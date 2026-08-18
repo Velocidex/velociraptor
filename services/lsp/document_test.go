@@ -32,6 +32,29 @@ SELECT {
 } AS B
 FROM scope()
 `,
+	}, {
+		Name: "Columns",
+		Query: `
+LET Session <= shell_session(argv=["XXXbash"])
+
+SELECT Session.IsRunning, version(function="shell_session")
+FROM scope()
+
+LET _ <= background(query={
+  SELECT * FROM chain(a={
+    SELECT sleep(time=1), shell_session_control(
+       stdin=format(format="echo hello %v\n\n", args=_value)) AS Session
+    FROM range(end=10)
+    WHERE log(dedup= -1,
+       message="Session.IsRunning = %v", args=Session.IsRunning)
+ }, b={
+   SELECT shell_session_control(close_stdin=TRUE)
+   FROM scope()
+ })
+})
+
+SELECT * FROM foreach(row=Session.Query)
+`,
 	}}
 )
 
@@ -52,8 +75,6 @@ func (self *LSPTestSuite) TestDocuments() {
 
 		golden = append(golden, doc.Debug())
 	}
-
-	fmt.Println(strings.Join(golden, "\n"))
 
 	goldie.Assert(self.T(), "TestDocuments",
 		[]byte(strings.Join(golden, "\n")))

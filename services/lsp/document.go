@@ -37,16 +37,7 @@ func (self *Document) Diagnostics() (res []*protocol.Diagnostic) {
 			Severity: protocol.DiagnosticSeverityError,
 			Source:   protocol.NewOptional("vql"),
 			Message:  protocol.String(verify_error.Error()),
-			Range: protocol.Range{
-				Start: protocol.Position{
-					Line:      uint32(verify_error.Pos.Pos.Line),
-					Character: uint32(verify_error.Pos.Pos.Column),
-				},
-				End: protocol.Position{
-					Line:      uint32(verify_error.Pos.EndPos.Line),
-					Character: uint32(verify_error.Pos.EndPos.Column),
-				},
-			},
+			Range:    *protocolRange(verify_error.Pos),
 		}
 		res = append(res, diag)
 	}

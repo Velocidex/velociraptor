@@ -8,16 +8,16 @@ Hover:
 {
  "contents": {
   "kind": "Function",
-  "value": "Lookup an IP Address using the MaxMind GeoIP database"
+  "value": "Function geoip: Lookup an IP Address using the MaxMind GeoIP database"
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 8
+   "line": 0,
+   "character": 7
   },
   "end": {
-   "line": 1,
-   "character": 13
+   "line": 0,
+   "character": 12
   }
  }
 }
@@ -31,16 +31,16 @@ Hover:
 {
  "contents": {
   "kind": "Plugin",
-  "value": "The scope plugin returns the current scope as a single row"
+  "value": "Plugin scope: The scope plugin returns the current scope as a single row"
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 15
+   "line": 0,
+   "character": 14
   },
   "end": {
-   "line": 1,
-   "character": 20
+   "line": 0,
+   "character": 19
   }
  }
 }
@@ -54,16 +54,16 @@ Hover:
 {
  "contents": {
   "kind": "Function",
-  "value": "Returns the lowercase version of a string"
+  "value": "Function lowcase: Returns the lowercase version of a string"
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 26
+   "line": 0,
+   "character": 25
   },
   "end": {
-   "line": 1,
-   "character": 33
+   "line": 0,
+   "character": 32
   }
  }
 }
@@ -76,12 +76,12 @@ Diagnostics:
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 21
+    "line": 0,
+    "character": 20
    }
   },
   "severity": 1,
@@ -91,7 +91,20 @@ Diagnostics:
 ]
 Hover:
 {
- "contents": null
+ "contents": {
+  "kind": "Plugin",
+  "value": "Plugin glob: Retrieve files based on a list of glob expressions\n\nThe `glob()` plugin is one o ..."
+ },
+ "range": {
+  "start": {
+   "line": 0,
+   "character": 14
+  },
+  "end": {
+   "line": 0,
+   "character": 18
+  }
+ }
 }
 
 Test case 4: Complete a plugin args
@@ -103,16 +116,16 @@ Hover:
 {
  "contents": {
   "kind": "Arg",
-  "value": "One or more glob patterns to apply to the filesystem."
+  "value": "Plugin glob: arg globs: One or more glob patterns to apply to the filesystem."
  },
  "range": {
   "start": {
-   "line": 1,
-   "character": 15
+   "line": 0,
+   "character": 19
   },
   "end": {
-   "line": 1,
-   "character": 19
+   "line": 0,
+   "character": 24
   }
  }
 }

@@ -511,7 +511,7 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 		visitor.Visit(vql)
 
 		// Keep a copy of all the callsites
-		state.Callsites = visitor.CallSites
+		state.Callsites = append(state.Callsites, visitor.CallSites...)
 		state.TopLevelQueries = append(state.TopLevelQueries, &QueryDesc{
 			Query: vql,
 			Pos: vfilter.RangePosition{

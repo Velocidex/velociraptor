@@ -2,7 +2,6 @@ package lsp
 
 import (
 	"context"
-	"fmt"
 	"sync"
 
 	"go.lsp.dev/protocol"
@@ -22,13 +21,21 @@ type LSPServer struct {
 	documents map[uri.URI]*Document
 }
 
+func (self *LSPServer) getDoc(id uri.URI) (*Document, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	doc, pres := self.documents[id]
+	if !pres {
+		return nil, utils.NotFoundError
+	}
+	return doc, nil
+}
+
 func (self *LSPServer) returnRespose(resp any) (*api_proto.LSPResponse, error) {
 	serialized, err := protocol.Marshal(resp)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("Got %v\n", string(serialized))
 
 	return &api_proto.LSPResponse{
 		Json: string(serialized),
@@ -89,6 +96,32 @@ func (self *LSPServer) LSP(
 		}
 
 		result, err := self.Hover(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.DiagnosticOp:
+		req := &protocol.DocumentDiagnosticParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Diagnostic(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.SymbolOp:
+		req := &protocol.DocumentSymbolParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DocumentSymbol(ctx, req)
 		if err != nil {
 			return nil, err
 		}
