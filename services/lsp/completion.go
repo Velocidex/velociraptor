@@ -22,7 +22,7 @@ import (
 //
 // If point is at the inner callsite we want to retrieve the most
 // specific callsite - in this case bar().
-func (self *Document) matchCallsite(line, column int) (
+func (self *Document) matchCallsite(pos lexer.Position) (
 	callsite *vfilter.CallSite, offset_at_point int, err error) {
 
 	type prospect_t struct {
@@ -39,10 +39,10 @@ func (self *Document) matchCallsite(line, column int) (
 		cs_pos := cs.Pos
 
 		// Potential prospect - the point is inside the callsite.
-		if isPosBetween(cs_pos, line, column) {
+		if isPosBetween(cs_pos, pos) {
 			if offset_at_point < 0 {
 				offset_at_point, err = getNextOffset(
-					self.Text, cs_pos.Pos, line, column)
+					self.Text, cs_pos.Pos, pos)
 				if err != nil {
 					// If we can not get the exact offset, then the
 					// text does not match the offset.
@@ -60,8 +60,7 @@ func (self *Document) matchCallsite(line, column int) (
 	if len(prospects) == 0 {
 		return nil, 0, utils.Wrap(
 			utils.NotFoundError,
-			"matchCallsite: Coordinate %v,%v are not found in text",
-			line, column)
+			"matchCallsite: Coordinate %v are not found in text", pos)
 	}
 
 	sort.Slice(prospects, func(i, j int) bool {
@@ -98,7 +97,7 @@ func (self *LSPServer) complete_function_names(
 func (self *LSPServer) complete_arg_names(
 	doc *Document,
 	cs *vfilter.CallSite,
-	line, column, offset_at_point int) (items []protocol.CompletionItem) {
+	offset_at_point int) (items []protocol.CompletionItem) {
 
 	// Find the description for the function
 	desc := doc.getVQLFunctionDescription(cs)
@@ -167,23 +166,20 @@ func (self *LSPServer) Completion(
 
 	items := []protocol.CompletionItem{}
 
-	self.mu.Lock()
-	doc, pres := self.documents[params.TextDocument.URI]
-	self.mu.Unlock()
-	if !pres {
-		return nil, utils.NotFoundError
+	doc, err := self.getDoc(params.TextDocument.URI)
+	if err != nil {
+		return nil, err
 	}
 
 	// Find the function at point
-	line := int(params.Position.Line)
-	column := int(params.Position.Character)
+	pos := lexerPositionFromProtocol(params.Position)
 
-	cs, offset_at_point, err := doc.matchCallsite(line, column)
+	cs, offset_at_point, err := doc.matchCallsite(pos)
 
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
 	if err == nil {
-		match := doc.Text[cs.Pos.Pos.Offset:offset_at_point]
+		match := doc.getFragment(cs.Pos.Pos.Offset, offset_at_point)
 
 		// Match is partial name - we need to complete the name:
 		// callsite: foobar(...)
@@ -193,7 +189,7 @@ func (self *LSPServer) Completion(
 				cs, match)...)
 		} else {
 			items = append(items, self.complete_arg_names(
-				doc, cs, line, column, offset_at_point)...)
+				doc, cs, offset_at_point)...)
 		}
 	}
 	return items, nil
@@ -210,21 +206,21 @@ func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {
 	}
 }
 
-func isPosBetween(rng vfilter.RangePosition, line, column int) bool {
-	left := rng.Pos
-	right := rng.EndPos
+func isPosBetween(rng vfilter.RangePosition, pos lexer.Position) bool {
+	start := rng.Pos
+	end := rng.EndPos
 
 	// Line falls outside the range of interest.
-	if left.Line < line || right.Line > line {
+	if start.Line > pos.Line || end.Line < pos.Line {
 		return false
 	}
 
 	// Falls to the left of the range.
-	if left.Line == line && left.Column > column {
+	if start.Line == pos.Line && start.Column > pos.Column {
 		return false
 	}
 
-	if right.Line == line && right.Column < column {
+	if end.Line == pos.Line && end.Column < pos.Column {
 		return false
 	}
 
@@ -236,21 +232,21 @@ func isPosBetween(rng vfilter.RangePosition, line, column int) bool {
 func getNextOffset(
 	text string,
 	start lexer.Position,
-	line, column int) (offset int, err error) {
+	pos lexer.Position) (offset int, err error) {
 
 	cur_line := start.Line
 	cur_col := start.Column
-	for idx, char := range text {
+	for idx, char := range text[start.Offset:] {
 		if char == '\n' {
 			cur_line++
-			cur_col = 0
+			cur_col = 1
 		}
 
-		if cur_col == column && cur_line == line {
-			return idx + 1 + start.Offset, nil
+		if cur_col == pos.Column && cur_line == pos.Line {
+			return idx + start.Offset, nil
 		}
 
-		if cur_line > line {
+		if cur_line > pos.Line {
 			break
 		}
 		cur_col++
