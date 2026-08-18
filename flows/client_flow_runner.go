@@ -612,8 +612,12 @@ func (self *ClientFlowRunner) FlowStats(
 		return nil
 	}
 
-	err = launcher_service.Storage().WriteFlowStats(ctx, self.config_obj,
-		stats, utils.BackgroundWriter)
+	// if doing completion write, register with completer so flow finished msg is not sent until record written to disk
+	completion := utils.BackgroundWriter
+	if msg.FlowComplete {
+		completion = self.completer.GetCompletionFunc()
+	}
+	err = launcher_service.Storage().WriteFlowStats(ctx, self.config_obj, stats, completion)
 	if err != nil {
 		return err
 	}
