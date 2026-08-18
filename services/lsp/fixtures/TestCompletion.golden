@@ -1,7 +1,7 @@
 
 Test case 0: Complete VQL function
 SELECT geoip(db='Foo', ip='127.0.0.1') AS Foo FROM scope()
-SELECT geoi<--
+SELECT geo<--
 Diagnostics:
 []
 Completions:
@@ -19,7 +19,7 @@ Completions:
 
 Test case 1: Complete VQL plugin
 SELECT * FROM scope()
-SELECT * FROM sco<--
+SELECT * FROM sc<--
 Diagnostics:
 []
 Completions:
@@ -55,18 +55,18 @@ Completions:
 
 Test case 3: Complete plugin all args
 SELECT * FROM glob()
-SELECT * FROM glob(<--
+SELECT * FROM glob<--
 Diagnostics:
 [
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 21
+    "line": 0,
+    "character": 20
    }
   },
   "severity": 1,
@@ -134,18 +134,18 @@ Completions:
 
 Test case 4: Complete a plugin args
 SELECT * FROM glob(gloXXX='*')
-SELECT * FROM glob(gl<--
+SELECT * FROM glob(g<--
 Diagnostics:
 [
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 20
+    "line": 0,
+    "character": 19
    },
    "end": {
-    "line": 1,
-    "character": 30
+    "line": 0,
+    "character": 29
    }
   },
   "severity": 1,
@@ -155,12 +155,12 @@ Diagnostics:
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 31
+    "line": 0,
+    "character": 30
    }
   },
   "severity": 1,
@@ -183,18 +183,18 @@ Completions:
 
 Test case 5: Complete some plugin args (accessor already exists, so should not be completed) 
 SELECT * FROM glob(gloXXX='*', accessor='file')
-SELECT * FROM glob(<--
+SELECT * FROM glob<--
 Diagnostics:
 [
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 20
+    "line": 0,
+    "character": 19
    },
    "end": {
-    "line": 1,
-    "character": 30
+    "line": 0,
+    "character": 29
    }
   },
   "severity": 1,
@@ -204,12 +204,12 @@ Diagnostics:
  {
   "range": {
    "start": {
-    "line": 1,
-    "character": 15
+    "line": 0,
+    "character": 14
    },
    "end": {
-    "line": 1,
-    "character": 48
+    "line": 0,
+    "character": 47
    }
   },
   "severity": 1,

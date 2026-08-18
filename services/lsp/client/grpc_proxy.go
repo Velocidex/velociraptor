@@ -3,6 +3,7 @@ package client
 import (
 	"context"
 	"errors"
+	"sync"
 
 	"go.lsp.dev/protocol"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -13,6 +14,8 @@ const (
 	DidOpenOp    = "DidOpen"
 	CompletionOp = "CompletionOp"
 	HoverOp      = "HoverOp"
+	DiagnosticOp = "DiagnosticOp"
+	SymbolOp     = "SymbolOp"
 )
 
 var (
@@ -24,6 +27,7 @@ var (
 type LSPProxy struct {
 	protocol.UnimplementedServer
 
+	mu         sync.Mutex
 	api_client api_proto.APIClient
 }
 
@@ -61,6 +65,10 @@ func (self *LSPProxy) Initialize(
 func (self *LSPProxy) Completion(
 	ctx context.Context,
 	params *protocol.CompletionParams) (protocol.CompletionResult, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result := []protocol.CompletionItem{}
 	err := self.forwardCall(ctx, CompletionOp, params, &result)
 	if err != nil {
@@ -72,12 +80,19 @@ func (self *LSPProxy) Completion(
 func (self *LSPProxy) Hover(
 	ctx context.Context, params *protocol.HoverParams) (
 	*protocol.Hover, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
 	result := &protocol.Hover{}
 	return result, self.forwardCall(ctx, HoverOp, params, result)
 }
 
 func (self *LSPProxy) DidOpen(
 	ctx context.Context, params *protocol.DidOpenTextDocumentParams) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	diagnostics := []protocol.Diagnostic{}
 	uri := params.TextDocument.URI
@@ -97,6 +112,28 @@ func (self *LSPProxy) DidOpen(
 			URI:         uri,
 			Diagnostics: diagnostics,
 		})
+}
+
+func (self *LSPProxy) Diagnostic(ctx context.Context,
+	params *protocol.DocumentDiagnosticParams) (
+	protocol.DocumentDiagnosticReport, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := &protocol.RelatedFullDocumentDiagnosticReport{}
+	return result, self.forwardCall(ctx, DiagnosticOp, params, result)
+}
+
+func (self *LSPProxy) DocumentSymbol(
+	ctx context.Context, params *protocol.DocumentSymbolParams) (
+	protocol.DocumentSymbolResult, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := &protocol.DocumentSymbolSlice{}
+	return result, self.forwardCall(ctx, SymbolOp, params, result)
 }
 
 func NewLSPProxy(api_client api_proto.APIClient) protocol.Server {

@@ -75,7 +75,7 @@ func (self *LSPTestSuite) TestHover() {
 					URI: doc,
 				},
 				Position: protocol.Position{
-					Line:      1,
+					Line:      0,
 					Character: tc.Column,
 				},
 			},
@@ -88,8 +88,6 @@ func (self *LSPTestSuite) TestHover() {
 		golden = append(golden, "Hover:")
 		golden = append(golden, lsp.DumpProtool(hover))
 	}
-
-	fmt.Println(strings.Join(golden, "\n"))
 
 	goldie.Assert(self.T(), "TestHover",
 		[]byte(strings.Join(golden, "\n")))
