@@ -94,6 +94,42 @@ func (self *LSPServer) complete_function_names(
 	return items
 }
 
+// complete_prefix_names suggests plugins, functions and LET variables
+// matching the given prefix. This is the fallback used when the cursor
+// is not inside a call site - e.g. "SELECT * FROM parse." should
+// suggest all the parse* plugins.
+func (self *LSPServer) complete_prefix_names(
+	doc *Document, match string) (items []protocol.CompletionItem) {
+
+	// LET variables defined in the document.
+	for name := range doc.AnalysisState.Definitions {
+		if strings.HasPrefix(name, match) {
+			items = append(items, protocol.CompletionItem{
+				Label:  name,
+				Kind:   protocol.CompletionItemKindVariable,
+				Detail: protocol.NewOptional("LET variable"),
+			})
+		}
+	}
+
+	// Built in plugins and functions.
+	for _, desc := range LoadApiDescriptions() {
+		if strings.HasPrefix(desc.Name, match) {
+			items = append(items, protocol.CompletionItem{
+				Label: desc.Name,
+				LabelDetails: &protocol.CompletionItemLabelDetails{
+					Detail:      &desc.Type,
+					Description: &desc.Description,
+				},
+				Detail: protocol.NewOptional("Built in " + desc.Type),
+				Kind:   getKind(desc),
+			})
+		}
+	}
+
+	return items
+}
+
 func (self *LSPServer) complete_arg_names(
 	doc *Document,
 	cs *vfilter.CallSite,
@@ -191,8 +227,52 @@ func (self *LSPServer) Completion(
 			items = append(items, self.complete_arg_names(
 				doc, cs, offset_at_point)...)
 		}
+		return items, nil
 	}
-	return items, nil
+
+	// The cursor is not inside a call site - e.g. the user typed
+	// "SELECT * FROM parse." and the '.' trigger fired completion.
+	// Fall back to prefix based completion of plugins, functions and
+	// LET variables.
+	offset := positionToOffset(doc.Text, params.Position)
+	prefix := wordPrefix(doc.Text, offset)
+
+	// A trailing '.' (the trigger character) should not prevent
+	// matching the callable name itself.
+	prefix = strings.TrimSuffix(prefix, ".")
+
+	return self.complete_prefix_names(doc, prefix), nil
+}
+
+// wordPrefix returns the identifier prefix ending at the given byte
+// offset. Identifiers in VQL can contain letters, digits, underscores
+// and dots (for dotted plugin names like Artifact.Linux.Sys.Users).
+func wordPrefix(text string, offset int) string {
+	start := offset
+	for start > 0 {
+		c := text[start-1]
+		if c == '.' || c == '_' || (c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
+			start--
+			continue
+		}
+		break
+	}
+	return text[start:offset]
+}
+
+// positionToOffset converts a 0 based LSP position to a byte offset in
+// the document.
+func positionToOffset(text string, pos protocol.Position) int {
+	line := 0
+	offset := 0
+	for offset < len(text) && line < int(pos.Line) {
+		if text[offset] == '\n' {
+			line++
+		}
+		offset++
+	}
+	return offset + int(pos.Character)
 }
 
 func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {

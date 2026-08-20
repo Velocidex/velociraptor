@@ -40,6 +40,14 @@ var (
 		Name:   "Complete some plugin args (accessor already exists, so should not be completed) ",
 		Query:  "SELECT * FROM glob(gloXXX='*', accessor='file')",
 		Column: 18,
+	}, {
+		Name:   "Prefix fallback after trigger dot",
+		Query:  "SELECT * FROM parse.",
+		Column: 19,
+	}, {
+		Name:   "Prefix fallback mid name",
+		Query:  "SELECT * FROM parse_j",
+		Column: 20,
 	}}
 )
 
