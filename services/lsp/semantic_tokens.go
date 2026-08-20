@@ -118,9 +118,12 @@ func (self *LSPServer) SemanticTokensFull(
 		}
 		pos_proto := protocolPosition(pos)
 		if pos_proto.Line != prev_line {
+			// The first element of each token tuple is the line
+			// delta relative to the previous token, not the
+			// absolute line number.
 			data = append(data,
-				pos_proto.Line, pos_proto.Character, uint32(length),
-				uint32(token_type), 0)
+				pos_proto.Line-prev_line, pos_proto.Character,
+				uint32(length), uint32(token_type), 0)
 		} else {
 			data = append(data,
 				0, pos_proto.Character-prev_char, uint32(length),
