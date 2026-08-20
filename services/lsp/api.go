@@ -21,6 +21,7 @@ var (
 
 	mu                 sync.Mutex
 	cachedDescriptions []*api_proto.Completion
+	func_lookup        map[string]*api_proto.Completion
 )
 
 // Get the top level description line.
@@ -32,7 +33,10 @@ func elideDescription(in string) string {
 func LoadApiDescriptions() []*api_proto.Completion {
 	mu.Lock()
 	defer mu.Unlock()
+	return loadApiDescriptions()
+}
 
+func loadApiDescriptions() []*api_proto.Completion {
 	if len(cachedDescriptions) > 0 {
 		return cachedDescriptions
 	}

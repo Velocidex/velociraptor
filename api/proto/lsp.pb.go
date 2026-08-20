@@ -21,6 +21,7 @@ const (
 type LSPRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Operation     string                 `protobuf:"bytes,1,opt,name=operation,proto3" json:"operation,omitempty"`
+	Id            uint32                 `protobuf:"varint,3,opt,name=id,proto3" json:"id,omitempty"`
 	Json          string                 `protobuf:"bytes,2,opt,name=json,proto3" json:"json,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -61,6 +62,13 @@ func (x *LSPRequest) GetOperation() string {
 		return x.Operation
 	}
 	return ""
+}
+
+func (x *LSPRequest) GetId() uint32 {
+	if x != nil {
+		return x.Id
+	}
+	return 0
 }
 
 func (x *LSPRequest) GetJson() string {
@@ -118,10 +126,11 @@ var File_lsp_proto protoreflect.FileDescriptor
 
 const file_lsp_proto_rawDesc = "" +
 	"\n" +
-	"\tlsp.proto\x12\x05proto\">\n" +
+	"\tlsp.proto\x12\x05proto\"N\n" +
 	"\n" +
 	"LSPRequest\x12\x1c\n" +
-	"\toperation\x18\x01 \x01(\tR\toperation\x12\x12\n" +
+	"\toperation\x18\x01 \x01(\tR\toperation\x12\x0e\n" +
+	"\x02id\x18\x03 \x01(\rR\x02id\x12\x12\n" +
 	"\x04json\x18\x02 \x01(\tR\x04json\"!\n" +
 	"\vLSPResponse\x12\x12\n" +
 	"\x04json\x18\x02 \x01(\tR\x04jsonB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
