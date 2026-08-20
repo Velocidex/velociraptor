@@ -5,6 +5,7 @@ import (
 	"strings"
 	"unicode"
 
+	"github.com/alecthomas/participle/v2/lexer"
 	"go.lsp.dev/protocol"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -26,9 +27,12 @@ func (self *LSPServer) References(
 		return nil, utils.NotFoundError
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-	offset_at_point := position_mapper.positionToOffset(
-		int(params.Position.Line), int(params.Position.Character))
+	pos := lexerPositionFromProtocol(params.Position)
+	offset_at_point, err := getNextOffset(doc.Text,
+		lexer.Position{Line: 1, Column: 1, Offset: 0}, pos)
+	if err != nil {
+		return nil, nil
+	}
 
 	name := wordAtOffset(doc.Text, offset_at_point)
 	if name == "" {
@@ -53,14 +57,15 @@ func (self *LSPServer) References(
 	res := []protocol.Location{}
 	seen := make(map[protocol.Range]bool)
 
-	addLocation := func(offset int, length int) {
-		if offset < 0 || offset+length > len(doc.Text) {
-			return
-		}
+	// Callsites carry lexer positions so convert them directly with
+	// protocolPosition. The definition name is found by walking the
+	// raw text so its byte offset is converted with offsetToPosition.
+	addLocation := func(start protocol.Position, length int) {
 		rng := protocol.Range{
-			Start: position_mapper.mapOffset(offset),
-			End:   position_mapper.mapOffset(offset + length),
+			Start: start,
+			End:   start,
 		}
+		rng.End.Character += uint32(length)
 		if seen[rng] {
 			return
 		}
@@ -72,12 +77,15 @@ func (self *LSPServer) References(
 	}
 
 	if params.Context.IncludeDeclaration {
-		addLocation(definitionNameOffset(doc.Text, def), len(name))
+		offset := definitionNameOffset(doc.Text, def)
+		if offset >= 0 {
+			addLocation(offsetToPosition(doc.Text, offset), len(name))
+		}
 	}
 
 	for _, cs := range callsites {
 		if cs.Type == "symbol" && cs.Name == name {
-			addLocation(cs.Pos.Pos.Offset, len(cs.Name))
+			addLocation(protocolPosition(cs.Pos.Pos), len(cs.Name))
 		}
 	}
 

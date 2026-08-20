@@ -16,7 +16,7 @@ var (
 		Name  string
 		Query string
 	}{{
-		Name: "Selecting a plugin with arguments",
+		Name:  "Selecting a plugin with arguments",
 		Query: "SELECT * FROM pslist(pid=1)",
 	}, {
 		Name: "A LET variable and a function call",
@@ -24,7 +24,7 @@ var (
 			"LET MyVar = SELECT upcase(string=X) FROM pslist(pid=1)\n" +
 			"SELECT MyVar.Foo FROM scope()",
 	}, {
-		Name: "An artifact reference",
+		Name:  "An artifact reference",
 		Query: "SELECT * FROM Artifact.Linux.Sys.Users()",
 	}, {
 		Name: "Comments and strings",
@@ -75,8 +75,7 @@ func (self *LSPTestSuite) TestSemanticTokens() {
 	var golden []string
 	var legend []string
 
-	tokens_provider, ok := capabilities.Capabilities.SemanticTokensProvider.
-		(*protocol.SemanticTokensOptions)
+	tokens_provider, ok := capabilities.Capabilities.SemanticTokensProvider.(*protocol.SemanticTokensOptions)
 	assert.True(self.T(), ok)
 	legend = tokens_provider.Legend.TokenTypes
 

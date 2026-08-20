@@ -5,6 +5,7 @@ import (
 	"sort"
 	"strings"
 
+	"github.com/alecthomas/participle/v2/lexer"
 	"go.lsp.dev/protocol"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -21,8 +22,8 @@ import (
 //
 // If point is at the inner callsite we want to retrieve the most
 // specific callsite - in this case bar().
-func (self *Document) matchCallsite(offset_at_point int) (
-	callsite *vfilter.CallSite, err error) {
+func (self *Document) matchCallsite(pos lexer.Position) (
+	callsite *vfilter.CallSite, offset_at_point int, err error) {
 
 	type prospect_t struct {
 		distance int
@@ -32,11 +33,23 @@ func (self *Document) matchCallsite(offset_at_point int) (
 	// Find potential overlapping callsites
 	var prospects []*prospect_t
 
+	offset_at_point = -1
+
 	for _, cs := range self.AnalysisState.Callsites {
 		cs_pos := cs.Pos
 
 		// Potential prospect - the point is inside the callsite.
-		if rngContains(cs_pos, offset_at_point) {
+		if isPosBetween(cs_pos, pos) {
+			if offset_at_point < 0 {
+				offset_at_point, err = getNextOffset(
+					self.Text, cs_pos.Pos, pos)
+				if err != nil {
+					// If we can not get the exact offset, then the
+					// text does not match the offset.
+					break
+				}
+			}
+
 			prospects = append(prospects, &prospect_t{
 				distance: offset_at_point - cs_pos.Pos.Offset,
 				cs:       &cs,
@@ -45,10 +58,9 @@ func (self *Document) matchCallsite(offset_at_point int) (
 	}
 
 	if len(prospects) == 0 {
-		return nil, utils.Wrap(
+		return nil, 0, utils.Wrap(
 			utils.NotFoundError,
-			"matchCallsite: Offset %v is not found in text",
-			offset_at_point)
+			"matchCallsite: Coordinate %v are not found in text", pos)
 	}
 
 	sort.Slice(prospects, func(i, j int) bool {
@@ -57,7 +69,7 @@ func (self *Document) matchCallsite(offset_at_point int) (
 
 	// Minimize the distance
 	best_cs := prospects[0].cs
-	return best_cs, nil
+	return best_cs, offset_at_point, nil
 }
 
 // Complete possible function names on callsite.
@@ -154,24 +166,20 @@ func (self *LSPServer) Completion(
 
 	items := []protocol.CompletionItem{}
 
-	self.mu.Lock()
-	doc, pres := self.documents[params.TextDocument.URI]
-	self.mu.Unlock()
-	if !pres {
-		return nil, utils.NotFoundError
+	doc, err := self.getDoc(params.TextDocument.URI)
+	if err != nil {
+		return nil, err
 	}
 
 	// Find the function at point
-	position_mapper := newPositionMapper(doc.Text)
-	offset_at_point := position_mapper.positionToOffset(
-		int(params.Position.Line), int(params.Position.Character))
+	pos := lexerPositionFromProtocol(params.Position)
 
-	cs, err := doc.matchCallsite(offset_at_point)
+	cs, offset_at_point, err := doc.matchCallsite(pos)
 
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
 	if err == nil {
-		match := doc.Text[cs.Pos.Pos.Offset:offset_at_point]
+		match := doc.getFragment(cs.Pos.Pos.Offset, offset_at_point)
 
 		// Match is partial name - we need to complete the name:
 		// callsite: foobar(...)
@@ -196,6 +204,55 @@ func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {
 	default:
 		return protocol.CompletionItemKindText
 	}
+}
+
+func isPosBetween(rng vfilter.RangePosition, pos lexer.Position) bool {
+	start := rng.Pos
+	end := rng.EndPos
+
+	// Line falls outside the range of interest.
+	if start.Line > pos.Line || end.Line < pos.Line {
+		return false
+	}
+
+	// Falls to the left of the range.
+	if start.Line == pos.Line && start.Column > pos.Column {
+		return false
+	}
+
+	if end.Line == pos.Line && end.Column < pos.Column {
+		return false
+	}
+
+	return true
+}
+
+// Find the absolute offset in the text of the line and character
+// specified.
+func getNextOffset(
+	text string,
+	start lexer.Position,
+	pos lexer.Position) (offset int, err error) {
+
+	cur_line := start.Line
+	cur_col := start.Column
+	for idx, char := range text[start.Offset:] {
+		if cur_col == pos.Column && cur_line == pos.Line {
+			return idx + start.Offset, nil
+		}
+
+		if char == '\n' {
+			cur_line++
+			cur_col = 1
+		} else {
+			cur_col++
+		}
+
+		if cur_line > pos.Line {
+			break
+		}
+	}
+	return 0, utils.NotFoundError
 }
 
 func (self *Document) getVQLFunctionDescription(

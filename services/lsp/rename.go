@@ -3,6 +3,7 @@ package lsp
 import (
 	"context"
 
+	"github.com/alecthomas/participle/v2/lexer"
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -24,9 +25,12 @@ func (self *LSPServer) PrepareRename(
 		return nil, utils.NotFoundError
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-	offset_at_point := position_mapper.positionToOffset(
-		int(params.Position.Line), int(params.Position.Character))
+	pos := lexerPositionFromProtocol(params.Position)
+	offset_at_point, err := getNextOffset(doc.Text,
+		lexer.Position{Line: 1, Column: 1, Offset: 0}, pos)
+	if err != nil {
+		return nil, nil
+	}
 
 	name := wordAtOffset(doc.Text, offset_at_point)
 	if name == "" {
@@ -43,11 +47,13 @@ func (self *LSPServer) PrepareRename(
 		return nil, nil
 	}
 
-	return &protocol.Range{
-		Start: position_mapper.mapOffset(offset_at_point),
-		End: position_mapper.mapOffset(
-			offset_at_point + len(name)),
-	}, nil
+	// The cursor position is already the start of the identifier.
+	rng := protocol.Range{
+		Start: protocolPosition(pos),
+		End:   protocolPosition(pos),
+	}
+	rng.End.Character += uint32(len(name))
+	return &rng, nil
 }
 
 // Rename renames a LET variable everywhere it is used in the document.
@@ -62,9 +68,12 @@ func (self *LSPServer) Rename(
 		return nil, utils.NotFoundError
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-	offset_at_point := position_mapper.positionToOffset(
-		int(params.Position.Line), int(params.Position.Character))
+	pos := lexerPositionFromProtocol(params.Position)
+	offset_at_point, err := getNextOffset(doc.Text,
+		lexer.Position{Line: 1, Column: 1, Offset: 0}, pos)
+	if err != nil {
+		return nil, nil
+	}
 
 	name := wordAtOffset(doc.Text, offset_at_point)
 	if name == "" {
@@ -85,14 +94,12 @@ func (self *LSPServer) Rename(
 	edits := []protocol.TextEdit{}
 	seen := make(map[protocol.Range]bool)
 
-	addEdit := func(offset int, length int) {
-		if offset < 0 || offset+length > len(doc.Text) {
-			return
-		}
+	addEdit := func(start protocol.Position, length int) {
 		rng := protocol.Range{
-			Start: position_mapper.mapOffset(offset),
-			End:   position_mapper.mapOffset(offset + length),
+			Start: start,
+			End:   start,
 		}
+		rng.End.Character += uint32(length)
 		if seen[rng] {
 			return
 		}
@@ -108,12 +115,12 @@ func (self *LSPServer) Rename(
 	if offset < 0 {
 		return nil, nil
 	}
-	addEdit(offset, len(name))
+	addEdit(offsetToPosition(doc.Text, offset), len(name))
 
 	// Rename every bare symbol use.
 	for _, cs := range callsites {
 		if cs.Type == "symbol" && cs.Name == name {
-			addEdit(cs.Pos.Pos.Offset, len(cs.Name))
+			addEdit(protocolPosition(cs.Pos.Pos), len(cs.Name))
 		}
 	}
 

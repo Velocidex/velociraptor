@@ -21,8 +21,6 @@ func (self *LSPServer) Symbols(
 
 	self.mu.Lock()
 	for uri, doc := range self.documents {
-		position_mapper := newPositionMapper(doc.Text)
-
 		for _, def := range doc.AnalysisState.Definitions {
 			if query != "" &&
 				!strings.Contains(strings.ToLower(def.Name), query) {
@@ -33,8 +31,8 @@ func (self *LSPServer) Symbols(
 				Location: &protocol.Location{
 					URI: uri,
 					Range: protocol.Range{
-						Start: position_mapper.mapPos(def.Pos.Pos),
-						End:   position_mapper.mapPos(def.Pos.EndPos),
+						Start: protocolPosition(def.Pos.Pos),
+						End:   protocolPosition(def.Pos.EndPos),
 					},
 				},
 			}

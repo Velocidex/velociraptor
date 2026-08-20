@@ -64,13 +64,11 @@ func (self *LSPServer) removeArgumentAction(
 	doc_uri uri.URI, doc *Document,
 	diag protocol.Diagnostic) *protocol.CodeAction {
 
-	position_mapper := newPositionMapper(doc.Text)
-
 	// Find the argument in the analysis state whose position matches
 	// the diagnostic range.
 	for _, cs := range doc.AnalysisState.Callsites {
 		for _, arg := range cs.Args {
-			arg_range := position_mapper.mapRange(arg.Pos)
+			arg_range := *protocolRange(arg.Pos)
 			if !rangesEqual(arg_range, diag.Range) {
 				continue
 			}

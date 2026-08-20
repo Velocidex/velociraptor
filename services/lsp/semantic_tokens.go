@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/alecthomas/participle/v2/lexer"
 	"go.lsp.dev/protocol"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
@@ -103,28 +104,26 @@ func (self *LSPServer) SemanticTokensFull(
 		}
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-
 	var data []uint32
 	prev_line := uint32(0)
 	prev_char := uint32(0)
 
-	appendToken := func(offset int, length int, token_type int) {
-		if offset < 0 || length <= 0 {
+	appendToken := func(pos lexer.Position, length int, token_type int) {
+		if pos.Offset < 0 || length <= 0 {
 			return
 		}
-		pos := position_mapper.mapOffset(offset)
-		if pos.Line != prev_line {
+		pos_proto := protocolPosition(pos)
+		if pos_proto.Line != prev_line {
 			data = append(data,
-				pos.Line, pos.Character, uint32(length),
+				pos_proto.Line, pos_proto.Character, uint32(length),
 				uint32(token_type), 0)
 		} else {
 			data = append(data,
-				0, pos.Character-prev_char, uint32(length),
+				0, pos_proto.Character-prev_char, uint32(length),
 				uint32(token_type), 0)
 		}
-		prev_line = pos.Line
-		prev_char = pos.Character
+		prev_line = pos_proto.Line
+		prev_char = pos_proto.Character
 	}
 
 	for i := 0; i < len(tokens); i++ {
@@ -137,7 +136,7 @@ func (self *LSPServer) SemanticTokensFull(
 			if pres {
 				if token_type, ok := callables[dotted]; ok {
 					name_len := dottedTokenLength(tokens, i, end)
-					appendToken(token.Pos.Offset, name_len,
+					appendToken(token.Pos, name_len,
 						token_type)
 					i = end
 					continue
@@ -145,7 +144,7 @@ func (self *LSPServer) SemanticTokensFull(
 
 				if _, pres := let_vars[dotted]; pres {
 					name_len := dottedTokenLength(tokens, i, end)
-					appendToken(token.Pos.Offset, name_len,
+					appendToken(token.Pos, name_len,
 						semTokenVariable)
 					i = end
 					continue
@@ -155,7 +154,7 @@ func (self *LSPServer) SemanticTokensFull(
 				// definition lookup.
 				if token.Type == "Ident" {
 					if _, pres := let_vars[token.Value]; pres {
-						appendToken(token.Pos.Offset, len(token.Value),
+						appendToken(token.Pos, len(token.Value),
 							semTokenVariable)
 						continue
 					}
@@ -163,13 +162,13 @@ func (self *LSPServer) SemanticTokensFull(
 
 				// Everything else is an ordinary property or a
 				// bare symbol reference.
-				appendToken(token.Pos.Offset, len(token.Value),
+				appendToken(token.Pos, len(token.Value),
 					semTokenProperty)
 				continue
 			}
 
 			// A SymbolIdent without a path is a property lookup.
-			appendToken(token.Pos.Offset, len(token.Value),
+			appendToken(token.Pos, len(token.Value),
 				semTokenProperty)
 			continue
 		}
@@ -181,7 +180,7 @@ func (self *LSPServer) SemanticTokensFull(
 			continue
 		}
 
-		appendToken(token.Pos.Offset, len(token.Value), token_type)
+		appendToken(token.Pos, len(token.Value), token_type)
 	}
 
 	return &protocol.SemanticTokens{

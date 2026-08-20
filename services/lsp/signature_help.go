@@ -22,11 +22,8 @@ func (self *LSPServer) SignatureHelp(
 		return nil, utils.NotFoundError
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-	offset_at_point := position_mapper.positionToOffset(
-		int(params.Position.Line), int(params.Position.Character))
-
-	cs, err := doc.matchCallsite(offset_at_point)
+	pos := lexerPositionFromProtocol(params.Position)
+	cs, offset_at_point, err := doc.matchCallsite(pos)
 	if err != nil {
 		return nil, nil
 	}

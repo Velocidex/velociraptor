@@ -22,8 +22,6 @@ func (self *LSPServer) InlayHint(
 		return nil, utils.NotFoundError
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-
 	res := []protocol.InlayHint{}
 	for _, cs := range doc.AnalysisState.Callsites {
 		desc := doc.getVQLFunctionDescription(&cs)
@@ -48,8 +46,9 @@ func (self *LSPServer) InlayHint(
 				continue
 			}
 
-			pos := position_mapper.mapOffset(
-				arg.Pos.Pos.Offset + len(arg.Name))
+			// The hint is placed just after the argument name.
+			pos := protocolPosition(arg.Pos.Pos)
+			pos.Character += uint32(len(arg.Name))
 
 			// An empty range means the whole document.
 			if params.Range != (protocol.Range{}) &&

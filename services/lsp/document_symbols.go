@@ -25,14 +25,12 @@ func (self *LSPServer) DocumentSymbol(
 		return protocol.DocumentSymbolSlice(res), nil
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-
 	for _, def := range doc.AnalysisState.Definitions {
 		symbol := protocol.DocumentSymbol{
 			Name:           def.Name,
 			Kind:           protocol.SymbolKindVariable,
-			Range:          position_mapper.mapRange(def.Pos),
-			SelectionRange: position_mapper.mapRange(def.Pos),
+			Range:          *protocolRange(def.Pos),
+			SelectionRange: *protocolRange(def.Pos),
 		}
 
 		// Functions are declared with LET Foo(X, Y) = ...

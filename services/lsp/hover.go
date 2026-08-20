@@ -2,30 +2,24 @@ package lsp
 
 import (
 	"context"
+	"fmt"
 
 	"go.lsp.dev/protocol"
 	"www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func (self *LSPServer) Hover(
 	ctx context.Context,
 	params *protocol.HoverParams) (*protocol.Hover, error) {
 
-	self.mu.Lock()
-	doc, pres := self.documents[params.TextDocument.URI]
-	self.mu.Unlock()
-	if !pres {
-		return nil, utils.NotFoundError
+	doc, err := self.getDoc(params.TextDocument.URI)
+	if err != nil {
+		return nil, err
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-
-	// Find the function at point.
-	offset_at_point := position_mapper.positionToOffset(
-		int(params.Position.Line), int(params.Position.Character))
-
-	cs, err := doc.matchCallsite(offset_at_point)
+	// Find the function at point
+	pos := lexerPositionFromProtocol(params.Position)
+	cs, offset_at_point, err := doc.matchCallsite(pos)
 
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
@@ -35,24 +29,10 @@ func (self *LSPServer) Hover(
 			return &protocol.Hover{}, nil
 		}
 
-		match := doc.Text[cs.Pos.Pos.Offset:offset_at_point]
-		if len(match) < len(cs.Name) {
-			// The point is on the function name - we need to display
-			// hover info about the function.
-			return &protocol.Hover{
-				Range: &protocol.Range{
-					Start: position_mapper.mapPos(cs.Pos.Pos),
-					End: position_mapper.mapOffset(
-						cs.Pos.Pos.Offset + len(cs.Name)),
-				},
-				Contents: &protocol.MarkupContent{
-					Kind:  protocol.MarkupKind(desc.Type),
-					Value: desc.Description,
-				},
-			}, nil
-
-		} else {
-			// Maybe the point is on an arg name
+		match := doc.getFragment(cs.Pos.Pos.Offset, offset_at_point)
+		if len(match) > len(cs.Name) {
+			// Point is after the initial name, check maybe the point
+			// is on an arg name so we can show hover about the arg.
 			for _, arg := range cs.Args {
 				// The arg description
 				arg_desc := getArgDesc(arg.Name, desc)
@@ -60,22 +40,43 @@ func (self *LSPServer) Hover(
 					return &protocol.Hover{}, nil
 				}
 
-				if offset_at_point >= arg.Pos.Pos.Offset &&
-					offset_at_point <= arg.Pos.Pos.Offset+len(arg.Name) {
+				start := arg.Pos.Pos
+				if start.Line == pos.Line &&
+					start.Column <= pos.Column &&
+					pos.Column <= start.Column+len(arg.Name) {
+
+					hover_range := protocolRange(arg.Pos)
+					hover_range.End = hover_range.Start
+					hover_range.End.Character += uint32(len(arg.Name))
 					return &protocol.Hover{
-						Range: &protocol.Range{
-							Start: position_mapper.mapPos(cs.Pos.Pos),
-							End: position_mapper.mapOffset(
-								cs.Pos.Pos.Offset + len(cs.Name)),
-						},
+						Range: hover_range,
 						Contents: &protocol.MarkupContent{
-							Kind:  protocol.MarkupKind("Arg"),
-							Value: arg_desc.Description,
+							Kind: protocol.MarkupKind("Arg"),
+							Value: fmt.Sprintf("%s %s: arg %s: %s",
+								desc.Type, desc.Name,
+								arg_desc.Name, arg_desc.Description),
 						},
 					}, nil
 				}
 			}
 		}
+
+		// The point is on the function name or somewhere else within
+		// the function args. - we need to display hover info about
+		// the function. Only highlight the function name instead of
+		// all of it.
+		hover_range := protocolRange(cs.Pos)
+		hover_range.End = hover_range.Start
+		hover_range.End.Character += uint32(len(cs.Name))
+
+		return &protocol.Hover{
+			Range: hover_range,
+			Contents: &protocol.MarkupContent{
+				Kind: protocol.MarkupKind(desc.Type),
+				Value: fmt.Sprintf("%s %s: %s",
+					desc.Type, desc.Name, desc.Description),
+			},
+		}, nil
 	}
 
 	return &protocol.Hover{}, nil

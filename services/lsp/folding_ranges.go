@@ -22,8 +22,6 @@ func (self *LSPServer) FoldingRanges(
 		return nil, utils.NotFoundError
 	}
 
-	position_mapper := newPositionMapper(doc.Text)
-
 	// Collect the spans of all top level queries and definitions.
 	// The LET definition is included in the span of the query
 	// statement itself so we deduplicate identical spans.
@@ -44,8 +42,8 @@ func (self *LSPServer) FoldingRanges(
 
 	res := []protocol.FoldingRange{}
 	for _, span := range spans {
-		start := position_mapper.mapPos(span.Pos)
-		end := position_mapper.mapPos(span.EndPos)
+		start := protocolPosition(span.Pos)
+		end := protocolPosition(span.EndPos)
 
 		// Only fold spans that cover more than one line.
 		if end.Line > start.Line {
