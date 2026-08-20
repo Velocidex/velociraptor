@@ -102,8 +102,13 @@ func (self *LSPServer) complete_function_names(
 // matching the given prefix. This is the fallback used when the cursor
 // is not inside a call site - e.g. "SELECT * FROM parse." should
 // suggest all the parse* plugins.
+//
+// edit_range covers the typed prefix in the document (including any
+// trailing '.' trigger character) so the client replaces it with the
+// full name instead of appending to it.
 func (self *LSPServer) complete_prefix_names(
-	doc *Document, match string) (items []protocol.CompletionItem) {
+	doc *Document, match string,
+	edit_range *protocol.Range) (items []protocol.CompletionItem) {
 
 	// LET variables defined in the document.
 	for name := range doc.AnalysisState.Definitions {
@@ -113,6 +118,13 @@ func (self *LSPServer) complete_prefix_names(
 				Kind:   protocol.CompletionItemKindVariable,
 				Detail: protocol.NewOptional("LET variable"),
 			})
+			if edit_range != nil {
+				items[len(items)-1].TextEdit = protocol.CompletionItemTextEdit(
+					&protocol.TextEdit{
+						Range:   *edit_range,
+						NewText: name,
+					})
+			}
 		}
 	}
 
@@ -132,6 +144,13 @@ func (self *LSPServer) complete_prefix_names(
 				}),
 				Kind: getKind(desc),
 			})
+			if edit_range != nil {
+				items[len(items)-1].TextEdit = protocol.CompletionItemTextEdit(
+					&protocol.TextEdit{
+						Range:   *edit_range,
+						NewText: desc.Name,
+					})
+			}
 		}
 	}
 
@@ -253,11 +272,19 @@ func (self *LSPServer) Completion(
 	offset := positionToOffset(doc.Text, params.Position)
 	prefix := wordPrefix(doc.Text, offset)
 
+	// The edit range covers the typed prefix including any trailing
+	// '.' trigger character, so the client replaces it with the full
+	// name rather than appending to it.
+	edit_range := protocol.Range{
+		Start: offsetToPosition(doc.Text, offset-len(prefix)),
+		End:   offsetToPosition(doc.Text, offset),
+	}
+
 	// A trailing '.' (the trigger character) should not prevent
 	// matching the callable name itself.
 	prefix = strings.TrimSuffix(prefix, ".")
 
-	return self.complete_prefix_names(doc, prefix), nil
+	return self.complete_prefix_names(doc, prefix, &edit_range), nil
 }
 
 // wordPrefix returns the identifier prefix ending at the given byte
