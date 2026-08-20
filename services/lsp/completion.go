@@ -78,7 +78,9 @@ func (self *LSPServer) complete_function_names(
 	match string) (items []protocol.CompletionItem) {
 
 	for _, desc := range LoadApiDescriptions() {
-		if strings.EqualFold(desc.Type, cs.Type) &&
+		// A symbol can act as a plugin or a function.
+		if (cs.Type == "symbol" ||
+			strings.EqualFold(desc.Type, cs.Type)) &&
 			strings.HasPrefix(desc.Name, match) {
 
 			desc_range := protocolRange(cs.Pos)
