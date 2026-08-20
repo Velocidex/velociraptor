@@ -1,0 +1,32 @@
+Diagnostics after valid change:
+[]
+Diagnostics after broken change:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 0
+   },
+   "end": {
+    "line": 0,
+    "character": 0
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(0,0) Generic Error: (globs='*'|: 1:29: lexer: invalid input text \"?\""
+ }
+]
+Completions after broken change:
+[
+ {
+  "label": "globs",
+  "labelDetails": {
+   "detail": "globs",
+   "description": "One or more glob patterns to apply to the filesystem."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ }
+]

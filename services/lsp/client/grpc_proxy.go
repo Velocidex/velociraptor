@@ -12,6 +12,7 @@ import (
 const (
 	InitializeOp = "Initialize"
 	DidOpenOp    = "DidOpen"
+	DidChangeOp  = "DidChange"
 	CompletionOp = "CompletionOp"
 	HoverOp      = "HoverOp"
 
@@ -119,6 +120,32 @@ func (self *LSPProxy) DidOpen(
 	diagnostics := []protocol.Diagnostic{}
 	uri := params.TextDocument.URI
 	err := self.forwardCall(ctx, DidOpenOp, params, &diagnostics)
+	if err != nil {
+		return err
+	}
+
+	// Unsolicited publication of the diagnostics.
+	lsp_client, ok := protocol.ClientFromContext(ctx)
+	if !ok {
+		return ErrorLspClientContextMissing
+	}
+
+	return lsp_client.PublishDiagnostics(ctx,
+		&protocol.PublishDiagnosticsParams{
+			URI:         uri,
+			Diagnostics: diagnostics,
+		})
+}
+
+func (self *LSPProxy) DidChange(
+	ctx context.Context, params *protocol.DidChangeTextDocumentParams) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	diagnostics := []protocol.Diagnostic{}
+	uri := params.TextDocument.URI
+	err := self.forwardCall(ctx, DidChangeOp, params, &diagnostics)
 	if err != nil {
 		return err
 	}

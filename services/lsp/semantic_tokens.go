@@ -71,7 +71,11 @@ func (self *LSPServer) SemanticTokensFull(
 
 	tokens, err := vfilter.Tokenize(doc.Text)
 	if err != nil {
-		return nil, err
+		// The document may be temporarily invalid while typing
+		// (e.g. a trigger character like '?' or '.'). Return empty
+		// tokens instead of failing so the editor keeps working
+		// and can clear the old highlighting.
+		return &protocol.SemanticTokens{}, nil
 	}
 
 	// Build a map of the callable plugins and functions. The API
