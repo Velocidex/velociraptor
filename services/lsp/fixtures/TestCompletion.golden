@@ -1,7 +1,7 @@
 
 Test case 0: Complete VQL function
 SELECT geoip(db='Foo', ip='127.0.0.1') AS Foo FROM scope()
-SELECT geoi<--
+SELECT geo<--
 Diagnostics:
 []
 Completions:
@@ -19,7 +19,7 @@ Completions:
 
 Test case 1: Complete VQL plugin
 SELECT * FROM scope()
-SELECT * FROM sco<--
+SELECT * FROM sc<--
 Diagnostics:
 []
 Completions:
@@ -55,7 +55,7 @@ Completions:
 
 Test case 3: Complete plugin all args
 SELECT * FROM glob()
-SELECT * FROM glob(<--
+SELECT * FROM glob<--
 Diagnostics:
 [
  {
@@ -134,7 +134,7 @@ Completions:
 
 Test case 4: Complete a plugin args
 SELECT * FROM glob(gloXXX='*')
-SELECT * FROM glob(gl<--
+SELECT * FROM glob(g<--
 Diagnostics:
 [
  {
@@ -183,7 +183,7 @@ Completions:
 
 Test case 5: Complete some plugin args (accessor already exists, so should not be completed) 
 SELECT * FROM glob(gloXXX='*', accessor='file')
-SELECT * FROM glob(<--
+SELECT * FROM glob<--
 Diagnostics:
 [
  {

@@ -19,11 +19,11 @@ var (
 	}{{
 		Name:   "Complete VQL function",
 		Query:  "SELECT geoip(db='Foo', ip='127.0.0.1') AS Foo FROM scope()",
-		Column: 11,
+		Column: 10,
 	}, {
 		Name:   "Complete VQL plugin",
 		Query:  "SELECT * FROM scope()",
-		Column: 17,
+		Column: 16,
 	}, {
 		Name:   "Complete VQL nested function",
 		Query:  "SELECT * FROM glob(globs=lowcase(string='*'))",
@@ -31,15 +31,15 @@ var (
 	}, {
 		Name:   "Complete plugin all args",
 		Query:  "SELECT * FROM glob()",
-		Column: 19,
+		Column: 18,
 	}, {
 		Name:   "Complete a plugin args",
 		Query:  "SELECT * FROM glob(gloXXX='*')",
-		Column: 21,
+		Column: 20,
 	}, {
 		Name:   "Complete some plugin args (accessor already exists, so should not be completed) ",
 		Query:  "SELECT * FROM glob(gloXXX='*', accessor='file')",
-		Column: 19,
+		Column: 18,
 	}}
 )
 

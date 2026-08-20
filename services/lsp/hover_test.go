@@ -89,8 +89,6 @@ func (self *LSPTestSuite) TestHover() {
 		golden = append(golden, lsp.DumpProtool(hover))
 	}
 
-	fmt.Println(strings.Join(golden, "\n"))
-
 	goldie.Assert(self.T(), "TestHover",
 		[]byte(strings.Join(golden, "\n")))
 }

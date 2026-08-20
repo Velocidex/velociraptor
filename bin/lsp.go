@@ -35,15 +35,8 @@ var (
 	lsp_cmd = app.Command("lsp",
 		"Run a VQL language server on stdin/stdout (LSP over stdio).")
 
-	lsp_command_datastore = lsp_cmd.Flag(
-		"datastore", "Path to a datastore directory (defaults to temp)").
-		ExistingDir()
-
 	lsp_log_file = lsp_cmd.Flag("log", "Write the LSP log to a file instead of stdout").
 			String()
-
-	lsp_check_plugin = lsp_cmd.Flag("check", "Check a VQL query and exit").
-				String()
 
 	lsp_cmd_port = lsp_cmd.Flag(
 		"port", "Is specified we listen on this TCP port, "+
@@ -143,6 +136,15 @@ func doLSP() error {
 	}
 	defer stdio.Close()
 
+	if *lsp_log_file != "" {
+		fd, err := os.OpenFile(*lsp_log_file,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return err
+		}
+		stdio.log_file = fd
+	}
+
 	stream := jsonrpc2.NewStream(stdio)
 	server_ctx, conn, _ := protocol.NewServer(ctx, server, stream)
 	select {
@@ -158,16 +160,31 @@ func doLSP() error {
 type stdioConn struct {
 	reader io.Reader
 	writer io.Writer
+
+	log_file *os.File
 }
 
 func (self stdioConn) Read(p []byte) (int, error) {
-	return self.reader.Read(p)
+	n, err := self.reader.Read(p)
+	if self.log_file != nil {
+		self.log_file.Write([]byte("\n<----\n"))
+		self.log_file.Write(p[:n])
+	}
+	return n, err
 }
 
 func (self stdioConn) Write(p []byte) (int, error) {
-	return self.writer.Write(p)
+	n, err := self.writer.Write(p)
+	if self.log_file != nil {
+		self.log_file.Write([]byte("\n---->\n"))
+		self.log_file.Write(p[:n])
+	}
+	return n, err
 }
 
 func (self stdioConn) Close() error {
+	if self.log_file != nil {
+		self.log_file.Close()
+	}
 	return nil
 }
