@@ -9,7 +9,6 @@ import (
 	errors "github.com/go-errors/errors"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -119,22 +118,27 @@ func doVerify() error {
 			if !pres {
 				continue
 			}
-
-			state, ok := result.(*launcher.AnalysisState)
+			state, ok := result.(*ordereddict.Dict)
 			if !ok {
 				continue
 			}
-			if len(state.Errors) == 0 {
+
+			analysis_errors, pres := state.GetStrings("Errors")
+			if len(analysis_errors) == 0 {
 				if !*verify_issues_only {
 					logger.Info("Verified %v: <green>OK</>", artifact_path)
 				}
 			}
-			for _, err := range state.Errors {
+			for _, err := range analysis_errors {
 				logger.Error("%v: <red>%v</>", artifact_path, err)
 				ret = errors.New(err)
 			}
-			for _, msg := range state.Warnings {
-				logger.Info("%v: %v", artifact_path, msg)
+
+			analysis_warnings, pres := state.GetStrings("Warnings")
+			if pres {
+				for _, msg := range analysis_warnings {
+					logger.Info("%v: %v", artifact_path, msg)
+				}
 			}
 		}
 	}
