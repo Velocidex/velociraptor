@@ -76,9 +76,15 @@ func (self *Document) matchCallsite(pos lexer.Position) (
 func (self *LSPServer) complete_function_names(
 	cs *vfilter.CallSite,
 	match string) (items []protocol.CompletionItem) {
+
 	for _, desc := range LoadApiDescriptions() {
 		if strings.EqualFold(desc.Type, cs.Type) &&
 			strings.HasPrefix(desc.Name, match) {
+
+			desc_range := protocolRange(cs.Pos)
+			desc_range.End = desc_range.Start
+			desc_range.End.Character += uint32(len(match) + 1)
+
 			items = append(items, protocol.CompletionItem{
 				Label: desc.Name,
 				LabelDetails: &protocol.CompletionItemLabelDetails{
@@ -87,6 +93,10 @@ func (self *LSPServer) complete_function_names(
 				},
 				Detail: protocol.NewOptional("Built in " + desc.Type),
 				Kind:   getKind(desc),
+				TextEdit: &protocol.TextEdit{
+					Range:   *desc_range,
+					NewText: desc.Name + "()",
+				},
 			})
 		}
 	}
@@ -94,13 +104,32 @@ func (self *LSPServer) complete_function_names(
 	return items
 }
 
+func (self *LSPServer) decorateArgWithTextEdit(
+	name string,
+	item *protocol.CompletionItem,
+	pos protocol.Position) {
+	desc_range := protocol.Range{
+		Start: pos,
+		End:   pos,
+	}
+	desc_range.End.Character--
+
+	item.TextEdit = &protocol.TextEdit{
+		Range:   desc_range,
+		NewText: name + "=",
+	}
+}
+
 func (self *LSPServer) complete_arg_names(
 	doc *Document,
 	cs *vfilter.CallSite,
-	offset_at_point int) (items []protocol.CompletionItem) {
+	offset_at_point int,
+	pos protocol.Position,
+	trigger_kind protocol.CompletionTriggerKind,
+) (items []protocol.CompletionItem) {
 
 	// Find the description for the function
-	desc := doc.getVQLFunctionDescription(cs)
+	desc := doc.getVQLFunctionDescription(cs.Name, cs.Type)
 	if desc == nil {
 		return nil
 	}
@@ -123,7 +152,7 @@ func (self *LSPServer) complete_arg_names(
 
 			for _, arg_desc := range desc.Args {
 				if strings.HasPrefix(arg_desc.Name, match) {
-					items = append(items, protocol.CompletionItem{
+					item := protocol.CompletionItem{
 						Label: arg_desc.Name,
 						LabelDetails: &protocol.CompletionItemLabelDetails{
 							Detail:      &arg_desc.Name,
@@ -131,30 +160,40 @@ func (self *LSPServer) complete_arg_names(
 						},
 						Detail: protocol.NewOptional(desc.Type + " arg"),
 						Kind:   protocol.CompletionItemKindVariable,
-					})
+					}
+
+					if trigger_kind == protocol.CompletionTriggerKindTriggerCharacter {
+						self.decorateArgWithTextEdit(
+							arg_desc.Name, &item, pos)
+					}
+
+					items = append(items, item)
 				}
 			}
 		}
 	}
 
-	if len(items) == 0 {
-		for _, arg_desc := range desc.Args {
-			_, pres := found[arg_desc.Name]
-			if pres {
-				continue
-			}
-
-			items = append(items, protocol.CompletionItem{
-				Label: arg_desc.Name,
-				LabelDetails: &protocol.CompletionItemLabelDetails{
-					Detail:      &arg_desc.Name,
-					Description: &arg_desc.Description,
-				},
-				Detail: protocol.NewOptional(desc.Type + " arg"),
-				Kind:   protocol.CompletionItemKindVariable,
-			})
+	for _, arg_desc := range desc.Args {
+		_, pres := found[arg_desc.Name]
+		if pres {
+			continue
 		}
-		return items
+
+		item := protocol.CompletionItem{
+			Label: arg_desc.Name,
+			LabelDetails: &protocol.CompletionItemLabelDetails{
+				Detail:      &arg_desc.Name,
+				Description: &arg_desc.Description,
+			},
+			Detail: protocol.NewOptional(desc.Type + " arg"),
+			Kind:   protocol.CompletionItemKindVariable,
+		}
+
+		if trigger_kind == protocol.CompletionTriggerKindTriggerCharacter {
+			self.decorateArgWithTextEdit(arg_desc.Name, &item, pos)
+		}
+
+		items = append(items, item)
 	}
 
 	return items
@@ -166,6 +205,8 @@ func (self *LSPServer) Completion(
 
 	items := []protocol.CompletionItem{}
 
+	trigger := params.Context.TriggerKind
+
 	doc, err := self.getDoc(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
@@ -173,7 +214,6 @@ func (self *LSPServer) Completion(
 
 	// Find the function at point
 	pos := lexerPositionFromProtocol(params.Position)
-
 	cs, offset_at_point, err := doc.matchCallsite(pos)
 
 	// The position is sitting inside a call site.
@@ -184,14 +224,15 @@ func (self *LSPServer) Completion(
 		// Match is partial name - we need to complete the name:
 		// callsite: foobar(...)
 		// cs_to_point match: foo
-		if len(match) < len(cs.Name) {
+		if len(match) <= len(cs.Name) {
 			items = append(items, self.complete_function_names(
 				cs, match)...)
 		} else {
 			items = append(items, self.complete_arg_names(
-				doc, cs, offset_at_point)...)
+				doc, cs, offset_at_point, params.Position, trigger)...)
 		}
 	}
+
 	return items, nil
 }
 
@@ -235,19 +276,16 @@ func getNextOffset(
 	pos lexer.Position) (offset int, err error) {
 
 	cur_line := start.Line
-	cur_col := start.Column
+	cur_col := start.Column + 1
 	for idx, char := range text[start.Offset:] {
 		if char == '\n' {
 			cur_line++
 			cur_col = 1
 		}
 
-		if cur_col == pos.Column && cur_line == pos.Line {
+		if cur_col == pos.Column && cur_line == pos.Line ||
+			cur_line > pos.Line {
 			return idx + start.Offset, nil
-		}
-
-		if cur_line > pos.Line {
-			break
 		}
 		cur_col++
 	}
@@ -255,17 +293,28 @@ func getNextOffset(
 }
 
 func (self *Document) getVQLFunctionDescription(
-	cs *vfilter.CallSite) *api_proto.Completion {
+	name, cs_type string) *api_proto.Completion {
 
-	for _, desc := range LoadApiDescriptions() {
-		if desc.Name == cs.Name &&
-			strings.EqualFold(desc.Type, cs.Type) {
-			return desc
+	mu.Lock()
+	// Manage the local global cache
+	if func_lookup == nil {
+		func_lookup = make(map[string]*api_proto.Completion)
+
+		for _, desc := range loadApiDescriptions() {
+			key := desc.Name
+			func_lookup[key] = desc
 		}
 	}
 
+	desc, pres := func_lookup[name]
+	if pres {
+		defer mu.Unlock()
+		return desc
+	}
+	mu.Unlock()
+
 	// Maybe the descriptor is a defined function
-	local_definition, ok := self.AnalysisState.Definitions[cs.Name]
+	local_definition, ok := self.AnalysisState.Definitions[name]
 	if !ok {
 		return nil
 	}

@@ -392,9 +392,36 @@ class FlowsList extends React.Component {
             this.setState({
                 offlineSpecs: specs[0].parameters,
                 showOfflineWizard: true});
-        } else {
-            this.setState({showCopyWizard: true});
+
+            return;
         }
+
+        // Get the full flow request so we can copy it into the
+        // GUI.
+        let flow_id = this.props.selected_flow &&
+            this.props.selected_flow.session_id;
+        let client_id = this.props.selected_flow &&
+            this.props.selected_flow.client_id;
+
+        if (!flow_id || !client_id) {
+            return;
+        }
+
+        api.get("v1/GetFlowDetails", {
+            flow_id: flow_id,
+            client_id: client_id,
+            include_full_request: true,
+        }, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            };
+
+            let flow = response.data.context;
+            this.setState({
+                full_request: flow,
+                showCopyWizard: true,
+            });
+        });
     };
 
     render() {

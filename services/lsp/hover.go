@@ -24,7 +24,7 @@ func (self *LSPServer) Hover(
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
 	if err == nil {
-		desc := doc.getVQLFunctionDescription(cs)
+		desc := doc.getVQLFunctionDescription(cs.Name, cs.Type)
 		if desc == nil {
 			return &protocol.Hover{}, nil
 		}

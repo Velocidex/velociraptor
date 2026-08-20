@@ -32,7 +32,16 @@ func (self *LSPServer) Initialize(
 			// Artifact.Linux.Sys) or '(' (as in pslist() ) should
 			// trigger completion.
 			CompletionProvider: &protocol.CompletionOptions{
-				TriggerCharacters: []string{".", "("},
+				TriggerCharacters: []string{".", "(", "?"},
+			},
+
+			// The server provides semantic highlighting.
+			SemanticTokensProvider: &protocol.SemanticTokensOptions{
+				Legend: protocol.SemanticTokensLegend{
+					TokenTypes:     tokenTypesLegend,
+					TokenModifiers: tokenModifiersLegend,
+				},
+				Full: protocol.Boolean(true),
 			},
 		},
 		ServerInfo: protocol.ServerInfo{
