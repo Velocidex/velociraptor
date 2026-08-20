@@ -81,6 +81,39 @@ func (self *LSPTestSuite) TestDidChange() {
 	golden = append(golden, "Completions after broken change:")
 	golden = append(golden, lsp.DumpProtool(completions))
 
+	// Now break the parse in a multi-statement document. The largest
+	// valid prefix (the first statement) should be salvaged so the
+	// analysis reflects the current text, not the old snapshot.
+	_, err = lsp_service.DidChange(self.Ctx,
+		&protocol.DidChangeTextDocumentParams{
+			TextDocument: protocol.VersionedTextDocumentIdentifier{
+				TextDocumentIdentifier: protocol.TextDocumentIdentifier{
+					URI: doc,
+				},
+				Version: 4,
+			},
+			ContentChanges: []protocol.TextDocumentContentChangeEvent{
+				&protocol.TextDocumentContentChangeWholeDocument{
+					Text: "LET X = 5\nSELECT * FROM pslist(pid=X)\nSELECT * FROM glob(globs='*'?",
+				},
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	// Completion inside the salvaged pslist() callsite should work.
+	completions, err = lsp_service.Completion(self.Ctx,
+		&protocol.CompletionParams{
+			TextDocumentPositionParams: protocol.TextDocumentPositionParams{
+				TextDocument: protocol.TextDocumentIdentifier{
+					URI: doc,
+				},
+				Position: protocol.Position{Line: 1, Character: 22},
+			},
+		})
+	assert.NoError(self.T(), err)
+	golden = append(golden, "Completions after broken multi-statement change:")
+	golden = append(golden, lsp.DumpProtool(completions))
+
 	goldie.Assert(self.T(), "TestDidChange",
 		[]byte(strings.Join(golden, "\n")))
 }

@@ -30,3 +30,15 @@ Completions after broken change:
   "detail": "Plugin arg"
  }
 ]
+Completions after broken multi-statement change:
+[
+ {
+  "label": "pid",
+  "labelDetails": {
+   "detail": "pid",
+   "description": "A process ID to list. If not provided list all processes."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ }
+]

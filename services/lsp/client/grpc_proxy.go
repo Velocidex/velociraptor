@@ -13,6 +13,7 @@ const (
 	InitializeOp = "Initialize"
 	DidOpenOp    = "DidOpen"
 	DidChangeOp  = "DidChange"
+	DidCloseOp   = "DidClose"
 	CompletionOp = "CompletionOp"
 	HoverOp      = "HoverOp"
 
@@ -151,6 +152,33 @@ func (self *LSPProxy) DidChange(
 	}
 
 	// Unsolicited publication of the diagnostics.
+	lsp_client, ok := protocol.ClientFromContext(ctx)
+	if !ok {
+		return ErrorLspClientContextMissing
+	}
+
+	return lsp_client.PublishDiagnostics(ctx,
+		&protocol.PublishDiagnosticsParams{
+			URI:         uri,
+			Diagnostics: diagnostics,
+		})
+}
+
+func (self *LSPProxy) DidClose(
+	ctx context.Context, params *protocol.DidCloseTextDocumentParams) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	diagnostics := []protocol.Diagnostic{}
+	uri := params.TextDocument.URI
+	err := self.forwardCall(ctx, DidCloseOp, params, &diagnostics)
+	if err != nil {
+		return err
+	}
+
+	// Unsolicited publication of the (empty) diagnostics to clear
+	// the ones from the closed document.
 	lsp_client, ok := protocol.ClientFromContext(ctx)
 	if !ok {
 		return ErrorLspClientContextMissing

@@ -89,6 +89,20 @@ func (self *LSPServer) LSP(
 
 		return self.returnRespose(result)
 
+	case client.DidCloseOp:
+		req := &protocol.DidCloseTextDocumentParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DidClose(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return self.returnRespose(result)
+
 	case client.CompletionOp:
 		req := &protocol.CompletionParams{}
 		err := protocol.Unmarshal([]byte(in.Json), req)
