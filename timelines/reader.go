@@ -39,6 +39,7 @@ type TimelineReader struct {
 	index_stat        api.FileInfo
 
 	transformer Transformer
+	filename    string
 }
 
 func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
@@ -154,6 +155,7 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 func (self *TimelineReader) Close() {
 	self.fd.Close()
 	self.index_fd.Close()
+	files.Remove(self.filename)
 }
 
 func (self TimelineReader) New(
@@ -201,6 +203,7 @@ func (self TimelineReader) New(
 		}),
 		index_stat:  stats,
 		transformer: transformer,
+		filename:    filename.AsClientPath(),
 	}, nil
 
 }

@@ -13,7 +13,20 @@ Completions:
    "description": "Lookup an IP Address using the MaxMind GeoIP database"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 11
+    }
+   },
+   "newText": "geoip()"
+  }
  }
 ]
 
@@ -31,7 +44,20 @@ Completions:
    "description": "The scope plugin returns the current scope as a single row"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 17
+    }
+   },
+   "newText": "scope()"
+  }
  }
 ]
 
@@ -49,13 +75,26 @@ Completions:
    "description": "Returns the lowercase version of a string"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 25
+    },
+    "end": {
+     "line": 0,
+     "character": 30
+    }
+   },
+   "newText": "lowcase()"
+  }
  }
 ]
 
 Test case 3: Complete plugin all args
 SELECT * FROM glob()
-SELECT * FROM glob<--
+SELECT * FROM glob(<--
 Diagnostics:
 [
  {
@@ -178,12 +217,66 @@ Completions:
   },
   "kind": 6,
   "detail": "Plugin arg"
+ },
+ {
+  "label": "globs",
+  "labelDetails": {
+   "detail": "globs",
+   "description": "One or more glob patterns to apply to the filesystem."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "root",
+  "labelDetails": {
+   "detail": "root",
+   "description": "The root directory to glob from (default '')."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "accessor",
+  "labelDetails": {
+   "detail": "accessor",
+   "description": "An accessor to use."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "nosymlink",
+  "labelDetails": {
+   "detail": "nosymlink",
+   "description": "If set we do not follow symlinks."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "recursion_callback",
+  "labelDetails": {
+   "detail": "recursion_callback",
+   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
+ {
+  "label": "one_filesystem",
+  "labelDetails": {
+   "detail": "one_filesystem",
+   "description": "If set we do not follow links to other filesystems."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
  }
 ]
 
 Test case 5: Complete some plugin args (accessor already exists, so should not be completed) 
 SELECT * FROM glob(gloXXX='*', accessor='file')
-SELECT * FROM glob<--
+SELECT * FROM glob(g<--
 Diagnostics:
 [
  {
@@ -219,6 +312,15 @@ Diagnostics:
 ]
 Completions:
 [
+ {
+  "label": "globs",
+  "labelDetails": {
+   "detail": "globs",
+   "description": "One or more glob patterns to apply to the filesystem."
+  },
+  "kind": 6,
+  "detail": "Plugin arg"
+ },
  {
   "label": "globs",
   "labelDetails": {

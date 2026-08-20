@@ -23,7 +23,7 @@ server to serve the actual LSP connections.
 
 To connect the LSP server to remove deployment simply create an API
 key as described in the docs. You only need a key with the `reader`
-role. Store the key somethere on the local system.
+role. Store the key somewhere on the local system.
 
 Create a shell script (for example ~/bin/vqllsp) with execute permissions:
 ```bash

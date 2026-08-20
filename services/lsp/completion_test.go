@@ -19,27 +19,27 @@ var (
 	}{{
 		Name:   "Complete VQL function",
 		Query:  "SELECT geoip(db='Foo', ip='127.0.0.1') AS Foo FROM scope()",
-		Column: 10,
+		Column: 11,
 	}, {
 		Name:   "Complete VQL plugin",
 		Query:  "SELECT * FROM scope()",
-		Column: 16,
+		Column: 17,
 	}, {
 		Name:   "Complete VQL nested function",
 		Query:  "SELECT * FROM glob(globs=lowcase(string='*'))",
-		Column: 46 - 17,
+		Column: 47 - 17,
 	}, {
 		Name:   "Complete plugin all args",
 		Query:  "SELECT * FROM glob()",
-		Column: 18,
+		Column: 20,
 	}, {
 		Name:   "Complete a plugin args",
 		Query:  "SELECT * FROM glob(gloXXX='*')",
-		Column: 20,
+		Column: 21,
 	}, {
 		Name:   "Complete some plugin args (accessor already exists, so should not be completed) ",
 		Query:  "SELECT * FROM glob(gloXXX='*', accessor='file')",
-		Column: 18,
+		Column: 21,
 	}}
 )
 
@@ -57,7 +57,7 @@ func (self *LSPTestSuite) TestCompletion() {
 
 		golden = append(golden, fmt.Sprintf(
 			"\nTest case %d: %s\n%v\n%v<--",
-			idx, tc.Name, tc.Query, tc.Query[:tc.Column]))
+			idx, tc.Name, tc.Query, tc.Query[:tc.Column-1]))
 
 		// Load the document.
 		diagnostics, err := lsp_service.DidOpen(self.Ctx,
