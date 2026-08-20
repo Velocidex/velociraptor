@@ -6,6 +6,7 @@ option go_package = "www.velocidex.com/golang/velociraptor/api/proto";
 
 message LSPRequest {
     string operation = 1;
+    uint32 id = 3;
     string json = 2;
 }
 

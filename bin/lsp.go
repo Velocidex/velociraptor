@@ -23,6 +23,7 @@ import (
 	"io"
 	"net"
 	"os"
+	"time"
 
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
@@ -113,21 +114,6 @@ func doLSP() error {
 		identity = grpc_client.API_User
 	}
 
-	// Make a remote query using the API - we better have user API
-	// credentials in the config file.
-	api_client, closer, err := grpc_client.Factory.GetAPIClient(
-		ctx, identity, config_obj)
-	if err != nil {
-		return err
-	}
-	defer func() { _ = closer() }()
-
-	server := lsp_client.NewLSPProxy(api_client)
-	// Listen on TCP
-	if *lsp_cmd_port > 0 {
-		return listenOnTCP(ctx, server, *lsp_cmd_port)
-	}
-
 	// The LSP protocol runs over stdio. It is important that nothing
 	// else writes to stdout, so we may redirect logging elsewhere.
 	stdio := stdioConn{
@@ -143,6 +129,21 @@ func doLSP() error {
 			return err
 		}
 		stdio.log_file = fd
+	}
+
+	// Make a remote query using the API - we better have user API
+	// credentials in the config file.
+	api_client, closer, err := grpc_client.Factory.GetAPIClient(
+		ctx, identity, config_obj)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = closer() }()
+
+	server := lsp_client.NewLSPProxy(api_client, stdio.log_file)
+	// Listen on TCP
+	if *lsp_cmd_port > 0 {
+		return listenOnTCP(ctx, server, *lsp_cmd_port)
 	}
 
 	stream := jsonrpc2.NewStream(stdio)
@@ -167,7 +168,9 @@ type stdioConn struct {
 func (self stdioConn) Read(p []byte) (int, error) {
 	n, err := self.reader.Read(p)
 	if self.log_file != nil {
-		self.log_file.Write([]byte("\n<----\n"))
+		fmt.Fprintf(self.log_file,
+			"\n%v <----\n", time.Now().Format(time.RFC3339Nano))
+
 		self.log_file.Write(p[:n])
 	}
 	return n, err
@@ -176,7 +179,8 @@ func (self stdioConn) Read(p []byte) (int, error) {
 func (self stdioConn) Write(p []byte) (int, error) {
 	n, err := self.writer.Write(p)
 	if self.log_file != nil {
-		self.log_file.Write([]byte("\n---->\n"))
+		fmt.Fprintf(self.log_file,
+			"\n%v ---->\n", time.Now().Format(time.RFC3339Nano))
 		self.log_file.Write(p[:n])
 	}
 	return n, err

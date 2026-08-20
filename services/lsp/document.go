@@ -4,22 +4,40 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
+	"www.velocidex.com/golang/vfilter"
 )
 
 // The document represents the parsed VQL document and its analysis
 // state. We cache the document in the server by URI so we can serve
 // other lsp queries for it quickly.
 type Document struct {
+	mu sync.Mutex
+
 	URI           uri.URI
 	Text          string
 	AnalysisState *launcher.AnalysisState
 	Errors        []*launcher.VerifierError
+	tokens        []vfilter.Token
+}
+
+func (self *Document) Tokenize() []vfilter.Token {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	tokens, err := vfilter.Tokenize(self.Text)
+	if err != nil {
+		return self.tokens
+	}
+
+	self.tokens = tokens
+	return tokens
 }
 
 func (self *Document) Debug() string {
@@ -29,6 +47,58 @@ func (self *Document) Debug() string {
 	}
 	res = append(res, self.AnalysisState.Debug())
 	return strings.Join(res, "\n")
+}
+
+// Update the current analysis state to the new text. We try to keep
+// as many of the callsite as possible by verifying them against the
+// new text.
+func (self *Document) UpdateTextFromDocument(other *Document) {
+	state := self.AnalysisState
+
+	new_state := &launcher.AnalysisState{
+		Definitions:   make(map[string]vfilter.DefinitionSite),
+		FailedToParse: other.AnalysisState.FailedToParse,
+	}
+
+	// Update the top level queries
+	for _, tlp := range state.TopLevelQueries {
+		old_text := self.getFragment(tlp.Pos.Pos.Offset,
+			tlp.Pos.EndPos.Offset)
+		new_text := other.getFragment(tlp.Pos.Pos.Offset,
+			tlp.Pos.EndPos.Offset)
+		if old_text == new_text {
+			new_state.TopLevelQueries = append(
+				new_state.TopLevelQueries, tlp)
+		}
+	}
+
+	// Update the callsites
+	for _, cs := range state.Callsites {
+		old_text := self.getFragment(cs.Pos.Pos.Offset,
+			cs.Pos.Pos.Offset+len(cs.Name))
+		new_text := other.getFragment(cs.Pos.Pos.Offset,
+			cs.Pos.Pos.Offset+len(cs.Name))
+		if old_text == new_text {
+			new_state.Callsites = append(new_state.Callsites, cs)
+		}
+	}
+
+	// Update the definitions
+	for key, desc := range state.Definitions {
+		old_text := self.getFragment(desc.Pos.Pos.Offset,
+			desc.Pos.EndPos.Offset)
+		new_text := other.getFragment(desc.Pos.Pos.Offset,
+			desc.Pos.EndPos.Offset)
+		if old_text == new_text {
+			new_state.Definitions[key] = desc
+		}
+	}
+
+	// Merge the new state to the current state.
+	state.TopLevelQueries = new_state.TopLevelQueries
+	state.Callsites = new_state.Callsites
+	state.Definitions = new_state.Definitions
+	self.Text = other.Text
 }
 
 func (self *Document) Diagnostics() (res []*protocol.Diagnostic) {
