@@ -146,6 +146,19 @@ func (self *LSPServer) LSP(
 		}
 		return self.returnRespose(result)
 
+	case client.DocumentSymbolsOp:
+		req := &protocol.DocumentSymbolParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DocumentSymbol(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
 	case client.InlayHintOp:
 		req := &protocol.InlayHintParams{}
 		err := protocol.Unmarshal([]byte(in.Json), req)

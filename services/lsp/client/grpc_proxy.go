@@ -21,6 +21,8 @@ const (
 
 	WorkspaceSymbolsOp = "WorkspaceSymbolsOp"
 
+	DocumentSymbolsOp = "DocumentSymbolsOp"
+
 	InlayHintOp = "InlayHintOp"
 
 	CodeActionOp = "CodeActionOp"
@@ -160,6 +162,17 @@ func (self *LSPProxy) Symbols(
 		return nil, err
 	}
 	return protocol.WorkspaceSymbolSlice(result), nil
+}
+
+func (self *LSPProxy) DocumentSymbol(
+	ctx context.Context, params *protocol.DocumentSymbolParams) (
+	protocol.DocumentSymbolResult, error) {
+	result := []protocol.DocumentSymbol{}
+	err := self.forwardCall(ctx, DocumentSymbolsOp, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return protocol.DocumentSymbolSlice(result), nil
 }
 
 func (self *LSPProxy) InlayHint(
