@@ -13,7 +13,11 @@ Completions:
    "description": "Lookup an IP Address using the MaxMind GeoIP database"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Lookup an IP Address using the MaxMind GeoIP database"
+  }
  }
 ]
 
@@ -31,7 +35,11 @@ Completions:
    "description": "The scope plugin returns the current scope as a single row"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "The scope plugin returns the current scope as a single row"
+  }
  }
 ]
 
@@ -49,7 +57,11 @@ Completions:
    "description": "Returns the lowercase version of a string"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Returns the lowercase version of a string"
+  }
  }
 ]
 
@@ -83,7 +95,11 @@ Completions:
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "One or more glob patterns to apply to the filesystem."
+  }
  },
  {
   "label": "root",
@@ -92,7 +108,11 @@ Completions:
    "description": "The root directory to glob from (default '')."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "The root directory to glob from (default '')."
+  }
  },
  {
   "label": "accessor",
@@ -101,7 +121,11 @@ Completions:
    "description": "An accessor to use."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "An accessor to use."
+  }
  },
  {
   "label": "nosymlink",
@@ -110,7 +134,11 @@ Completions:
    "description": "If set we do not follow symlinks."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "If set we do not follow symlinks."
+  }
  },
  {
   "label": "recursion_callback",
@@ -119,7 +147,11 @@ Completions:
    "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  }
  },
  {
   "label": "one_filesystem",
@@ -128,7 +160,11 @@ Completions:
    "description": "If set we do not follow links to other filesystems."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "If set we do not follow links to other filesystems."
+  }
  }
 ]
 
@@ -177,7 +213,11 @@ Completions:
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "One or more glob patterns to apply to the filesystem."
+  }
  }
 ]
 
@@ -226,7 +266,11 @@ Completions:
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "One or more glob patterns to apply to the filesystem."
+  }
  },
  {
   "label": "root",
@@ -235,7 +279,11 @@ Completions:
    "description": "The root directory to glob from (default '')."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "The root directory to glob from (default '')."
+  }
  },
  {
   "label": "nosymlink",
@@ -244,7 +292,11 @@ Completions:
    "description": "If set we do not follow symlinks."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "If set we do not follow symlinks."
+  }
  },
  {
   "label": "recursion_callback",
@@ -253,7 +305,11 @@ Completions:
    "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  }
  },
  {
   "label": "one_filesystem",
@@ -262,7 +318,11 @@ Completions:
    "description": "If set we do not follow links to other filesystems."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "If set we do not follow links to other filesystems."
+  }
  }
 ]
 
@@ -296,7 +356,11 @@ Completions:
    "description": "Parse log files generated by auditd"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse log files generated by auditd"
+  }
  },
  {
   "label": "parse_binary",
@@ -305,7 +369,11 @@ Completions:
    "description": "Parse a binary file into a data structure using a profile"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a binary file into a data structure using a profile"
+  }
  },
  {
   "label": "parse_csv",
@@ -314,7 +382,11 @@ Completions:
    "description": "Parses events from a CSV file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a CSV file"
+  }
  },
  {
   "label": "parse_ese",
@@ -323,7 +395,11 @@ Completions:
    "description": "Opens an ESE file and dump a table"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump a table"
+  }
  },
  {
   "label": "parse_ese_catalog",
@@ -332,7 +408,11 @@ Completions:
    "description": "Opens an ESE file and dump the schema"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump the schema"
+  }
  },
  {
   "label": "parse_evtx",
@@ -341,7 +421,11 @@ Completions:
    "description": "Parses events from an EVTX file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from an EVTX file"
+  }
  },
  {
   "label": "parse_float",
@@ -350,7 +434,11 @@ Completions:
    "description": "Convert a string to a float"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Convert a string to a float"
+  }
  },
  {
   "label": "parse_journald",
@@ -359,7 +447,11 @@ Completions:
    "description": "Parse a journald file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a journald file"
+  }
  },
  {
   "label": "parse_json",
@@ -368,7 +460,11 @@ Completions:
    "description": "Parse a JSON string into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a JSON string into an object"
+  }
  },
  {
   "label": "parse_json_array",
@@ -377,7 +473,11 @@ Completions:
    "description": "Parse a JSON string into an array"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a JSON string into an array"
+  }
  },
  {
   "label": "parse_json_array",
@@ -386,7 +486,11 @@ Completions:
    "description": "Parses events from a line oriented json file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a line oriented json file"
+  }
  },
  {
   "label": "parse_jsonl",
@@ -395,7 +499,11 @@ Completions:
    "description": "Parses a line oriented json file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a line oriented json file"
+  }
  },
  {
   "label": "parse_lines",
@@ -404,7 +512,11 @@ Completions:
    "description": "Parse a file separated into lines"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a file separated into lines"
+  }
  },
  {
   "label": "parse_mft",
@@ -413,7 +525,11 @@ Completions:
    "description": "Scan the $MFT from an NTFS volume"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $MFT from an NTFS volume"
+  }
  },
  {
   "label": "parse_ntfs",
@@ -422,7 +538,11 @@ Completions:
    "description": "Parse specific inodes from an NTFS image file or the raw device"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse specific inodes from an NTFS image file or the raw device"
+  }
  },
  {
   "label": "parse_ntfs_i30",
@@ -431,7 +551,11 @@ Completions:
    "description": "Scan the $I30 stream from an NTFS MFT entry"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $I30 stream from an NTFS MFT entry"
+  }
  },
  {
   "label": "parse_ntfs_ranges",
@@ -440,7 +564,11 @@ Completions:
    "description": "Show the run ranges for an NTFS stream"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Show the run ranges for an NTFS stream"
+  }
  },
  {
   "label": "parse_pe",
@@ -449,7 +577,11 @@ Completions:
    "description": "Parse a PE file"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PE file"
+  }
  },
  {
   "label": "parse_pkcs7",
@@ -458,7 +590,11 @@ Completions:
    "description": "Parse a DER encoded pkcs7 string into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a DER encoded pkcs7 string into an object"
+  }
  },
  {
   "label": "parse_pst",
@@ -467,7 +603,11 @@ Completions:
    "description": "Parse a PST file and extract email data"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PST file and extract email data"
+  }
  },
  {
   "label": "parse_records_with_regex",
@@ -476,7 +616,11 @@ Completions:
    "description": "Parses a file with a set of regexp and yields matches as records"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a file with a set of regexp and yields matches as records"
+  }
  },
  {
   "label": "parse_recyclebin",
@@ -485,7 +629,11 @@ Completions:
    "description": "Parses a $I file found in the $Recycle"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a $I file found in the $Recycle"
+  }
  },
  {
   "label": "parse_string_with_regex",
@@ -494,7 +642,11 @@ Completions:
    "description": "Parse a string with a set of regex and extract fields"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a string with a set of regex and extract fields"
+  }
  },
  {
   "label": "parse_usn",
@@ -503,7 +655,11 @@ Completions:
    "description": "Parse the USN journal from a device, image file or USN file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse the USN journal from a device, image file or USN file"
+  }
  },
  {
   "label": "parse_x509",
@@ -512,7 +668,11 @@ Completions:
    "description": "Parse a DER encoded x509 string into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a DER encoded x509 string into an object"
+  }
  },
  {
   "label": "parse_xml",
@@ -521,7 +681,11 @@ Completions:
    "description": "Parse an XML document into a dict like object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse an XML document into a dict like object"
+  }
  },
  {
   "label": "parse_yaml",
@@ -530,7 +694,11 @@ Completions:
    "description": "Parse yaml into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse yaml into an object"
+  }
  }
 ]
 
@@ -548,7 +716,11 @@ Completions:
    "description": "Parse log files generated by auditd"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse log files generated by auditd"
+  }
  },
  {
   "label": "parse_binary",
@@ -557,7 +729,11 @@ Completions:
    "description": "Parse a binary file into a data structure using a profile"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a binary file into a data structure using a profile"
+  }
  },
  {
   "label": "parse_csv",
@@ -566,7 +742,11 @@ Completions:
    "description": "Parses events from a CSV file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a CSV file"
+  }
  },
  {
   "label": "parse_ese",
@@ -575,7 +755,11 @@ Completions:
    "description": "Opens an ESE file and dump a table"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump a table"
+  }
  },
  {
   "label": "parse_ese_catalog",
@@ -584,7 +768,11 @@ Completions:
    "description": "Opens an ESE file and dump the schema"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump the schema"
+  }
  },
  {
   "label": "parse_evtx",
@@ -593,7 +781,11 @@ Completions:
    "description": "Parses events from an EVTX file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from an EVTX file"
+  }
  },
  {
   "label": "parse_float",
@@ -602,7 +794,11 @@ Completions:
    "description": "Convert a string to a float"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Convert a string to a float"
+  }
  },
  {
   "label": "parse_journald",
@@ -611,7 +807,11 @@ Completions:
    "description": "Parse a journald file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a journald file"
+  }
  },
  {
   "label": "parse_json",
@@ -620,7 +820,11 @@ Completions:
    "description": "Parse a JSON string into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a JSON string into an object"
+  }
  },
  {
   "label": "parse_json_array",
@@ -629,7 +833,11 @@ Completions:
    "description": "Parse a JSON string into an array"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a JSON string into an array"
+  }
  },
  {
   "label": "parse_json_array",
@@ -638,7 +846,11 @@ Completions:
    "description": "Parses events from a line oriented json file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a line oriented json file"
+  }
  },
  {
   "label": "parse_jsonl",
@@ -647,7 +859,11 @@ Completions:
    "description": "Parses a line oriented json file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a line oriented json file"
+  }
  },
  {
   "label": "parse_lines",
@@ -656,7 +872,11 @@ Completions:
    "description": "Parse a file separated into lines"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a file separated into lines"
+  }
  },
  {
   "label": "parse_mft",
@@ -665,7 +885,11 @@ Completions:
    "description": "Scan the $MFT from an NTFS volume"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $MFT from an NTFS volume"
+  }
  },
  {
   "label": "parse_ntfs",
@@ -674,7 +898,11 @@ Completions:
    "description": "Parse specific inodes from an NTFS image file or the raw device"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse specific inodes from an NTFS image file or the raw device"
+  }
  },
  {
   "label": "parse_ntfs_i30",
@@ -683,7 +911,11 @@ Completions:
    "description": "Scan the $I30 stream from an NTFS MFT entry"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $I30 stream from an NTFS MFT entry"
+  }
  },
  {
   "label": "parse_ntfs_ranges",
@@ -692,7 +924,11 @@ Completions:
    "description": "Show the run ranges for an NTFS stream"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Show the run ranges for an NTFS stream"
+  }
  },
  {
   "label": "parse_pe",
@@ -701,7 +937,11 @@ Completions:
    "description": "Parse a PE file"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PE file"
+  }
  },
  {
   "label": "parse_pkcs7",
@@ -710,7 +950,11 @@ Completions:
    "description": "Parse a DER encoded pkcs7 string into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a DER encoded pkcs7 string into an object"
+  }
  },
  {
   "label": "parse_pst",
@@ -719,7 +963,11 @@ Completions:
    "description": "Parse a PST file and extract email data"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PST file and extract email data"
+  }
  },
  {
   "label": "parse_records_with_regex",
@@ -728,7 +976,11 @@ Completions:
    "description": "Parses a file with a set of regexp and yields matches as records"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a file with a set of regexp and yields matches as records"
+  }
  },
  {
   "label": "parse_recyclebin",
@@ -737,7 +989,11 @@ Completions:
    "description": "Parses a $I file found in the $Recycle"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a $I file found in the $Recycle"
+  }
  },
  {
   "label": "parse_string_with_regex",
@@ -746,7 +1002,11 @@ Completions:
    "description": "Parse a string with a set of regex and extract fields"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a string with a set of regex and extract fields"
+  }
  },
  {
   "label": "parse_usn",
@@ -755,7 +1015,11 @@ Completions:
    "description": "Parse the USN journal from a device, image file or USN file"
   },
   "kind": 1,
-  "detail": "Built in Plugin"
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse the USN journal from a device, image file or USN file"
+  }
  },
  {
   "label": "parse_x509",
@@ -764,7 +1028,11 @@ Completions:
    "description": "Parse a DER encoded x509 string into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a DER encoded x509 string into an object"
+  }
  },
  {
   "label": "parse_xml",
@@ -773,7 +1041,11 @@ Completions:
    "description": "Parse an XML document into a dict like object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse an XML document into a dict like object"
+  }
  },
  {
   "label": "parse_yaml",
@@ -782,6 +1054,10 @@ Completions:
    "description": "Parse yaml into an object"
   },
   "kind": 1,
-  "detail": "Built in Function"
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse yaml into an object"
+  }
  }
 ]

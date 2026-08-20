@@ -27,7 +27,11 @@ Completions after broken change:
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "One or more glob patterns to apply to the filesystem."
+  }
  }
 ]
 Completions after broken multi-statement change:
@@ -39,6 +43,10 @@ Completions after broken multi-statement change:
    "description": "A process ID to list. If not provided list all processes."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "A process ID to list. If not provided list all processes."
+  }
  }
 ]

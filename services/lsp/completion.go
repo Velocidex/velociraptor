@@ -86,7 +86,11 @@ func (self *LSPServer) complete_function_names(
 					Description: &desc.Description,
 				},
 				Detail: protocol.NewOptional("Built in " + desc.Type),
-				Kind:   getKind(desc),
+				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+					Kind:  markupKind(desc.Type),
+					Value: desc.Description,
+				}),
+				Kind: getKind(desc),
 			})
 		}
 	}
@@ -122,7 +126,11 @@ func (self *LSPServer) complete_prefix_names(
 					Description: &desc.Description,
 				},
 				Detail: protocol.NewOptional("Built in " + desc.Type),
-				Kind:   getKind(desc),
+				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+					Kind:  markupKind(desc.Type),
+					Value: desc.Description,
+				}),
+				Kind: getKind(desc),
 			})
 		}
 	}
@@ -166,7 +174,11 @@ func (self *LSPServer) complete_arg_names(
 							Description: &arg_desc.Description,
 						},
 						Detail: protocol.NewOptional(desc.Type + " arg"),
-						Kind:   protocol.CompletionItemKindVariable,
+						Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+							Kind:  protocol.MarkupKindMarkdown,
+							Value: arg_desc.Description,
+						}),
+						Kind: protocol.CompletionItemKindVariable,
 					})
 				}
 			}
@@ -187,7 +199,11 @@ func (self *LSPServer) complete_arg_names(
 					Description: &arg_desc.Description,
 				},
 				Detail: protocol.NewOptional(desc.Type + " arg"),
-				Kind:   protocol.CompletionItemKindVariable,
+				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: arg_desc.Description,
+				}),
+				Kind: protocol.CompletionItemKindVariable,
 			})
 		}
 		return items
