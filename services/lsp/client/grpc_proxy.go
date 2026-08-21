@@ -109,7 +109,19 @@ func (self *LSPProxy) Hover(
 	defer self.mu.Unlock()
 
 	result := &protocol.Hover{}
-	return result, self.forwardCall(ctx, HoverOp, params, result)
+	err := self.forwardCall(ctx, HoverOp, params, result)
+	if err != nil {
+		return nil, err
+	}
+
+	// The server returns a null result when there is nothing to
+	// show. Unmarshalling null into the pre-allocated struct leaves
+	// it with empty contents which crashes editor clients when they
+	// convert the response - convert it back to a null result.
+	if result.Contents == nil {
+		return nil, nil
+	}
+	return result, nil
 }
 
 func (self *LSPProxy) DidOpen(

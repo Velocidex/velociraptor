@@ -146,6 +146,13 @@ func (self *LSPServer) LSP(
 		if err != nil {
 			return nil, err
 		}
+
+		// A typed nil pointer would be marshalled as
+		// {"contents":null} which crashes editor clients - marshal
+		// an untyped null result instead.
+		if result == nil {
+			return self.returnRespose(nil)
+		}
 		return self.returnRespose(result)
 
 	case client.FormattingOp:
