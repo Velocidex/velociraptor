@@ -122,7 +122,18 @@ func doLSP() error {
 	}
 	defer func() { _ = closer() }()
 
-	server := lsp_client.NewLSPProxy(api_client)
+	var log_file *os.File
+	if *lsp_log_file != "" {
+		var err error
+		log_file, err = os.OpenFile(*lsp_log_file,
+			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+		if err != nil {
+			return err
+		}
+		defer log_file.Close()
+	}
+
+	server := lsp_client.NewLSPProxy(api_client, log_file)
 	// Listen on TCP
 	if *lsp_cmd_port > 0 {
 		return listenOnTCP(ctx, server, *lsp_cmd_port)
@@ -135,15 +146,6 @@ func doLSP() error {
 		writer: os.Stdout,
 	}
 	defer stdio.Close()
-
-	if *lsp_log_file != "" {
-		fd, err := os.OpenFile(*lsp_log_file,
-			os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-		if err != nil {
-			return err
-		}
-		stdio.log_file = fd
-	}
 
 	stream := jsonrpc2.NewStream(stdio)
 	server_ctx, conn, _ := protocol.NewServer(ctx, server, stream)
@@ -160,31 +162,16 @@ func doLSP() error {
 type stdioConn struct {
 	reader io.Reader
 	writer io.Writer
-
-	log_file *os.File
 }
 
 func (self stdioConn) Read(p []byte) (int, error) {
-	n, err := self.reader.Read(p)
-	if self.log_file != nil {
-		self.log_file.Write([]byte("\n<----\n"))
-		self.log_file.Write(p[:n])
-	}
-	return n, err
+	return self.reader.Read(p)
 }
 
 func (self stdioConn) Write(p []byte) (int, error) {
-	n, err := self.writer.Write(p)
-	if self.log_file != nil {
-		self.log_file.Write([]byte("\n---->\n"))
-		self.log_file.Write(p[:n])
-	}
-	return n, err
+	return self.writer.Write(p)
 }
 
 func (self stdioConn) Close() error {
-	if self.log_file != nil {
-		self.log_file.Close()
-	}
 	return nil
 }

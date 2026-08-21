@@ -34,6 +34,12 @@ func (self *LSPServer) getDoc(id uri.URI) (*Document, error) {
 	return doc, nil
 }
 
+func (self *LSPServer) setDoc(id uri.URI, doc *Document) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self.documents[id] = doc
+}
+
 func (self *LSPServer) returnRespose(resp any) (*api_proto.LSPResponse, error) {
 	serialized, err := protocol.Marshal(resp)
 	if err != nil {
@@ -306,6 +312,32 @@ func (self *LSPServer) LSP(
 		}
 
 		result, err := self.Diagnostic(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.SymbolOp:
+		req := &protocol.DocumentSymbolParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DocumentSymbol(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.DocumentHighlightOp:
+		req := &protocol.DocumentHighlightParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DocumentHighlight(ctx, req)
 		if err != nil {
 			return nil, err
 		}
