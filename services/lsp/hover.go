@@ -54,15 +54,17 @@ func (self *LSPServer) Hover(
 					hover_range := protocolRange(arg.Pos)
 					hover_range.End = hover_range.Start
 					hover_range.End.Character += uint32(len(arg.Name))
-					return &protocol.Hover{
-						Range: hover_range,
-						Contents: &protocol.MarkupContent{
-							Kind: protocol.MarkupKind("Arg"),
-							Value: fmt.Sprintf("%s %s: arg %s: %s",
-								desc.Type, desc.Name,
-								arg_desc.Name, arg_desc.Description),
-						},
-					}, nil
+				return &protocol.Hover{
+					Range: hover_range,
+					Contents: &protocol.MarkupContent{
+						// MarkupContent only supports the
+						// markdown and plaintext kinds.
+						Kind: protocol.MarkupKindMarkdown,
+						Value: fmt.Sprintf("**%s %s** arg `%s`: %s",
+							desc.Type, desc.Name,
+							arg_desc.Name, arg_desc.Description),
+					},
+				}, nil
 				}
 			}
 		}
@@ -78,8 +80,10 @@ func (self *LSPServer) Hover(
 		return &protocol.Hover{
 			Range: hover_range,
 			Contents: &protocol.MarkupContent{
-				Kind: protocol.MarkupKind(desc.Type),
-				Value: fmt.Sprintf("%s %s: %s",
+				// MarkupContent only supports the markdown and
+				// plaintext kinds.
+				Kind: protocol.MarkupKindMarkdown,
+				Value: fmt.Sprintf("**%s %s**: %s",
 					desc.Type, desc.Name, desc.Description),
 			},
 		}, nil

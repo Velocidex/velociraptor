@@ -15,12 +15,11 @@ func (self *LSPServer) Initialize(
 			TextDocumentSync: protocol.TextDocumentSyncKindFull,
 
 			// The server pushes diagnostics via
-			// textDocument/publishDiagnostics.
-			DiagnosticProvider: &protocol.DiagnosticOptions{
-				InterFileDependencies: false,
-				WorkspaceDiagnostics:  false,
-				Identifier:            new("vql"),
-			},
+			// textDocument/publishDiagnostics. Pull diagnostics
+			// (textDocument/diagnostic) are deliberately NOT
+			// advertised: clients that see the capability register
+			// an extra diagnostic collection and the same
+			// diagnostics appear twice in the problems panel.
 
 			// The server provides a document outline.
 			DocumentSymbolProvider: protocol.Boolean(true),
@@ -48,9 +47,6 @@ func (self *LSPServer) Initialize(
 
 			// The server provides workspace symbols.
 			WorkspaceSymbolProvider: protocol.Boolean(true),
-
-			// The server provides inlay hints.
-			InlayHintProvider: protocol.Boolean(true),
 
 			// The server provides code actions.
 			CodeActionProvider: protocol.Boolean(true),
