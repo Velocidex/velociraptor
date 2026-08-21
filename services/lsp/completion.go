@@ -291,6 +291,16 @@ func (self *LSPServer) Completion(
 // offset. Identifiers in VQL can contain letters, digits, underscores
 // and dots (for dotted plugin names like Artifact.Linux.Sys.Users).
 func wordPrefix(text string, offset int) string {
+	// The client may report a position beyond the end of the
+	// document (e.g. its view of the text is briefly ahead of the
+	// server) - clamp it instead of indexing out of range.
+	if offset > len(text) {
+		offset = len(text)
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
 	start := offset
 	for start > 0 {
 		c := text[start-1]
@@ -305,7 +315,9 @@ func wordPrefix(text string, offset int) string {
 }
 
 // positionToOffset converts a 0 based LSP position to a byte offset in
-// the document.
+// the document. Positions beyond the end of the document (possible
+// when the client's view of the text is ahead of the server) are
+// clamped to the end of the document.
 func positionToOffset(text string, pos protocol.Position) int {
 	line := 0
 	offset := 0
@@ -315,7 +327,11 @@ func positionToOffset(text string, pos protocol.Position) int {
 		}
 		offset++
 	}
-	return offset + int(pos.Character)
+	offset += int(pos.Character)
+	if offset > len(text) {
+		offset = len(text)
+	}
+	return offset
 }
 
 func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {

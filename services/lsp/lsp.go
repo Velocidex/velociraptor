@@ -2,12 +2,15 @@ package lsp
 
 import (
 	"context"
+	"fmt"
+	"runtime/debug"
 	"sync"
 
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/lsp/client"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -45,7 +48,23 @@ func (self *LSPServer) returnRespose(resp any) (*api_proto.LSPResponse, error) {
 // Main dispatch for the lsp server.
 func (self *LSPServer) LSP(
 	ctx context.Context,
-	in *api_proto.LSPRequest) (*api_proto.LSPResponse, error) {
+	in *api_proto.LSPRequest) (resp *api_proto.LSPResponse, err error) {
+
+	// A panic in any feature handler must never take down the
+	// frontend - recover it and report the failure to the client as
+	// a regular error.
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		logger := logging.GetLogger(self.config_obj,
+			&logging.FrontendComponent)
+		logger.Error("LSP %v: recovered from panic: %v\n%v",
+			in.Operation, r, debug.Stack())
+		err = fmt.Errorf("LSP operation %v failed: %v", in.Operation, r)
+	}()
+
 	switch in.Operation {
 	case client.InitializeOp:
 		req := &protocol.InitializeParams{}
