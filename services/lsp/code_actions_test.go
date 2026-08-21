@@ -97,3 +97,40 @@ func (self *LSPTestSuite) TestCodeActionFormatDocument() {
 	goldie.Assert(self.T(), "TestCodeActionFormatDocument",
 		[]byte(strings.Join(golden, "\n")))
 }
+
+// A document with syntax errors can not be formatted. The source
+// format action must be omitted from the response rather than
+// appended as a null entry - a null in the actions array crashes
+// editor clients when they convert the result.
+func (self *LSPTestSuite) TestCodeActionNoNullEntries() {
+	lsp_service := lsp.NewLSPServer(self.ConfigObj).(*lsp.LSPServer)
+
+	doc := uri.URI("file:///XXX-broken")
+	text := "SELECT * FROM pars.\nLET MyFunc(X, Y) = X + Y\n"
+
+	_, err := lsp_service.DidOpen(self.Ctx,
+		&protocol.DidOpenTextDocumentParams{
+			TextDocument: protocol.TextDocumentItem{
+				URI:  doc,
+				Text: text,
+			},
+		})
+	assert.NoError(self.T(), err)
+
+	actions, err := lsp_service.CodeAction(self.Ctx,
+		&protocol.CodeActionParams{
+			TextDocument: protocol.TextDocumentIdentifier{
+				URI: doc,
+			},
+			Range: protocol.Range{
+				Start: protocol.Position{Line: 0, Character: 0},
+				End:   protocol.Position{Line: 0, Character: 1},
+			},
+			Context: protocol.CodeActionContext{},
+		})
+	assert.NoError(self.T(), err)
+
+	for i, action := range actions {
+		assert.NotNil(self.T(), action, "action %d is nil", i)
+	}
+}

@@ -37,8 +37,16 @@ func (self *LSPServer) CodeAction(
 	}
 
 	if actionKindRequested(params, protocol.CodeActionKindSource) {
-		actions = append(actions, self.formatDocumentAction(
-			params.TextDocument.URI, doc))
+		action := self.formatDocumentAction(
+			params.TextDocument.URI, doc)
+
+		// A nil action (e.g. the document can not be formatted
+		// because it contains syntax errors) must not be appended -
+		// a null entry in the response array crashes editor
+		// clients when they convert the result.
+		if action != nil {
+			actions = append(actions, action)
+		}
 	}
 
 	return actions, nil

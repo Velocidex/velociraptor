@@ -26,7 +26,10 @@ func (self *LSPServer) Hover(
 	if err == nil {
 		desc := doc.getVQLFunctionDescription(cs)
 		if desc == nil {
-			return &protocol.Hover{}, nil
+			// No hover to show - the result must be null. An empty
+			// Hover struct serializes contents as null which crashes
+			// editor clients converting the result.
+			return nil, nil
 		}
 
 		match := doc.getFragment(cs.Pos.Pos.Offset, offset_at_point)
@@ -37,7 +40,10 @@ func (self *LSPServer) Hover(
 				// The arg description
 				arg_desc := getArgDesc(arg.Name, desc)
 				if arg_desc == nil {
-					return &protocol.Hover{}, nil
+					// No hover to show - the result must be null. An empty
+					// Hover struct serializes contents as null which crashes
+					// editor clients converting the result.
+					return nil, nil
 				}
 
 				start := arg.Pos.Pos
@@ -79,7 +85,10 @@ func (self *LSPServer) Hover(
 		}, nil
 	}
 
-	return &protocol.Hover{}, nil
+	// No hover to show - the result must be null. An empty
+	// Hover struct serializes contents as null which crashes
+	// editor clients converting the result.
+	return nil, nil
 }
 
 func getArgDesc(arg_name string,
