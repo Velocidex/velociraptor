@@ -23,14 +23,14 @@ Completions after broken change:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "One or more glob patterns to apply to the filesystem."
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   }
  }
 ]
@@ -39,14 +39,14 @@ Completions after broken multi-statement change:
  {
   "label": "pid",
   "labelDetails": {
-   "detail": "pid",
+   "detail": ": int64",
    "description": "A process ID to list. If not provided list all processes."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "pslist arg",
   "documentation": {
    "kind": "markdown",
-   "value": "A process ID to list. If not provided list all processes."
+   "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
   }
  }
 ]
