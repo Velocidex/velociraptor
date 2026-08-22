@@ -133,7 +133,7 @@ func doLSP() error {
 		defer log_file.Close()
 	}
 
-	server := lsp_client.NewLSPProxy(api_client, log_file)
+	server := lsp_client.NewLSPProxy(ctx, api_client, log_file)
 	// Listen on TCP
 	if *lsp_cmd_port > 0 {
 		return listenOnTCP(ctx, server, *lsp_cmd_port)

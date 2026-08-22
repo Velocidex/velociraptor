@@ -6,43 +6,46 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"go.lsp.dev/protocol"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
-	InitializeOp        = "Initialize"
-	DidOpenOp           = "DidOpen"
-	DidChangeOp         = "DidChange"
-	DidCloseOp          = "DidClose"
-	CompletionOp        = "CompletionOp"
-	HoverOp             = "HoverOp"
+	InitializeOp = "Initialize"
+	DidOpenOp    = "DidOpen"
+	DidChangeOp  = "DidChange"
+	DidCloseOp   = "DidClose"
+	CompletionOp = "CompletionOp"
+	HoverOp      = "HoverOp"
 
-	DiagnosticOp        = "DiagnosticOp"
+	DiagnosticOp = "DiagnosticOp"
 
-	FormattingOp        = "FormattingOp"
+	FormattingOp = "FormattingOp"
 
-	SignatureHelpOp     = "SignatureHelpOp"
+	SignatureHelpOp = "SignatureHelpOp"
 
-	FoldingRangesOp     = "FoldingRangesOp"
+	FoldingRangesOp = "FoldingRangesOp"
 
-	WorkspaceSymbolsOp  = "WorkspaceSymbolsOp"
+	WorkspaceSymbolsOp = "WorkspaceSymbolsOp"
 
-	DocumentSymbolsOp   = "DocumentSymbolsOp"
+	DocumentSymbolsOp = "DocumentSymbolsOp"
 
-	InlayHintOp         = "InlayHintOp"
+	InlayHintOp = "InlayHintOp"
 
-	CodeActionOp        = "CodeActionOp"
+	CodeActionOp = "CodeActionOp"
 
-	ReferencesOp        = "ReferencesOp"
+	ReferencesOp = "ReferencesOp"
 
-	PrepareRenameOp     = "PrepareRenameOp"
+	PrepareRenameOp = "PrepareRenameOp"
 
-	RenameOp            = "RenameOp"
+	RenameOp = "RenameOp"
 
-	SemanticTokensOp    = "SemanticTokensOp"
+	SemanticTokensOp = "SemanticTokensOp"
 
 	SymbolOp            = "SymbolOp"
 	DocumentHighlightOp = "DocumentHighlightOp"
@@ -50,6 +53,19 @@ const (
 
 var (
 	ErrorLspClientContextMissing = errors.New("ErrorLspClientContextMissing")
+
+	// Hard cap on a single forwarded call. When the backend dies
+	// the gRPC channel can silently black hole calls (the transport
+	// looks alive but nothing answers) - without a deadline the
+	// editor just spins forever.
+	forwardCallTimeout = 30 * time.Second
+
+	// Watchdog tuning. A healthy backend answers pings in
+	// milliseconds so only a genuinely stuck connection will
+	// accumulate consecutive timeouts.
+	watchdogInterval    = 10 * time.Second
+	watchdogTimeout     = 10 * time.Second
+	maxWatchdogFailures = 3
 )
 
 // LSPProxy is a LSPServer that forwards all calls to the gRPC
@@ -74,6 +90,12 @@ func (self *LSPProxy) forwardCall(
 	operation string,
 	id uint32,
 	params any, result any) error {
+
+	// Never let a call hang on a dead connection - see
+	// forwardCallTimeout above.
+	ctx, cancel := context.WithTimeout(ctx, forwardCallTimeout)
+	defer cancel()
+
 	serialized, err := protocol.Marshal(params)
 	if err != nil {
 		return err
@@ -380,10 +402,73 @@ func (self *LSPProxy) WorkDoneProgressCancel(
 	return nil
 }
 
+// watchdog detects a dead backend so this process can exit and let
+// the editor client restart it with a fresh connection.
+//
+// Editor clients (e.g. vscode-languageclient) only restart the
+// language server when the process exits. When the Velociraptor
+// frontend behind this proxy dies or restarts, the gRPC channel can
+// silently black hole every call while the process stays alive -
+// from the client's point of view requests are simply never answered.
+// Pinging the backend periodically and exiting when it stays
+// unresponsive turns such a hang into a clean automatic restart.
+func (self *LSPProxy) watchdog(ctx context.Context) {
+	failures := 0
+	ticker := time.NewTicker(watchdogInterval)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+
+		case <-ticker.C:
+			// The ping targets a document that was never
+			// opened - the backend answers with an empty
+			// diagnostics list without touching anything.
+			ping_ctx, cancel := context.WithTimeout(
+				context.Background(), watchdogTimeout)
+			_, err := self.api_client.LSP(ping_ctx,
+				&api_proto.LSPRequest{
+					Operation: DidCloseOp,
+					Json:      "{}",
+				})
+			cancel()
+
+			// Only timeouts indicate a stuck connection -
+			// the transport looks alive but nothing answers.
+			// Any other outcome (success, fast refusal,
+			// connection down) either proves the backend is
+			// responsive or is something gRPC retries on its
+			// own (e.g. Unavailable while the frontend
+			// restarts), so those reset the failure count.
+			if err == nil ||
+				status.Code(err) != codes.DeadlineExceeded {
+				if err != nil {
+					self.Debug("Watchdog: ping: %v", err)
+				}
+				failures = 0
+				continue
+			}
+
+			failures++
+			self.Debug("Watchdog: backend unresponsive (%v/%v)",
+				failures, maxWatchdogFailures)
+			if failures >= maxWatchdogFailures {
+				self.Debug("Watchdog: giving up, exiting so the client can reconnect")
+				os.Exit(1)
+			}
+		}
+	}
+}
+
 func NewLSPProxy(
+	ctx context.Context,
 	api_client api_proto.APIClient, log_file *os.File) protocol.Server {
-	return &LSPProxy{
+	res := &LSPProxy{
 		api_client: api_client,
 		log_file:   log_file,
 	}
+	go res.watchdog(ctx)
+	return res
 }
