@@ -281,6 +281,12 @@ func (self *LSPServer) complete_arg_names(
 				Range:   edit_range,
 				NewText: new_text,
 			})
+		// Editors build their filter query from the characters an
+		// item overwrites - which may include the '.' trigger
+		// character - so the filter text must carry it too or the
+		// popup filters everything out (same trick as
+		// pluginFunctionCompletionItem).
+		item.FilterText = protocol.NewOptional(prefix + arg_desc.Name)
 		items = append(items, item)
 	}
 
@@ -441,8 +447,15 @@ func (self *LSPServer) Completion(
 	// provide argument completions for the function before the paren.
 	// This covers queries that do not parse yet, such as an unclosed
 	// call like "SELECT * FROM pslist(".
+	//
+	// The paren may be hidden behind a typed prefix - "pslist(." or
+	// "pslist(fil" - so strip the identifier prefix (wordPrefix
+	// includes '.' trigger characters) before looking for it. Without
+	// this the '.' trigger inside fresh parens falls through to the
+	// full plugin/function list instead of argument names.
 	offset := positionToOffset(doc.Text, params.Position)
-	if offset > 0 && doc.Text[offset-1] == '(' {
+	paren_offset := offset - len(wordPrefix(doc.Text, offset)) - 1
+	if paren_offset >= 0 && doc.Text[paren_offset] == '(' {
 		if name, _, err := doc.findFunctionBeforeParen(pos); err == nil {
 			// Find the function description
 			for _, desc := range LoadApiDescriptions() {

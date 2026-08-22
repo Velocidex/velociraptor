@@ -31,6 +31,20 @@ Completions after broken change:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
+  },
+  "filterText": "gloglobs",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 22
+    }
+   },
+   "newText": "globs="
   }
  }
 ]
@@ -47,6 +61,20 @@ Completions after broken multi-statement change:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
+  },
+  "filterText": "ppid",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 1,
+     "character": 21
+    },
+    "end": {
+     "line": 1,
+     "character": 22
+    }
+   },
+   "newText": "pid="
   }
  }
 ]

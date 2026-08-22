@@ -57,6 +57,10 @@ var (
 		Query:  "SELECT * FROM pslist(",
 		Column: 21,
 	}, {
+		Name:   "Trigger dot hiding the paren still completes args",
+		Query:  "SELECT * FROM pslist(.",
+		Column: 22,
+	}, {
 		Name:   "Symbol callsite falls back to prefix completion",
 		Query:  "SELECT parse_ FROM scope()",
 		Column: 13,
