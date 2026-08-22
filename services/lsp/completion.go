@@ -287,7 +287,7 @@ func (self *LSPServer) complete_arg_names(
 		// popup filters everything out (same trick as
 		// pluginFunctionCompletionItem). Any partially typed
 		// letters however are left out so editors can filter the
-		// args properly - typing "fi" must rank "filename" above
+		// args properly - typing `fi` must rank "filename" above
 		// unrelated args instead of matching them all equally.
 		filter_text := arg_desc.Name
 		if strings.HasPrefix(prefix, ".") {
