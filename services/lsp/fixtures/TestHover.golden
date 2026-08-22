@@ -7,8 +7,8 @@ Diagnostics:
 Hover:
 {
  "contents": {
-  "kind": "Function",
-  "value": "Function geoip: Lookup an IP Address using the MaxMind GeoIP database"
+  "kind": "markdown",
+  "value": "**Function geoip**: Lookup an IP Address using the MaxMind GeoIP database"
  },
  "range": {
   "start": {
@@ -30,8 +30,8 @@ Diagnostics:
 Hover:
 {
  "contents": {
-  "kind": "Plugin",
-  "value": "Plugin scope: The scope plugin returns the current scope as a single row"
+  "kind": "markdown",
+  "value": "**Plugin scope**: The scope plugin returns the current scope as a single row"
  },
  "range": {
   "start": {
@@ -53,8 +53,8 @@ Diagnostics:
 Hover:
 {
  "contents": {
-  "kind": "Function",
-  "value": "Function lowcase: Returns the lowercase version of a string"
+  "kind": "markdown",
+  "value": "**Function lowcase**: Returns the lowercase version of a string"
  },
  "range": {
   "start": {
@@ -92,8 +92,8 @@ Diagnostics:
 Hover:
 {
  "contents": {
-  "kind": "Plugin",
-  "value": "Plugin glob: Retrieve files based on a list of glob expressions\n\nThe `glob()` plugin is one o ..."
+  "kind": "markdown",
+  "value": "**Plugin glob**: Retrieve files based on a list of glob expressions\n\nThe `glob()` plugin is one o ..."
  },
  "range": {
   "start": {
@@ -115,8 +115,8 @@ Diagnostics:
 Hover:
 {
  "contents": {
-  "kind": "Arg",
-  "value": "Plugin glob: arg globs: One or more glob patterns to apply to the filesystem."
+  "kind": "markdown",
+  "value": "**Plugin glob** arg `globs` (`string`): One or more glob patterns to apply to the filesystem."
  },
  "range": {
   "start": {
