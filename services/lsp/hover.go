@@ -24,7 +24,7 @@ func (self *LSPServer) Hover(
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
 	if err == nil {
-		desc := doc.getVQLFunctionDescription(cs.Name, cs.Type)
+		desc := doc.getVQLFunctionDescription(cs)
 		if desc == nil {
 			// No hover to show - the result must be null. An empty
 			// Hover struct serializes contents as null which crashes
