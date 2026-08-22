@@ -107,14 +107,22 @@ func shortDescription(desc string) string {
 // in plugin or function. The label detail carries the type with a
 // leading space because editors render it directly appended to the
 // label.
+//
+// FilterText carries a trailing '.' so editors keep matching the item
+// when the trigger character is part of the replaced range: editors
+// build their filter query from the characters an item overwrites
+// (e.g. "pars.") and a plain label like "parse_auditd" fails that
+// fuzzy match.
 func pluginFunctionCompletionItem(
 	desc *api_proto.Completion) protocol.CompletionItem {
 
 	label_detail := " " + desc.Type
 	description := shortDescription(desc.Description)
+	filter_text := desc.Name + "."
 
 	return protocol.CompletionItem{
-		Label: desc.Name,
+		Label:      desc.Name,
+		FilterText: protocol.NewOptional(filter_text),
 		LabelDetails: &protocol.CompletionItemLabelDetails{
 			Detail:      &label_detail,
 			Description: &description,
