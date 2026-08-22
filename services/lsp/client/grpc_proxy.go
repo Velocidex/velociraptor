@@ -237,6 +237,16 @@ func (self *LSPProxy) forwardCall(
 	})
 	if err != nil {
 		self.Debug("Grpc call failed %v: %v", id, err.Error())
+
+		// The client canceled the request ($/cancelRequest) - this
+		// is routine while typing since editors supersede stale
+		// completion requests constantly. Reply with the zero value
+		// instead of an error so clients do not surface a failure
+		// notification for every keystroke.
+		if ctx.Err() != nil || strings.Contains(err.Error(), "code = Canceled") {
+			self.Debug("Grpc call canceled %v", id)
+			return nil
+		}
 		return err
 	}
 	self.Debug("Grpc call succeeded %v!", id)
