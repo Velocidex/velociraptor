@@ -285,8 +285,15 @@ func (self *LSPServer) complete_arg_names(
 		// item overwrites - which may include the '.' trigger
 		// character - so the filter text must carry it too or the
 		// popup filters everything out (same trick as
-		// pluginFunctionCompletionItem).
-		item.FilterText = protocol.NewOptional(prefix + arg_desc.Name)
+		// pluginFunctionCompletionItem). Any partially typed
+		// letters however are left out so editors can filter the
+		// args properly - typing "fi" must rank "filename" above
+		// unrelated args instead of matching them all equally.
+		filter_text := arg_desc.Name
+		if strings.HasPrefix(prefix, ".") {
+			filter_text = "." + filter_text
+		}
+		item.FilterText = protocol.NewOptional(filter_text)
 		items = append(items, item)
 	}
 
