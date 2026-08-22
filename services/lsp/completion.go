@@ -136,6 +136,37 @@ func pluginFunctionCompletionItem(
 	}
 }
 
+// afterFromKeyword returns true when the word ending at word_start is
+// preceded only by a FROM keyword, i.e. the cursor is in plugin
+// position where functions are not valid.
+func afterFromKeyword(text string, word_start int) bool {
+	i := word_start
+
+	// Skip whitespace between the keyword and the word.
+	for i > 0 {
+		c := text[i-1]
+		if c == ' ' || c == '\t' || c == '\n' || c == '\r' {
+			i--
+			continue
+		}
+		break
+	}
+
+	// Walk back over the word itself (which may be dotted).
+	end := i
+	for i > 0 {
+		c := text[i-1]
+		if c == '.' || c == '_' || (c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
+			i--
+			continue
+		}
+		break
+	}
+
+	return strings.EqualFold(text[i:end], "from")
+}
+
 // complete_prefix_names suggests plugins, functions and LET variables
 // matching the given prefix. This is the fallback used when the cursor
 // is not inside a call site - e.g. "SELECT * FROM parse." should
@@ -144,9 +175,13 @@ func pluginFunctionCompletionItem(
 // edit_range covers the typed prefix in the document (including any
 // trailing '.' trigger character) so the client replaces it with the
 // full name instead of appending to it.
+//
+// When plugin_position is set the cursor directly follows FROM and
+// only plugins are offered - functions are not valid there.
 func (self *LSPServer) complete_prefix_names(
 	doc *Document, match string,
-	edit_range *protocol.Range) (items []protocol.CompletionItem) {
+	edit_range *protocol.Range,
+	plugin_position bool) (items []protocol.CompletionItem) {
 
 	// LET variables defined in the document.
 	for name := range doc.AnalysisState.Definitions {
@@ -166,18 +201,43 @@ func (self *LSPServer) complete_prefix_names(
 		}
 	}
 
+	// Offset just past the replaced range to detect an already
+	// present open paren.
+	next_offset := -1
+	if edit_range != nil {
+		next_offset = positionToOffset(doc.Text, edit_range.End)
+	}
+
 	// Built in plugins and functions.
 	for _, desc := range LoadApiDescriptions() {
-		if strings.HasPrefix(desc.Name, match) {
-			items = append(items, pluginFunctionCompletionItem(desc))
-			if edit_range != nil {
-				items[len(items)-1].TextEdit = protocol.CompletionItemTextEdit(
-					&protocol.TextEdit{
-						Range:   *edit_range,
-						NewText: desc.Name,
-					})
-			}
+		if !strings.HasPrefix(desc.Name, match) {
+			continue
 		}
+
+		if plugin_position &&
+			strings.EqualFold(desc.Type, "function") {
+			continue
+		}
+
+		item := pluginFunctionCompletionItem(desc)
+
+		// Leave the cursor between an inserted paren pair unless
+		// one is already present right after the name.
+		new_text := desc.Name
+		if next_offset < 0 || next_offset >= len(doc.Text) ||
+			doc.Text[next_offset] != '(' {
+			new_text += "($0)"
+			item.InsertTextFormat = protocol.InsertTextFormatSnippet
+		}
+
+		if edit_range != nil {
+			item.TextEdit = protocol.CompletionItemTextEdit(
+				&protocol.TextEdit{
+					Range:   *edit_range,
+					NewText: new_text,
+				})
+		}
+		items = append(items, item)
 	}
 
 	return items
@@ -339,7 +399,13 @@ func (self *LSPServer) Completion(
 			items = append(items, self.complete_arg_names(
 				doc, cs, offset_at_point)...)
 		}
-		return items, nil
+
+		// Plain symbols (bare identifiers) have no descriptions -
+		// fall through to the prefix based completion instead of
+		// returning nothing.
+		if len(items) > 0 || !strings.EqualFold(cs.Type, "symbol") {
+			return items, nil
+		}
 	}
 
 	// The cursor is not inside a call site - e.g. the user typed
@@ -387,9 +453,11 @@ func (self *LSPServer) Completion(
 
 	// A trailing '.' (the trigger character) should not prevent
 	// matching the callable name itself.
+	plugin_position := afterFromKeyword(doc.Text, offset-len(prefix))
 	prefix = strings.TrimSuffix(prefix, ".")
 
-	return self.complete_prefix_names(doc, prefix, &edit_range), nil
+	return self.complete_prefix_names(doc, prefix, &edit_range,
+		plugin_position), nil
 }
 
 // wordPrefix returns the identifier prefix ending at the given byte

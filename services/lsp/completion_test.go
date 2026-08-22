@@ -48,6 +48,18 @@ var (
 		Name:   "Prefix fallback mid name",
 		Query:  "SELECT * FROM parse_j",
 		Column: 20,
+	}, {
+		Name:   "Plugin position after FROM only offers plugins",
+		Query:  "select * from pars",
+		Column: 18,
+	}, {
+		Name:   "Unclosed paren completes args of the call before it",
+		Query:  "SELECT * FROM pslist(",
+		Column: 21,
+	}, {
+		Name:   "Symbol callsite falls back to prefix completion",
+		Query:  "SELECT parse_ FROM scope()",
+		Column: 13,
 	}}
 )
 
