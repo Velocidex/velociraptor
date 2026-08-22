@@ -175,30 +175,17 @@ func (self *LSPServer) complete_arg_names(
 		found[arg.Name] = true
 		distance_to_start_of_arg := offset_at_point - arg.Pos.Pos.Offset
 
+		// A cursor at the end of a partially typed name
+		// (distance == len) is included so completing right
+		// after typing "fil" suggests "filename".
 		if distance_to_start_of_arg > 0 &&
-			distance_to_start_of_arg < len(arg.Name) {
+			distance_to_start_of_arg <= len(arg.Name) {
 			match := arg.Name[:distance_to_start_of_arg]
-
-			// Point is past the arg name - no completion available.
-			if len(match) > len(arg.Name) {
-				return items
-			}
 
 			for _, arg_desc := range desc.Args {
 				if strings.HasPrefix(arg_desc.Name, match) {
-					items = append(items, protocol.CompletionItem{
-						Label: arg_desc.Name,
-						LabelDetails: &protocol.CompletionItemLabelDetails{
-							Detail:      &arg_desc.Name,
-							Description: &arg_desc.Description,
-						},
-						Detail: protocol.NewOptional(desc.Type + " arg"),
-						Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
-							Kind:  protocol.MarkupKindMarkdown,
-							Value: arg_desc.Description,
-						}),
-						Kind: protocol.CompletionItemKindVariable,
-					})
+					items = append(items,
+						argCompletionItem(desc, arg_desc))
 				}
 			}
 		}
@@ -211,24 +198,46 @@ func (self *LSPServer) complete_arg_names(
 				continue
 			}
 
-			items = append(items, protocol.CompletionItem{
-				Label: arg_desc.Name,
-				LabelDetails: &protocol.CompletionItemLabelDetails{
-					Detail:      &arg_desc.Name,
-					Description: &arg_desc.Description,
-				},
-				Detail: protocol.NewOptional(desc.Type + " arg"),
-				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
-					Kind:  protocol.MarkupKindMarkdown,
-					Value: arg_desc.Description,
-				}),
-				Kind: protocol.CompletionItemKindVariable,
-			})
+			items = append(items, argCompletionItem(desc, arg_desc))
 		}
 		return items
 	}
 
 	return items
+}
+
+// argCompletionItem builds a completion for a named argument. The
+// declared type is surfaced in the label details and documentation so
+// editors can display it in the popup and agents can read it from the
+// structured response.
+func argCompletionItem(
+	desc *api_proto.Completion,
+	arg_desc *api_proto.ArgDescriptor) protocol.CompletionItem {
+
+	label_detail := ""
+	if arg_desc.Type != "" {
+		label_detail = ": " + arg_desc.Type
+	}
+
+	documentation := arg_desc.Description
+	if arg_desc.Type != "" {
+		documentation = "Type: `" + arg_desc.Type + "`\n\n" +
+			arg_desc.Description
+	}
+
+	return protocol.CompletionItem{
+		Label: arg_desc.Name,
+		LabelDetails: &protocol.CompletionItemLabelDetails{
+			Detail:      &label_detail,
+			Description: &arg_desc.Description,
+		},
+		Detail: protocol.NewOptional(desc.Name + " arg"),
+		Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+			Kind:  protocol.MarkupKindMarkdown,
+			Value: documentation,
+		}),
+		Kind: protocol.CompletionItemKindVariable,
+	}
 }
 
 func (self *LSPServer) Completion(

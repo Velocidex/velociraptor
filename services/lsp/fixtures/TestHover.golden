@@ -116,7 +116,7 @@ Hover:
 {
  "contents": {
   "kind": "markdown",
-  "value": "**Plugin glob** arg `globs`: One or more glob patterns to apply to the filesystem."
+  "value": "**Plugin glob** arg `globs` (`string`): One or more glob patterns to apply to the filesystem."
  },
  "range": {
   "start": {

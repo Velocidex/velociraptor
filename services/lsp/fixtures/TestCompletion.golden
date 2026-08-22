@@ -91,79 +91,79 @@ Completions:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "One or more glob patterns to apply to the filesystem."
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   }
  },
  {
   "label": "root",
   "labelDetails": {
-   "detail": "root",
+   "detail": ": accessors.OSPath",
    "description": "The root directory to glob from (default '')."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "The root directory to glob from (default '')."
+   "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
   }
  },
  {
   "label": "accessor",
   "labelDetails": {
-   "detail": "accessor",
+   "detail": ": string",
    "description": "An accessor to use."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "An accessor to use."
+   "value": "Type: `string`\n\nAn accessor to use."
   }
  },
  {
   "label": "nosymlink",
   "labelDetails": {
-   "detail": "nosymlink",
+   "detail": ": bool",
    "description": "If set we do not follow symlinks."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "If set we do not follow symlinks."
+   "value": "Type: `bool`\n\nIf set we do not follow symlinks."
   }
  },
  {
   "label": "recursion_callback",
   "labelDetails": {
-   "detail": "recursion_callback",
+   "detail": ": string",
    "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+   "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   }
  },
  {
   "label": "one_filesystem",
   "labelDetails": {
-   "detail": "one_filesystem",
+   "detail": ": bool",
    "description": "If set we do not follow links to other filesystems."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "If set we do not follow links to other filesystems."
+   "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
   }
  }
 ]
@@ -209,14 +209,14 @@ Completions:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "One or more glob patterns to apply to the filesystem."
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   }
  }
 ]
@@ -262,66 +262,66 @@ Completions:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "One or more glob patterns to apply to the filesystem."
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   }
  },
  {
   "label": "root",
   "labelDetails": {
-   "detail": "root",
+   "detail": ": accessors.OSPath",
    "description": "The root directory to glob from (default '')."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "The root directory to glob from (default '')."
+   "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
   }
  },
  {
   "label": "nosymlink",
   "labelDetails": {
-   "detail": "nosymlink",
+   "detail": ": bool",
    "description": "If set we do not follow symlinks."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "If set we do not follow symlinks."
+   "value": "Type: `bool`\n\nIf set we do not follow symlinks."
   }
  },
  {
   "label": "recursion_callback",
   "labelDetails": {
-   "detail": "recursion_callback",
+   "detail": ": string",
    "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+   "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   }
  },
  {
   "label": "one_filesystem",
   "labelDetails": {
-   "detail": "one_filesystem",
+   "detail": ": bool",
    "description": "If set we do not follow links to other filesystems."
   },
   "kind": 6,
-  "detail": "Plugin arg",
+  "detail": "glob arg",
   "documentation": {
    "kind": "markdown",
-   "value": "If set we do not follow links to other filesystems."
+   "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
   }
  }
 ]
