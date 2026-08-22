@@ -5,13 +5,18 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"go.lsp.dev/protocol"
+	"go.lsp.dev/uri"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -66,6 +71,12 @@ var (
 	watchdogInterval    = 10 * time.Second
 	watchdogTimeout     = 10 * time.Second
 	maxWatchdogFailures = 3
+
+	// When the backend stays unresponsive we keep trying to dial a
+	// fresh connection every watchdog cycle. Only if reconnecting
+	// keeps failing for this many cycles do we give up and exit,
+	// letting the editor client restart us.
+	maxReconnectFailures = 10
 )
 
 // LSPProxy is a LSPServer that forwards all calls to the gRPC
@@ -73,9 +84,126 @@ var (
 type LSPProxy struct {
 	protocol.UnimplementedServer
 
-	mu         sync.Mutex
-	api_client api_proto.APIClient
-	log_file   *os.File
+	mu sync.Mutex
+
+	// The api client is accessed from both the forwarding calls and
+	// the watchdog goroutine which may swap it for a freshly dialed
+	// connection - hence the atomic container.
+	api_client atomic.Value // holds api_proto.APIClient
+
+	// documents caches the latest full text of every open document.
+	// The backend negotiates full text sync so each didChange
+	// carries the complete content, making the cache trivial to
+	// maintain. It exists so the proxy can restore backend state if
+	// the backend loses it - e.g. when the Velociraptor frontend
+	// restarts, its LSP service starts with an empty document map
+	// and answers every document operation with NotFoundError until
+	// the document is re-opened.
+	documents map[uri.URI]docState
+
+	// Connection parameters needed to dial a fresh backend
+	// connection when the current one becomes unresponsive.
+	identity   grpc_client.CallerIdentity
+	config_obj *config_proto.Config
+
+	log_file *os.File
+}
+
+// docState is the cached state of an open document.
+type docState struct {
+	text    string
+	version int32
+}
+
+func (self *LSPProxy) getAPIClient() api_proto.APIClient {
+	return self.api_client.Load().(api_proto.APIClient)
+}
+
+// docURIFromParams extracts the document URI from any params type
+// that refers to a document, so recovery logic can work generically.
+func docURIFromParams(params any) (uri.URI, bool) {
+	switch p := params.(type) {
+	case *protocol.DidChangeTextDocumentParams:
+		return p.TextDocument.URI, true
+	case *protocol.CompletionParams:
+		return p.TextDocument.URI, true
+	case *protocol.HoverParams:
+		return p.TextDocument.URI, true
+	case *protocol.SignatureHelpParams:
+		return p.TextDocument.URI, true
+	case *protocol.DocumentSymbolParams:
+		return p.TextDocument.URI, true
+	case *protocol.FoldingRangeParams:
+		return p.TextDocument.URI, true
+	case *protocol.CodeActionParams:
+		return p.TextDocument.URI, true
+	case *protocol.SemanticTokensParams:
+		return p.TextDocument.URI, true
+	case *protocol.InlayHintParams:
+		return p.TextDocument.URI, true
+	case *protocol.DocumentFormattingParams:
+		return p.TextDocument.URI, true
+	case *protocol.DocumentHighlightParams:
+		return p.TextDocument.URI, true
+	case *protocol.ReferenceParams:
+		return p.TextDocument.URI, true
+	case *protocol.PrepareRenameParams:
+		return p.TextDocument.URI, true
+	case *protocol.RenameParams:
+		return p.TextDocument.URI, true
+	}
+	return "", false
+}
+
+// resyncDocument restores backend state for a document the backend
+// no longer knows about by replaying its cached content as a
+// didOpen. Best effort - failures are logged and surfaced to the
+// caller through the retry that follows.
+func (self *LSPProxy) resyncDocument(ctx context.Context, uri uri.URI) {
+	state, ok := self.documents[uri]
+	if !ok {
+		self.Debug("Recovery: no cached content for %v", uri)
+		return
+	}
+	self.Debug("Recovery: replaying didOpen for %v", uri)
+	diagnostics := []protocol.Diagnostic{}
+	err := self.forwardCall(ctx, DidOpenOp, 0,
+		&protocol.DidOpenTextDocumentParams{
+			TextDocument: protocol.TextDocumentItem{
+				URI:        uri,
+				LanguageID: "vql",
+				Version:    state.version,
+				Text:       state.text,
+			},
+		}, &diagnostics)
+	if err != nil {
+		self.Debug("Recovery: didOpen failed: %v", err)
+	}
+}
+
+// forwardCallWithRecovery forwards a call and, when the backend
+// reports it does not know the document (NotFoundError - typically
+// because the frontend restarted and lost its LSP state), replays
+// the cached document content and retries once. All document scoped
+// handlers should use this instead of forwardCall directly.
+func (self *LSPProxy) forwardCallWithRecovery(
+	ctx context.Context,
+	operation string,
+	id uint32,
+	params any, result any) error {
+
+	err := self.forwardCall(ctx, operation, id, params, result)
+	if err == nil || !strings.Contains(err.Error(), "NotFoundError") {
+		return err
+	}
+
+	uri, ok := docURIFromParams(params)
+	if !ok {
+		return err
+	}
+
+	self.resyncDocument(ctx, uri)
+	return self.forwardCall(ctx, operation, id, params, result)
 }
 
 func (self *LSPProxy) Debug(format string, v ...interface{}) {
@@ -102,7 +230,7 @@ func (self *LSPProxy) forwardCall(
 	}
 
 	self.Debug("Grpc call %v with id %v", operation, id)
-	resp, err := self.api_client.LSP(ctx, &api_proto.LSPRequest{
+	resp, err := self.getAPIClient().LSP(ctx, &api_proto.LSPRequest{
 		Operation: operation,
 		Id:        uint32(id),
 		Json:      string(serialized),
@@ -139,7 +267,7 @@ func (self *LSPProxy) Completion(
 	defer self.mu.Unlock()
 
 	result := []protocol.CompletionItem{}
-	err := self.forwardCall(ctx, CompletionOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, CompletionOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -154,7 +282,7 @@ func (self *LSPProxy) Hover(
 	defer self.mu.Unlock()
 
 	result := &protocol.Hover{}
-	err := self.forwardCall(ctx, HoverOp, 0, params, result)
+	err := self.forwardCallWithRecovery(ctx, HoverOp, 0, params, result)
 	if err != nil {
 		return nil, err
 	}
@@ -174,6 +302,13 @@ func (self *LSPProxy) DidOpen(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// Cache the content so it can be replayed if the backend loses
+	// its state.
+	self.documents[params.TextDocument.URI] = docState{
+		text:    params.TextDocument.Text,
+		version: params.TextDocument.Version,
+	}
 
 	diagnostics := []protocol.Diagnostic{}
 	uri := params.TextDocument.URI
@@ -201,9 +336,20 @@ func (self *LSPProxy) DidChange(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Update the cache. Sync kind is Full so the whole-document
+	// change event carries the complete document text.
+	for _, change := range params.ContentChanges {
+		if whole, ok := change.(*protocol.TextDocumentContentChangeWholeDocument); ok {
+			self.documents[params.TextDocument.URI] = docState{
+				text:    whole.Text,
+				version: params.TextDocument.Version,
+			}
+		}
+	}
+
 	diagnostics := []protocol.Diagnostic{}
 	uri := params.TextDocument.URI
-	err := self.forwardCall(ctx, DidChangeOp, 0, params, &diagnostics)
+	err := self.forwardCallWithRecovery(ctx, DidChangeOp, 0, params, &diagnostics)
 	if err != nil {
 		return err
 	}
@@ -226,6 +372,9 @@ func (self *LSPProxy) DidClose(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	// The document is gone - drop the cached content.
+	delete(self.documents, params.TextDocument.URI)
 
 	diagnostics := []protocol.Diagnostic{}
 	uri := params.TextDocument.URI
@@ -252,7 +401,7 @@ func (self *LSPProxy) Formatting(
 	ctx context.Context, params *protocol.DocumentFormattingParams) (
 	[]protocol.TextEdit, error) {
 	result := []protocol.TextEdit{}
-	err := self.forwardCall(ctx, FormattingOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, FormattingOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -263,7 +412,7 @@ func (self *LSPProxy) SignatureHelp(
 	ctx context.Context, params *protocol.SignatureHelpParams) (
 	*protocol.SignatureHelp, error) {
 	result := &protocol.SignatureHelp{}
-	err := self.forwardCall(ctx, SignatureHelpOp, 0, params, result)
+	err := self.forwardCallWithRecovery(ctx, SignatureHelpOp, 0, params, result)
 	if err != nil {
 		return nil, err
 	}
@@ -274,7 +423,7 @@ func (self *LSPProxy) FoldingRanges(
 	ctx context.Context, params *protocol.FoldingRangeParams) (
 	[]protocol.FoldingRange, error) {
 	result := []protocol.FoldingRange{}
-	err := self.forwardCall(ctx, FoldingRangesOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, FoldingRangesOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -296,7 +445,7 @@ func (self *LSPProxy) DocumentSymbol(
 	ctx context.Context, params *protocol.DocumentSymbolParams) (
 	protocol.DocumentSymbolResult, error) {
 	result := []protocol.DocumentSymbol{}
-	err := self.forwardCall(ctx, DocumentSymbolsOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, DocumentSymbolsOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -307,7 +456,7 @@ func (self *LSPProxy) InlayHint(
 	ctx context.Context, params *protocol.InlayHintParams) (
 	[]protocol.InlayHint, error) {
 	result := []protocol.InlayHint{}
-	err := self.forwardCall(ctx, InlayHintOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, InlayHintOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -318,7 +467,7 @@ func (self *LSPProxy) CodeAction(
 	ctx context.Context, params *protocol.CodeActionParams) (
 	[]protocol.CommandOrCodeAction, error) {
 	result := []protocol.CommandOrCodeAction{}
-	err := self.forwardCall(ctx, CodeActionOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, CodeActionOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -329,7 +478,7 @@ func (self *LSPProxy) References(
 	ctx context.Context, params *protocol.ReferenceParams) (
 	[]protocol.Location, error) {
 	result := []protocol.Location{}
-	err := self.forwardCall(ctx, ReferencesOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, ReferencesOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -340,7 +489,7 @@ func (self *LSPProxy) PrepareRename(
 	ctx context.Context, params *protocol.PrepareRenameParams) (
 	protocol.PrepareRenameResult, error) {
 	result := protocol.Range{}
-	err := self.forwardCall(ctx, PrepareRenameOp, 0, params, &result)
+	err := self.forwardCallWithRecovery(ctx, PrepareRenameOp, 0, params, &result)
 	if err != nil {
 		return nil, err
 	}
@@ -351,7 +500,7 @@ func (self *LSPProxy) Rename(
 	ctx context.Context, params *protocol.RenameParams) (
 	*protocol.WorkspaceEdit, error) {
 	result := &protocol.WorkspaceEdit{}
-	err := self.forwardCall(ctx, RenameOp, 0, params, result)
+	err := self.forwardCallWithRecovery(ctx, RenameOp, 0, params, result)
 	if err != nil {
 		return nil, err
 	}
@@ -382,7 +531,7 @@ func (self *LSPProxy) Diagnostic(ctx context.Context,
 	defer self.mu.Unlock()
 
 	result := &protocol.RelatedFullDocumentDiagnosticReport{}
-	return result, self.forwardCall(ctx, DiagnosticOp, 0, params, result)
+	return result, self.forwardCallWithRecovery(ctx, DiagnosticOp, 0, params, result)
 }
 
 func (self *LSPProxy) DocumentHighlight(
@@ -393,7 +542,7 @@ func (self *LSPProxy) DocumentHighlight(
 	defer self.mu.Unlock()
 
 	result := []protocol.DocumentHighlight{}
-	return result, self.forwardCall(ctx, DocumentHighlightOp, 0, params, &result)
+	return result, self.forwardCallWithRecovery(ctx, DocumentHighlightOp, 0, params, &result)
 }
 
 func (self *LSPProxy) WorkDoneProgressCancel(
@@ -402,18 +551,37 @@ func (self *LSPProxy) WorkDoneProgressCancel(
 	return nil
 }
 
-// watchdog detects a dead backend so this process can exit and let
-// the editor client restart it with a fresh connection.
+// Shutdown is part of the LSP lifecycle - the editor client sends it
+// before stopping the server. Acknowledge it so the client does not
+// have to time out and hard kill us.
+func (self *LSPProxy) Shutdown(ctx context.Context) error {
+	return nil
+}
+
+// Exit terminates the process after a Shutdown.
+func (self *LSPProxy) Exit(ctx context.Context) error {
+	os.Exit(0)
+	return nil
+}
+
+// watchdog keeps the connection to the backend healthy.
 //
-// Editor clients (e.g. vscode-languageclient) only restart the
-// language server when the process exits. When the Velociraptor
-// frontend behind this proxy dies or restarts, the gRPC channel can
-// silently black hole every call while the process stays alive -
-// from the client's point of view requests are simply never answered.
-// Pinging the backend periodically and exiting when it stays
-// unresponsive turns such a hang into a clean automatic restart.
+// When the Velociraptor frontend behind this proxy dies or restarts,
+// the gRPC channel can silently black hole every call while looking
+// perfectly alive at the transport level - from the editor's point
+// of view requests are simply never answered. The watchdog pings the
+// backend periodically and, once pings keep timing out, dials a fresh
+// connection and swaps it in without dropping the editor session.
+// This matters because a proxy restart would lose all document state
+// (the editor does not resend didOpen for files it already opened),
+// leaving completions and diagnostics dead until the file is
+// reopened.
+//
+// If dialing fresh connections keeps failing as well we exit so the
+// editor client can restart us through its own restart logic.
 func (self *LSPProxy) watchdog(ctx context.Context) {
 	failures := 0
+	reconnect_failures := 0
 	ticker := time.NewTicker(watchdogInterval)
 	defer ticker.Stop()
 
@@ -428,7 +596,7 @@ func (self *LSPProxy) watchdog(ctx context.Context) {
 			// diagnostics list without touching anything.
 			ping_ctx, cancel := context.WithTimeout(
 				context.Background(), watchdogTimeout)
-			_, err := self.api_client.LSP(ping_ctx,
+			_, err := self.getAPIClient().LSP(ping_ctx,
 				&api_proto.LSPRequest{
 					Operation: DidCloseOp,
 					Json:      "{}",
@@ -454,7 +622,35 @@ func (self *LSPProxy) watchdog(ctx context.Context) {
 			failures++
 			self.Debug("Watchdog: backend unresponsive (%v/%v)",
 				failures, maxWatchdogFailures)
-			if failures >= maxWatchdogFailures {
+			if failures < maxWatchdogFailures {
+				continue
+			}
+
+			// The connection is stuck - dial a brand new one
+			// and swap it in. The pool never re-issues the
+			// connection we hold (its closer is a no-op) so
+			// this always results in a freshly dialed channel.
+			reconnect_ctx, reconnect_cancel := context.WithTimeout(
+				context.Background(), watchdogTimeout)
+			new_client, _, err := grpc_client.Factory.GetAPIClient(
+				reconnect_ctx, self.identity, self.config_obj)
+			reconnect_cancel()
+			if err == nil {
+				self.api_client.Store(new_client)
+				self.Debug("Watchdog: reconnected to backend")
+				failures = 0
+				reconnect_failures = 0
+				continue
+			}
+
+			// Reconnecting failed too - keep trying on future
+			// cycles until we exceed our budget, then exit so
+			// the editor client can restart us.
+			reconnect_failures++
+			failures = 0
+			self.Debug("Watchdog: reconnect failed (%v/%v): %v",
+				reconnect_failures, maxReconnectFailures, err)
+			if reconnect_failures >= maxReconnectFailures {
 				self.Debug("Watchdog: giving up, exiting so the client can reconnect")
 				os.Exit(1)
 			}
@@ -464,11 +660,17 @@ func (self *LSPProxy) watchdog(ctx context.Context) {
 
 func NewLSPProxy(
 	ctx context.Context,
-	api_client api_proto.APIClient, log_file *os.File) protocol.Server {
+	api_client api_proto.APIClient,
+	identity grpc_client.CallerIdentity,
+	config_obj *config_proto.Config,
+	log_file *os.File) protocol.Server {
 	res := &LSPProxy{
-		api_client: api_client,
+		documents:  make(map[uri.URI]docState),
+		identity:   identity,
+		config_obj: config_obj,
 		log_file:   log_file,
 	}
+	res.api_client.Store(api_client)
 	go res.watchdog(ctx)
 	return res
 }
