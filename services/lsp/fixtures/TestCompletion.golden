@@ -103,7 +103,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
-  "filterText": "globglobs",
+  "filterText": "globs",
   "textEdit": {
    "range": {
     "start": {
@@ -130,7 +130,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
   },
-  "filterText": "globroot",
+  "filterText": "root",
   "textEdit": {
    "range": {
     "start": {
@@ -157,7 +157,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nAn accessor to use."
   },
-  "filterText": "globaccessor",
+  "filterText": "accessor",
   "textEdit": {
    "range": {
     "start": {
@@ -184,7 +184,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow symlinks."
   },
-  "filterText": "globnosymlink",
+  "filterText": "nosymlink",
   "textEdit": {
    "range": {
     "start": {
@@ -211,7 +211,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
-  "filterText": "globrecursion_callback",
+  "filterText": "recursion_callback",
   "textEdit": {
    "range": {
     "start": {
@@ -238,7 +238,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
   },
-  "filterText": "globone_filesystem",
+  "filterText": "one_filesystem",
   "textEdit": {
    "range": {
     "start": {
@@ -305,7 +305,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
-  "filterText": "gglobs",
+  "filterText": "globs",
   "textEdit": {
    "range": {
     "start": {
@@ -372,7 +372,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
-  "filterText": "globglobs",
+  "filterText": "globs",
   "textEdit": {
    "range": {
     "start": {
@@ -399,7 +399,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
   },
-  "filterText": "globroot",
+  "filterText": "root",
   "textEdit": {
    "range": {
     "start": {
@@ -426,7 +426,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow symlinks."
   },
-  "filterText": "globnosymlink",
+  "filterText": "nosymlink",
   "textEdit": {
    "range": {
     "start": {
@@ -453,7 +453,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
-  "filterText": "globrecursion_callback",
+  "filterText": "recursion_callback",
   "textEdit": {
    "range": {
     "start": {
@@ -480,7 +480,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
   },
-  "filterText": "globone_filesystem",
+  "filterText": "one_filesystem",
   "textEdit": {
    "range": {
     "start": {
