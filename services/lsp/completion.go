@@ -256,6 +256,34 @@ func (self *LSPServer) complete_arg_names(
 
 	found := make(map[string]bool)
 
+	// Arg completions replace whatever partial text sits before the
+	// cursor (a partially typed name or the '.' trigger character) so
+	// accepting an item does not leave stray characters behind - e.g.
+	// selecting "accessor" after "plugin(." must not produce
+	// "plugin(.accessor". The inserted name ends with '=' to start
+	// the value unless one is already present.
+	prefix := wordPrefix(doc.Text, offset_at_point)
+	edit_range := protocol.Range{
+		Start: offsetToPosition(doc.Text, offset_at_point-len(prefix)),
+		End:   offsetToPosition(doc.Text, offset_at_point),
+	}
+	append_eq := offset_at_point >= len(doc.Text) ||
+		doc.Text[offset_at_point] != '='
+
+	addItem := func(arg_desc *api_proto.ArgDescriptor) {
+		item := argCompletionItem(desc, arg_desc)
+		new_text := arg_desc.Name
+		if append_eq {
+			new_text += "="
+		}
+		item.TextEdit = protocol.CompletionItemTextEdit(
+			&protocol.TextEdit{
+				Range:   edit_range,
+				NewText: new_text,
+			})
+		items = append(items, item)
+	}
+
 	// Determine the arg that is on point
 	for _, arg := range cs.Args {
 		found[arg.Name] = true
@@ -270,8 +298,7 @@ func (self *LSPServer) complete_arg_names(
 
 			for _, arg_desc := range desc.Args {
 				if strings.HasPrefix(arg_desc.Name, match) {
-					items = append(items,
-						argCompletionItem(desc, arg_desc))
+					addItem(arg_desc)
 				}
 			}
 		}
@@ -284,7 +311,7 @@ func (self *LSPServer) complete_arg_names(
 				continue
 			}
 
-			items = append(items, argCompletionItem(desc, arg_desc))
+			addItem(arg_desc)
 		}
 		return items
 	}
