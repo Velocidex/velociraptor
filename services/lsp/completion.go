@@ -268,6 +268,46 @@ func argCompletionItem(
 	}
 }
 
+// findFunctionBeforeParen looks for a function name immediately before
+// an open paren at the given position. Returns the function name and
+// its start offset if found.
+func (self *Document) findFunctionBeforeParen(pos lexer.Position) (string, int, error) {
+	protoPos := protocol.Position{
+		Line:      uint32(pos.Line - 1),
+		Character: uint32(pos.Column - 1),
+	}
+	offset := positionToOffset(self.Text, protoPos)
+	if offset <= 0 {
+		return "", 0, utils.NotFoundError
+	}
+
+	// Walk backwards to find the opening paren
+	parenOffset := -1
+	for i := offset - 1; i >= 0; i-- {
+		if self.Text[i] == '(' {
+			parenOffset = i
+			break
+		}
+		if self.Text[i] == '\n' {
+			break // Don't cross line boundaries
+		}
+	}
+	if parenOffset == -1 {
+		return "", 0, utils.NotFoundError
+	}
+
+	// Walk backwards from paren to find the function name
+	end := parenOffset
+	for end > 0 && (isIdentChar(self.Text[end-1]) || self.Text[end-1] == '.') {
+		end--
+	}
+	if end == parenOffset {
+		return "", 0, utils.NotFoundError
+	}
+
+	return self.Text[end:parenOffset], end, nil
+}
+
 func (self *LSPServer) Completion(
 	ctx context.Context,
 	params *protocol.CompletionParams) ([]protocol.CompletionItem, error) {
@@ -304,9 +344,37 @@ func (self *LSPServer) Completion(
 
 	// The cursor is not inside a call site - e.g. the user typed
 	// "SELECT * FROM parse." and the '.' trigger fired completion.
+	// But first, check if we are right after an open paren - if so,
+	// provide argument completions for the function before the paren.
+	// This covers queries that do not parse yet, such as an unclosed
+	// call like "SELECT * FROM pslist(".
+	offset := positionToOffset(doc.Text, params.Position)
+	if offset > 0 && doc.Text[offset-1] == '(' {
+		if name, _, err := doc.findFunctionBeforeParen(pos); err == nil {
+			// Find the function description
+			for _, desc := range LoadApiDescriptions() {
+				if strings.EqualFold(desc.Name, name) {
+					// Create a CallSite with no provided args so
+					// complete_arg_names offers every unused one.
+					cs := &vfilter.CallSite{
+						Name: name,
+						Type: desc.Type,
+						Args: []vfilter.ArgDesc{},
+					}
+					items = append(items, self.complete_arg_names(
+						doc, cs, offset)...)
+					break
+				}
+			}
+			if len(items) > 0 {
+				return items, nil
+			}
+		}
+	}
+
 	// Fall back to prefix based completion of plugins, functions and
 	// LET variables.
-	offset := positionToOffset(doc.Text, params.Position)
+	offset = positionToOffset(doc.Text, params.Position)
 	prefix := wordPrefix(doc.Text, offset)
 
 	// The edit range covers the typed prefix including any trailing
