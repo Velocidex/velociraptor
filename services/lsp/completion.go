@@ -79,23 +79,53 @@ func (self *LSPServer) complete_function_names(
 	for _, desc := range LoadApiDescriptions() {
 		if strings.EqualFold(desc.Type, cs.Type) &&
 			strings.HasPrefix(desc.Name, match) {
-			items = append(items, protocol.CompletionItem{
-				Label: desc.Name,
-				LabelDetails: &protocol.CompletionItemLabelDetails{
-					Detail:      &desc.Type,
-					Description: &desc.Description,
-				},
-				Detail: protocol.NewOptional("Built in " + desc.Type),
-				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
-					Kind:  markupKind(desc.Type),
-					Value: desc.Description,
-				}),
-				Kind: getKind(desc),
-			})
+			items = append(items,
+				pluginFunctionCompletionItem(desc))
 		}
 	}
 
 	return items
+}
+
+// shortDescription caps a description to roughly one popup row so
+// editors do not need to truncate it with an ellipsis. The full text
+// remains available in the item documentation.
+func shortDescription(desc string) string {
+	const max_len = 60
+	if len(desc) <= max_len {
+		return desc
+	}
+
+	cut := desc[:max_len]
+	if idx := strings.LastIndex(cut, " "); idx > max_len/2 {
+		cut = cut[:idx]
+	}
+	return cut
+}
+
+// pluginFunctionCompletionItem builds the completion item for a built
+// in plugin or function. The label detail carries the type with a
+// leading space because editors render it directly appended to the
+// label.
+func pluginFunctionCompletionItem(
+	desc *api_proto.Completion) protocol.CompletionItem {
+
+	label_detail := " " + desc.Type
+	description := shortDescription(desc.Description)
+
+	return protocol.CompletionItem{
+		Label: desc.Name,
+		LabelDetails: &protocol.CompletionItemLabelDetails{
+			Detail:      &label_detail,
+			Description: &description,
+		},
+		Detail: protocol.NewOptional("Built in " + desc.Type),
+		Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+			Kind:  markupKind(desc.Type),
+			Value: desc.Description,
+		}),
+		Kind: getKind(desc),
+	}
 }
 
 // complete_prefix_names suggests plugins, functions and LET variables
@@ -131,19 +161,7 @@ func (self *LSPServer) complete_prefix_names(
 	// Built in plugins and functions.
 	for _, desc := range LoadApiDescriptions() {
 		if strings.HasPrefix(desc.Name, match) {
-			items = append(items, protocol.CompletionItem{
-				Label: desc.Name,
-				LabelDetails: &protocol.CompletionItemLabelDetails{
-					Detail:      &desc.Type,
-					Description: &desc.Description,
-				},
-				Detail: protocol.NewOptional("Built in " + desc.Type),
-				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
-					Kind:  markupKind(desc.Type),
-					Value: desc.Description,
-				}),
-				Kind: getKind(desc),
-			})
+			items = append(items, pluginFunctionCompletionItem(desc))
 			if edit_range != nil {
 				items[len(items)-1].TextEdit = protocol.CompletionItemTextEdit(
 					&protocol.TextEdit{
@@ -225,11 +243,13 @@ func argCompletionItem(
 			arg_desc.Description
 	}
 
+	description := shortDescription(arg_desc.Description)
+
 	return protocol.CompletionItem{
 		Label: arg_desc.Name,
 		LabelDetails: &protocol.CompletionItemLabelDetails{
 			Detail:      &label_detail,
-			Description: &arg_desc.Description,
+			Description: &description,
 		},
 		Detail: protocol.NewOptional(desc.Name + " arg"),
 		Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
