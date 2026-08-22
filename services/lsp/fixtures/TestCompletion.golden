@@ -103,6 +103,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
+  "filterText": "globglobs",
   "textEdit": {
    "range": {
     "start": {
@@ -129,6 +130,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
   },
+  "filterText": "globroot",
   "textEdit": {
    "range": {
     "start": {
@@ -155,6 +157,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nAn accessor to use."
   },
+  "filterText": "globaccessor",
   "textEdit": {
    "range": {
     "start": {
@@ -181,6 +184,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow symlinks."
   },
+  "filterText": "globnosymlink",
   "textEdit": {
    "range": {
     "start": {
@@ -207,6 +211,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
+  "filterText": "globrecursion_callback",
   "textEdit": {
    "range": {
     "start": {
@@ -233,6 +238,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
   },
+  "filterText": "globone_filesystem",
   "textEdit": {
    "range": {
     "start": {
@@ -299,6 +305,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
+  "filterText": "gglobs",
   "textEdit": {
    "range": {
     "start": {
@@ -365,6 +372,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
+  "filterText": "globglobs",
   "textEdit": {
    "range": {
     "start": {
@@ -391,6 +399,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
   },
+  "filterText": "globroot",
   "textEdit": {
    "range": {
     "start": {
@@ -417,6 +426,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow symlinks."
   },
+  "filterText": "globnosymlink",
   "textEdit": {
    "range": {
     "start": {
@@ -443,6 +453,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
   },
+  "filterText": "globrecursion_callback",
   "textEdit": {
    "range": {
     "start": {
@@ -469,6 +480,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
   },
+  "filterText": "globone_filesystem",
   "textEdit": {
    "range": {
     "start": {
@@ -1907,6 +1919,7 @@ Completions:
    "kind": "markdown",
    "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
   },
+  "filterText": "pid",
   "textEdit": {
    "range": {
     "start": {
@@ -1923,7 +1936,59 @@ Completions:
  }
 ]
 
-Test case 10: Symbol callsite falls back to prefix completion
+Test case 10: Trigger dot hiding the paren still completes args
+SELECT * FROM pslist(.
+SELECT * FROM pslist(.<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 21
+   },
+   "end": {
+    "line": 0,
+    "character": 21
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,22) Generic Error: unexpected token \".\" (expected <ident> \"=\" ((\"{\" _Select \"}\") | (\"[\" _CommaExpression? \"]\") | _AndExpression))"
+ }
+]
+Completions:
+[
+ {
+  "label": "pid",
+  "labelDetails": {
+   "detail": ": int64",
+   "description": "A process ID to list. If not provided list all processes."
+  },
+  "kind": 6,
+  "detail": "pslist arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
+  },
+  "filterText": ".pid",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 21
+    },
+    "end": {
+     "line": 0,
+     "character": 22
+    }
+   },
+   "newText": "pid="
+  }
+ }
+]
+
+Test case 11: Symbol callsite falls back to prefix completion
 SELECT parse_ FROM scope()
 SELECT parse_<--
 Diagnostics:
