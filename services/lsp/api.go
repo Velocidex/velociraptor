@@ -14,6 +14,9 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
+
+	// Import all vql plugins so they register their functions/plugins.
+	_ "www.velocidex.com/golang/velociraptor/vql_plugins"
 )
 
 var (
