@@ -39,6 +39,7 @@ type AnalysisState struct {
 	Artifact        string
 	TopLevelQueries []*QueryDesc
 	Callsites       []vfilter.CallSite
+	FailedToParse   bool
 
 	Permissions []string
 	Errors      []*VerifierError
@@ -494,6 +495,8 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {
+		// We failed to parse completely.
+		state.FailedToParse = true
 		return []error{err}
 	}
 
