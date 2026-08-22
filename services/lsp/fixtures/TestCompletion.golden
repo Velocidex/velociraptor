@@ -102,6 +102,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "globs="
   }
  },
  {
@@ -115,6 +128,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "root="
   }
  },
  {
@@ -128,6 +154,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nAn accessor to use."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "accessor="
   }
  },
  {
@@ -141,6 +180,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow symlinks."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "nosymlink="
   }
  },
  {
@@ -154,6 +206,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "recursion_callback="
   }
  },
  {
@@ -167,6 +232,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "one_filesystem="
   }
  }
 ]
@@ -220,6 +298,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "globs="
   }
  }
 ]
@@ -273,6 +364,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "globs="
   }
  },
  {
@@ -286,6 +390,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "root="
   }
  },
  {
@@ -299,6 +416,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow symlinks."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "nosymlink="
   }
  },
  {
@@ -312,6 +442,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "recursion_callback="
   }
  },
  {
@@ -325,6 +468,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "one_filesystem="
   }
  }
 ]
@@ -1750,6 +1906,19 @@ Completions:
   "documentation": {
    "kind": "markdown",
    "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 21
+    },
+    "end": {
+     "line": 0,
+     "character": 21
+    }
+   },
+   "newText": "pid="
   }
  }
 ]

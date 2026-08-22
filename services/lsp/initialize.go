@@ -28,12 +28,13 @@ func (self *LSPServer) Initialize(
 			HoverProvider: protocol.Boolean(true),
 
 			// The server provides autocompletion. Typing '.' (as in
-			// Artifact.Linux.Sys) triggers completion. '(' is
-			// deliberately NOT a completion trigger - it already
-			// triggers signature help below and firing both shows two
-			// overlapping popups with the same information.
+			// Artifact.Linux.Sys) triggers completion. '(' also
+			// triggers completion so argument names pop up right
+			// after an unclosed call like "pslist(" - such queries do
+			// not parse yet so signature help can not fire for them
+			// and the two popups never overlap in practice.
 			CompletionProvider: &protocol.CompletionOptions{
-				TriggerCharacters: []string{".", "?"},
+				TriggerCharacters: []string{".", "(", "?"},
 			},
 
 			// The server provides semantic highlighting.
