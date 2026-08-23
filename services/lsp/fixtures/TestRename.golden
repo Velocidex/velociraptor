@@ -1,0 +1,59 @@
+PrepareRename for LET X:
+{
+ "start": {
+  "line": 0,
+  "character": 4
+ },
+ "end": {
+  "line": 0,
+  "character": 5
+ }
+}
+PrepareRename for a plugin name:
+null
+Rename X to Y from a use:
+{
+ "changes": {
+  "file:///XXX": [
+   {
+    "range": {
+     "start": {
+      "line": 0,
+      "character": 4
+     },
+     "end": {
+      "line": 0,
+      "character": 5
+     }
+    },
+    "newText": "Y"
+   },
+   {
+    "range": {
+     "start": {
+      "line": 1,
+      "character": 7
+     },
+     "end": {
+      "line": 1,
+      "character": 8
+     }
+    },
+    "newText": "Y"
+   },
+   {
+    "range": {
+     "start": {
+      "line": 2,
+      "character": 21
+     },
+     "end": {
+      "line": 2,
+      "character": 22
+     }
+    },
+    "newText": "Y"
+   }
+  ]
+ }
+}

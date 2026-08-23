@@ -11,4 +11,4 @@ unaliased
 lsp
 opencode
 upcase
-emacs
+quickfix

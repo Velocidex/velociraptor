@@ -76,17 +76,9 @@ func (self *Document) matchCallsite(pos lexer.Position) (
 func (self *LSPServer) complete_function_names(
 	cs *vfilter.CallSite,
 	match string) (items []protocol.CompletionItem) {
-
 	for _, desc := range LoadApiDescriptions() {
-		// A symbol can act as a plugin or a function.
-		if (cs.Type == "symbol" ||
-			strings.EqualFold(desc.Type, cs.Type)) &&
+		if strings.EqualFold(desc.Type, cs.Type) &&
 			strings.HasPrefix(desc.Name, match) {
-
-			desc_range := protocolRange(cs.Pos)
-			desc_range.End = desc_range.Start
-			desc_range.End.Character += uint32(len(match) + 1)
-
 			items = append(items, protocol.CompletionItem{
 				Label: desc.Name,
 				LabelDetails: &protocol.CompletionItemLabelDetails{
@@ -94,11 +86,11 @@ func (self *LSPServer) complete_function_names(
 					Description: &desc.Description,
 				},
 				Detail: protocol.NewOptional("Built in " + desc.Type),
-				Kind:   getKind(desc),
-				TextEdit: &protocol.TextEdit{
-					Range:   *desc_range,
-					NewText: desc.Name + "()",
-				},
+				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+					Kind:  markupKind(desc.Type),
+					Value: desc.Description,
+				}),
+				Kind: getKind(desc),
 			})
 		}
 	}
@@ -106,32 +98,72 @@ func (self *LSPServer) complete_function_names(
 	return items
 }
 
-func (self *LSPServer) decorateArgWithTextEdit(
-	name string,
-	item *protocol.CompletionItem,
-	pos protocol.Position) {
-	desc_range := protocol.Range{
-		Start: pos,
-		End:   pos,
-	}
-	desc_range.End.Character--
+// complete_prefix_names suggests plugins, functions and LET variables
+// matching the given prefix. This is the fallback used when the cursor
+// is not inside a call site - e.g. "SELECT * FROM parse." should
+// suggest all the parse* plugins.
+//
+// edit_range covers the typed prefix in the document (including any
+// trailing '.' trigger character) so the client replaces it with the
+// full name instead of appending to it.
+func (self *LSPServer) complete_prefix_names(
+	doc *Document, match string,
+	edit_range *protocol.Range) (items []protocol.CompletionItem) {
 
-	item.TextEdit = &protocol.TextEdit{
-		Range:   desc_range,
-		NewText: name + "=",
+	// LET variables defined in the document.
+	for name := range doc.AnalysisState.Definitions {
+		if strings.HasPrefix(name, match) {
+			items = append(items, protocol.CompletionItem{
+				Label:  name,
+				Kind:   protocol.CompletionItemKindVariable,
+				Detail: protocol.NewOptional("LET variable"),
+			})
+			if edit_range != nil {
+				items[len(items)-1].TextEdit = protocol.CompletionItemTextEdit(
+					&protocol.TextEdit{
+						Range:   *edit_range,
+						NewText: name,
+					})
+			}
+		}
 	}
+
+	// Built in plugins and functions.
+	for _, desc := range LoadApiDescriptions() {
+		if strings.HasPrefix(desc.Name, match) {
+			items = append(items, protocol.CompletionItem{
+				Label: desc.Name,
+				LabelDetails: &protocol.CompletionItemLabelDetails{
+					Detail:      &desc.Type,
+					Description: &desc.Description,
+				},
+				Detail: protocol.NewOptional("Built in " + desc.Type),
+				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+					Kind:  markupKind(desc.Type),
+					Value: desc.Description,
+				}),
+				Kind: getKind(desc),
+			})
+			if edit_range != nil {
+				items[len(items)-1].TextEdit = protocol.CompletionItemTextEdit(
+					&protocol.TextEdit{
+						Range:   *edit_range,
+						NewText: desc.Name,
+					})
+			}
+		}
+	}
+
+	return items
 }
 
 func (self *LSPServer) complete_arg_names(
 	doc *Document,
 	cs *vfilter.CallSite,
-	offset_at_point int,
-	pos protocol.Position,
-	trigger_kind protocol.CompletionTriggerKind,
-) (items []protocol.CompletionItem) {
+	offset_at_point int) (items []protocol.CompletionItem) {
 
 	// Find the description for the function
-	desc := doc.getVQLFunctionDescription(cs.Name, cs.Type)
+	desc := doc.getVQLFunctionDescription(cs)
 	if desc == nil {
 		return nil
 	}
@@ -154,48 +186,46 @@ func (self *LSPServer) complete_arg_names(
 
 			for _, arg_desc := range desc.Args {
 				if strings.HasPrefix(arg_desc.Name, match) {
-					item := protocol.CompletionItem{
+					items = append(items, protocol.CompletionItem{
 						Label: arg_desc.Name,
 						LabelDetails: &protocol.CompletionItemLabelDetails{
 							Detail:      &arg_desc.Name,
 							Description: &arg_desc.Description,
 						},
 						Detail: protocol.NewOptional(desc.Type + " arg"),
-						Kind:   protocol.CompletionItemKindVariable,
-					}
-
-					if trigger_kind == protocol.CompletionTriggerKindTriggerCharacter {
-						self.decorateArgWithTextEdit(
-							arg_desc.Name, &item, pos)
-					}
-
-					items = append(items, item)
+						Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+							Kind:  protocol.MarkupKindMarkdown,
+							Value: arg_desc.Description,
+						}),
+						Kind: protocol.CompletionItemKindVariable,
+					})
 				}
 			}
 		}
 	}
 
-	for _, arg_desc := range desc.Args {
-		_, pres := found[arg_desc.Name]
-		if pres {
-			continue
-		}
+	if len(items) == 0 {
+		for _, arg_desc := range desc.Args {
+			_, pres := found[arg_desc.Name]
+			if pres {
+				continue
+			}
 
-		item := protocol.CompletionItem{
-			Label: arg_desc.Name,
-			LabelDetails: &protocol.CompletionItemLabelDetails{
-				Detail:      &arg_desc.Name,
-				Description: &arg_desc.Description,
-			},
-			Detail: protocol.NewOptional(desc.Type + " arg"),
-			Kind:   protocol.CompletionItemKindVariable,
+			items = append(items, protocol.CompletionItem{
+				Label: arg_desc.Name,
+				LabelDetails: &protocol.CompletionItemLabelDetails{
+					Detail:      &arg_desc.Name,
+					Description: &arg_desc.Description,
+				},
+				Detail: protocol.NewOptional(desc.Type + " arg"),
+				Documentation: protocol.InlayHintTooltip(&protocol.MarkupContent{
+					Kind:  protocol.MarkupKindMarkdown,
+					Value: arg_desc.Description,
+				}),
+				Kind: protocol.CompletionItemKindVariable,
+			})
 		}
-
-		if trigger_kind == protocol.CompletionTriggerKindTriggerCharacter {
-			self.decorateArgWithTextEdit(arg_desc.Name, &item, pos)
-		}
-
-		items = append(items, item)
+		return items
 	}
 
 	return items
@@ -207,8 +237,6 @@ func (self *LSPServer) Completion(
 
 	items := []protocol.CompletionItem{}
 
-	trigger := params.Context.TriggerKind
-
 	doc, err := self.getDoc(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
@@ -216,6 +244,7 @@ func (self *LSPServer) Completion(
 
 	// Find the function at point
 	pos := lexerPositionFromProtocol(params.Position)
+
 	cs, offset_at_point, err := doc.matchCallsite(pos)
 
 	// The position is sitting inside a call site.
@@ -226,16 +255,83 @@ func (self *LSPServer) Completion(
 		// Match is partial name - we need to complete the name:
 		// callsite: foobar(...)
 		// cs_to_point match: foo
-		if len(match) <= len(cs.Name) {
+		if len(match) < len(cs.Name) {
 			items = append(items, self.complete_function_names(
 				cs, match)...)
 		} else {
 			items = append(items, self.complete_arg_names(
-				doc, cs, offset_at_point, params.Position, trigger)...)
+				doc, cs, offset_at_point)...)
 		}
+		return items, nil
 	}
 
-	return items, nil
+	// The cursor is not inside a call site - e.g. the user typed
+	// "SELECT * FROM parse." and the '.' trigger fired completion.
+	// Fall back to prefix based completion of plugins, functions and
+	// LET variables.
+	offset := positionToOffset(doc.Text, params.Position)
+	prefix := wordPrefix(doc.Text, offset)
+
+	// The edit range covers the typed prefix including any trailing
+	// '.' trigger character, so the client replaces it with the full
+	// name rather than appending to it.
+	edit_range := protocol.Range{
+		Start: offsetToPosition(doc.Text, offset-len(prefix)),
+		End:   offsetToPosition(doc.Text, offset),
+	}
+
+	// A trailing '.' (the trigger character) should not prevent
+	// matching the callable name itself.
+	prefix = strings.TrimSuffix(prefix, ".")
+
+	return self.complete_prefix_names(doc, prefix, &edit_range), nil
+}
+
+// wordPrefix returns the identifier prefix ending at the given byte
+// offset. Identifiers in VQL can contain letters, digits, underscores
+// and dots (for dotted plugin names like Artifact.Linux.Sys.Users).
+func wordPrefix(text string, offset int) string {
+	// The client may report a position beyond the end of the
+	// document (e.g. its view of the text is briefly ahead of the
+	// server) - clamp it instead of indexing out of range.
+	if offset > len(text) {
+		offset = len(text)
+	}
+	if offset < 0 {
+		offset = 0
+	}
+
+	start := offset
+	for start > 0 {
+		c := text[start-1]
+		if c == '.' || c == '_' || (c >= 'a' && c <= 'z') ||
+			(c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') {
+			start--
+			continue
+		}
+		break
+	}
+	return text[start:offset]
+}
+
+// positionToOffset converts a 0 based LSP position to a byte offset in
+// the document. Positions beyond the end of the document (possible
+// when the client's view of the text is ahead of the server) are
+// clamped to the end of the document.
+func positionToOffset(text string, pos protocol.Position) int {
+	line := 0
+	offset := 0
+	for offset < len(text) && line < int(pos.Line) {
+		if text[offset] == '\n' {
+			line++
+		}
+		offset++
+	}
+	offset += int(pos.Character)
+	if offset > len(text) {
+		offset = len(text)
+	}
+	return offset
 }
 
 func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {
@@ -278,45 +374,38 @@ func getNextOffset(
 	pos lexer.Position) (offset int, err error) {
 
 	cur_line := start.Line
-	cur_col := start.Column + 1
+	cur_col := start.Column
 	for idx, char := range text[start.Offset:] {
+		if cur_col == pos.Column && cur_line == pos.Line {
+			return idx + start.Offset, nil
+		}
+
 		if char == '\n' {
 			cur_line++
 			cur_col = 1
+		} else {
+			cur_col++
 		}
 
-		if cur_col == pos.Column && cur_line == pos.Line ||
-			cur_line > pos.Line {
-			return idx + start.Offset, nil
+		if cur_line > pos.Line {
+			break
 		}
-		cur_col++
 	}
 	return 0, utils.NotFoundError
 }
 
 func (self *Document) getVQLFunctionDescription(
-	name, cs_type string) *api_proto.Completion {
+	cs *vfilter.CallSite) *api_proto.Completion {
 
-	mu.Lock()
-	// Manage the local global cache
-	if func_lookup == nil {
-		func_lookup = make(map[string]*api_proto.Completion)
-
-		for _, desc := range loadApiDescriptions() {
-			key := desc.Name
-			func_lookup[key] = desc
+	for _, desc := range LoadApiDescriptions() {
+		if desc.Name == cs.Name &&
+			strings.EqualFold(desc.Type, cs.Type) {
+			return desc
 		}
 	}
 
-	desc, pres := func_lookup[name]
-	if pres {
-		defer mu.Unlock()
-		return desc
-	}
-	mu.Unlock()
-
 	// Maybe the descriptor is a defined function
-	local_definition, ok := self.AnalysisState.Definitions[name]
+	local_definition, ok := self.AnalysisState.Definitions[cs.Name]
 	if !ok {
 		return nil
 	}

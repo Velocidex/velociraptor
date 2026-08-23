@@ -2,10 +2,12 @@ package lsp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
 
+	"github.com/alecthomas/participle/v2"
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -142,6 +144,24 @@ func NewDocument(
 			verify_error = &launcher.VerifierError{
 				Name:    launcher.GENERIC_ERROR,
 				Message: err.Error(),
+			}
+
+			// Syntax errors carry the position of the
+			// offending token - extract it so the diagnostic
+			// points at the broken statement instead of the
+			// top of the document.
+			var parse_err participle.Error
+			if errors.As(err, &parse_err) {
+				pos := parse_err.Position()
+				verify_error.Pos = vfilter.RangePosition{
+					Pos:    pos,
+					EndPos: pos,
+				}
+
+				// The unadorned message is cleaner than
+				// the wrapped string which contains a
+				// source snippet.
+				verify_error.Message = parse_err.Message()
 			}
 		}
 		res.Errors = append(res.Errors, verify_error)

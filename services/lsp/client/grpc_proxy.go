@@ -16,19 +16,43 @@ const (
 	InitializeOp        = "Initialize"
 	DidOpenOp           = "DidOpen"
 	DidChangeOp         = "DidChange"
+	DidCloseOp          = "DidClose"
 	CompletionOp        = "CompletionOp"
 	HoverOp             = "HoverOp"
+
 	DiagnosticOp        = "DiagnosticOp"
-	SymbolOp            = "SymbolOp"
-	DocumentHighlightOp = "DocumentHighlighOp"
+
+	FormattingOp        = "FormattingOp"
+
+	SignatureHelpOp     = "SignatureHelpOp"
+
+	FoldingRangesOp     = "FoldingRangesOp"
+
+	WorkspaceSymbolsOp  = "WorkspaceSymbolsOp"
+
+	DocumentSymbolsOp   = "DocumentSymbolsOp"
+
+	InlayHintOp         = "InlayHintOp"
+
+	CodeActionOp        = "CodeActionOp"
+
+	ReferencesOp        = "ReferencesOp"
+
+	PrepareRenameOp     = "PrepareRenameOp"
+
+	RenameOp            = "RenameOp"
+
 	SemanticTokensOp    = "SemanticTokensOp"
+
+	SymbolOp            = "SymbolOp"
+	DocumentHighlightOp = "DocumentHighlightOp"
 )
 
 var (
 	ErrorLspClientContextMissing = errors.New("ErrorLspClientContextMissing")
 )
 
-// LSPPRoxy is a LSPServer that forwards all calls to the gRPC
+// LSPProxy is a LSPServer that forwards all calls to the gRPC
 // endpoint.
 type LSPProxy struct {
 	protocol.UnimplementedServer
@@ -108,32 +132,19 @@ func (self *LSPProxy) Hover(
 	defer self.mu.Unlock()
 
 	result := &protocol.Hover{}
-	return result, self.forwardCall(ctx, HoverOp, 0, params, result)
-}
-
-func (self *LSPProxy) DidChange(
-	ctx context.Context, params *protocol.DidChangeTextDocumentParams) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	diagnostics := []protocol.Diagnostic{}
-	uri := params.TextDocument.URI
-	err := self.forwardCall(ctx, DidChangeOp, 0, params, &diagnostics)
+	err := self.forwardCall(ctx, HoverOp, 0, params, result)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// Unsolicited publication of the diagnostics.
-	lsp_client, ok := protocol.ClientFromContext(ctx)
-	if !ok {
-		return ErrorLspClientContextMissing
+	// The server returns a null result when there is nothing to
+	// show. Unmarshalling null into the pre-allocated struct leaves
+	// it with empty contents which crashes editor clients when they
+	// convert the response - convert it back to a null result.
+	if result.Contents == nil {
+		return nil, nil
 	}
-
-	return lsp_client.PublishDiagnostics(ctx,
-		&protocol.PublishDiagnosticsParams{
-			URI:         uri,
-			Diagnostics: diagnostics,
-		})
+	return result, nil
 }
 
 func (self *LSPProxy) DidOpen(
@@ -162,37 +173,167 @@ func (self *LSPProxy) DidOpen(
 		})
 }
 
-func (self *LSPProxy) Diagnostic(ctx context.Context,
-	params *protocol.DocumentDiagnosticParams) (
-	protocol.DocumentDiagnosticReport, error) {
+func (self *LSPProxy) DidChange(
+	ctx context.Context, params *protocol.DidChangeTextDocumentParams) error {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	result := &protocol.RelatedFullDocumentDiagnosticReport{}
-	return result, self.forwardCall(ctx, DiagnosticOp, 0, params, result)
+	diagnostics := []protocol.Diagnostic{}
+	uri := params.TextDocument.URI
+	err := self.forwardCall(ctx, DidChangeOp, 0, params, &diagnostics)
+	if err != nil {
+		return err
+	}
+
+	// Unsolicited publication of the diagnostics.
+	lsp_client, ok := protocol.ClientFromContext(ctx)
+	if !ok {
+		return ErrorLspClientContextMissing
+	}
+
+	return lsp_client.PublishDiagnostics(ctx,
+		&protocol.PublishDiagnosticsParams{
+			URI:         uri,
+			Diagnostics: diagnostics,
+		})
+}
+
+func (self *LSPProxy) DidClose(
+	ctx context.Context, params *protocol.DidCloseTextDocumentParams) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	diagnostics := []protocol.Diagnostic{}
+	uri := params.TextDocument.URI
+	err := self.forwardCall(ctx, DidCloseOp, 0, params, &diagnostics)
+	if err != nil {
+		return err
+	}
+
+	// Unsolicited publication of the (empty) diagnostics to clear
+	// the ones from the closed document.
+	lsp_client, ok := protocol.ClientFromContext(ctx)
+	if !ok {
+		return ErrorLspClientContextMissing
+	}
+
+	return lsp_client.PublishDiagnostics(ctx,
+		&protocol.PublishDiagnosticsParams{
+			URI:         uri,
+			Diagnostics: diagnostics,
+		})
+}
+
+func (self *LSPProxy) Formatting(
+	ctx context.Context, params *protocol.DocumentFormattingParams) (
+	[]protocol.TextEdit, error) {
+	result := []protocol.TextEdit{}
+	err := self.forwardCall(ctx, FormattingOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) SignatureHelp(
+	ctx context.Context, params *protocol.SignatureHelpParams) (
+	*protocol.SignatureHelp, error) {
+	result := &protocol.SignatureHelp{}
+	err := self.forwardCall(ctx, SignatureHelpOp, 0, params, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) FoldingRanges(
+	ctx context.Context, params *protocol.FoldingRangeParams) (
+	[]protocol.FoldingRange, error) {
+	result := []protocol.FoldingRange{}
+	err := self.forwardCall(ctx, FoldingRangesOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) Symbols(
+	ctx context.Context, params *protocol.WorkspaceSymbolParams) (
+	protocol.WorkspaceSymbolResult, error) {
+	result := []protocol.WorkspaceSymbol{}
+	err := self.forwardCall(ctx, WorkspaceSymbolsOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return protocol.WorkspaceSymbolSlice(result), nil
 }
 
 func (self *LSPProxy) DocumentSymbol(
 	ctx context.Context, params *protocol.DocumentSymbolParams) (
 	protocol.DocumentSymbolResult, error) {
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	result := &protocol.DocumentSymbolSlice{}
-	return result, self.forwardCall(ctx, SymbolOp, 0, params, result)
+	result := []protocol.DocumentSymbol{}
+	err := self.forwardCall(ctx, DocumentSymbolsOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return protocol.DocumentSymbolSlice(result), nil
 }
 
-func (self *LSPProxy) DocumentHighlight(
-	ctx context.Context, params *protocol.DocumentHighlightParams) (
-	[]protocol.DocumentHighlight, error) {
+func (self *LSPProxy) InlayHint(
+	ctx context.Context, params *protocol.InlayHintParams) (
+	[]protocol.InlayHint, error) {
+	result := []protocol.InlayHint{}
+	err := self.forwardCall(ctx, InlayHintOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
+func (self *LSPProxy) CodeAction(
+	ctx context.Context, params *protocol.CodeActionParams) (
+	[]protocol.CommandOrCodeAction, error) {
+	result := []protocol.CommandOrCodeAction{}
+	err := self.forwardCall(ctx, CodeActionOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
 
-	result := []protocol.DocumentHighlight{}
-	return result, self.forwardCall(ctx, DocumentHighlightOp, 0, params, &result)
+func (self *LSPProxy) References(
+	ctx context.Context, params *protocol.ReferenceParams) (
+	[]protocol.Location, error) {
+	result := []protocol.Location{}
+	err := self.forwardCall(ctx, ReferencesOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+func (self *LSPProxy) PrepareRename(
+	ctx context.Context, params *protocol.PrepareRenameParams) (
+	protocol.PrepareRenameResult, error) {
+	result := protocol.Range{}
+	err := self.forwardCall(ctx, PrepareRenameOp, 0, params, &result)
+	if err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
+func (self *LSPProxy) Rename(
+	ctx context.Context, params *protocol.RenameParams) (
+	*protocol.WorkspaceEdit, error) {
+	result := &protocol.WorkspaceEdit{}
+	err := self.forwardCall(ctx, RenameOp, 0, params, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 func (self *LSPProxy) SemanticTokensFull(
@@ -209,6 +350,28 @@ func (self *LSPProxy) SemanticTokensFull(
 	result := &protocol.SemanticTokens{}
 	return result, self.forwardCall(
 		ctx, SemanticTokensOp, id, params, result)
+}
+
+func (self *LSPProxy) Diagnostic(ctx context.Context,
+	params *protocol.DocumentDiagnosticParams) (
+	protocol.DocumentDiagnosticReport, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := &protocol.RelatedFullDocumentDiagnosticReport{}
+	return result, self.forwardCall(ctx, DiagnosticOp, 0, params, result)
+}
+
+func (self *LSPProxy) DocumentHighlight(
+	ctx context.Context, params *protocol.DocumentHighlightParams) (
+	[]protocol.DocumentHighlight, error) {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	result := []protocol.DocumentHighlight{}
+	return result, self.forwardCall(ctx, DocumentHighlightOp, 0, params, &result)
 }
 
 func (self *LSPProxy) WorkDoneProgressCancel(

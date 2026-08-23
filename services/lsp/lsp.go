@@ -2,12 +2,15 @@ package lsp
 
 import (
 	"context"
+	"fmt"
+	"runtime/debug"
 	"sync"
 
 	"go.lsp.dev/protocol"
 	"go.lsp.dev/uri"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/lsp/client"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -51,7 +54,23 @@ func (self *LSPServer) returnRespose(resp any) (*api_proto.LSPResponse, error) {
 // Main dispatch for the lsp server.
 func (self *LSPServer) LSP(
 	ctx context.Context,
-	in *api_proto.LSPRequest) (*api_proto.LSPResponse, error) {
+	in *api_proto.LSPRequest) (resp *api_proto.LSPResponse, err error) {
+
+	// A panic in any feature handler must never take down the
+	// frontend - recover it and report the failure to the client as
+	// a regular error.
+	defer func() {
+		r := recover()
+		if r == nil {
+			return
+		}
+		logger := logging.GetLogger(self.config_obj,
+			&logging.FrontendComponent)
+		logger.Error("LSP %v: recovered from panic: %v\n%v",
+			in.Operation, r, debug.Stack())
+		err = fmt.Errorf("LSP operation %v failed: %v", in.Operation, r)
+	}()
+
 	switch in.Operation {
 	case client.InitializeOp:
 		req := &protocol.InitializeParams{}
@@ -95,6 +114,20 @@ func (self *LSPServer) LSP(
 
 		return self.returnRespose(result)
 
+	case client.DidCloseOp:
+		req := &protocol.DidCloseTextDocumentParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DidClose(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		return self.returnRespose(result)
+
 	case client.CompletionOp:
 		req := &protocol.CompletionParams{}
 		err := protocol.Unmarshal([]byte(in.Json), req)
@@ -116,6 +149,156 @@ func (self *LSPServer) LSP(
 		}
 
 		result, err := self.Hover(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+
+		// A typed nil pointer would be marshalled as
+		// {"contents":null} which crashes editor clients - marshal
+		// an untyped null result instead.
+		if result == nil {
+			return self.returnRespose(nil)
+		}
+		return self.returnRespose(result)
+
+	case client.FormattingOp:
+		req := &protocol.DocumentFormattingParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Formatting(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.SignatureHelpOp:
+		req := &protocol.SignatureHelpParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.SignatureHelp(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.FoldingRangesOp:
+		req := &protocol.FoldingRangeParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.FoldingRanges(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.WorkspaceSymbolsOp:
+		req := &protocol.WorkspaceSymbolParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Symbols(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.DocumentSymbolsOp:
+		req := &protocol.DocumentSymbolParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.DocumentSymbol(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.InlayHintOp:
+		req := &protocol.InlayHintParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.InlayHint(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.CodeActionOp:
+		req := &protocol.CodeActionParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.CodeAction(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.ReferencesOp:
+		req := &protocol.ReferenceParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.References(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.PrepareRenameOp:
+		req := &protocol.PrepareRenameParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.PrepareRename(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.RenameOp:
+		req := &protocol.RenameParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.Rename(ctx, req)
+		if err != nil {
+			return nil, err
+		}
+		return self.returnRespose(result)
+
+	case client.SemanticTokensOp:
+		req := &protocol.SemanticTokensParams{}
+		err := protocol.Unmarshal([]byte(in.Json), req)
+		if err != nil {
+			return nil, err
+		}
+
+		result, err := self.SemanticTokensFull(ctx, req)
 		if err != nil {
 			return nil, err
 		}
@@ -155,19 +338,6 @@ func (self *LSPServer) LSP(
 		}
 
 		result, err := self.DocumentHighlight(ctx, req)
-		if err != nil {
-			return nil, err
-		}
-		return self.returnRespose(result)
-
-	case client.SemanticTokensOp:
-		req := &protocol.SemanticTokensParams{}
-		err := protocol.Unmarshal([]byte(in.Json), req)
-		if err != nil {
-			return nil, err
-		}
-
-		result, err := self.SemanticTokensFull(ctx, req)
 		if err != nil {
 			return nil, err
 		}

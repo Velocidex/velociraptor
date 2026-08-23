@@ -72,3 +72,42 @@ func lexerPositionFromProtocol(in protocol.Position) lexer.Position {
 		Column: int(in.Character + 1),
 	}
 }
+
+// offsetToPosition converts a byte offset in the document to a 0
+// based LSP position. It is used by the features which work on raw
+// byte offsets (references, rename) to convert the offsets they
+// compute from the document text.
+func offsetToPosition(text string, offset int) protocol.Position {
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > len(text) {
+		offset = len(text)
+	}
+
+	line := 0
+	for idx, char := range text {
+		if idx >= offset {
+			break
+		}
+		if char == '\n' {
+			line++
+		}
+	}
+
+	// Find the start of the line containing the offset.
+	line_start := 0
+	for idx, char := range text {
+		if idx >= offset {
+			break
+		}
+		if char == '\n' {
+			line_start = idx + 1
+		}
+	}
+
+	return protocol.Position{
+		Line:      uint32(line),
+		Character: uint32(offset - line_start),
+	}
+}

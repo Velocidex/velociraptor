@@ -15,12 +15,11 @@ func (self *LSPServer) Initialize(
 			TextDocumentSync: protocol.TextDocumentSyncKindFull,
 
 			// The server pushes diagnostics via
-			// textDocument/publishDiagnostics.
-			DiagnosticProvider: &protocol.DiagnosticOptions{
-				InterFileDependencies: false,
-				WorkspaceDiagnostics:  false,
-				Identifier:            new("vql"),
-			},
+			// textDocument/publishDiagnostics. Pull diagnostics
+			// (textDocument/diagnostic) are deliberately NOT
+			// advertised: clients that see the capability register
+			// an extra diagnostic collection and the same
+			// diagnostics appear twice in the problems panel.
 
 			// The server provides a document outline.
 			DocumentSymbolProvider: protocol.Boolean(true),
@@ -34,6 +33,38 @@ func (self *LSPServer) Initialize(
 			CompletionProvider: &protocol.CompletionOptions{
 				TriggerCharacters: []string{".", "(", "?"},
 			},
+
+			// The server provides semantic highlighting.
+			SemanticTokensProvider: &protocol.SemanticTokensOptions{
+				Legend: protocol.SemanticTokensLegend{
+					TokenTypes:     tokenTypesLegend,
+					TokenModifiers: tokenModifiersLegend,
+				},
+				Full: protocol.Boolean(true),
+			},
+
+			// The server provides document formatting.
+			DocumentFormattingProvider: protocol.Boolean(true),
+
+			// The server provides signature help.
+			SignatureHelpProvider: &protocol.SignatureHelpOptions{
+				TriggerCharacters: []string{"(", ","},
+			},
+
+			// The server provides folding ranges.
+			FoldingRangeProvider: protocol.Boolean(true),
+
+			// The server provides workspace symbols.
+			WorkspaceSymbolProvider: protocol.Boolean(true),
+
+			// The server provides code actions.
+			CodeActionProvider: protocol.Boolean(true),
+
+			// The server provides references.
+			ReferencesProvider: protocol.Boolean(true),
+
+			// The server provides rename.
+			RenameProvider: protocol.Boolean(true),
 
 			// The server provides semantic highlighting.
 			SemanticTokensProvider: &protocol.SemanticTokensOptions{
