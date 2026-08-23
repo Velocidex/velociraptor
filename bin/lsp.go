@@ -23,6 +23,8 @@ import (
 	"io"
 	"net"
 	"os"
+	"sync"
+	"time"
 
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
@@ -37,6 +39,12 @@ var (
 
 	lsp_log_file = lsp_cmd.Flag("log", "Write the LSP log to a file instead of stdout").
 			String()
+
+	lsp_log_verbose = lsp_cmd.Flag("log_verbose", "Increase LSP log verbosity "+
+		"to include raw wire protocol dumps. Requires --log. Each "+
+		"dump is delimited by ==== markers so pure protocol views "+
+		"can be extracted mechanically. Payloads over 4kb are "+
+		"truncated.").Bool()
 
 	lsp_cmd_port = lsp_cmd.Flag(
 		"port", "Is specified we listen on this TCP port, "+
@@ -148,7 +156,16 @@ func doLSP() error {
 	}
 	defer stdio.Close()
 
-	stream := jsonrpc2.NewStream(stdio)
+	// Optionally mirror all wire traffic into the log file.
+	var stream_conn io.ReadWriteCloser = stdio
+	if log_file != nil && *lsp_log_verbose {
+		stream_conn = &loggingConn{
+			ReadWriteCloser: stdio,
+			log_file:        log_file,
+		}
+	}
+
+	stream := jsonrpc2.NewStream(stream_conn)
 	server_ctx, conn, _ := protocol.NewServer(ctx, server, stream)
 	select {
 	case <-conn.Done():
@@ -175,4 +192,61 @@ func (self stdioConn) Write(p []byte) (int, error) {
 
 func (self stdioConn) Close() error {
 	return nil
+}
+
+// maxWireLogPayload caps how much of each frame is written to the
+// wire log. Document syncs carry the full document text on every
+// keystroke so unbounded dumps would flood the log with content we
+// already have in the event log and in the editor itself.
+const maxWireLogPayload = 4096
+
+// loggingConn wraps the stdio stream and mirrors all traffic
+// crossing it into the log file. This provides visibility into the
+// raw protocol which is essential when debugging framing or
+// ordering issues that structured event logs can not show. Reads
+// are marked <---- (from the editor), writes ----> (to the editor).
+//
+// Each dump is wrapped in ==== markers so tooling can extract a
+// pure protocol view with e.g.
+//
+//	awk '/^==== wire/,/^==== end/' logfile
+//
+// The header always shows shown/total bytes so truncation is
+// visible to analyzers even when the payload itself is capped.
+type loggingConn struct {
+	io.ReadWriteCloser
+	log_file *os.File
+	mu       sync.Mutex
+}
+
+func (self *loggingConn) dump(direction string, p []byte) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	shown := len(p)
+	if shown > maxWireLogPayload {
+		shown = maxWireLogPayload
+	}
+
+	fmt.Fprintf(self.log_file, "\n==== wire %v %v (%d/%d bytes) ====\n",
+		direction, time.Now().Format(time.RFC3339Nano),
+		shown, len(p))
+	self.log_file.Write(p[:shown])
+	// Payloads do not necessarily end with a newline so add one to
+	// keep the end marker on its own line. Parsers should treat the
+	// section contents as payload plus exactly one newline.
+	fmt.Fprintf(self.log_file, "\n==== end ====\n")
+}
+
+func (self *loggingConn) Read(p []byte) (int, error) {
+	n, err := self.ReadWriteCloser.Read(p)
+	if n > 0 {
+		self.dump("<----", p[:n])
+	}
+	return n, err
+}
+
+func (self *loggingConn) Write(p []byte) (int, error) {
+	self.dump("---->", p)
+	return self.ReadWriteCloser.Write(p)
 }
