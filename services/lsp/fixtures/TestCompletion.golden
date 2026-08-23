@@ -9,24 +9,16 @@ Completions:
  {
   "label": "geoip",
   "labelDetails": {
-   "detail": "Function",
+   "detail": " Function",
    "description": "Lookup an IP Address using the MaxMind GeoIP database"
   },
   "kind": 1,
   "detail": "Built in Function",
-  "textEdit": {
-   "range": {
-    "start": {
-     "line": 0,
-     "character": 7
-    },
-    "end": {
-     "line": 0,
-     "character": 11
-    }
-   },
-   "newText": "geoip()"
-  }
+  "documentation": {
+   "kind": "markdown",
+   "value": "Lookup an IP Address using the MaxMind GeoIP database"
+  },
+  "filterText": "geoip."
  }
 ]
 
@@ -40,24 +32,16 @@ Completions:
  {
   "label": "scope",
   "labelDetails": {
-   "detail": "Plugin",
+   "detail": " Plugin",
    "description": "The scope plugin returns the current scope as a single row"
   },
   "kind": 1,
   "detail": "Built in Plugin",
-  "textEdit": {
-   "range": {
-    "start": {
-     "line": 0,
-     "character": 14
-    },
-    "end": {
-     "line": 0,
-     "character": 17
-    }
-   },
-   "newText": "scope()"
-  }
+  "documentation": {
+   "kind": "markdown",
+   "value": "The scope plugin returns the current scope as a single row"
+  },
+  "filterText": "scope."
  }
 ]
 
@@ -71,30 +55,22 @@ Completions:
  {
   "label": "lowcase",
   "labelDetails": {
-   "detail": "Function",
+   "detail": " Function",
    "description": "Returns the lowercase version of a string"
   },
   "kind": 1,
   "detail": "Built in Function",
-  "textEdit": {
-   "range": {
-    "start": {
-     "line": 0,
-     "character": 25
-    },
-    "end": {
-     "line": 0,
-     "character": 30
-    }
-   },
-   "newText": "lowcase()"
-  }
+  "documentation": {
+   "kind": "markdown",
+   "value": "Returns the lowercase version of a string"
+  },
+  "filterText": "lowcase."
  }
 ]
 
 Test case 3: Complete plugin all args
 SELECT * FROM glob()
-SELECT * FROM glob(<--
+SELECT * FROM glob<--
 Diagnostics:
 [
  {
@@ -118,56 +94,164 @@ Completions:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
+  },
+  "filterText": "globs",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "globs="
+  }
  },
  {
   "label": "root",
   "labelDetails": {
-   "detail": "root",
+   "detail": ": accessors.OSPath",
    "description": "The root directory to glob from (default '')."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
+  },
+  "filterText": "root",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "root="
+  }
  },
  {
   "label": "accessor",
   "labelDetails": {
-   "detail": "accessor",
+   "detail": ": string",
    "description": "An accessor to use."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `string`\n\nAn accessor to use."
+  },
+  "filterText": "accessor",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "accessor="
+  }
  },
  {
   "label": "nosymlink",
   "labelDetails": {
-   "detail": "nosymlink",
+   "detail": ": bool",
    "description": "If set we do not follow symlinks."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `bool`\n\nIf set we do not follow symlinks."
+  },
+  "filterText": "nosymlink",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "nosymlink="
+  }
  },
  {
   "label": "recursion_callback",
   "labelDetails": {
-   "detail": "recursion_callback",
-   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+   "detail": ": string",
+   "description": "A VQL function that determines if a directory should be"
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "filterText": "recursion_callback",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "recursion_callback="
+  }
  },
  {
   "label": "one_filesystem",
   "labelDetails": {
-   "detail": "one_filesystem",
+   "detail": ": bool",
    "description": "If set we do not follow links to other filesystems."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
+  },
+  "filterText": "one_filesystem",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "one_filesystem="
+  }
  }
 ]
 
@@ -212,71 +296,35 @@ Completions:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "globs",
-  "labelDetails": {
-   "detail": "globs",
-   "description": "One or more glob patterns to apply to the filesystem."
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
-  "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "root",
-  "labelDetails": {
-   "detail": "root",
-   "description": "The root directory to glob from (default '')."
-  },
-  "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "accessor",
-  "labelDetails": {
-   "detail": "accessor",
-   "description": "An accessor to use."
-  },
-  "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "nosymlink",
-  "labelDetails": {
-   "detail": "nosymlink",
-   "description": "If set we do not follow symlinks."
-  },
-  "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "recursion_callback",
-  "labelDetails": {
-   "detail": "recursion_callback",
-   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
-  },
-  "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "one_filesystem",
-  "labelDetails": {
-   "detail": "one_filesystem",
-   "description": "If set we do not follow links to other filesystems."
-  },
-  "kind": 6,
-  "detail": "Plugin arg"
+  "filterText": "globs",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "globs="
+  }
  }
 ]
 
 Test case 5: Complete some plugin args (accessor already exists, so should not be completed) 
 SELECT * FROM glob(gloXXX='*', accessor='file')
-SELECT * FROM glob(g<--
+SELECT * FROM glob<--
 Diagnostics:
 [
  {
@@ -315,55 +363,2392 @@ Completions:
  {
   "label": "globs",
   "labelDetails": {
-   "detail": "globs",
+   "detail": ": string",
    "description": "One or more glob patterns to apply to the filesystem."
   },
   "kind": 6,
-  "detail": "Plugin arg"
- },
- {
-  "label": "globs",
-  "labelDetails": {
-   "detail": "globs",
-   "description": "One or more glob patterns to apply to the filesystem."
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `string`\n\nOne or more glob patterns to apply to the filesystem."
   },
-  "kind": 6,
-  "detail": "Plugin arg"
+  "filterText": "globs",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "globs="
+  }
  },
  {
   "label": "root",
   "labelDetails": {
-   "detail": "root",
+   "detail": ": accessors.OSPath",
    "description": "The root directory to glob from (default '')."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `accessors.OSPath`\n\nThe root directory to glob from (default '')."
+  },
+  "filterText": "root",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "root="
+  }
  },
  {
   "label": "nosymlink",
   "labelDetails": {
-   "detail": "nosymlink",
+   "detail": ": bool",
    "description": "If set we do not follow symlinks."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `bool`\n\nIf set we do not follow symlinks."
+  },
+  "filterText": "nosymlink",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "nosymlink="
+  }
  },
  {
   "label": "recursion_callback",
   "labelDetails": {
-   "detail": "recursion_callback",
-   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+   "detail": ": string",
+   "description": "A VQL function that determines if a directory should be"
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `string`\n\nA VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "filterText": "recursion_callback",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "recursion_callback="
+  }
  },
  {
   "label": "one_filesystem",
   "labelDetails": {
-   "detail": "one_filesystem",
+   "detail": ": bool",
    "description": "If set we do not follow links to other filesystems."
   },
   "kind": 6,
-  "detail": "Plugin arg"
+  "detail": "glob arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `bool`\n\nIf set we do not follow links to other filesystems."
+  },
+  "filterText": "one_filesystem",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "one_filesystem="
+  }
+ }
+]
+
+Test case 6: Prefix fallback after trigger dot
+SELECT * FROM parse.
+SELECT * FROM parse<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 20
+   },
+   "end": {
+    "line": 0,
+    "character": 20
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,21) Generic Error: unexpected token \"<EOF>\" (expected <ident>)"
+ }
+]
+Completions:
+[
+ {
+  "label": "parse_auditd",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse log files generated by auditd"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse log files generated by auditd"
+  },
+  "filterText": "parse_auditd.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_auditd($0)"
+  }
+ },
+ {
+  "label": "parse_csv",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a CSV file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a CSV file"
+  },
+  "filterText": "parse_csv.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_csv($0)"
+  }
+ },
+ {
+  "label": "parse_ese",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump a table"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump a table"
+  },
+  "filterText": "parse_ese.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_ese($0)"
+  }
+ },
+ {
+  "label": "parse_ese_catalog",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump the schema"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump the schema"
+  },
+  "filterText": "parse_ese_catalog.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_ese_catalog($0)"
+  }
+ },
+ {
+  "label": "parse_evtx",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from an EVTX file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from an EVTX file"
+  },
+  "filterText": "parse_evtx.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_evtx($0)"
+  }
+ },
+ {
+  "label": "parse_journald",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a journald file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a journald file"
+  },
+  "filterText": "parse_journald.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_journald($0)"
+  }
+ },
+ {
+  "label": "parse_json_array",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a line oriented json file"
+  },
+  "filterText": "parse_json_array.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_json_array($0)"
+  }
+ },
+ {
+  "label": "parse_jsonl",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a line oriented json file"
+  },
+  "filterText": "parse_jsonl.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_jsonl($0)"
+  }
+ },
+ {
+  "label": "parse_lines",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a file separated into lines"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a file separated into lines"
+  },
+  "filterText": "parse_lines.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_lines($0)"
+  }
+ },
+ {
+  "label": "parse_mft",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $MFT from an NTFS volume"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $MFT from an NTFS volume"
+  },
+  "filterText": "parse_mft.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_mft($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_i30",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "filterText": "parse_ntfs_i30.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_ntfs_i30($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_ranges",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Show the run ranges for an NTFS stream"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Show the run ranges for an NTFS stream"
+  },
+  "filterText": "parse_ntfs_ranges.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_ntfs_ranges($0)"
+  }
+ },
+ {
+  "label": "parse_pst",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a PST file and extract email data"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PST file and extract email data"
+  },
+  "filterText": "parse_pst.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_pst($0)"
+  }
+ },
+ {
+  "label": "parse_records_with_regex",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a file with a set of regexp and yields matches as"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a file with a set of regexp and yields matches as records"
+  },
+  "filterText": "parse_records_with_regex.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_records_with_regex($0)"
+  }
+ },
+ {
+  "label": "parse_recyclebin",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a $I file found in the $Recycle"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a $I file found in the $Recycle"
+  },
+  "filterText": "parse_recyclebin.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_recyclebin($0)"
+  }
+ },
+ {
+  "label": "parse_usn",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse the USN journal from a device, image file or USN file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse the USN journal from a device, image file or USN file"
+  },
+  "filterText": "parse_usn.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 19
+    }
+   },
+   "newText": "parse_usn($0)"
+  }
+ }
+]
+
+Test case 7: Prefix fallback mid name
+SELECT * FROM parse_j
+SELECT * FROM parse_<--
+Diagnostics:
+[]
+Completions:
+[
+ {
+  "label": "parse_auditd",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse log files generated by auditd"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse log files generated by auditd"
+  },
+  "filterText": "parse_auditd.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_auditd($0)"
+  }
+ },
+ {
+  "label": "parse_csv",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a CSV file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a CSV file"
+  },
+  "filterText": "parse_csv.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_csv($0)"
+  }
+ },
+ {
+  "label": "parse_ese",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump a table"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump a table"
+  },
+  "filterText": "parse_ese.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_ese($0)"
+  }
+ },
+ {
+  "label": "parse_ese_catalog",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump the schema"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump the schema"
+  },
+  "filterText": "parse_ese_catalog.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_ese_catalog($0)"
+  }
+ },
+ {
+  "label": "parse_evtx",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from an EVTX file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from an EVTX file"
+  },
+  "filterText": "parse_evtx.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_evtx($0)"
+  }
+ },
+ {
+  "label": "parse_journald",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a journald file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a journald file"
+  },
+  "filterText": "parse_journald.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_journald($0)"
+  }
+ },
+ {
+  "label": "parse_json_array",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a line oriented json file"
+  },
+  "filterText": "parse_json_array.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_json_array($0)"
+  }
+ },
+ {
+  "label": "parse_jsonl",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a line oriented json file"
+  },
+  "filterText": "parse_jsonl.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_jsonl($0)"
+  }
+ },
+ {
+  "label": "parse_lines",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a file separated into lines"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a file separated into lines"
+  },
+  "filterText": "parse_lines.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_lines($0)"
+  }
+ },
+ {
+  "label": "parse_mft",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $MFT from an NTFS volume"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $MFT from an NTFS volume"
+  },
+  "filterText": "parse_mft.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_mft($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_i30",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "filterText": "parse_ntfs_i30.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_ntfs_i30($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_ranges",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Show the run ranges for an NTFS stream"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Show the run ranges for an NTFS stream"
+  },
+  "filterText": "parse_ntfs_ranges.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_ntfs_ranges($0)"
+  }
+ },
+ {
+  "label": "parse_pst",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a PST file and extract email data"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PST file and extract email data"
+  },
+  "filterText": "parse_pst.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_pst($0)"
+  }
+ },
+ {
+  "label": "parse_records_with_regex",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a file with a set of regexp and yields matches as"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a file with a set of regexp and yields matches as records"
+  },
+  "filterText": "parse_records_with_regex.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_records_with_regex($0)"
+  }
+ },
+ {
+  "label": "parse_recyclebin",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a $I file found in the $Recycle"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a $I file found in the $Recycle"
+  },
+  "filterText": "parse_recyclebin.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_recyclebin($0)"
+  }
+ },
+ {
+  "label": "parse_usn",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse the USN journal from a device, image file or USN file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse the USN journal from a device, image file or USN file"
+  },
+  "filterText": "parse_usn.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 20
+    }
+   },
+   "newText": "parse_usn($0)"
+  }
+ }
+]
+
+Test case 8: Plugin position after FROM only offers plugins
+select * from pars
+select * from pars<--
+Diagnostics:
+[]
+Completions:
+[
+ {
+  "label": "parse_auditd",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse log files generated by auditd"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse log files generated by auditd"
+  },
+  "filterText": "parse_auditd.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_auditd($0)"
+  }
+ },
+ {
+  "label": "parse_csv",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a CSV file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a CSV file"
+  },
+  "filterText": "parse_csv.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_csv($0)"
+  }
+ },
+ {
+  "label": "parse_ese",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump a table"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump a table"
+  },
+  "filterText": "parse_ese.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_ese($0)"
+  }
+ },
+ {
+  "label": "parse_ese_catalog",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump the schema"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump the schema"
+  },
+  "filterText": "parse_ese_catalog.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_ese_catalog($0)"
+  }
+ },
+ {
+  "label": "parse_evtx",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from an EVTX file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from an EVTX file"
+  },
+  "filterText": "parse_evtx.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_evtx($0)"
+  }
+ },
+ {
+  "label": "parse_journald",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a journald file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a journald file"
+  },
+  "filterText": "parse_journald.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_journald($0)"
+  }
+ },
+ {
+  "label": "parse_json_array",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a line oriented json file"
+  },
+  "filterText": "parse_json_array.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_json_array($0)"
+  }
+ },
+ {
+  "label": "parse_jsonl",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a line oriented json file"
+  },
+  "filterText": "parse_jsonl.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_jsonl($0)"
+  }
+ },
+ {
+  "label": "parse_lines",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a file separated into lines"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a file separated into lines"
+  },
+  "filterText": "parse_lines.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_lines($0)"
+  }
+ },
+ {
+  "label": "parse_mft",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $MFT from an NTFS volume"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $MFT from an NTFS volume"
+  },
+  "filterText": "parse_mft.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_mft($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_i30",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "filterText": "parse_ntfs_i30.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_ntfs_i30($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_ranges",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Show the run ranges for an NTFS stream"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Show the run ranges for an NTFS stream"
+  },
+  "filterText": "parse_ntfs_ranges.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_ntfs_ranges($0)"
+  }
+ },
+ {
+  "label": "parse_pst",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a PST file and extract email data"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PST file and extract email data"
+  },
+  "filterText": "parse_pst.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_pst($0)"
+  }
+ },
+ {
+  "label": "parse_records_with_regex",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a file with a set of regexp and yields matches as"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a file with a set of regexp and yields matches as records"
+  },
+  "filterText": "parse_records_with_regex.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_records_with_regex($0)"
+  }
+ },
+ {
+  "label": "parse_recyclebin",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a $I file found in the $Recycle"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a $I file found in the $Recycle"
+  },
+  "filterText": "parse_recyclebin.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_recyclebin($0)"
+  }
+ },
+ {
+  "label": "parse_usn",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse the USN journal from a device, image file or USN file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse the USN journal from a device, image file or USN file"
+  },
+  "filterText": "parse_usn.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_usn($0)"
+  }
+ }
+]
+
+Test case 9: Unclosed paren completes args of the call before it
+SELECT * FROM pslist(
+SELECT * FROM pslist(<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 21
+   },
+   "end": {
+    "line": 0,
+    "character": 21
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,22) Generic Error: unexpected token \"<EOF>\" (expected <ident> \"=\" ((\"{\" _Select \"}\") | (\"[\" _CommaExpression? \"]\") | _AndExpression))"
+ }
+]
+Completions:
+[
+ {
+  "label": "pid",
+  "labelDetails": {
+   "detail": ": int64",
+   "description": "A process ID to list. If not provided list all processes."
+  },
+  "kind": 6,
+  "detail": "pslist arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
+  },
+  "filterText": "pid",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 21
+    },
+    "end": {
+     "line": 0,
+     "character": 21
+    }
+   },
+   "newText": "pid="
+  }
+ }
+]
+
+Test case 10: Trigger dot hiding the paren still completes args
+SELECT * FROM pslist(.
+SELECT * FROM pslist(.<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 21
+   },
+   "end": {
+    "line": 0,
+    "character": 21
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,22) Generic Error: unexpected token \".\" (expected <ident> \"=\" ((\"{\" _Select \"}\") | (\"[\" _CommaExpression? \"]\") | _AndExpression))"
+ }
+]
+Completions:
+[
+ {
+  "label": "pid",
+  "labelDetails": {
+   "detail": ": int64",
+   "description": "A process ID to list. If not provided list all processes."
+  },
+  "kind": 6,
+  "detail": "pslist arg",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Type: `int64`\n\nA process ID to list. If not provided list all processes."
+  },
+  "filterText": ".pid",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 21
+    },
+    "end": {
+     "line": 0,
+     "character": 22
+    }
+   },
+   "newText": "pid="
+  }
+ }
+]
+
+Test case 11: Symbol callsite falls back to prefix completion
+SELECT parse_ FROM scope()
+SELECT parse_<--
+Diagnostics:
+[]
+Completions:
+[
+ {
+  "label": "parse_auditd",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse log files generated by auditd"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse log files generated by auditd"
+  },
+  "filterText": "parse_auditd.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_auditd($0)"
+  }
+ },
+ {
+  "label": "parse_binary",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a binary file into a data structure using a profile"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a binary file into a data structure using a profile"
+  },
+  "filterText": "parse_binary.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_binary($0)"
+  }
+ },
+ {
+  "label": "parse_csv",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a CSV file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a CSV file"
+  },
+  "filterText": "parse_csv.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_csv($0)"
+  }
+ },
+ {
+  "label": "parse_ese",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump a table"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump a table"
+  },
+  "filterText": "parse_ese.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_ese($0)"
+  }
+ },
+ {
+  "label": "parse_ese_catalog",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Opens an ESE file and dump the schema"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Opens an ESE file and dump the schema"
+  },
+  "filterText": "parse_ese_catalog.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_ese_catalog($0)"
+  }
+ },
+ {
+  "label": "parse_evtx",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from an EVTX file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from an EVTX file"
+  },
+  "filterText": "parse_evtx.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_evtx($0)"
+  }
+ },
+ {
+  "label": "parse_float",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Convert a string to a float"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Convert a string to a float"
+  },
+  "filterText": "parse_float.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_float($0)"
+  }
+ },
+ {
+  "label": "parse_journald",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a journald file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a journald file"
+  },
+  "filterText": "parse_journald.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_journald($0)"
+  }
+ },
+ {
+  "label": "parse_json",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a JSON string into an object"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a JSON string into an object"
+  },
+  "filterText": "parse_json.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_json($0)"
+  }
+ },
+ {
+  "label": "parse_json_array",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a JSON string into an array"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a JSON string into an array"
+  },
+  "filterText": "parse_json_array.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_json_array($0)"
+  }
+ },
+ {
+  "label": "parse_json_array",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses events from a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses events from a line oriented json file"
+  },
+  "filterText": "parse_json_array.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_json_array($0)"
+  }
+ },
+ {
+  "label": "parse_jsonl",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a line oriented json file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a line oriented json file"
+  },
+  "filterText": "parse_jsonl.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_jsonl($0)"
+  }
+ },
+ {
+  "label": "parse_lines",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a file separated into lines"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a file separated into lines"
+  },
+  "filterText": "parse_lines.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_lines($0)"
+  }
+ },
+ {
+  "label": "parse_mft",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $MFT from an NTFS volume"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $MFT from an NTFS volume"
+  },
+  "filterText": "parse_mft.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_mft($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse specific inodes from an NTFS image file or the raw"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse specific inodes from an NTFS image file or the raw device"
+  },
+  "filterText": "parse_ntfs.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_ntfs($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_i30",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Scan the $I30 stream from an NTFS MFT entry"
+  },
+  "filterText": "parse_ntfs_i30.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_ntfs_i30($0)"
+  }
+ },
+ {
+  "label": "parse_ntfs_ranges",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Show the run ranges for an NTFS stream"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Show the run ranges for an NTFS stream"
+  },
+  "filterText": "parse_ntfs_ranges.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_ntfs_ranges($0)"
+  }
+ },
+ {
+  "label": "parse_pe",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a PE file"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PE file"
+  },
+  "filterText": "parse_pe.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_pe($0)"
+  }
+ },
+ {
+  "label": "parse_pkcs7",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a DER encoded pkcs7 string into an object"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a DER encoded pkcs7 string into an object"
+  },
+  "filterText": "parse_pkcs7.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_pkcs7($0)"
+  }
+ },
+ {
+  "label": "parse_pst",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse a PST file and extract email data"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a PST file and extract email data"
+  },
+  "filterText": "parse_pst.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_pst($0)"
+  }
+ },
+ {
+  "label": "parse_records_with_regex",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a file with a set of regexp and yields matches as"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a file with a set of regexp and yields matches as records"
+  },
+  "filterText": "parse_records_with_regex.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_records_with_regex($0)"
+  }
+ },
+ {
+  "label": "parse_recyclebin",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parses a $I file found in the $Recycle"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses a $I file found in the $Recycle"
+  },
+  "filterText": "parse_recyclebin.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_recyclebin($0)"
+  }
+ },
+ {
+  "label": "parse_string_with_regex",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a string with a set of regex and extract fields"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a string with a set of regex and extract fields"
+  },
+  "filterText": "parse_string_with_regex.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_string_with_regex($0)"
+  }
+ },
+ {
+  "label": "parse_usn",
+  "labelDetails": {
+   "detail": " Plugin",
+   "description": "Parse the USN journal from a device, image file or USN file"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse the USN journal from a device, image file or USN file"
+  },
+  "filterText": "parse_usn.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_usn($0)"
+  }
+ },
+ {
+  "label": "parse_x509",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse a DER encoded x509 string into an object"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse a DER encoded x509 string into an object"
+  },
+  "filterText": "parse_x509.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_x509($0)"
+  }
+ },
+ {
+  "label": "parse_xml",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse an XML document into a dict like object"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse an XML document into a dict like object"
+  },
+  "filterText": "parse_xml.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_xml($0)"
+  }
+ },
+ {
+  "label": "parse_yaml",
+  "labelDetails": {
+   "detail": " Function",
+   "description": "Parse yaml into an object"
+  },
+  "kind": 1,
+  "detail": "Built in Function",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parse yaml into an object"
+  },
+  "filterText": "parse_yaml.",
+  "insertTextFormat": 2,
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_yaml($0)"
+  }
  }
 ]

@@ -2,7 +2,8 @@ package lsp
 
 import (
 	"context"
-	"regexp"
+	"fmt"
+	"os"
 	"strings"
 	"sync"
 
@@ -11,14 +12,9 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
-	"www.velocidex.com/golang/vfilter"
-	"www.velocidex.com/golang/vfilter/types"
 )
 
 var (
-	doc_regex = regexp.MustCompile("doc=(.+)")
-
 	mu                 sync.Mutex
 	cachedDescriptions []*api_proto.Completion
 	func_lookup        map[string]*api_proto.Completion
@@ -42,8 +38,16 @@ func loadApiDescriptions() []*api_proto.Completion {
 	}
 
 	descriptions, err := utils.LoadApiDescription()
-	if err != nil {
-		descriptions = IntrospectDescription()
+	if err != nil || len(descriptions) == 0 {
+		// The embedded reference document is compiled into every
+		// build so this should never happen - but if it does we
+		// must not fail silently or every IDE feature will appear
+		// broken with nothing in the logs to explain it. Note we
+		// can not use the regular logger here as it requires a
+		// config object we do not carry - stderr is safe because
+		// the LSP protocol runs over stdin/stdout.
+		fmt.Fprintf(os.Stderr,
+			"LSP: unable to load VQL API descriptions: %v\n", err)
 	}
 
 	for _, d := range descriptions {
@@ -54,89 +58,6 @@ func loadApiDescriptions() []*api_proto.Completion {
 	cachedDescriptions = descriptions
 
 	return cachedDescriptions
-}
-
-func IntrospectDescription() []*api_proto.Completion {
-	result := []*api_proto.Completion{}
-
-	scope := vql_subsystem.MakeScope()
-	defer scope.Close()
-
-	type_map := types.NewTypeMap()
-	info := scope.Describe(type_map)
-
-	for _, item := range info.Functions {
-		var metadata map[string]string
-		if item.Metadata != nil {
-			metadata = make(map[string]string)
-			for _, i := range item.Metadata.Items() {
-				metadata[i.Key] = utils.ToString(i.Value)
-			}
-		}
-		result = append(result, &api_proto.Completion{
-			Name:        item.Name,
-			Description: elideDescription(item.Doc),
-			Type:        "Function",
-			Args:        getArgDescriptors(item.ArgType, type_map, scope),
-			Metadata:    metadata,
-		})
-	}
-
-	for _, item := range info.Plugins {
-		var metadata map[string]string
-		if item.Metadata != nil {
-			metadata = make(map[string]string)
-			for _, i := range item.Metadata.Items() {
-				metadata[i.Key] = utils.ToString(i.Value)
-			}
-		}
-		result = append(result, &api_proto.Completion{
-			Name:        item.Name,
-			Description: elideDescription(item.Doc),
-			Type:        "Plugin",
-			Args:        getArgDescriptors(item.ArgType, type_map, scope),
-			Metadata:    metadata,
-		})
-	}
-
-	return result
-}
-
-func getArgDescriptors(
-	arg_type string,
-	type_map *vfilter.TypeMap,
-	scope vfilter.Scope) []*api_proto.ArgDescriptor {
-	args := []*api_proto.ArgDescriptor{}
-	arg_desc, pres := type_map.Get(scope, arg_type)
-	if pres && arg_desc != nil && arg_desc.Fields != nil {
-		for _, i := range arg_desc.Fields.Items() {
-			v, ok := i.Value.(*types.TypeReference)
-			if !ok {
-				continue
-			}
-
-			target := v.Target
-			if v.Repeated {
-				target = " list of " + target
-			}
-
-			required := ""
-			if strings.Contains(v.Tag, "required") {
-				required = "(required)"
-			}
-			doc := ""
-			matches := doc_regex.FindStringSubmatch(v.Tag)
-			if matches != nil {
-				doc = matches[1]
-			}
-			args = append(args, &api_proto.ArgDescriptor{
-				Name:        i.Key,
-				Description: elideDescription(doc) + required,
-				Type:        target,
-			})
-		}
-	}
-	return args
 }
 
 func getArtifactParamDescriptors(

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"sort"
 	"strings"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -79,7 +80,13 @@ func (self *AnalysisState) Debug() string {
 	}
 
 	res = append(res, "Definitions:")
-	for _, desc := range self.Definitions {
+	names := make([]string, 0, len(self.Definitions))
+	for name := range self.Definitions {
+		names = append(names, name)
+	}
+	sort.Strings(names)
+	for _, name := range names {
+		desc := self.Definitions[name]
 		res = append(res, fmt.Sprintf("(%d,%d)-(%d,%d) %s (%s)",
 			desc.Pos.Pos.Line, desc.Pos.Pos.Column,
 			desc.Pos.EndPos.Line, desc.Pos.EndPos.Column,

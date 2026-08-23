@@ -1,0 +1,41 @@
+
+Test case 0: Types of the named arguments
+SELECT * FROM glob(globs='/foo', accessor='file')
+Inlay hints:
+[
+ {
+  "position": {
+   "line": 0,
+   "character": 24
+  },
+  "label": "· string",
+  "kind": 1
+ },
+ {
+  "position": {
+   "line": 0,
+   "character": 41
+  },
+  "label": "· string",
+  "kind": 1
+ }
+]
+
+Test case 1: Types of a function call
+SELECT upcase(string='abc') FROM scope()
+Inlay hints:
+[
+ {
+  "position": {
+   "line": 0,
+   "character": 20
+  },
+  "label": "· string",
+  "kind": 1
+ }
+]
+
+Test case 2: No hints for non built in calls
+SELECT * FROM MyUnknownPlugin(foo=1)
+Inlay hints:
+[]

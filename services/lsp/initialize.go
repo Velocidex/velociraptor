@@ -15,12 +15,11 @@ func (self *LSPServer) Initialize(
 			TextDocumentSync: protocol.TextDocumentSyncKindFull,
 
 			// The server pushes diagnostics via
-			// textDocument/publishDiagnostics.
-			DiagnosticProvider: &protocol.DiagnosticOptions{
-				InterFileDependencies: false,
-				WorkspaceDiagnostics:  false,
-				Identifier:            new("vql"),
-			},
+			// textDocument/publishDiagnostics. Pull diagnostics
+			// (textDocument/diagnostic) are deliberately NOT
+			// advertised: clients that see the capability register
+			// an extra diagnostic collection and the same
+			// diagnostics appear twice in the problems panel.
 
 			// The server provides a document outline.
 			DocumentSymbolProvider: protocol.Boolean(true),
@@ -29,8 +28,11 @@ func (self *LSPServer) Initialize(
 			HoverProvider: protocol.Boolean(true),
 
 			// The server provides autocompletion. Typing '.' (as in
-			// Artifact.Linux.Sys) or '(' (as in pslist() ) should
-			// trigger completion.
+			// Artifact.Linux.Sys) triggers completion. '(' also
+			// triggers completion so argument names pop up right
+			// after an unclosed call like "pslist(" - such queries do
+			// not parse yet so signature help can not fire for them
+			// and the two popups never overlap in practice.
 			CompletionProvider: &protocol.CompletionOptions{
 				TriggerCharacters: []string{".", "(", "?"},
 			},
@@ -43,6 +45,29 @@ func (self *LSPServer) Initialize(
 				},
 				Full: protocol.Boolean(true),
 			},
+
+			// The server provides document formatting.
+			DocumentFormattingProvider: protocol.Boolean(true),
+
+			// The server provides signature help.
+			SignatureHelpProvider: &protocol.SignatureHelpOptions{
+				TriggerCharacters: []string{"(", ","},
+			},
+
+			// The server provides folding ranges.
+			FoldingRangeProvider: protocol.Boolean(true),
+
+			// The server provides workspace symbols.
+			WorkspaceSymbolProvider: protocol.Boolean(true),
+
+			// The server provides code actions.
+			CodeActionProvider: protocol.Boolean(true),
+
+			// The server provides references.
+			ReferencesProvider: protocol.Boolean(true),
+
+			// The server provides rename.
+			RenameProvider: protocol.Boolean(true),
 		},
 		ServerInfo: protocol.ServerInfo{
 			Name:    "vql-lsp",
