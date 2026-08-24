@@ -280,10 +280,10 @@ fi
 		"PostInst": `
 getent group {{.ServerGroup}} >/dev/null 2>&1 || groupadd \
         -r \
-	{{.ServerGroup}}
+        {{.ServerGroup}}
 getent passwd {{.ServerUser}} >/dev/null 2>&1 || useradd \
         -r -l \
-	-g {{.ServerGroup}} \
+        -g {{.ServerGroup}} \
         -d /proc \
         -s /sbin/nologin \
         -c "{{.ServiceDescription}}" \
@@ -344,12 +344,12 @@ chmod 755 {{.VelociraptorBinaryPath}}
 		// permissions.
 		"PostInst": `
 if ! getent group {{.ServerUser}} >/dev/null; then
-	addgroup --system {{.ServerGroup}}
+   addgroup --system {{.ServerGroup}}
 fi
 
 if ! getent passwd {{.ServerUser}} >/dev/null; then
    adduser --system --home /etc/{{.ServerUser}} --no-create-home \
-	  --ingroup {{.ServerGroup}} {{.ServerUser}} --shell /bin/false \
+     --ingroup {{.ServerGroup}} {{.ServerUser}} --shell /bin/false \
      --gecos "{{.ServiceDescription}}"
 fi
 
