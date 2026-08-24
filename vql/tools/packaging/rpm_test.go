@@ -132,6 +132,37 @@ func (self *PackagingTestSuite) TestRPMServer() {
 	goldie.Assert(self.T(), "TestRPMServer", fixture)
 }
 
+func (self *PackagingTestSuite) TestRPMServerWithCustomUser() {
+	spec := NewServerRPMSpec()
+	spec.Expansion.ServerUser = "myexistinguser"
+
+	arch, err := getRPMArch(self.elf_data)
+	assert.NoError(self.T(), err)
+
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	spec.SetRuntimeParameters(
+		target_config, arch, "releaseX", "server", 0, self.elf_data)
+
+	builder, err := BuildRPM(spec)
+	assert.NoError(self.T(), err)
+
+	service_file, ok := builder.(*RPMBuilder).state.Get(
+		"/etc/systemd/system/velociraptor_server.service")
+	assert.True(self.T(), ok)
+	service_body := string(service_file.(rpmpack.RPMFile).Body)
+	assert.Contains(self.T(), service_body, "User=myexistinguser")
+	assert.Contains(self.T(), service_body, "Group=myexistinguser")
+
+	postin, ok := builder.(*RPMBuilder).state.Get("Postin")
+	assert.True(self.T(), ok)
+	postin_body := postin.(string)
+	assert.Contains(self.T(), postin_body, "getent group myexistinguser")
+	assert.Contains(self.T(), postin_body, "getent passwd myexistinguser")
+	assert.NotContains(self.T(), postin_body, "getent passwd velociraptor")
+}
+
 func (self *PackagingTestSuite) TestRPMServerMaster() {
 	spec := NewServerRPMSpec()
 	arch, err := getRPMArch(self.elf_data)

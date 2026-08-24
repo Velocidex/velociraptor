@@ -35,6 +35,9 @@ var (
 	server_rpm_command_binary = server_rpm_command.Flag(
 		"binary", "The binary to package").String()
 
+	server_rpm_command_user = server_rpm_command.Flag(
+		"server_user", "The existing server user to run the packaged service as.").String()
+
 	client_rpm_command_output = client_rpm_command.Flag(
 		"output", "Directory to store rpms in. (Default current directory)").
 		Default(".").String()
@@ -198,15 +201,30 @@ func doServerRPM() error {
 			Set("ConfigPath", abs_config_path),
 	}
 
-	query := `
-       LET _ <= log(message="Packaging binary %v to client RPM", args=BinaryToPackage)
+	query_preamble := ""
+	package_spec := ""
 
+	if *server_rpm_command_user != "" {
+		builder.Env.Set("ServerUser", *server_rpm_command_user)
+
+		query_preamble = `
+       LET S <= SELECT Spec FROM rpm_create(show_spec=TRUE, server=TRUE)
+       LET R <= S[0].Spec + dict(
+         Expansion=S[0].Spec.Expansion + dict(ServerUser=ServerUser)
+       )
+`
+		package_spec = `,
+                       package_spec=R`
+	}
+
+	query := fmt.Sprintf(`
+       LET _ <= log(message="Packaging binary %%v to server RPM", args=BinaryToPackage)%s
        SELECT OSPath
-       FROM rpm_create(exe=BinaryToPackage, server=TRUE,
+       FROM rpm_create(exe=BinaryToPackage, server=TRUE%s,
                        directory_name=Output,
                        config=read_file(filename=ConfigPath, length=1000000),
                        release=Release)
-`
+`, query_preamble, package_spec)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
