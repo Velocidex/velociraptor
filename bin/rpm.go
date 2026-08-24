@@ -211,33 +211,26 @@ func doServerRPM() error {
 			Set("ConfigPath", abs_config_path),
 	}
 
-	query_preamble := ""
-	package_spec := ""
-
+	server_user_arg := ""
+	server_group_arg := ""
+	
+	// if the user (and group) is specified, supply it to the rpm_create function to set custom user/group
 	if server_user != "" {
 		builder.Env.Set("ServerUser", server_user)
 		builder.Env.Set("ServerGroup", server_group)
 
-		query_preamble = `
-       LET S <= SELECT Spec FROM rpm_create(show_spec=TRUE, server=TRUE)
-		 LET EffectiveUser <= ServerUser || S[0].Spec.Expansion.ServerUser
-		 LET EffectiveGroup <= ServerGroup || EffectiveUser
-       LET R <= S[0].Spec + dict(
-		 Expansion=S[0].Spec.Expansion + dict(ServerUser=EffectiveUser, ServerGroup=EffectiveGroup)
-       )
-`
-		package_spec = `,
-                       package_spec=R`
+		server_user_arg =  ",\n                          server_user=ServerUser"
+		server_group_arg = ",\n                          server_group=ServerGroup"
 	}
 
 	query := fmt.Sprintf(`
-       LET _ <= log(message="Packaging binary %%v to server RPM", args=BinaryToPackage)%s
-       SELECT OSPath
-       FROM rpm_create(exe=BinaryToPackage, server=TRUE%s,
-                       directory_name=Output,
-                       config=read_file(filename=ConfigPath, length=1000000),
-                       release=Release)
-`, query_preamble, package_spec)
+          LET _ <= log(message="Packaging binary %%v to server RPM", args=BinaryToPackage)
+          LET Config <= read_file(filename=ConfigPath, length=1000000)
+          SELECT OSPath
+          FROM rpm_create(exe=BinaryToPackage, server=TRUE,
+                          directory_name=Output,
+                          config=Config,
+                          release=Release%s%s)`, server_user_arg, server_group_arg)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {

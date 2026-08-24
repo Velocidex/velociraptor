@@ -32,6 +32,8 @@ type CreatePackageArgs struct {
 	Exe         *accessors.OSPath `vfilter:"optional,field=exe,doc=Alternative a path to the executable to repack"`
 	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
 	Config      string            `vfilter:"optional,field=config,doc=The config to be repacked in the form of a json or yaml string. If not provided we use the current config./"`
+	ServerUser  string            `vfilter:"optional,field=server_user,doc=The user to run the server as"`
+	ServerGroup string            `vfilter:"optional,field=server_group,doc=The group to run the server as"`
 	ShowSpec    bool              `vfilter:"optional,field=show_spec,doc=If set we only show the spec that would have been used. You can use this to customize the input for package_spec"`
 	DirName     string            `vfilter:"optional,field=directory_name,doc=Package files will be created inside this directory. If not specified we use a temporary directory"`
 	ExtraArgs   []string          `vfilter:"optional,field=extra_args,doc=Additional command line args to be provided to the service"`
@@ -122,6 +124,17 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 			}
 		}
 
+		effective_server_user := ""
+		effective_server_group := ""
+		if arg.Server {
+			effective_server_user, effective_server_group, err =
+				ValidateCustomServerUserGroup(arg.ServerUser, arg.ServerGroup)
+			if err != nil {
+				scope.Log("ERROR:%v: %v", self.name, err)
+				return
+			}
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("ERROR:%v: Command can only run on the server", self.name)
@@ -148,6 +161,19 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				return
 			}
 			if spec.Server {
+				spec.Expansion.ServerUser, spec.Expansion.ServerGroup, err =
+					ValidateCustomServerUserGroup(
+						spec.Expansion.ServerUser, spec.Expansion.ServerGroup)
+				if err != nil {
+					scope.Log("ERROR:%v: %v", self.name, err)
+					return
+				}
+
+				if effective_server_user != "" {
+					spec.Expansion.ServerUser = effective_server_user
+					spec.Expansion.ServerGroup = effective_server_group
+				}
+
 				target_config_obj, err = validateServerConfig(target_config_obj)
 				if err != nil {
 					scope.Log("ERROR:%v: %v", self.name, err)
@@ -167,6 +193,19 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 
 		} else if arg.Server {
 			spec = self.serverSpecFactory()
+			spec.Expansion.ServerUser, spec.Expansion.ServerGroup, err =
+				ValidateCustomServerUserGroup(
+					spec.Expansion.ServerUser, spec.Expansion.ServerGroup)
+			if err != nil {
+				scope.Log("ERROR:%v: %v", self.name, err)
+				return
+			}
+
+			if effective_server_user != "" {
+				spec.Expansion.ServerUser = effective_server_user
+				spec.Expansion.ServerGroup = effective_server_group
+			}
+
 			target_config_obj, err = validateServerConfig(target_config_obj)
 			if err != nil {
 				scope.Log("ERROR:%v: %v", self.name, err)
