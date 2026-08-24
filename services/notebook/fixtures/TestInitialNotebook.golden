@@ -17,7 +17,13 @@
     "notebook": [
      {
       "template": "# Welcome to Velociraptor notebooks!\n",
-      "type": "markdown"
+      "type": "markdown",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Notebooks.Default"
+       }
+      ]
      }
     ]
    }
@@ -64,7 +70,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Generic.Client.Info"
+       }
+      ]
      }
     ]
    },
@@ -122,7 +134,13 @@
     "notebook": [
      {
       "template": "# Custom.Generic.Client.Info template\n",
-      "type": "markdown"
+      "type": "markdown",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Custom.Generic.Client.Info"
+       }
+      ]
      }
     ]
    },
@@ -188,7 +206,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Events from Generic.Events\n\nFrom {{ Scope \"StartTime\" }} to {{ Scope \"EndTime\" }}\n*/\n\nSELECT timestamp(epoch=_ts) AS ServerTime, *\n FROM source(start_time=StartTime, end_time=EndTime, artifact=\"Generic.Events\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Generic.Events"
+       }
+      ]
      }
     ]
    }
@@ -256,7 +280,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Events from Generic.Events\n\nFrom {{ Scope \"StartTime\" }} to {{ Scope \"EndTime\" }}\n*/\n\nSELECT timestamp(epoch=_ts) AS ServerTime, *\n FROM source(start_time=StartTime, end_time=EndTime, artifact=\"Generic.Events\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Generic.Events"
+       }
+      ]
      }
     ]
    }
@@ -323,7 +353,13 @@
     "notebook": [
      {
       "template": "SELECT Arg1 FROM scope()\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "GlobalNotebook"
+       }
+      ]
      }
     ]
    }
@@ -376,7 +412,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Generic.Client.Info"
+       }
+      ]
      }
     ]
    },
@@ -422,7 +464,13 @@
     "notebook": [
      {
       "template": "SELECT NotebookExport, ArtifactExport FROM scope()",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "NotebookWithImport"
+       }
+      ]
      }
     ]
    }
@@ -455,17 +503,86 @@
      {
       "template": "SELECT * FROM info()",
       "type": "vql_suggestion",
-      "name": "A good suggestion."
+      "name": "A good suggestion.",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "NotebookWithSugegstions"
+       }
+      ]
      },
      {
       "template": "\n/*\n# NotebookWithSugegstions\n*/\nSELECT * FROM source(artifact=\"NotebookWithSugegstions\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "NotebookWithSugegstions"
+       }
+      ]
      }
     ]
    }
   ]
  },
  "Notebook with suggestions Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {}
+ },
+ "Multiple artifacts Request": {
+  "name": "Multiple artifacts",
+  "description": "Cells are tagged with the artifact they were created from",
+  "artifacts": [
+   "Generic.Client.Info",
+   "ArtifactWithCustomNotebook"
+  ]
+ },
+ "Multiple artifacts Response": {
+  "name": "PrivateNotebook",
+  "parameters": [
+   {
+    "name": "FirstParameter",
+    "default": "1982-12-10",
+    "type": "timestamp"
+   },
+   {
+    "name": "ArtifactName",
+    "default": "Generic.Client.Info",
+    "description": "Name of the artifact this notebook came from."
+   }
+  ],
+  "sources": [
+   {
+    "notebook": [
+     {
+      "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "Generic.Client.Info"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "notebook": [
+     {
+      "template": "/*\n# ArtifactWithCustomNotebook\n*/\n\n// Deliberately no artifact specified here - the cell is\n// tagged with its own artifact by the notebook manager.\nSELECT * FROM source()\n",
+      "type": "vql",
+      "env": [
+       {
+        "key": "CellArtifactName",
+        "value": "ArtifactWithCustomNotebook"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Multiple artifacts Spec": {
   "artifact": "PrivateNotebook",
   "parameters": {}
  }

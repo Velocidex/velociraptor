@@ -35,6 +35,21 @@ var (
 			Mode: MODE_HUNT_ARTIFACT,
 		},
 		{
+			// Cells created from an artifact source are tagged with
+			// CellArtifactName which takes precedence over the
+			// notebook wide ArtifactName (which refers to the first
+			// artifact in the collection).
+			Env: ordereddict.NewDict().
+				Set("CellArtifactName", "Windows.Search.FileFinder").
+				Set("ArtifactName", "Generic.Client.Info").
+				Set("HuntId", "H.123"),
+			Args: ordereddict.NewDict(),
+			Mode: MODE_HUNT_ARTIFACT,
+			Assertion: func(arg *SourcePluginArgs) bool {
+				return arg.Artifact == "Windows.Search.FileFinder"
+			},
+		},
+		{
 			// Client event notebook provides the following in env.
 			Env: ordereddict.NewDict().
 				Set("ArtifactName", "Server.Monitor.Health").

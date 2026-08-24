@@ -110,6 +110,12 @@
    "DEBUG:Query Stats: {\"RowsScanned\":1,\"PluginsCalled\":1,\"FunctionsCalled\":5,\"ProtocolSearch\":0,\"ScopeCopy\":3}\n"
   ],
   "type": "vql",
+  "env": [
+   {
+    "key": "CellArtifactName",
+    "value": "Notebook.With.Parameters"
+   }
+  ],
   "current_version": "03",
   "available_versions": [
    "03"

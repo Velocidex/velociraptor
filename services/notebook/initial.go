@@ -87,6 +87,24 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
+// Notebook cells created from an artifact source are tagged with
+// this environment variable. The value is the fully qualified
+// artifact name (including any named source - e.g.
+// Custom.Artifact/Source). The source() plugin gives this tag
+// precedence over the notebook wide ArtifactName parameter (which
+// always refers to the first artifact in the collection), so bare
+// source() calls within a cell resolve to the artifact the cell
+// was created from. Tagging happens at notebook creation time so
+// it automatically follows artifact renames or copies.
+const CellArtifactNameEnv = "CellArtifactName"
+
+func cellArtifactEnv(source_name string) []*artifacts_proto.ArtifactEnv {
+	return []*artifacts_proto.ArtifactEnv{{
+		Key:   CellArtifactNameEnv,
+		Value: source_name,
+	}}
+}
+
 // Create the initial cells of the notebook.
 func (self *NotebookManager) CreateInitialNotebook(ctx context.Context,
 	config_obj *config_proto.Config,
@@ -310,6 +328,17 @@ func CalculateNotebookArtifact(
 
 			custom_cells := false
 			for _, n := range s.Notebook {
+				// Clone the cell before we modify it because the
+				// original belongs to the global repository cache.
+				n = proto.Clone(n).(*artifacts_proto.NotebookSourceCell)
+
+				// Tag the cell with the artifact it was created
+				// from. This allows source() calls within the cell
+				// that do not explicitly specify an artifact to
+				// resolve to this artifact, even when the notebook
+				// is created from multiple artifacts.
+				n.Env = append(n.Env, cellArtifactEnv(source_name)...)
+
 				new_source.Notebook = append(new_source.Notebook, n)
 				switch strings.ToLower(n.Type) {
 
@@ -339,6 +368,7 @@ func CalculateNotebookArtifact(
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
 							Output: output,
+							Env:    cellArtifactEnv(source_name),
 							Template: fmt.Sprintf(`
 /*
 # Events from %v
@@ -357,6 +387,7 @@ LIMIT %v
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
 							Output: output,
+							Env:    cellArtifactEnv(source_name),
 							Template: fmt.Sprintf(`
 /*
 # %v

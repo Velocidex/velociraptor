@@ -96,6 +96,22 @@ sources:
   - name: A good suggestion.
     type: vql_suggestion
     template: SELECT * FROM info()
+`, `
+name: ArtifactWithCustomNotebook
+type: CLIENT
+sources:
+- query: |
+    SELECT * FROM info()
+  notebook:
+  - type: vql
+    template: |
+      /*
+      # ArtifactWithCustomNotebook
+      */
+
+      // Deliberately no artifact specified here - the cell is
+      // tagged with its own artifact by the notebook manager.
+      SELECT * FROM source()
 `}
 
 type checker func(t *testing.T, response *artifacts_proto.Artifact, spec *flows_proto.ArtifactSpec)
@@ -283,6 +299,29 @@ func initialTestCases(client_id string) []notebookTestCase {
 				AssertDictRegex(t, "vql_suggestion", "Sources.0.Notebook.0.Type", artifact)
 				AssertDictRegex(t, "SELECT \\* FROM source", "Sources.0.Notebook.1.Template", artifact)
 				AssertDictRegex(t, "vql", "Sources.0.Notebook.1.Type", artifact)
+			},
+		},
+		{
+			req: &api_proto.NotebookMetadata{
+				Name:        "Multiple artifacts",
+				Description: "Cells are tagged with the artifact they were created from",
+				Artifacts:   []string{"Generic.Client.Info", "ArtifactWithCustomNotebook"},
+			},
+			check: func(t *testing.T, artifact *artifacts_proto.Artifact,
+				spec *flows_proto.ArtifactSpec) {
+
+				// The default cell of the first artifact is tagged
+				// with its own artifact name.
+				AssertDictRegex(t, "CellArtifactName", "Sources.0.Notebook.0.Env.0.Key", artifact)
+				AssertDictRegex(t, "Generic.Client.Info",
+					"Sources.0.Notebook.0.Env.0.Value", artifact)
+
+				// The custom cell (with a bare source()) of the
+				// second artifact is tagged with its own artifact -
+				// not the first one in the collection.
+				AssertDictRegex(t, "CellArtifactName", "Sources.1.Notebook.0.Env.0.Key", artifact)
+				AssertDictRegex(t, "ArtifactWithCustomNotebook",
+					"Sources.1.Notebook.0.Env.0.Value", artifact)
 			},
 		},
 	}

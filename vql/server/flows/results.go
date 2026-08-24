@@ -414,7 +414,15 @@ func (self *SourcePluginArgs) ParseSourceArgsFromScope(scope vfilter.Scope) {
 	}
 
 	if self.Artifact == "" {
-		artifact_name, pres := scope.Resolve("ArtifactName")
+		// Cells created from an artifact source are tagged with the
+		// artifact they belong to (see notebook.CellArtifactNameEnv).
+		// This takes precedence over the notebook wide ArtifactName
+		// parameter which always refers to the first artifact in the
+		// collection.
+		artifact_name, pres := scope.Resolve("CellArtifactName")
+		if !pres {
+			artifact_name, pres = scope.Resolve("ArtifactName")
+		}
 		if pres {
 			artifact, ok := artifact_name.(string)
 			if ok {
