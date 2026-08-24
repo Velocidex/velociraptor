@@ -4,6 +4,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"fmt"
 
 	"github.com/google/rpmpack"
 	"github.com/stretchr/testify/suite"
@@ -134,7 +135,15 @@ func (self *PackagingTestSuite) TestRPMServer() {
 
 func (self *PackagingTestSuite) TestRPMServerWithCustomUser() {
 	spec := NewServerRPMSpec()
-	spec.Expansion.ServerUser = "myexistinguser"
+	
+	// as supplied by cmdline
+	server_user := "myexistinguser"
+	server_group := ""
+	server_user_val, server_group_val, err := ValidateCustomServerUserGroup(server_user, server_group)
+	assert.NoError(self.T(), err)
+
+	spec.Expansion.ServerUser = server_user_val
+	spec.Expansion.ServerGroup = server_group_val
 
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)
@@ -152,21 +161,28 @@ func (self *PackagingTestSuite) TestRPMServerWithCustomUser() {
 		"/etc/systemd/system/velociraptor_server.service")
 	assert.True(self.T(), ok)
 	service_body := string(service_file.(rpmpack.RPMFile).Body)
-	assert.Contains(self.T(), service_body, "User=myexistinguser")
-	assert.Contains(self.T(), service_body, "Group=myexistinguser")
+	assert.Contains(self.T(), service_body, fmt.Sprintf("User=%s", server_user_val))
+	assert.Contains(self.T(), service_body, fmt.Sprintf("Group=%s", server_group_val))
 
 	postin, ok := builder.(*RPMBuilder).state.Get("Postin")
 	assert.True(self.T(), ok)
 	postin_body := postin.(string)
-	assert.Contains(self.T(), postin_body, "getent group myexistinguser")
-	assert.Contains(self.T(), postin_body, "getent passwd myexistinguser")
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent group %s", server_user_val))
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent passwd %s", server_group_val))
 	assert.NotContains(self.T(), postin_body, "getent passwd velociraptor")
 }
 
 func (self *PackagingTestSuite) TestRPMServerWithCustomUserAndGroup() {
 	spec := NewServerRPMSpec()
-	spec.Expansion.ServerUser = "myexistinguser"
-	spec.Expansion.ServerGroup = "myexistinggroup"
+	
+	// as supplied by cmdline
+	server_user := "myexistinguser"
+	server_group := "myexistinggroup"
+	server_user_val, server_group_val, err := ValidateCustomServerUserGroup(server_user, server_group)
+	assert.NoError(self.T(), err)
+
+	spec.Expansion.ServerUser = server_user_val
+	spec.Expansion.ServerGroup = server_group_val
 
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)
@@ -184,14 +200,14 @@ func (self *PackagingTestSuite) TestRPMServerWithCustomUserAndGroup() {
 		"/etc/systemd/system/velociraptor_server.service")
 	assert.True(self.T(), ok)
 	service_body := string(service_file.(rpmpack.RPMFile).Body)
-	assert.Contains(self.T(), service_body, "User=myexistinguser")
-	assert.Contains(self.T(), service_body, "Group=myexistinggroup")
+	assert.Contains(self.T(), service_body, fmt.Sprintf("User=%s", server_user_val))
+	assert.Contains(self.T(), service_body, fmt.Sprintf("Group=%s", server_group_val))
 
 	postin, ok := builder.(*RPMBuilder).state.Get("Postin")
 	assert.True(self.T(), ok)
 	postin_body := postin.(string)
-	assert.Contains(self.T(), postin_body, "getent group myexistinggroup")
-	assert.Contains(self.T(), postin_body, "getent passwd myexistinguser")
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent group %s", server_group_val))
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent passwd %s", server_user_val))
 	assert.Contains(self.T(), postin_body, "-g myexistinggroup")
 	assert.NotContains(self.T(), postin_body, "getent passwd velociraptor")
 	assert.NotContains(self.T(), postin_body, "getent group velociraptor")
