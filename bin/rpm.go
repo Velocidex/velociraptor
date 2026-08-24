@@ -38,6 +38,9 @@ var (
 	server_rpm_command_user = server_rpm_command.Flag(
 		"server_user", "The existing server user to run the packaged service as.").String()
 
+	server_rpm_command_group = server_rpm_command.Flag(
+		"server_group", "The existing server group to run the packaged service as.").String()
+
 	client_rpm_command_output = client_rpm_command.Flag(
 		"output", "Directory to store rpms in. (Default current directory)").
 		Default(".").String()
@@ -189,6 +192,12 @@ func doServerRPM() error {
 		*rpm_command_release = "A"
 	}
 
+	server_user, server_group, err := validateCustomServerUserGroup(
+		*server_rpm_command_user, *server_rpm_command_group)
+	if err != nil {
+		return err
+	}
+
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -204,13 +213,16 @@ func doServerRPM() error {
 	query_preamble := ""
 	package_spec := ""
 
-	if *server_rpm_command_user != "" {
-		builder.Env.Set("ServerUser", *server_rpm_command_user)
+	if server_user != "" {
+		builder.Env.Set("ServerUser", server_user)
+		builder.Env.Set("ServerGroup", server_group)
 
 		query_preamble = `
        LET S <= SELECT Spec FROM rpm_create(show_spec=TRUE, server=TRUE)
+		 LET EffectiveUser <= ServerUser || S[0].Spec.Expansion.ServerUser
+		 LET EffectiveGroup <= ServerGroup || EffectiveUser
        LET R <= S[0].Spec + dict(
-         Expansion=S[0].Spec.Expansion + dict(ServerUser=ServerUser)
+		 Expansion=S[0].Spec.Expansion + dict(ServerUser=EffectiveUser, ServerGroup=EffectiveGroup)
        )
 `
 		package_spec = `,
@@ -232,6 +244,18 @@ func doServerRPM() error {
 	}
 
 	return logger.Error
+}
+
+func validateCustomServerUserGroup(server_user, server_group string) (string, string, error) {
+	if server_group != "" && server_user == "" {
+		return "", "", fmt.Errorf("--server_group requires --server_user")
+	}
+
+	if server_group == "" {
+		server_group = server_user
+	}
+
+	return server_user, server_group, nil
 }
 
 func init() {

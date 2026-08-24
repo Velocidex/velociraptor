@@ -261,7 +261,7 @@ ExecStart={{.VelociraptorBinaryPath}} --config {{.ConfigPath}} frontend {{ Escap
    --minion --node {{ .NodeName }}
 {{- end }}
 User={{.ServerUser}}
-Group={{.ServerUser}}
+Group={{.ServerGroup}}
 CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
 
@@ -270,20 +270,20 @@ WantedBy=multi-user.target
 `,
 		"Preinst": `
 if ! [ -f /bin/systemctl ] ; then
-   getent group {{.ServerUser}} >/dev/null || groupadd -g 115 -r {{.ServerUser}} || :
+   getent group {{.ServerGroup}} >/dev/null || groupadd -g 115 -r {{.ServerGroup}} || :
    getent passwd {{.ServerUser}} >/dev/null || \
-   useradd -c "Privilege-separated {{.ServerUser}}" -u 115 -g {{.ServerUser}}  -s /sbin/nologin \
+   useradd -c "Privilege-separated {{.ServerUser}}" -u 115 -g {{.ServerGroup}}  -s /sbin/nologin \
      -s /sbin/nologin -r -d /var/empty/{{.ServerUser}} {{.ServerUser}} 2> /dev/null || :
 fi
 `,
 
 		"PostInst": `
-getent group {{.ServerUser}} >/dev/null 2>&1 || groupadd \
+getent group {{.ServerGroup}} >/dev/null 2>&1 || groupadd \
         -r \
-        {{.ServerUser}}
+	{{.ServerGroup}}
 getent passwd {{.ServerUser}} >/dev/null 2>&1 || useradd \
         -r -l \
-        -g {{.ServerUser}} \
+	-g {{.ServerGroup}} \
         -d /proc \
         -s /sbin/nologin \
         -c "{{.ServiceDescription}}" \
@@ -300,8 +300,8 @@ mkdir -p '{{.FileStorePath}}'/config
 # Only chown two levels of the filestore directory in case
 # this is an upgrade and there are many files already there.
 # otherwise chown -R takes too long.
-chown {{.ServerUser}}:{{.ServerUser}} '{{.FileStorePath}}' '{{.FileStorePath}}'/*
-chown {{.ServerUser}}:{{.ServerUser}} -R $(dirname "{{.ConfigPath}}")
+chown {{.ServerUser}}:{{.ServerGroup}} '{{.FileStorePath}}' '{{.FileStorePath}}'/*
+chown {{.ServerUser}}:{{.ServerGroup}} -R $(dirname "{{.ConfigPath}}")
 
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "{{.ConfigPath}}")
@@ -344,12 +344,12 @@ chmod 755 {{.VelociraptorBinaryPath}}
 		// permissions.
 		"PostInst": `
 if ! getent group {{.ServerUser}} >/dev/null; then
-   addgroup --system {{.ServerUser}}
+	addgroup --system {{.ServerGroup}}
 fi
 
 if ! getent passwd {{.ServerUser}} >/dev/null; then
    adduser --system --home /etc/{{.ServerUser}} --no-create-home \
-     --ingroup {{.ServerUser}} {{.ServerUser}} --shell /bin/false \
+	  --ingroup {{.ServerGroup}} {{.ServerUser}} --shell /bin/false \
      --gecos "{{.ServiceDescription}}"
 fi
 
@@ -378,6 +378,9 @@ type TemplateExpansion struct {
 
 	// The privilege separated username for the server.
 	ServerUser string
+
+	// The group for the privilege separated user.
+	ServerGroup string
 
 	// Where to put the service file on systemd
 	SystemdServiceFile string
@@ -596,6 +599,7 @@ velociraptor-server-{{ .Version }}.{{ .Arch }}.rpm
 			ConfigPath:             "/etc/velociraptor/server.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor",
 			ServerUser:             "velociraptor",
+			ServerGroup:            "velociraptor",
 			SystemdServiceFile:     "velociraptor_server.service",
 			SysvService:            "velociraptor",
 			ServiceDescription:     "Velociraptor server",
@@ -647,6 +651,7 @@ velociraptor-server-{{ .Version }}.{{ .Arch }}.deb
 			ConfigPath:             "/etc/velociraptor/server.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor",
 			ServerUser:             "velociraptor",
+			ServerGroup:            "velociraptor",
 			SystemdServiceFile:     "velociraptor_server.service",
 			SysvService:            "velociraptor",
 			ServiceDescription:     "Velociraptor server",
