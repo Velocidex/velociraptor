@@ -169,6 +169,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 					return
 				}
 
+				// override default user (and group) if set
 				if effective_server_user != "" {
 					spec.Expansion.ServerUser = effective_server_user
 					spec.Expansion.ServerGroup = effective_server_group
@@ -180,7 +181,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 					return
 				}
 
-				// We force the binary to run as the velociraptor user
+				// We force the binary to run as the velociraptor (or custom) user
 				target_config_obj.Frontend.RunAsUser = spec.Expansion.ServerUser
 
 			} else {
@@ -201,6 +202,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				return
 			}
 
+			// override default user (and group) if set
 			if effective_server_user != "" {
 				spec.Expansion.ServerUser = effective_server_user
 				spec.Expansion.ServerGroup = effective_server_group
@@ -212,7 +214,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				return
 			}
 
-			// We force the binary to run as the velociraptor user
+			// We force the binary to run as the velociraptor (or custom) user
 			target_config_obj.Frontend.RunAsUser = spec.Expansion.ServerUser
 
 		} else {
