@@ -393,6 +393,18 @@ func validateClientConfig(
 	return config.StripClientConfig(client_config), nil
 }
 
+func ValidateCustomServerUserGroup(server_user, server_group string) (string, string, error) {
+	if server_group != "" && server_user == "" {
+		return "", "", fmt.Errorf("--server_group requires --server_user")
+	}
+
+	if server_group == "" {
+		server_group = server_user
+	}
+
+	return server_user, server_group, nil
+}
+
 func (self CreatePackagePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
 		Name:    self.name,
