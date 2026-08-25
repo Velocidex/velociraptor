@@ -5,19 +5,18 @@
  },
  "Unspecified Artifacts Response": {
   "name": "PrivateNotebook",
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "Notebooks.Default",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "sources": [
    {
     "notebook": [
      {
       "template": "# Welcome to Velociraptor notebooks!\n",
-      "type": "markdown"
+      "type": "markdown",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "Notebooks.Default"
+       }
+      ]
      }
     ]
    }
@@ -42,11 +41,6 @@
     "name": "FirstParameter",
     "default": "1982-12-10",
     "type": "timestamp"
-   },
-   {
-    "name": "ArtifactName",
-    "default": "Generic.Client.Info",
-    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "ClientId",
@@ -102,11 +96,6 @@
   "name": "PrivateNotebook",
   "parameters": [
    {
-    "name": "ArtifactName",
-    "default": "Custom.Generic.Client.Info",
-    "description": "Name of the artifact this notebook came from."
-   },
-   {
     "name": "ClientId",
     "default": "C.1235",
     "description": "Implied client id from notebook"
@@ -122,7 +111,13 @@
     "notebook": [
      {
       "template": "# Custom.Generic.Client.Info template\n",
-      "type": "markdown"
+      "type": "markdown",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "Custom.Generic.Client.Info"
+       }
+      ]
      }
     ]
    },
@@ -161,11 +156,6 @@
    {
     "name": "Arg1",
     "default": "Foo"
-   },
-   {
-    "name": "ArtifactName",
-    "default": "Generic.Events",
-    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "ClientId",
@@ -229,11 +219,6 @@
    {
     "name": "Arg1",
     "default": "Foo"
-   },
-   {
-    "name": "ArtifactName",
-    "default": "Generic.Events",
-    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "ClientId",
@@ -311,11 +296,6 @@
    {
     "name": "Arg2",
     "default": "Bar"
-   },
-   {
-    "name": "ArtifactName",
-    "default": "GlobalNotebook",
-    "description": "Name of the artifact this notebook came from."
    }
   ],
   "sources": [
@@ -323,7 +303,13 @@
     "notebook": [
      {
       "template": "SELECT Arg1 FROM scope()\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "GlobalNotebook"
+       }
+      ]
      }
     ]
    }
@@ -359,11 +345,6 @@
     "name": "FirstParameter",
     "default": "1982-12-10",
     "type": "timestamp"
-   },
-   {
-    "name": "ArtifactName",
-    "default": "Generic.Client.Info",
-    "description": "Name of the artifact this notebook came from."
    },
    {
     "name": "HuntId",
@@ -410,19 +391,18 @@
  },
  "Notebook with exports Response": {
   "name": "PrivateNotebook",
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "NotebookWithImport",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "sources": [
    {
     "notebook": [
      {
       "template": "SELECT NotebookExport, ArtifactExport FROM scope()",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "NotebookWithImport"
+       }
+      ]
      }
     ]
    }
@@ -442,13 +422,6 @@
  },
  "Notebook with suggestions Response": {
   "name": "PrivateNotebook",
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "NotebookWithSugegstions",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "sources": [
    {
     "notebook": [
@@ -466,6 +439,54 @@
   ]
  },
  "Notebook with suggestions Spec": {
+  "artifact": "PrivateNotebook",
+  "parameters": {}
+ },
+ "Notebook with multiple sources Request": {
+  "name": "Notebook with multiple sources",
+  "description": "Adding multiple sources and notebook should update ArtifactName for each source",
+  "artifacts": [
+   "MultipleNotebooks"
+  ]
+ },
+ "Notebook with multiple sources Response": {
+  "name": "PrivateNotebook",
+  "sources": [
+   {
+    "name": "Part1",
+    "notebook": [
+     {
+      "template": "SELECT * FROM info()\n",
+      "type": "vql",
+      "name": "Test1",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "MultipleNotebooks/Part1"
+       }
+      ]
+     }
+    ]
+   },
+   {
+    "name": "Part2",
+    "notebook": [
+     {
+      "template": "SELECT * FROM info()\n",
+      "type": "vql",
+      "name": "Test1",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "MultipleNotebooks/Part2"
+       }
+      ]
+     }
+    ]
+   }
+  ]
+ },
+ "Notebook with multiple sources Spec": {
   "artifact": "PrivateNotebook",
   "parameters": {}
  }
