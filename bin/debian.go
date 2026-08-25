@@ -55,10 +55,10 @@ var (
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
 
-	server_rpm_command_user = server_rpm_command.Flag(
+	server_debian_command_user = server_debian_command.Flag(
 		"server_user", "The (existing) server user to run the packaged service as.").String()
 
-	server_rpm_command_group = server_rpm_command.Flag(
+	server_debian_command_group = server_debian_command.Flag(
 		"server_group", "The (existing) server group to run the packaged service as.").String()
 
 	client_debian_command = debian_command.Command(
@@ -123,7 +123,7 @@ func doServerDeb() error {
 	}
 
 	server_user, server_group, err := packaging.ValidateCustomServerUserGroup(
-		*server_rpm_command_user, *server_rpm_command_group)
+		*server_debian_command_user, *server_debian_command_group)
 	if err != nil {
 		return err
 	}
