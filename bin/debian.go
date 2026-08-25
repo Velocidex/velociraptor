@@ -55,6 +55,12 @@ var (
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
 
+	server_rpm_command_user = server_rpm_command.Flag(
+		"server_user", "The (existing) server user to run the packaged service as.").String()
+
+	server_rpm_command_group = server_rpm_command.Flag(
+		"server_group", "The (existing) server group to run the packaged service as.").String()
+
 	client_debian_command = debian_command.Command(
 		"client", "Create a client package from a client config file.")
 
@@ -116,6 +122,12 @@ func doServerDeb() error {
 		*server_debian_command_output = "."
 	}
 
+	server_user, server_group, err := packaging.ValidateCustomServerUserGroup(
+		*server_rpm_command_user, *server_rpm_command_group)
+	if err != nil {
+		return err
+	}
+
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -128,14 +140,26 @@ func doServerDeb() error {
 			Set("ConfigPath", abs_config_path),
 	}
 
-	query := `
+	server_user_arg := ""
+	server_group_arg := ""
+	
+	// if the user (and group) is specified, supply it to the rpm_create function to set custom user/group
+	if server_user != "" {
+		builder.Env.Set("ServerUser", server_user)
+		builder.Env.Set("ServerGroup", server_group)
+
+		server_user_arg =  ",\n                          server_user=ServerUser"
+		server_group_arg = ",\n                          server_group=ServerGroup"
+	}
+
+	query := fmt.Sprintf(`
        LET _ <= log(message="Packaging binary %v to server Deb", args=BinaryToPackage)
 
        SELECT OSPath
        FROM deb_create(exe=BinaryToPackage, server=TRUE,
                        directory_name=Output,
                        config=read_file(filename=ConfigPath, length=1000000),
-                       release=Release)`
+                       release=Release%s%s)`, server_user_arg, server_group_arg)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
