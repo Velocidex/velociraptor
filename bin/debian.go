@@ -154,7 +154,7 @@ func doServerDeb() error {
 	}
 
 	query := fmt.Sprintf(`
-       LET _ <= log(message="Packaging binary %v to server Deb", args=BinaryToPackage)
+       LET _ <= log(message="Packaging binary %%v to server Deb", args=BinaryToPackage)
 
        SELECT OSPath
        FROM deb_create(exe=BinaryToPackage, server=TRUE,
