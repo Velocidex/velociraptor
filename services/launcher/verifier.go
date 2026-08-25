@@ -79,7 +79,8 @@ func (self *AnalysisState) Debug() string {
 	}
 
 	res = append(res, "Definitions:")
-	for _, desc := range self.Definitions {
+	for _, key := range utils.Sort(self.Definitions) {
+		desc := self.Definitions[key]
 		res = append(res, fmt.Sprintf("(%d,%d)-(%d,%d) %s (%s)",
 			desc.Pos.Pos.Line, desc.Pos.Pos.Column,
 			desc.Pos.EndPos.Line, desc.Pos.EndPos.Column,

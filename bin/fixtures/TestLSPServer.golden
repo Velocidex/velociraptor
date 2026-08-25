@@ -16,11 +16,29 @@ Test Case 1 Initialize call:
    "completionProvider": {
     "triggerCharacters": [
      ".",
-     "("
+     "(",
+     "?"
     ]
    },
    "hoverProvider": true,
    "documentSymbolProvider": true,
+   "semanticTokensProvider": {
+    "legend": {
+     "tokenTypes": [
+      "keyword",
+      "comment",
+      "string",
+      "number",
+      "operator",
+      "function",
+      "plugin",
+      "variable",
+      "property"
+     ],
+     "tokenModifiers": []
+    },
+    "full": true
+   },
    "diagnosticProvider": {
     "identifier": "vql",
     "interFileDependencies": false,
@@ -56,17 +74,17 @@ Test Case 2 Add doc:
    {
     "range": {
      "start": {
-      "line": 1,
-      "character": 15
+      "line": 0,
+      "character": 14
      },
      "end": {
-      "line": 1,
-      "character": 24
+      "line": 0,
+      "character": 23
      }
     },
     "severity": 1,
     "source": "vql",
-    "message": "unknown_plugin:Unknown plugin infoXXX()"
+    "message": "(1,15) unknown_plugin: Unknown plugin infoXXX()"
    }
   ]
  }

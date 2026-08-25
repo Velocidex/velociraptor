@@ -96,6 +96,23 @@ sources:
   - name: A good suggestion.
     type: vql_suggestion
     template: SELECT * FROM info()
+`, `
+name: MultipleNotebooks
+type: CLIENT
+sources:
+- name: Part1
+  notebook:
+  - name: Test1
+    type: vql
+    template: |
+       SELECT * FROM info()
+
+- name: Part2
+  notebook:
+  - name: Test1
+    type: vql
+    template: |
+       SELECT * FROM info()
 `}
 
 type checker func(t *testing.T, response *artifacts_proto.Artifact, spec *flows_proto.ArtifactSpec)
@@ -139,11 +156,11 @@ func initialTestCases(client_id string) []notebookTestCase {
 				AssertDictRegex(t, "1982-12-10", "Parameters.0.Default", artifact)
 
 				// ClientId and Flow ID are added
-				AssertDictRegex(t, "ClientId", "Parameters.2.Name", artifact)
-				AssertDictRegex(t, client_id, "Parameters.2.Default", artifact)
+				AssertDictRegex(t, "ClientId", "Parameters.1.Name", artifact)
+				AssertDictRegex(t, client_id, "Parameters.1.Default", artifact)
 
-				AssertDictRegex(t, "FlowId", "Parameters.3.Name", artifact)
-				AssertDictRegex(t, "F.1234", "Parameters.3.Default", artifact)
+				AssertDictRegex(t, "FlowId", "Parameters.2.Name", artifact)
+				AssertDictRegex(t, "F.1234", "Parameters.2.Default", artifact)
 
 				// But the spec contains the actual collected data
 				AssertDictRegex(t, "FirstParameter", "Parameters.Env.0.Key", spec)
@@ -177,8 +194,10 @@ func initialTestCases(client_id string) []notebookTestCase {
 				spec *flows_proto.ArtifactSpec) {
 
 				// StartTime and EndTime are added as parameters
-				AssertDictRegex(t, "StartTime", "Parameters.3.Name", artifact)
-				AssertDictRegex(t, "EndTime", "Parameters.4.Name", artifact)
+				AssertDictRegex(t, "Arg1", "Parameters.0.Name", artifact)
+				AssertDictRegex(t, "ClientId", "Parameters.1.Name", artifact)
+				AssertDictRegex(t, "StartTime", "Parameters.2.Name", artifact)
+				AssertDictRegex(t, "EndTime", "Parameters.3.Name", artifact)
 
 				// The Value of StartTime in the spec comes from the
 				// Env of the request.
@@ -248,12 +267,12 @@ func initialTestCases(client_id string) []notebookTestCase {
 				spec *flows_proto.ArtifactSpec) {
 
 				// HuntId is added
-				AssertDictRegex(t, "HuntId", "Parameters.2.Name", artifact)
-				AssertDictRegex(t, "H.1234", "Parameters.2.Default", artifact)
+				AssertDictRegex(t, "HuntId", "Parameters.1.Name", artifact)
+				AssertDictRegex(t, "H.1234", "Parameters.1.Default", artifact)
 
 				// Spec has the value from the hunt object
-				AssertDictRegex(t, "FirstParameter", "Parameters.Env.0.Key", spec)
-				AssertDictRegex(t, "2021-11", "Parameters.Env.0.Value", spec)
+				AssertDictRegex(t, "FirstParameter", "Parameters.Env.1.Key", spec)
+				AssertDictRegex(t, "2021-11", "Parameters.Env.1.Value", spec)
 
 			},
 		},
@@ -283,6 +302,13 @@ func initialTestCases(client_id string) []notebookTestCase {
 				AssertDictRegex(t, "vql_suggestion", "Sources.0.Notebook.0.Type", artifact)
 				AssertDictRegex(t, "SELECT \\* FROM source", "Sources.0.Notebook.1.Template", artifact)
 				AssertDictRegex(t, "vql", "Sources.0.Notebook.1.Type", artifact)
+			},
+		},
+		{
+			req: &api_proto.NotebookMetadata{
+				Name:        "Notebook with multiple sources",
+				Description: "Adding multiple sources and notebook should update ArtifactName for each source",
+				Artifacts:   []string{"MultipleNotebooks"},
 			},
 		},
 	}

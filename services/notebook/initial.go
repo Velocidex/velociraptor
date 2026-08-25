@@ -309,7 +309,9 @@ func CalculateNotebookArtifact(
 			}
 
 			custom_cells := false
-			for _, n := range s.Notebook {
+			// Tag custom cells with the artifact name and the source
+			for _, n_orig := range s.Notebook {
+				n := proto.Clone(n_orig).(*artifacts_proto.NotebookSourceCell)
 				new_source.Notebook = append(new_source.Notebook, n)
 				switch strings.ToLower(n.Type) {
 
@@ -318,6 +320,10 @@ func CalculateNotebookArtifact(
 				// be used. This allows suppressing notebook cells for
 				// this source.
 				case "vql", "md", "markdown", "none":
+					n.Env = append(n.Env, &artifacts_proto.ArtifactEnv{
+						Key:   "ArtifactName",
+						Value: source_name,
+					})
 					custom_cells = true
 				}
 			}
@@ -368,15 +374,6 @@ LIMIT 50
 				}
 			}
 		}
-	}
-
-	if len(out.Artifacts) > 0 {
-		res.Parameters = append(res.Parameters,
-			&artifacts_proto.ArtifactParameter{
-				Name:        "ArtifactName",
-				Description: "Name of the artifact this notebook came from.",
-				Default:     out.Artifacts[0],
-			})
 	}
 
 	// Add any custom variables.
@@ -713,8 +710,6 @@ func updateNotebookRequests(
 // Get the initial cells from a notebook artifact. Each source should
 // contain a notebook clause.
 func getInitialCellsFromArtifacts(
-	ctx context.Context,
-	config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
 	in *api_proto.NotebookMetadata) (
 	result []*api_proto.NotebookCellRequest, err error) {
@@ -788,7 +783,7 @@ func getInitialCells(
 		return nil, nil, err
 	}
 
-	cells, err := getInitialCellsFromArtifacts(ctx, config_obj, psuedo_artifact, out)
+	cells, err := getInitialCellsFromArtifacts(psuedo_artifact, out)
 	if err != nil {
 		return nil, nil, err
 	}
