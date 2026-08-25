@@ -37,10 +37,10 @@ var (
 		"binary", "The binary to package").String()
 
 	server_rpm_command_user = server_rpm_command.Flag(
-		"server_user", "The existing server user to run the packaged service as.").String()
+		"server_user", "The (existing) server user to run the packaged service as.").String()
 
 	server_rpm_command_group = server_rpm_command.Flag(
-		"server_group", "The existing server group to run the packaged service as.").String()
+		"server_group", "The (existing) server group to run the packaged service as.").String()
 
 	client_rpm_command_output = client_rpm_command.Flag(
 		"output", "Directory to store rpms in. (Default current directory)").
