@@ -343,7 +343,7 @@ chmod 755 {{.VelociraptorBinaryPath}}
 		// Add privilege separated user accounts and lock down
 		// permissions.
 		"PostInst": `
-if ! getent group {{.ServerUser}} >/dev/null; then
+if ! getent group {{.ServerGroup}} >/dev/null; then
    addgroup --system {{.ServerGroup}}
 fi
 
