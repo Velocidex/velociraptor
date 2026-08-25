@@ -6,22 +6,11 @@
   "artifacts": [
    "Notebooks.Default"
   ],
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "Notebooks.Default",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "requests": [
    {
     "query_id": 1,
     "total_queries": 1,
     "env": [
-     {
-      "key": "ArtifactName",
-      "value": "Notebooks.Default"
-     },
      {
       "key": "ColumnTypes",
       "value": "{}"
@@ -88,22 +77,11 @@
   "artifacts": [
    "Notebooks.Default"
   ],
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "Notebooks.Default",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "requests": [
    {
     "query_id": 1,
     "total_queries": 1,
     "env": [
-     {
-      "key": "ArtifactName",
-      "value": "Notebooks.Default"
-     },
      {
       "key": "ColumnTypes",
       "value": "{}"
