@@ -22,12 +22,10 @@
 /*
 Azure Monitor managed-identity / default-credential auth.
 
-This file is compiled only under the "sumo" build tag because it pulls in the
-azidentity SDK (which is also used by the ADX plugin). It provides the
-azidentity-backed token sources for the managed_identity and default_credential
-auth modes of azure_monitor_upload(). The service-principal path (including
-AZURE_* environment variable credentials) lives in azure_monitor.go and is
-always compiled.
+The azidentity-backed token sources for the managed_identity and
+default_credential auth modes of azure_monitor_upload(). The service-principal
+path (including AZURE_* environment variable credentials) uses
+golang.org/x/oauth2 directly and lives in azure_monitor.go.
 
 Note: azidentity manages its own HTTP stack for token acquisition (IMDS for
 managed identity, the Entra endpoints for the default credential chain), so the
@@ -49,40 +47,40 @@ import (
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
-func init() {
-	// Managed identity (optionally user-assigned via managed_identity_client_id).
-	azureMonitorMITokenSource = func(
-		ctx context.Context, scope vfilter.Scope,
-		transport *http.Transport,
-		arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error) {
+// azureMonitorMITokenSource authenticates with a managed identity (optionally
+// user-assigned via managed_identity_client_id).
+func azureMonitorMITokenSource(
+	ctx context.Context, scope vfilter.Scope,
+	transport *http.Transport,
+	arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error) {
 
-		options := &azidentity.ManagedIdentityCredentialOptions{}
-		if arg.ManagedIdentityClient != "" {
-			options.ID = azidentity.ClientID(arg.ManagedIdentityClient)
-		}
-
-		cred, err := azidentity.NewManagedIdentityCredential(options)
-		if err != nil {
-			return nil, err
-		}
-
-		return newAzureADTokenSource(cred), nil
+	options := &azidentity.ManagedIdentityCredentialOptions{}
+	if arg.ManagedIdentityClient != "" {
+		options.ID = azidentity.ClientID(arg.ManagedIdentityClient)
 	}
 
-	// DefaultAzureCredential chain: AZURE_* env vars, workload identity,
-	// managed identity, Azure CLI - auto-detected by the SDK.
-	azureMonitorDefaultTokenSource = func(
-		ctx context.Context, scope vfilter.Scope,
-		transport *http.Transport,
-		arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error) {
-
-		cred, err := azidentity.NewDefaultAzureCredential(nil)
-		if err != nil {
-			return nil, err
-		}
-
-		return newAzureADTokenSource(cred), nil
+	cred, err := azidentity.NewManagedIdentityCredential(options)
+	if err != nil {
+		return nil, err
 	}
+
+	return newAzureADTokenSource(cred), nil
+}
+
+// azureMonitorDefaultTokenSource authenticates with the DefaultAzureCredential
+// chain: AZURE_* env vars, workload identity, managed identity, Azure CLI -
+// auto-detected by the SDK.
+func azureMonitorDefaultTokenSource(
+	ctx context.Context, scope vfilter.Scope,
+	transport *http.Transport,
+	arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error) {
+
+	cred, err := azidentity.NewDefaultAzureCredential(nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return newAzureADTokenSource(cred), nil
 }
 
 // azureADCredTokenSource adapts an azcore.TokenCredential to an

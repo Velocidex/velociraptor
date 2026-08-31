@@ -540,14 +540,14 @@
   - name: managed_identity
     type: bool
     description: Use an Azure managed identity instead of a service principal (requires
-      a 'sumo' build and that the server runs in Azure).
+      that the server runs in Azure).
   - name: managed_identity_client_id
     type: string
     description: Optional client ID of a user-assigned managed identity.
   - name: default_credential
     type: bool
     description: Use the Azure SDK DefaultAzureCredential chain (AZURE_* env vars,
-      workload identity, managed identity, Azure CLI). Requires a 'sumo' build.
+      workload identity, managed identity, Azure CLI).
   - name: chunk_size
     type: int64
     description: The number of rows to send at a time.

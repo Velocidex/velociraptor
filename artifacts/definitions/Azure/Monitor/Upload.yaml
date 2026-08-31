@@ -15,6 +15,14 @@ description: |
   column containing the full event, allowing efficient queries on the
   structured columns while keeping full flexibility via `RawData`.
 
+  ## Requirements
+
+  This artifact needs the `azure_monitor_upload()` plugin, which is only
+  compiled into Velociraptor builds made with the `sumo` build tag - the
+  official Docker image, or a release binary with `sumo` in its name.
+  Standard builds do not include it (the Azure SDK it depends on is a
+  heavy dependency, so it is excluded the same way `adx_upload()` is).
+
   ## 1. Create the custom table
 
   In the Log Analytics workspace create a custom table (the name must end
@@ -23,6 +31,7 @@ description: |
 
   ```
   TimeGenerated:  datetime
+  EventTime:      datetime
   Artifact:       string
   ClientId:       string
   FlowId:         string
@@ -30,6 +39,14 @@ description: |
   Hostname:       string
   RawData:        dynamic
   ```
+
+  `TimeGenerated` is the *ingestion* time. Log Analytics uses it as the
+  partition key and only accepts values in a narrow window around now
+  (roughly not older than 2 days, and not far into the future), so the
+  event's own time cannot go there - rows from forensic artifacts would
+  be re-stamped or rejected. That event time is uploaded as `EventTime`
+  instead, taken from the artifact's `Timestamp` column and simply
+  absent for artifacts that have none. It also remains inside `RawData`.
 
   ## 2. Create a Data Collection Rule (DCR)
 
@@ -51,10 +68,10 @@ description: |
     in the server's environment (the SDK `EnvironmentCredential`
     behaviour). This path still honors the server's proxy / CA settings.
   - **Managed identity** - set `ManagedIdentity` to TRUE (server must run
-    in Azure; requires a `sumo` build).
+    in Azure).
   - **Default credential chain** - set `DefaultCredential` to TRUE to use
     the Azure SDK `DefaultAzureCredential` (env vars, workload identity,
-    managed identity, Azure CLI; requires a `sumo` build).
+    managed identity, Azure CLI).
 
   Whichever identity is used, assign it the **Monitoring Metrics
   Publisher** role on the **DCR** (scope = the DCR resource).
@@ -102,15 +119,14 @@ parameters:
     type: bool
     description: |
       Use an Azure managed identity instead of a service principal
-      (requires a 'sumo' build and that the server runs in Azure).
+      (requires that the server runs in Azure).
   - name: ManagedIdentityClientID
     description: Optional client ID of a user-assigned managed identity.
   - name: DefaultCredential
     type: bool
     description: |
       Use the Azure SDK DefaultAzureCredential chain (AZURE_* env vars,
-      workload identity, managed identity, Azure CLI). Requires a 'sumo'
-      build.
+      workload identity, managed identity, Azure CLI).
   - name: Threads
     type: int
     default: 1
@@ -145,7 +161,21 @@ parameters:
       of type 'Azure Monitor Creds'.
 
 sources:
-  - query: |
+  - precondition: |
+      SELECT * FROM info()
+      WHERE version(plugin="azure_monitor_upload") >= 1
+
+    query: |
+      -- azure_monitor_upload() only exists in 'sumo' builds. Server
+      -- monitoring does not evaluate the precondition above, so also
+      -- log an actionable message here rather than leaving the user
+      -- with a bare "plugin not found".
+      LET _ <= if(condition=NOT version(plugin="azure_monitor_upload"),
+          then=log(level="ERROR", dedup=-1,
+                   message="Azure.Monitor.Upload requires a Velociraptor " +
+                     "build with the 'sumo' tag (the official Docker image, " +
+                     "or a release binary with 'sumo' in its name)."))
+
       LET completions = SELECT * FROM watch_monitoring(
                artifact="System.Flow.Completion")
                WHERE Flow.artifacts_with_results =~ ArtifactNameRegex

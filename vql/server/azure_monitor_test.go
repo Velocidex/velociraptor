@@ -1,8 +1,14 @@
+//go:build sumo
+// +build sumo
+
 package server
 
 import (
 	"context"
 	stdjson "encoding/json"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 
@@ -103,16 +109,21 @@ func TestMarshalAzureRow(t *testing.T) {
 	if _, pres := raw["Name"]; !pres {
 		t.Errorf("RawData should contain the original Name column: %s", out["RawData"])
 	}
+
+	// The row has no Timestamp column, so there is no event time to report.
+	if _, pres := out["EventTime"]; pres {
+		t.Errorf("EventTime should be omitted when the row has no Timestamp: %s", data)
+	}
 }
 
-func TestMarshalAzureRowPrefersTimestampColumn(t *testing.T) {
+// TimeGenerated must be the ingestion time (Azure only accepts a narrow window
+// around it), while the artifact's own event time goes to EventTime.
+func TestMarshalAzureRowSplitsEventTime(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 	ctx := context.Background()
 	opts := vql_subsystem.EncOptsFromScope(scope)
 
-	// When both Timestamp and _timestamp are present, the artifact's own
-	// Timestamp column wins.
 	row := ordereddict.NewDict().
 		Set("Timestamp", time.Date(2021, 6, 7, 8, 9, 10, 0, time.UTC)).
 		Set("_timestamp", time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC))
@@ -129,8 +140,23 @@ func TestMarshalAzureRowPrefersTimestampColumn(t *testing.T) {
 
 	var tg string
 	_ = stdjson.Unmarshal(out["TimeGenerated"], &tg)
-	if len(tg) < 4 || tg[:4] != "2021" {
-		t.Errorf("TimeGenerated = %q, want it derived from the Timestamp column (2021...)", tg)
+	if len(tg) < 4 || tg[:4] != "2024" {
+		t.Errorf("TimeGenerated = %q, want it derived from _timestamp (2024...)", tg)
+	}
+
+	var et string
+	_ = stdjson.Unmarshal(out["EventTime"], &et)
+	if len(et) < 4 || et[:4] != "2021" {
+		t.Errorf("EventTime = %q, want it derived from the Timestamp column (2021...)", et)
+	}
+
+	// The event time also stays in RawData, as the artifact emitted it.
+	raw := map[string]stdjson.RawMessage{}
+	if err := stdjson.Unmarshal(out["RawData"], &raw); err != nil {
+		t.Fatalf("RawData is not an object: %v", err)
+	}
+	if _, pres := raw["Timestamp"]; !pres {
+		t.Errorf("RawData should retain the original Timestamp column: %s", out["RawData"])
 	}
 }
 
@@ -161,8 +187,9 @@ func TestFormatAzureTimeZeroValues(t *testing.T) {
 	}
 }
 
-// An empty Timestamp column must not shadow the injected _timestamp.
-func TestMarshalAzureRowEmptyTimestampFallsBack(t *testing.T) {
+// An empty Timestamp column yields no EventTime at all, and leaves the
+// injected _timestamp as TimeGenerated.
+func TestMarshalAzureRowEmptyTimestampHasNoEventTime(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
 	ctx := context.Background()
@@ -172,14 +199,20 @@ func TestMarshalAzureRowEmptyTimestampFallsBack(t *testing.T) {
 		Set("Timestamp", "").
 		Set("_timestamp", time.Date(2024, 1, 2, 3, 4, 5, 0, time.UTC))
 
-	tg := marshalAndGetTimeGenerated(t, ctx, scope, row, opts)
+	out := marshalAzureRowForTest(t, ctx, scope, row, opts)
+
+	var tg string
+	_ = stdjson.Unmarshal(out["TimeGenerated"], &tg)
 	if len(tg) < 4 || tg[:4] != "2024" {
 		t.Errorf("TimeGenerated = %q, want it derived from _timestamp (2024...)", tg)
 	}
+	if _, pres := out["EventTime"]; pres {
+		t.Errorf("EventTime should be omitted for an empty Timestamp: %s", out["EventTime"])
+	}
 }
 
-// With neither a usable Timestamp nor a _timestamp, TimeGenerated falls all
-// the way back to now - never to the zero time.
+// Without a _timestamp, TimeGenerated falls all the way back to now - never to
+// the zero time - and an unparseable Timestamp produces no EventTime.
 func TestMarshalAzureRowUnparseableTimestampFallsBackToNow(t *testing.T) {
 	scope := vql_subsystem.MakeScope()
 	defer scope.Close()
@@ -192,7 +225,12 @@ func TestMarshalAzureRowUnparseableTimestampFallsBackToNow(t *testing.T) {
 
 	// Marshal twice: the second row exercises the cached-failed-parse path.
 	for i := 0; i < 2; i++ {
-		tg := marshalAndGetTimeGenerated(t, ctx, scope, row, opts)
+		out := marshalAzureRowForTest(t, ctx, scope, row, opts)
+
+		var tg string
+		if err := stdjson.Unmarshal(out["TimeGenerated"], &tg); err != nil {
+			t.Fatalf("row %d: TimeGenerated is not a JSON string: %v", i, err)
+		}
 		parsed, err := time.Parse(time.RFC3339Nano, tg)
 		if err != nil {
 			t.Fatalf("row %d: TimeGenerated %q is not RFC3339: %v", i, tg, err)
@@ -200,12 +238,50 @@ func TestMarshalAzureRowUnparseableTimestampFallsBackToNow(t *testing.T) {
 		if parsed.Year() < 2024 {
 			t.Errorf("row %d: TimeGenerated = %q, want the time.Now() fallback", i, tg)
 		}
+		if _, pres := out["EventTime"]; pres {
+			t.Errorf("row %d: EventTime should be omitted for an unparseable Timestamp: %s",
+				i, out["EventTime"])
+		}
 	}
 }
 
-func marshalAndGetTimeGenerated(
+// An error response body must not be relayed to the logs and the result row in
+// its entirety - a broken endpoint can return an arbitrarily large error page.
+func TestPostAzureBatchTruncatesResponse(t *testing.T) {
+	scope := vql_subsystem.MakeScope()
+	defer scope.Close()
+
+	huge := strings.Repeat("A", 1024*1024)
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			w.WriteHeader(http.StatusBadRequest)
+			_, _ = w.Write([]byte(huge))
+		}))
+	defer server.Close()
+
+	arg := &_AzureMonitorPluginArgs{MaxRetries: 0, RetryWait: 1}
+	status, body, err := post_azure_batch(context.Background(), scope,
+		server.Client(), server.URL, []byte("ignored"), arg)
+
+	if err == nil {
+		t.Fatalf("expected an error for a 400 response")
+	}
+	if status != http.StatusBadRequest {
+		t.Errorf("status = %d, want %d", status, http.StatusBadRequest)
+	}
+	if len(body) > azureMonitorMaxRespBody+64 {
+		t.Errorf("response body is %d bytes, want it capped near %d",
+			len(body), azureMonitorMaxRespBody)
+	}
+	if !strings.HasSuffix(body, "...(truncated)") {
+		t.Errorf("a capped body should be marked truncated, got %d bytes ending %q",
+			len(body), body[max(0, len(body)-20):])
+	}
+}
+
+func marshalAzureRowForTest(
 	t *testing.T, ctx context.Context, scope vfilter.Scope,
-	row *ordereddict.Dict, opts *json.EncOpts) string {
+	row *ordereddict.Dict, opts *json.EncOpts) map[string]stdjson.RawMessage {
 	t.Helper()
 
 	data, err := marshal_azure_row(ctx, scope, row, opts)
@@ -217,12 +293,7 @@ func marshalAndGetTimeGenerated(
 	if err := stdjson.Unmarshal(data, &out); err != nil {
 		t.Fatalf("output is not valid JSON: %v (%s)", err, data)
 	}
-
-	var tg string
-	if err := stdjson.Unmarshal(out["TimeGenerated"], &tg); err != nil {
-		t.Fatalf("TimeGenerated is not a JSON string: %v (%s)", err, data)
-	}
-	return tg
+	return out
 }
 
 func assertJSONString(t *testing.T, m map[string]stdjson.RawMessage, key, want string) {

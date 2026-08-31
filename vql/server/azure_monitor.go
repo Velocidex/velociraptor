@@ -1,3 +1,6 @@
+//go:build sumo
+// +build sumo
+
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2025 Rapid7 Inc.
@@ -30,10 +33,12 @@ stream, authenticated with an Entra (Azure AD) OAuth2 bearer token. The service
 principal or managed identity must hold the "Monitoring Metrics Publisher" role
 on the DCR.
 
-The service-principal auth path uses only the standard library plus
-golang.org/x/oauth2 so this file carries no build tag and is compiled into every
-build (like elastic.go / splunk.go). The managed-identity path pulls in the
-azidentity SDK and therefore lives in azure_monitor_mi.go behind the "sumo" tag.
+Like the ADX plugin, this plugin is compiled only under the "sumo" build tag
+because its managed-identity and default-credential auth paths pull in the
+azidentity SDK (a fat dependency shared with ADX). Builds without the tag do not
+register azure_monitor_upload at all, so callers can detect it with
+version(plugin="azure_monitor_upload"). The azidentity-backed token sources live
+in azure_monitor_mi.go.
 */
 package server
 
@@ -84,39 +89,15 @@ const azureMonitorMaxBuffer = uint64(1024 * 1024)
 // configuration comes near this.
 const azureMonitorMaxChunkSize = int64(100000)
 
+// An error response body is only ever used for a log line and the Response
+// column of a result row, so a few KB is plenty. Reading more lets a
+// misconfigured endpoint (a proxy or WAF error page) push megabytes into the
+// server monitoring logs on every retry of every failed batch.
+const azureMonitorMaxRespBody = 8 * 1024
+
 // Never honor a Retry-After longer than this - a misconfigured (or hostile)
 // server should not be able to park an upload worker for hours.
 const azureMonitorMaxRetryAfter = 5 * time.Minute
-
-// azureTokenSourceFunc builds an OAuth2 token source from the Azure identity
-// SDK. The managed-identity and default-credential implementations pull in the
-// azidentity SDK and are therefore provided by an init() in azure_monitor_mi.go,
-// compiled only under the "sumo" build tag. In builds without that tag these
-// modes are unavailable and the stubs below return an explanatory error.
-//
-// Note the plain service-principal path (including AZURE_* environment variable
-// credentials) does NOT use these - it uses golang.org/x/oauth2 directly and is
-// always compiled.
-type azureTokenSourceFunc func(
-	ctx context.Context, scope vfilter.Scope,
-	transport *http.Transport,
-	arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error)
-
-var azureMonitorMITokenSource azureTokenSourceFunc = func(
-	ctx context.Context, scope vfilter.Scope,
-	transport *http.Transport,
-	arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error) {
-	return nil, errors.New(
-		"managed_identity requires a Velociraptor build with the 'sumo' tag")
-}
-
-var azureMonitorDefaultTokenSource azureTokenSourceFunc = func(
-	ctx context.Context, scope vfilter.Scope,
-	transport *http.Transport,
-	arg *_AzureMonitorPluginArgs) (oauth2.TokenSource, error) {
-	return nil, errors.New(
-		"default_credential requires a Velociraptor build with the 'sumo' tag")
-}
 
 type _AzureMonitorPluginArgs struct {
 	Query                 vfilter.StoredQuery `vfilter:"required,field=query,doc=Source for rows to upload."`
@@ -128,9 +109,9 @@ type _AzureMonitorPluginArgs struct {
 	TenantID              string              `vfilter:"optional,field=tenant_id,doc=Azure Service Principal Tenant ID."`
 	ClientID              string              `vfilter:"optional,field=client_id,doc=Azure Service Principal Client ID."`
 	ClientSecret          string              `vfilter:"optional,field=client_secret,doc=Azure Service Principal Client Secret."`
-	ManagedIdentity       bool                `vfilter:"optional,field=managed_identity,doc=Use an Azure managed identity instead of a service principal (requires a 'sumo' build and that the server runs in Azure)."`
+	ManagedIdentity       bool                `vfilter:"optional,field=managed_identity,doc=Use an Azure managed identity instead of a service principal (requires that the server runs in Azure)."`
 	ManagedIdentityClient string              `vfilter:"optional,field=managed_identity_client_id,doc=Optional client ID of a user-assigned managed identity."`
-	DefaultCredential     bool                `vfilter:"optional,field=default_credential,doc=Use the Azure SDK DefaultAzureCredential chain (AZURE_* env vars, workload identity, managed identity, Azure CLI). Requires a 'sumo' build."`
+	DefaultCredential     bool                `vfilter:"optional,field=default_credential,doc=Use the Azure SDK DefaultAzureCredential chain (AZURE_* env vars, workload identity, managed identity, Azure CLI)."`
 	ChunkSize             int64               `vfilter:"optional,field=chunk_size,doc=The number of rows to send at a time."`
 	WaitTime              int64               `vfilter:"optional,field=wait_time,doc=Batch upload at most this long in seconds (default 5)."`
 	MaxMemoryBuffer       uint64              `vfilter:"optional,field=max_memory_buffer,doc=Max uncompressed request body in bytes; keep under the ~1MB Azure limit (default 900KB)."`
@@ -292,9 +273,8 @@ func (self _AzureMonitorPlugin) Call(ctx context.Context,
 
 		// One token source shared by all threads - the underlying sources
 		// cache and refresh tokens safely across goroutines. Creating it up
-		// front also fails fast (before the source query starts) when
-		// managed_identity or default_credential is requested on a build
-		// without the 'sumo' tag.
+		// front also fails fast, before the source query starts, if the
+		// requested credential cannot be constructed.
 		tokenSource, err := getAzureMonitorTokenSource(ctx, scope, transport, arg)
 		if err != nil {
 			scope.Log("azure_monitor_upload: %v", err)
@@ -437,8 +417,9 @@ func _upload_rows_azure(
 
 // marshal_azure_row shapes a VQL row into the JSON object expected by the DCR
 // stream. Every Log Analytics table requires a TimeGenerated column, so we
-// always populate it. The remaining metadata is lifted into structured columns
-// and the original row is preserved under RawData.
+// always populate it - with the ingestion time, see below. The row's own event
+// time is carried separately in EventTime. The remaining metadata is lifted
+// into structured columns and the original row is preserved under RawData.
 func marshal_azure_row(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -461,19 +442,28 @@ func marshal_azure_row(
 	organization, _ := row_dict.GetString("_Organization")
 	hostname, _ := row_dict.GetString("_Hostname")
 
-	// Prefer the artifact's own Timestamp column, fall back to the injected
-	// _timestamp, otherwise default to now.
+	// TimeGenerated is the Log Analytics partition / retention key and Azure
+	// only accepts a narrow window around the moment of ingestion (roughly the
+	// last 2 days, and not far into the future), so it must hold the ingestion
+	// time rather than the event time. Rows from forensic artifacts routinely
+	// carry historical Timestamps which Azure would re-stamp or reject - those
+	// go into EventTime below instead. Use the injected _timestamp, falling
+	// back to now for callers that do not supply one.
 	timeGenerated := ""
-	if ts, pres := row_dict.Get("Timestamp"); pres && !utils.IsNil(ts) {
+	if ts, pres := row_dict.Get("_timestamp"); pres && !utils.IsNil(ts) {
 		timeGenerated = formatAzureTime(ctx, scope, ts)
 	}
 	if timeGenerated == "" {
-		if ts, pres := row_dict.Get("_timestamp"); pres && !utils.IsNil(ts) {
-			timeGenerated = formatAzureTime(ctx, scope, ts)
-		}
-	}
-	if timeGenerated == "" {
 		timeGenerated = time.Now().UTC().Format(time.RFC3339Nano)
+	}
+
+	// The artifact's own event time, when it has one. The key is omitted
+	// entirely when the column is absent or unparseable - formatAzureTime
+	// returns "" for those, and an empty string does not parse as a datetime
+	// column in the DCR.
+	eventTime := ""
+	if ts, pres := row_dict.Get("Timestamp"); pres && !utils.IsNil(ts) {
+		eventTime = formatAzureTime(ctx, scope, ts)
 	}
 
 	// Remove the injected metadata fields before storing the row as RawData
@@ -486,8 +476,11 @@ func marshal_azure_row(
 	row_dict.Delete("_timestamp")
 
 	out := ordereddict.NewDict().
-		Set("TimeGenerated", timeGenerated).
-		Set("Artifact", artifact).
+		Set("TimeGenerated", timeGenerated)
+	if eventTime != "" {
+		out.Set("EventTime", eventTime)
+	}
+	out.Set("Artifact", artifact).
 		Set("ClientId", clientId).
 		Set("FlowId", flowId).
 		Set("Organization", organization).
@@ -640,11 +633,17 @@ func post_azure_batch(
 			lastStatus = 0
 			lastBody = ""
 		} else {
-			body, read_err := utils.ReadAllWithLimit(resp.Body, constants.MAX_MEMORY)
+			// Deliberately not draining the rest of the body before closing:
+			// losing connection reuse on an error response is cheaper than
+			// reading an arbitrarily large one.
+			body, read_err := utils.ReadAllWithLimit(
+				resp.Body, azureMonitorMaxRespBody)
 			resp.Body.Close()
 			lastStatus = resp.StatusCode
 			lastBody = string(body)
-			if read_err != nil {
+			if errors.Is(read_err, utils.MemoryBufferExceeded) {
+				lastBody += " ...(truncated)"
+			} else if read_err != nil {
 				scope.Log("azure_monitor_upload: error reading response body (status %d): %v",
 					resp.StatusCode, read_err)
 			}
