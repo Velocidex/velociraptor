@@ -34,8 +34,9 @@ type RepositoryManager struct {
 
 func (self *RepositoryManager) NewRepository() services.Repository {
 	result := &Repository{
-		Data:     make(map[string]*artifacts_proto.Artifact),
-		metadata: self.metadata,
+		Data:       make(map[string]*artifacts_proto.Artifact),
+		config_obj: self.config_obj,
+		metadata:   self.metadata,
 	}
 
 	return result
@@ -371,8 +372,9 @@ func _newRepositoryManager(
 
 	global_repository := &Repository{
 		// Artifact name -> definition
-		Data:     make(map[string]*artifacts_proto.Artifact),
-		metadata: NewMetadataManager(ctx, config_obj),
+		Data:       make(map[string]*artifacts_proto.Artifact),
+		config_obj: config_obj,
+		metadata:   NewMetadataManager(ctx, config_obj),
 	}
 
 	// Start the metadata housekeeping loop.

@@ -44,9 +44,10 @@ import (
 
 // Holds multiple artifact definitions.
 type Repository struct {
-	mu       sync.Mutex
-	Data     map[string]*artifacts_proto.Artifact
-	metadata *metadataManager
+	mu         sync.Mutex
+	Data       map[string]*artifacts_proto.Artifact
+	metadata   *metadataManager
+	config_obj *config_proto.Config
 
 	// Each repository may have a parent - we search for the artifact
 	// in our parents as well.
@@ -71,6 +72,7 @@ func (self *Repository) Copy() services.Repository {
 
 	result := &Repository{
 		Data:              make(map[string]*artifacts_proto.Artifact),
+		config_obj:        self.config_obj,
 		parent:            self.parent,
 		parent_config_obj: self.parent_config_obj,
 	}
@@ -333,7 +335,8 @@ func (self *Repository) LoadProto(
 	}
 	self.mu.Unlock()
 
-	return artifact, nil
+	return artifact, updateTools(
+		context.Background(), self.config_obj, artifact)
 }
 
 func (self *Repository) GetArtifactType(

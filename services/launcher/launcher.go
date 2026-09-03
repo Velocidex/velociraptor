@@ -513,6 +513,12 @@ func (self *Launcher) EnsureToolsDeclared(
 		_, err = inventory.GetToolInfo(
 			ctx, config_obj, tool.Name, tool.Version)
 		if err != nil {
+			// If the tool is not found, we add it first and try again.
+			if !errors.Is(err, utils.NotFoundError) {
+				// All other errors are fatal.
+				return err
+			}
+
 			// Add tool info if it is not known but do not
 			// override existing tool. This allows the
 			// admin to override tools from the artifact

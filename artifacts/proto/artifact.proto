@@ -285,6 +285,11 @@ message Tool {
     // time, or when we update.
     string url = 2;
 
+    // A transform to apply when downloading the tool contents. Currently:
+    // 1. Empty string - no transform applied.
+    // 2. "gunzip" - The tool will be decompressed using the gunzip algorithm.
+    string download_transform = 19;
+
     // As an alternative to a url we allow scrapping of GitHub
     // releases using the github API. NOTE: When this method is
     // specified, the file will always be served locally.

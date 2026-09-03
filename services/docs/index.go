@@ -21,20 +21,14 @@ func (self *DocManager) getInventoryStat(ctx context.Context) (fs_api.FileInfo, 
 		return nil, err
 	}
 
-	// Materialize the tool because we need to check it's timestamp
-	tool, err := inventory_service.GetToolInfo(ctx, self.config_obj,
-		"DocsIndex", "")
+	fd, err := inventory_service.ReadTool(
+		ctx, self.config_obj, "DocsIndex", "")
 	if err != nil {
 		return nil, err
 	}
+	defer fd.Close()
 
-	path_manager := paths.NewInventoryPathManager(self.config_obj, tool)
-	path, file_store_factory, err := path_manager.Path()
-	if err != nil {
-		return nil, err
-	}
-
-	return file_store_factory.StatFile(path)
+	return fd.Stat()
 }
 
 func (self *DocManager) shouldUnpackTool(ctx context.Context) (

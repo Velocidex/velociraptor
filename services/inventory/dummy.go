@@ -5,6 +5,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"io"
 	"net"
 	"net/http"
@@ -19,6 +20,7 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -143,6 +145,106 @@ func (self *Dummy) GetToolInfo(
 		}
 	}
 	return nil, fmt.Errorf("Dummy inventory: Tool %v not declared in inventory.", tool)
+}
+
+type dummyHashWriter struct {
+	io.WriteCloser
+
+	sha_sum hash.Hash
+	owner   *Dummy
+
+	tool_name, tool_version string
+	ctx                     context.Context
+	config_obj              *config_proto.Config
+
+	// Where the file is actually stored.
+	filename string
+}
+
+func (self *dummyHashWriter) Write(buf []byte) (int, error) {
+	n, err := self.WriteCloser.Write(buf)
+	if err != nil {
+		return n, err
+	}
+
+	self.sha_sum.Write(buf[:n])
+	return n, err
+}
+
+func (self *dummyHashWriter) Close() error {
+	err := self.WriteCloser.Close()
+	if err != nil {
+		return err
+	}
+
+	self.owner.mu.Lock()
+	defer self.owner.mu.Unlock()
+
+	// Update the hash and filename in the inventory.
+	for i, item := range self.owner.binaries.Tools {
+		if item.Name == self.tool_name &&
+			item.Version == self.tool_version {
+			self.owner.binaries.Tools[i].Hash = hex.EncodeToString(
+				self.sha_sum.Sum(nil))
+			self.owner.binaries.Tools[i].Filename = self.filename
+			return nil
+		}
+	}
+
+	return utils.NotFoundError
+}
+
+func (self *Dummy) WriteTool(
+	ctx context.Context, config_obj *config_proto.Config,
+	tool_name, version string) (io.WriteCloser, error) {
+
+	tool, err := self.ProbeToolInfo(ctx, config_obj, tool_name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	fd, err := self.getTempFile(config_obj, tool.Name, tool.Url)
+	if err != nil {
+		return nil, err
+	}
+
+	err = fd.Truncate(0)
+	if err != nil {
+		return nil, err
+	}
+
+	writer := &dummyHashWriter{
+		WriteCloser:  fd,
+		sha_sum:      sha256.New(),
+		owner:        self,
+		ctx:          ctx,
+		config_obj:   config_obj,
+		tool_name:    tool_name,
+		tool_version: version,
+		filename:     fd.Name(),
+	}
+
+	return writer, nil
+}
+
+func (self *Dummy) ReadTool(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	tool_name, version string) (api.FileReader, error) {
+
+	tool, err := self.GetToolInfo(ctx, config_obj, tool_name, version)
+	if err != nil {
+		return nil, err
+	}
+
+	fd, err := os.Open(tool.Filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return &api.FileAdapter{
+		File: fd,
+	}, err
 }
 
 // Actually download and resolve the tool and make sure it is

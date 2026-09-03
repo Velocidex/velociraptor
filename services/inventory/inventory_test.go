@@ -5,11 +5,13 @@ import (
 	"context"
 	"crypto/sha256"
 	"encoding/hex"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 
 	"github.com/stretchr/testify/assert"
@@ -20,9 +22,9 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/inventory"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 )
@@ -63,7 +65,8 @@ func (self *ServicesTestSuite) TestGihubTools() {
 	tool_name := "SampleTool"
 	golden := ordereddict.NewDict()
 
-	self.installGitHubMock()
+	closer := self.installGitHubMock()
+	defer closer()
 
 	// Add a new tool from github.
 	inventory, err := services.GetInventory(self.ConfigObj)
@@ -109,7 +112,7 @@ func (self *ServicesTestSuite) TestGihubTools() {
 
 // Install a mock on the HTTP client to check the Github API for
 // release assets.
-func (self *ServicesTestSuite) installGitHubMock() {
+func (self *ServicesTestSuite) installGitHubMock() func() {
 	api_reply := `{"assets":[{"name":"Velociraptor-Vx.x.x-windows-amd64.exe","browser_download_url":"htttp://www.example.com/file.exe"}]}`
 
 	self.mock = &MockClient{
@@ -119,13 +122,10 @@ func (self *ServicesTestSuite) installGitHubMock() {
 		},
 	}
 
-	inventory_service, err := services.GetInventory(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	inventory_service.(*inventory.InventoryService).Client = self.mock
+	return networking.MockHTTPClient(self.mock)
 }
 
-func (self *ServicesTestSuite) installGitHubMockVersion2() {
+func (self *ServicesTestSuite) installGitHubMockVersion2() func() {
 	// The latest release is now version 2.
 	api_reply := `{"assets":[{"name":"Velociraptor-V2.x.x-windows-amd64.exe","browser_download_url":"htttp://www.example.com/file_v2.exe"}]}`
 
@@ -136,10 +136,7 @@ func (self *ServicesTestSuite) installGitHubMockVersion2() {
 		},
 	}
 
-	inventory_service, err := services.GetInventory(self.ConfigObj)
-	assert.NoError(self.T(), err)
-
-	inventory_service.(*inventory.InventoryService).Client = self.mock
+	return networking.MockHTTPClient(self.mock)
 }
 
 // Test that an artifact can add its own tools.
@@ -164,7 +161,8 @@ tools:
 			ArtifactIsBuiltIn: true})
 	assert.NoError(self.T(), err)
 
-	self.installGitHubMock()
+	closer := self.installGitHubMock()
+	defer closer()
 
 	// Launch the artifact - this will result in the tool being
 	// downloaded and the hash calculated on demand.
@@ -229,7 +227,8 @@ tools:
 			ArtifactIsBuiltIn: false})
 	assert.NoError(self.T(), err)
 
-	self.installGitHubMock()
+	closer := self.installGitHubMock()
+	defer closer()
 
 	hash := getHash("File Content")
 
@@ -280,7 +279,8 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	ctx := context.Background()
 	tool_name := "SampleTool"
 
-	self.installGitHubMock()
+	closer := self.installGitHubMock()
+	defer closer()
 
 	// Add a new tool from github.
 	tool_definition := &artifacts_proto.Tool{
@@ -304,7 +304,8 @@ func (self *ServicesTestSuite) TestUpgrade() {
 	assert.Equal(self.T(), tool.Hash, "3c03cf5341a1e078c438f31852e1587a70cc9f91ee02eda315dd231aba0a0ab1")
 
 	// Now force the tool to update by re-adding it but this time it is a new version.
-	self.installGitHubMockVersion2()
+	closer = self.installGitHubMockVersion2()
+	defer closer()
 
 	err = inventory_service.AddTool(ctx, self.ConfigObj, tool_definition,
 		services.ToolOptions{})
@@ -342,7 +343,9 @@ tools:
 			ArtifactIsBuiltIn: true})
 	assert.NoError(self.T(), err)
 
-	self.installGitHubMock()
+	closer := self.installGitHubMock()
+	defer closer()
+
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -624,9 +627,8 @@ sources:
 		},
 	}
 
-	inventory_service, err := services.GetInventory(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	inventory_service.(*inventory.InventoryService).Client = self.mock
+	closer := networking.MockHTTPClient(self.mock)
+	defer closer()
 
 	// Tools are only loaded when we compile the artifact since they are lazy.
 	launcher, err := services.GetLauncher(self.ConfigObj)
@@ -663,6 +665,9 @@ sources:
 	// highest known version.
 	assert.Contains(self.T(), response[2].Query[0].VQL, "HighestVersion")
 	assert.Contains(self.T(), response[2].Env[1].Value, "SampleTool0.6.5.exe")
+
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
 
 	// When no version is specified gets the latest version
 	tool, err := inventory_service.ProbeToolInfo(
@@ -741,9 +746,8 @@ tools:
 		},
 	}
 
-	inventory_service, err := services.GetInventory(self.ConfigObj)
-	assert.NoError(self.T(), err)
-	inventory_service.(*inventory.InventoryService).Client = self.mock
+	closer := networking.MockHTTPClient(self.mock)
+	defer closer()
 
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
@@ -779,6 +783,108 @@ tools:
 		getHash("File Content 2"))
 	assert.Equal(self.T(), response[0].Env[3].Value,
 		"http://www.example.com/SampleTool2.exe")
+}
+
+func (self *ServicesTestSuite) TestGunzipDownloadHandler() {
+	artifact_yaml := `
+name: TestArtifactDownload
+tools:
+- name: SampleToolCompressed
+  url: http://www.example.com/SampleTool0.6.5.exe
+  download_transform: gunzip
+sources:
+- query: SELECT Version065 FROM scope()
+`
+	self.LoadArtifacts(artifact_yaml)
+
+	nonce := "File Content"
+	compressed_data, err := utils.GzipCompress([]byte(nonce))
+	assert.NoError(self.T(), err)
+
+	self.mock = &MockClient{
+		responses: map[string]string{
+			"http://www.example.com/SampleTool0.6.5.exe": string(compressed_data),
+		},
+	}
+
+	closer := networking.MockHTTPClient(self.mock)
+	defer closer()
+
+	// Materialize the tool now - this will force HTTP requests
+	inventory, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	reader, err := inventory.ReadTool(
+		self.Ctx, self.ConfigObj, "SampleToolCompressed", "")
+	assert.NoError(self.T(), err)
+
+	data, err := io.ReadAll(reader)
+	assert.Equal(self.T(), string(data), nonce)
+
+	tool, err := inventory.GetToolInfo(self.Ctx, self.ConfigObj,
+		"SampleToolCompressed", "")
+	assert.NoError(self.T(), err)
+
+	assert.True(self.T(), tool.Hash != "")
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	repository, err := manager.GetGlobalRepository(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	_, err = repository.LoadYaml(artifact_yaml,
+		services.ArtifactOptions{
+			ValidateArtifact:  true,
+			ArtifactIsBuiltIn: true})
+	assert.NoError(self.T(), err)
+
+	tool, err = inventory.GetToolInfo(self.Ctx, self.ConfigObj,
+		"SampleToolCompressed", "")
+	assert.NoError(self.T(), err)
+
+	// The hash is retained.
+	assert.True(self.T(), tool.Hash != "")
+
+}
+
+func (self *ServicesTestSuite) TestInventoryReadWrite() {
+	inventory_service, err := services.GetInventory(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	// Add some tools to the inventory
+	err = inventory_service.AddTool(
+		self.Ctx, self.ConfigObj, &artifacts_proto.Tool{
+			Name: "SampleTool",
+		}, services.ToolOptions{AdminOverride: true})
+	assert.NoError(self.T(), err)
+
+	// Write the data
+	data := "Hello world"
+	hash_str := getHash(data)
+
+	writer, err := inventory_service.WriteTool(self.Ctx,
+		self.ConfigObj, "SampleTool", "")
+	assert.NoError(self.T(), err)
+
+	_, err = writer.Write([]byte(data))
+	assert.NoError(self.T(), err)
+	assert.NoError(self.T(), writer.Close())
+
+	tool, err := inventory_service.GetToolInfo(
+		self.Ctx, self.ConfigObj, "SampleTool", "")
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), hash_str, tool.Hash)
+
+	fd, err := inventory_service.ReadTool(
+		self.Ctx, self.ConfigObj, "SampleTool", "")
+	assert.NoError(self.T(), err)
+
+	buffer := make([]byte, 100)
+	n, err := fd.Read(buffer)
+	assert.NoError(self.T(), err)
+
+	assert.Equal(self.T(), string(buffer[:n]), string(data))
 }
 
 func getHash(data string) string {
