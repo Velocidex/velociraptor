@@ -266,8 +266,8 @@ Output: [
      {
       "DeviceName": "\\VOLUME{01d8236a6bef56c6-006c4c5d}",
       "DeviceCreationTime": "2022-02-16T19:21:39Z",
-      "VolumeSerialNumber": 30942058,
-      "VolumeSerialNumberHex": "0x1d8236a",
+      "VolumeSerialNumber": 7097437,
+      "VolumeSerialNumberHex": "0x6c4c5d",
       "Directories": [
        "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS",
        "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST",
@@ -375,8 +375,8 @@ Output: [
    {
     "DeviceName": "\\VOLUME{01d8236a6bef56c6-006c4c5d}",
     "DeviceCreationTime": "2022-02-16T19:21:39Z",
-    "VolumeSerialNumber": 30942058,
-    "VolumeSerialNumberHex": "0x1d8236a",
+    "VolumeSerialNumber": 7097437,
+    "VolumeSerialNumberHex": "0x6c4c5d",
     "Directories": [
      "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS",
      "\\VOLUME{01d8236a6bef56c6-006c4c5d}\\USERS\\TEST",

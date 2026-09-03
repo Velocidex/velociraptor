@@ -274,7 +274,7 @@ export: |
           }],
           ["__DeviceSize", 4, "unsigned long"],
           ["DeviceCreationTime", 8, "WinFileTime"],
-          ["VolumeSerialNumber", 12, "unsigned long"],
+          ["VolumeSerialNumber", 16, "unsigned long"],
           ["VolumeSerialNumberHex", 0, Value, {
               value: "x=>format(format='%#x', args=x.VolumeSerialNumber)",
           }],
