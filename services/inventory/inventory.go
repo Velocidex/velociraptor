@@ -41,6 +41,7 @@ import (
 	"io"
 	"net/url"
 	"path"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -200,6 +201,11 @@ func (self *InventoryService) addAllVersions(
 			result.Versions = append(result.Versions, parent_tool.Versions...)
 		}
 	}
+
+	// Ensure the versions list is stable.
+	sort.Slice(result.Versions, func(i, j int) bool {
+		return result.Versions[i].Artifact < result.Versions[j].Artifact
+	})
 
 	return result
 }

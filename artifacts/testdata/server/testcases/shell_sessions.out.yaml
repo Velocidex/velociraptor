@@ -7,16 +7,16 @@ Output: []
 Query: LET _ <= shell_session_control( name="testsession", close_stdin=TRUE, stdin="echo 'Hello world'")
 Output: []
 
-Query: SELECT Stdin, regex_replace(source=Stdout, re="\\s", replace="") AS Stsout, Stderr FROM foreach(row=Session.Query)
+Query: SELECT Stdin, regex_replace(source=Stdout, re="\\s", replace="") AS Stdout, Stderr FROM foreach(row=Session.Query) WHERE Stdin OR Stdout OR Stderr
 Output: [
  {
   "Stdin": "echo 'Hello world'",
-  "Stsout": "",
+  "Stdout": "",
   "Stderr": ""
  },
  {
   "Stdin": "",
-  "Stsout": "Helloworld",
+  "Stdout": "Helloworld",
   "Stderr": ""
  }
 ]
