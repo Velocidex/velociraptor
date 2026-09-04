@@ -31,7 +31,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -265,21 +264,9 @@ func ReadExeFile(
 		return nil, err
 	}
 
-	tool, err := inventory.GetToolInfo(
-		ctx, config_obj, target_tool, version)
-	if err != nil {
-		return nil, err
-	}
-
 	// The path is determined by the org specific inventory manager,
 	// but must be opened using the root orgs filestore.
-	path_manager := paths.NewInventoryPathManager(config_obj, tool)
-	pathspec, file_store_factory, err := path_manager.Path()
-	if err != nil {
-		return nil, err
-	}
-
-	fd, err := file_store_factory.ReadFile(pathspec)
+	fd, err := inventory.ReadTool(ctx, config_obj, target_tool, version)
 	if err != nil {
 		return nil, err
 	}
@@ -526,14 +513,7 @@ func AppendBinaries(
 
 		scope.Log("Adding binary %v", tool.Name)
 
-		// Try to open the tool directly from the filestore
-		path_manager := paths.NewInventoryPathManager(config_obj, tool)
-		pathspec, file_store_factory, err := path_manager.Path()
-		if err != nil {
-			return nil, err
-		}
-
-		fd, err := file_store_factory.ReadFile(pathspec)
+		fd, err := inventory.ReadTool(ctx, config_obj, name, version)
 		if err != nil {
 			return nil, err
 		}

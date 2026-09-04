@@ -40,6 +40,18 @@ func GzipUncompress(raw []byte) ([]byte, error) {
 	return buf.Bytes(), err
 }
 
+func GzipCompress(raw []byte) ([]byte, error) {
+	buf := &bytes.Buffer{}
+	writer, err := gzip.NewWriterLevel(buf, 9)
+	if err != nil {
+		return nil, err
+	}
+	writer.Write(raw)
+	writer.Close()
+
+	return buf.Bytes(), err
+}
+
 func Uncompress(
 	ctx context.Context, compressed []byte) ([]byte, error) {
 

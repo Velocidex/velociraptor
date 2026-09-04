@@ -7,23 +7,31 @@ description: |
 
 tools:
   - name: VelociraptorWindows
-    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-amd64.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-amd64.exe.gz
+    filename: velociraptor-v<VERSION>-windows-amd64.exe
     serve_locally: true
+    download_transform: gunzip
     version: <VERSION>
 
   - name: VelociraptorWindows_x86
-    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-386.exe
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-windows-386.exe.gz
     serve_locally: true
+    filename: velociraptor-v<VERSION>-windows-386.exe
+    download_transform: gunzip
     version: <VERSION>
 
   - name: VelociraptorLinux
-    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-linux-amd64-musl
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-linux-amd64-musl.gz
     serve_locally: true
+    filename: velociraptor-v<VERSION>-linux-amd64-musl
+    download_transform: gunzip
     version: <VERSION>
 
   - name: VelociraptorLinuxSumo
-    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-linux-amd64-sumo-musl
+    url: https://github.com/Velocidex/velociraptor/releases/download/v<VERSION>/velociraptor-v<VERSION>-linux-amd64-sumo-musl.gz
     serve_locally: true
+    filename: velociraptor-v<VERSION>-linux-amd64-sumo-musl
+    download_transform: gunzip
     version: <VERSION>
 
   # On MacOS we cannot embed the config in the binary so we use a
