@@ -66,7 +66,7 @@ description: |
   - **Environment variables** - leave the service principal fields empty
     and set `AZURE_TENANT_ID`, `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`
     in the server's environment (the SDK `EnvironmentCredential`
-    behaviour). This path still honors the server's proxy / CA settings.
+    behavior). This path still honors the server's proxy / CA settings.
   - **Managed identity** - set `ManagedIdentity` to TRUE (server must run
     in Azure).
   - **Default credential chain** - set `DefaultCredential` to TRUE to use
