@@ -714,7 +714,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	// The active tool is defined in TestArtifactSemver2
-	assert.Equal(self.T(), "TestArtifactConflictingVersion", tool.Artifact)
+	assert.Equal(self.T(), "TestArtifactSemver2", tool.Artifact)
 
 	golden.Set("Updated Version", tool)
 
