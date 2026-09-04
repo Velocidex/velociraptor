@@ -11,6 +11,7 @@ Output: [
   "inventory_add(tool=\"WinPmem\", url=\"https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe\", filename=\"winpmem_v3.3.rc3.exe\")": {
    "name": "WinPmem",
    "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
+   "download_transform": "",
    "github_project": "",
    "github_asset_regex": "",
    "serve_locally": false,
@@ -36,6 +37,7 @@ Output: [
  {
   "name": "WinPmem",
   "url": "https://storage.googleapis.com/go.velocidex.com/winpmem_v3.3.rc3.exe",
+  "download_transform": "",
   "github_project": "",
   "github_asset_regex": "",
   "serve_locally": false,

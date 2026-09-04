@@ -9,9 +9,11 @@ package services
 
 import (
 	"context"
+	"io"
 
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store/api"
 )
 
 func GetInventory(config_obj *config_proto.Config) (Inventory, error) {
@@ -66,4 +68,12 @@ type Inventory interface {
 
 	// Remove the tool from the inventory and all its versions.
 	RemoveTool(ctx context.Context, config_obj *config_proto.Config, tool_name string) error
+
+	// Read the bulk data of the tool. This does essentially the same
+	// as the FetchBinary VQL artifact.
+	ReadTool(ctx context.Context, config_obj *config_proto.Config,
+		tool, version string) (api.FileReader, error)
+
+	WriteTool(ctx context.Context, config_obj *config_proto.Config,
+		tool, version string) (io.WriteCloser, error)
 }

@@ -6,6 +6,7 @@ Queries:
     name="testsession", close_stdin=TRUE,
     stdin="echo 'Hello world'")
 - SELECT Stdin,
-         regex_replace(source=Stdout, re="\\s", replace="") AS Stsout,
+         regex_replace(source=Stdout, re="\\s", replace="") AS Stdout,
          Stderr
   FROM foreach(row=Session.Query)
+  WHERE Stdin OR Stdout OR Stderr
