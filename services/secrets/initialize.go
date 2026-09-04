@@ -129,6 +129,33 @@ var (
 			"table":       "RawVelociraptorEvents",
 		},
 	}, {
+		TypeName:    constants.AZURE_MONITOR_CREDS,
+		Description: "Credentials to be used in azure_monitor_upload() calls.",
+		// Credentials are optional in the secret - they may instead come from
+		// AZURE_* environment variables, a managed identity or the default
+		// credential chain. Only the ingestion destination is mandatory.
+		Verifier: `x=>x.logs_ingestion_endpoint AND x.dcr_immutable_id`,
+		Fields: []string{
+			"logs_ingestion_endpoint",
+			"dcr_immutable_id",
+			"stream_name",
+			"table",
+			"client_id",
+			"client_secret",
+			"tenant_id",
+			"managed_identity",
+			"managed_identity_client_id",
+			"default_credential",
+			"skip_verify",
+			"root_ca",
+		},
+		Template: map[string]string{
+			"logs_ingestion_endpoint": "https://your-dce-or-dcr.region.ingest.monitor.azure.com",
+			"stream_name":             "Custom-RawVelociraptorEvents_CL",
+			"table":                   "RawVelociraptorEvents_CL",
+			"skip_verify":             "FALSE",
+		},
+	}, {
 		TypeName:    constants.SMTP_CREDS,
 		Verifier:    "x=>x.server && x.server_port",
 		Description: "Credentials to be used in mail() plugin.",
