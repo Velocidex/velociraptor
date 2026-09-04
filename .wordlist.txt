@@ -11,3 +11,8 @@ unaliased
 lsp
 opencode
 upcase
+emacs
+
+Entra
+azidentity
+unparseable
