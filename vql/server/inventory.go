@@ -62,6 +62,9 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	}
 
 	if tool.Filename == "" && arg.File != nil {
+		// If the file is uploaded from the local filesystem we must
+		// serve it because it is not public.
+		tool.ServeLocally = true
 		tool.Filename = arg.File.Basename()
 	}
 

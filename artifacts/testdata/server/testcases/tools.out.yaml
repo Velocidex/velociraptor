@@ -4,6 +4,7 @@ Output: [
   "inventory_add(tool='Autorun_amd64', url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe')": {
    "name": "Autorun_amd64",
    "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+   "download_transform": "",
    "github_project": "",
    "github_asset_regex": "",
    "serve_locally": false,
@@ -68,6 +69,7 @@ Output: [
   "inventory_add(tool='Autorun_amd64', serve_locally=TRUE, url='https://storage.googleapis.com/go.velocidex.com/autorunsc.exe', hash='083d7eee4ed40a3e5a35675503b0b6be0cb627b4cb1009d185a558a805f64153', filename='autorunsc_x64.exe')": {
    "name": "Autorun_amd64",
    "url": "https://storage.googleapis.com/go.velocidex.com/autorunsc.exe",
+   "download_transform": "",
    "github_project": "",
    "github_asset_regex": "",
    "serve_locally": true,
@@ -134,6 +136,7 @@ Output: [
   "inventory_add(tool=\"FooBar\", file=srcDir + \"/artifacts/testdata/files/yara_test.txt\")": {
    "name": "FooBar",
    "url": "",
+   "download_transform": "",
    "github_project": "",
    "github_asset_regex": "",
    "serve_locally": true,
@@ -143,8 +146,10 @@ Output: [
    "materialize": false,
    "artifact": "",
    "filestore_path": "77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c",
-   "serve_url": "",
-   "serve_urls": [],
+   "serve_url": "https://www.velociraptor.server.com:8000/public/77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c",
+   "serve_urls": [
+    "https://www.velociraptor.server.com:8000/public/77e71a25fc41db4cc20410a71b3d000b25d2bd0688f08b832e150e850078235c"
+   ],
    "serve_path": "",
    "filename": "yara_test.txt",
    "hash": "f03278c10a41adcc97f24a612a680e7aa43efb461b337fef3d2a3d47b51e77bb",
