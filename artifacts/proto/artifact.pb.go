@@ -940,6 +940,10 @@ type Tool struct {
 	// The URL to fetch the tool from when we upload it the first
 	// time, or when we update.
 	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	// A transform to apply when downloading the tool contents. Currently:
+	// 1. Empty string - no transform applied.
+	// 2. "gunzip" - The tool will be decompressed using the gunzip algorithm.
+	DownloadTransform string `protobuf:"bytes,19,opt,name=download_transform,json=downloadTransform,proto3" json:"download_transform,omitempty"`
 	// As an alternative to a url we allow scrapping of GitHub
 	// releases using the github API. NOTE: When this method is
 	// specified, the file will always be served locally.
@@ -1042,6 +1046,13 @@ func (x *Tool) GetName() string {
 func (x *Tool) GetUrl() string {
 	if x != nil {
 		return x.Url
+	}
+	return ""
+}
+
+func (x *Tool) GetDownloadTransform() string {
+	if x != nil {
+		return x.DownloadTransform
 	}
 	return ""
 }
@@ -1414,10 +1425,11 @@ const file_artifact_proto_rawDesc = "" +
 	"\bmetadata\x18\x01 \x03(\v2,.proto.ArtifactMetadataStorage.MetadataEntryR\bmetadata\x1aT\n" +
 	"\rMetadataEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12-\n" +
-	"\x05value\x18\x02 \x01(\v2\x17.proto.ArtifactMetadataR\x05value:\x028\x01\"\xc8\x04\n" +
+	"\x05value\x18\x02 \x01(\v2\x17.proto.ArtifactMetadataR\x05value:\x028\x01\"\xf7\x04\n" +
 	"\x04Tool\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\x12%\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\x12-\n" +
+	"\x12download_transform\x18\x13 \x01(\tR\x11downloadTransform\x12%\n" +
 	"\x0egithub_project\x18\t \x01(\tR\rgithubProject\x12,\n" +
 	"\x12github_asset_regex\x18\n" +
 	" \x01(\tR\x10githubAssetRegex\x12#\n" +
