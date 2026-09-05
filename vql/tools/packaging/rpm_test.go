@@ -1,6 +1,7 @@
 package packaging
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
@@ -130,6 +131,79 @@ func (self *PackagingTestSuite) TestRPMServer() {
 	fixture = append(fixture, config_file.(rpmpack.RPMFile).Body...)
 
 	goldie.Assert(self.T(), "TestRPMServer", fixture)
+}
+
+func (self *PackagingTestSuite) TestRPMServerWithCustomUser() {
+	spec := NewServerRPMSpec()
+
+	server_user_val := "myexistinguser"
+	server_group_val := ""
+
+	spec.Expansion.ServiceUser = server_user_val
+	spec.Expansion.ServiceGroup = server_group_val
+
+	arch, err := getRPMArch(self.elf_data)
+	assert.NoError(self.T(), err)
+
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	spec.SetRuntimeParameters(
+		target_config, arch, "releaseX", "server", 0, self.elf_data)
+
+	builder, err := BuildRPM(spec)
+	assert.NoError(self.T(), err)
+
+	service_file, ok := builder.(*RPMBuilder).state.Get(
+		"/etc/systemd/system/velociraptor_server.service")
+	assert.True(self.T(), ok)
+	service_body := string(service_file.(rpmpack.RPMFile).Body)
+	assert.Contains(self.T(), service_body, fmt.Sprintf("User=%s", server_user_val))
+	assert.Contains(self.T(), service_body, fmt.Sprintf("Group=%s", server_group_val))
+
+	postin, ok := builder.(*RPMBuilder).state.Get("Postin")
+	assert.True(self.T(), ok)
+	postin_body := postin.(string)
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent group %s", server_group_val))
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent passwd %s", server_user_val))
+	assert.NotContains(self.T(), postin_body, "getent passwd velociraptor")
+}
+
+func (self *PackagingTestSuite) TestRPMServerWithCustomUserAndGroup() {
+	spec := NewServerRPMSpec()
+
+	server_user_val := "myexistinguser"
+	server_group_val := "myexistinggroup"
+	spec.Expansion.ServiceUser = server_user_val
+	spec.Expansion.ServiceGroup = server_group_val
+
+	arch, err := getRPMArch(self.elf_data)
+	assert.NoError(self.T(), err)
+
+	target_config, err := validateServerConfig(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	spec.SetRuntimeParameters(
+		target_config, arch, "releaseX", "server", 0, self.elf_data)
+
+	builder, err := BuildRPM(spec)
+	assert.NoError(self.T(), err)
+
+	service_file, ok := builder.(*RPMBuilder).state.Get(
+		"/etc/systemd/system/velociraptor_server.service")
+	assert.True(self.T(), ok)
+	service_body := string(service_file.(rpmpack.RPMFile).Body)
+	assert.Contains(self.T(), service_body, fmt.Sprintf("User=%s", server_user_val))
+	assert.Contains(self.T(), service_body, fmt.Sprintf("Group=%s", server_group_val))
+
+	postin, ok := builder.(*RPMBuilder).state.Get("Postin")
+	assert.True(self.T(), ok)
+	postin_body := postin.(string)
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent group %s", server_group_val))
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent passwd %s", server_user_val))
+	assert.Contains(self.T(), postin_body, "-g myexistinggroup")
+	assert.NotContains(self.T(), postin_body, "getent passwd velociraptor")
+	assert.NotContains(self.T(), postin_body, "getent group velociraptor")
 }
 
 func (self *PackagingTestSuite) TestRPMServerMaster() {

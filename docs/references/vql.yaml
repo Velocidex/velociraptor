@@ -1913,6 +1913,7 @@
 - name: deb_create
   description: Create a deployable Debian package for client or server.
   type: Plugin
+  version: 2
   args:
   - name: target
     type: string
@@ -1936,6 +1937,12 @@
     type: string
     description: The config to be repacked in the form of a json or yaml string. If
       not provided we use the current config./
+  - name: service_user
+    type: string
+    description: The user to run the service as
+  - name: service_group
+    type: string
+    description: The group to run the service as
   - name: show_spec
     type: bool
     description: If set we only show the spec that would have been used. You can use
@@ -9480,6 +9487,7 @@
 - name: rpm_create
   description: Create a deployable RPM package for client or server.
   type: Plugin
+  version: 2
   args:
   - name: target
     type: string
@@ -9503,6 +9511,12 @@
     type: string
     description: The config to be repacked in the form of a json or yaml string. If
       not provided we use the current config./
+  - name: service_user
+    type: string
+    description: The user to run the service as
+  - name: service_group
+    type: string
+    description: The group to run the service as
   - name: show_spec
     type: bool
     description: If set we only show the spec that would have been used. You can use

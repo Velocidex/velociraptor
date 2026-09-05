@@ -260,8 +260,8 @@ ExecStart={{.VelociraptorBinaryPath}} --config {{.ConfigPath}} frontend {{ Escap
 {{- if eq .Variant "minion" -}}
    --minion --node {{ .NodeName }}
 {{- end }}
-User={{.ServerUser}}
-Group={{.ServerUser}}
+User={{.ServiceUser}}
+Group={{.ServiceGroup}}
 CapabilityBoundingSet=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
 AmbientCapabilities=CAP_SYS_RESOURCE CAP_NET_BIND_SERVICE
 
@@ -270,24 +270,24 @@ WantedBy=multi-user.target
 `,
 		"Preinst": `
 if ! [ -f /bin/systemctl ] ; then
-   getent group {{.ServerUser}} >/dev/null || groupadd -g 115 -r {{.ServerUser}} || :
-   getent passwd {{.ServerUser}} >/dev/null || \
-   useradd -c "Privilege-separated {{.ServerUser}}" -u 115 -g {{.ServerUser}}  -s /sbin/nologin \
-     -s /sbin/nologin -r -d /var/empty/{{.ServerUser}} {{.ServerUser}} 2> /dev/null || :
+   getent group {{.ServiceGroup}} >/dev/null || groupadd -g 115 -r {{.ServiceGroup}} || :
+   getent passwd {{.ServiceUser}} >/dev/null || \
+   useradd -c "Privilege-separated {{.ServiceUser}}" -u 115 -g {{.ServiceGroup}}  -s /sbin/nologin \
+     -s /sbin/nologin -r -d /var/empty/{{.ServiceUser}} {{.ServiceUser}} 2> /dev/null || :
 fi
 `,
 
 		"PostInst": `
-getent group {{.ServerUser}} >/dev/null 2>&1 || groupadd \
+getent group {{.ServiceGroup}} >/dev/null 2>&1 || groupadd \
         -r \
-        {{.ServerUser}}
-getent passwd {{.ServerUser}} >/dev/null 2>&1 || useradd \
+        {{.ServiceGroup}}
+getent passwd {{.ServiceUser}} >/dev/null 2>&1 || useradd \
         -r -l \
-        -g {{.ServerUser}} \
+        -g {{.ServiceGroup}} \
         -d /proc \
         -s /sbin/nologin \
         -c "{{.ServiceDescription}}" \
-        {{.ServerUser}}
+        {{.ServiceUser}}
 :;
 {{ Expand "CommonPostinst" }}
 `,
@@ -300,8 +300,8 @@ mkdir -p '{{.FileStorePath}}'/config
 # Only chown two levels of the filestore directory in case
 # this is an upgrade and there are many files already there.
 # otherwise chown -R takes too long.
-chown {{.ServerUser}}:{{.ServerUser}} '{{.FileStorePath}}' '{{.FileStorePath}}'/*
-chown {{.ServerUser}}:{{.ServerUser}} -R $(dirname "{{.ConfigPath}}")
+chown {{.ServiceUser}}:{{.ServiceGroup}} '{{.FileStorePath}}' '{{.FileStorePath}}'/*
+chown {{.ServiceUser}}:{{.ServiceGroup}} -R $(dirname "{{.ConfigPath}}")
 
 # Lock down permissions on the config file.
 chmod -R go-r $(dirname "{{.ConfigPath}}")
@@ -343,13 +343,13 @@ chmod 755 {{.VelociraptorBinaryPath}}
 		// Add privilege separated user accounts and lock down
 		// permissions.
 		"PostInst": `
-if ! getent group {{.ServerUser}} >/dev/null; then
-   addgroup --system {{.ServerUser}}
+if ! getent group {{.ServiceGroup}} >/dev/null; then
+   addgroup --system {{.ServiceGroup}}
 fi
 
-if ! getent passwd {{.ServerUser}} >/dev/null; then
-   adduser --system --home /etc/{{.ServerUser}} --no-create-home \
-     --ingroup {{.ServerUser}} {{.ServerUser}} --shell /bin/false \
+if ! getent passwd {{.ServiceUser}} >/dev/null; then
+   adduser --system --home /etc/{{.ServiceUser}} --no-create-home \
+     --ingroup {{.ServiceGroup}} {{.ServiceUser}} --shell /bin/false \
      --gecos "{{.ServiceDescription}}"
 fi
 
@@ -377,7 +377,10 @@ type TemplateExpansion struct {
 	ExtraArgs string
 
 	// The privilege separated username for the server.
-	ServerUser string
+	ServiceUser string
+
+	// The group for the privilege separated user.
+	ServiceGroup string
 
 	// Where to put the service file on systemd
 	SystemdServiceFile string
@@ -504,7 +507,8 @@ func NewClientRPMSpec() *PackageSpec {
 
 			ConfigPath:             "/etc/velociraptor/client.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor_client",
-			ServerUser:             "velociraptor",
+			ServiceUser:            "velociraptor",
+			ServiceGroup:           "velociraptor",
 			SystemdServiceFile:     "velociraptor_client.service",
 			SysvService:            "velociraptor_client",
 			ServiceDescription:     "Velociraptor is an endpoint monitoring tool",
@@ -544,7 +548,7 @@ func NewClientDebSpec() *PackageSpec {
 
 			ConfigPath:             "/etc/velociraptor/client.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor_client",
-			ServerUser:             "velociraptor",
+			ServiceUser:            "velociraptor",
 			SystemdServiceFile:     "velociraptor_client.service",
 			SysvService:            "velociraptor_client",
 			ServiceDescription:     "Velociraptor client package.",
@@ -595,7 +599,8 @@ velociraptor-server-{{ .Version }}.{{ .Arch }}.rpm
 
 			ConfigPath:             "/etc/velociraptor/server.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor",
-			ServerUser:             "velociraptor",
+			ServiceUser:            "velociraptor",
+			ServiceGroup:           "velociraptor",
 			SystemdServiceFile:     "velociraptor_server.service",
 			SysvService:            "velociraptor",
 			ServiceDescription:     "Velociraptor server",
@@ -646,7 +651,8 @@ velociraptor-server-{{ .Version }}.{{ .Arch }}.deb
 
 			ConfigPath:             "/etc/velociraptor/server.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor",
-			ServerUser:             "velociraptor",
+			ServiceUser:            "velociraptor",
+			ServiceGroup:           "velociraptor",
 			SystemdServiceFile:     "velociraptor_server.service",
 			SysvService:            "velociraptor",
 			ServiceDescription:     "Velociraptor server",

@@ -15,6 +15,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
+/*
+   To inspect the produce rpm file:
+
+   rpm2cpio ./velociraptor-server-0.76.5.x86_64.rpm | less
+
+   rpm -qp --scripts velociraptor-server-0.77.2.x86_64.rpm  | less
+*/
+
 var (
 	rpm_command = app.Command(
 		"rpm", "Create an rpm package")
@@ -34,6 +42,12 @@ var (
 
 	server_rpm_command_binary = server_rpm_command.Flag(
 		"binary", "The binary to package").String()
+
+	server_rpm_command_user = server_rpm_command.Flag(
+		"server_user", "The (existing) server user to run the packaged service as.").String()
+
+	server_rpm_command_group = server_rpm_command.Flag(
+		"server_group", "The (existing) server group to run the packaged service as.").String()
 
 	client_rpm_command_output = client_rpm_command.Flag(
 		"output", "Directory to store rpms in. (Default current directory)").
@@ -195,18 +209,21 @@ func doServerRPM() error {
 			Set("Release", *rpm_command_release).
 			Set("Output", *server_rpm_command_output).
 			Set("BinaryToPackage", *server_rpm_command_binary).
-			Set("ConfigPath", abs_config_path),
+			Set("ConfigPath", abs_config_path).
+			Set("ServiceUser", *server_rpm_command_user).
+			Set("ServiceGroup", *server_rpm_command_group),
 	}
 
-	query := `
-       LET _ <= log(message="Packaging binary %v to client RPM", args=BinaryToPackage)
-
-       SELECT OSPath
-       FROM rpm_create(exe=BinaryToPackage, server=TRUE,
-                       directory_name=Output,
-                       config=read_file(filename=ConfigPath, length=1000000),
-                       release=Release)
-`
+	query := fmt.Sprintf(`
+          LET _ <= log(message="Packaging binary %%v to server RPM", args=BinaryToPackage)
+          LET Config <= read_file(filename=ConfigPath, length=1000000)
+          SELECT OSPath
+          FROM rpm_create(exe=BinaryToPackage, server=TRUE,
+                          directory_name=Output,
+                          config=Config,
+                          service_user=ServiceUser,
+                          service_group=ServiceGroup,
+                          release=Release)`)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {

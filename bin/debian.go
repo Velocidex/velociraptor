@@ -38,6 +38,14 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 )
 
+/*
+   To inspect the produced deb file:
+
+   ar p ./velociraptor-server-0.76.5.amd64.deb data.tar.gz | less
+
+   ar p ./velociraptor-server-0.76.5.amd64.deb control.tar.gz | less
+*/
+
 var (
 	debian_command = app.Command(
 		"debian", "Create a debian package")
@@ -54,6 +62,14 @@ var (
 
 	server_debian_command_binary = server_debian_command.Flag(
 		"binary", "The binary to package").String()
+
+	server_debian_command_user = server_debian_command.Flag(
+		"server_user", "The service user to run the packaged service as.").
+		Default("velociraptor").String()
+
+	server_debian_command_group = server_debian_command.Flag(
+		"server_group", "The service group to run the packaged service as.").
+		Default("velociraptor").String()
 
 	client_debian_command = debian_command.Command(
 		"client", "Create a client package from a client config file.")
@@ -125,17 +141,21 @@ func doServerDeb() error {
 			Set("Release", *debian_command_release).
 			Set("Output", *server_debian_command_output).
 			Set("BinaryToPackage", *server_debian_command_binary).
-			Set("ConfigPath", abs_config_path),
+			Set("ConfigPath", abs_config_path).
+			Set("ServiceUser", *server_debian_command_user).
+			Set("ServiceGroup", *server_debian_command_group),
 	}
 
-	query := `
-       LET _ <= log(message="Packaging binary %v to server Deb", args=BinaryToPackage)
+	query := fmt.Sprintf(`
+       LET _ <= log(message="Packaging binary %%v to server Deb", args=BinaryToPackage)
 
        SELECT OSPath
        FROM deb_create(exe=BinaryToPackage, server=TRUE,
                        directory_name=Output,
                        config=read_file(filename=ConfigPath, length=1000000),
-                       release=Release)`
+                       service_user=ServiceUser,
+                       service_group=ServiceGroup,
+                       release=Release)`)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {
