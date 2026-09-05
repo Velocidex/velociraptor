@@ -90,11 +90,9 @@ func (self *PackagingTestSuite) TestDEBServerWithCustomUser() {
 	// As supplied by cmdline.
 	server_user := "myexistinguser"
 	server_group := ""
-	server_user_val, server_group_val, err := ValidateCustomServerUserGroup(server_user, server_group)
-	assert.NoError(self.T(), err)
 
-	spec.Expansion.ServerUser = server_user_val
-	spec.Expansion.ServerGroup = server_group_val
+	spec.Expansion.ServiceUser = server_user
+	spec.Expansion.ServiceGroup = server_group
 
 	arch, err := getDebArch(self.elf_data)
 	assert.NoError(self.T(), err)
@@ -126,13 +124,8 @@ func (self *PackagingTestSuite) TestDEBServerWithCustomUserAndGroup() {
 	spec := NewServerDebSpec()
 
 	// As supplied by cmdline.
-	server_user := "myexistinguser"
-	server_group := "myexistinggroup"
-	server_user_val, server_group_val, err := ValidateCustomServerUserGroup(server_user, server_group)
-	assert.NoError(self.T(), err)
-
-	spec.Expansion.ServerUser = server_user_val
-	spec.Expansion.ServerGroup = server_group_val
+	spec.Expansion.ServiceUser = "myexistinguser"
+	spec.Expansion.ServiceGroup = "myexistinggroup"
 
 	arch, err := getDebArch(self.elf_data)
 	assert.NoError(self.T(), err)

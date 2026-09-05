@@ -13,8 +13,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/tools/packaging"
 )
+
+/*
+   To inspect the produce rpm file:
+
+   rpm2cpio ./velociraptor-server-0.76.5.x86_64.rpm | less
+
+   rpm -qp --scripts velociraptor-server-0.77.2.x86_64.rpm  | less
+*/
 
 var (
 	rpm_command = app.Command(
@@ -193,12 +200,6 @@ func doServerRPM() error {
 		*rpm_command_release = "A"
 	}
 
-	server_user, server_group, err := packaging.ValidateCustomServerUserGroup(
-		*server_rpm_command_user, *server_rpm_command_group)
-	if err != nil {
-		return err
-	}
-
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -208,19 +209,9 @@ func doServerRPM() error {
 			Set("Release", *rpm_command_release).
 			Set("Output", *server_rpm_command_output).
 			Set("BinaryToPackage", *server_rpm_command_binary).
-			Set("ConfigPath", abs_config_path),
-	}
-
-	server_user_arg := ""
-	server_group_arg := ""
-	
-	// if the user (and group) is specified, supply it to the rpm_create function to set custom user/group
-	if server_user != "" {
-		builder.Env.Set("ServerUser", server_user)
-		builder.Env.Set("ServerGroup", server_group)
-
-		server_user_arg =  ",\n                          server_user=ServerUser"
-		server_group_arg = ",\n                          server_group=ServerGroup"
+			Set("ConfigPath", abs_config_path).
+			Set("ServiceUser", *server_rpm_command_user).
+			Set("ServiceGroup", *server_rpm_command_group),
 	}
 
 	query := fmt.Sprintf(`
@@ -230,7 +221,9 @@ func doServerRPM() error {
           FROM rpm_create(exe=BinaryToPackage, server=TRUE,
                           directory_name=Output,
                           config=Config,
-                          release=Release%s%s)`, server_user_arg, server_group_arg)
+                          service_user=ServiceUser,
+                          service_group=ServiceGroup,
+                          release=Release)`)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {

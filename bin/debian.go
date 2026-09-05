@@ -36,8 +36,15 @@ import (
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
-	"www.velocidex.com/golang/velociraptor/vql/tools/packaging"
 )
+
+/*
+   To inspect the produced deb file:
+
+   ar p ./velociraptor-server-0.76.5.amd64.deb data.tar.gz | less
+
+   ar p ./velociraptor-server-0.76.5.amd64.deb control.tar.gz | less
+*/
 
 var (
 	debian_command = app.Command(
@@ -57,10 +64,12 @@ var (
 		"binary", "The binary to package").String()
 
 	server_debian_command_user = server_debian_command.Flag(
-		"server_user", "The (existing) server user to run the packaged service as.").String()
+		"server_user", "The service user to run the packaged service as.").
+		Default("velociraptor").String()
 
 	server_debian_command_group = server_debian_command.Flag(
-		"server_group", "The (existing) server group to run the packaged service as.").String()
+		"server_group", "The service group to run the packaged service as.").
+		Default("velociraptor").String()
 
 	client_debian_command = debian_command.Command(
 		"client", "Create a client package from a client config file.")
@@ -123,12 +132,6 @@ func doServerDeb() error {
 		*server_debian_command_output = "."
 	}
 
-	server_user, server_group, err := packaging.ValidateCustomServerUserGroup(
-		*server_debian_command_user, *server_debian_command_group)
-	if err != nil {
-		return err
-	}
-
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -138,19 +141,9 @@ func doServerDeb() error {
 			Set("Release", *debian_command_release).
 			Set("Output", *server_debian_command_output).
 			Set("BinaryToPackage", *server_debian_command_binary).
-			Set("ConfigPath", abs_config_path),
-	}
-
-	server_user_arg := ""
-	server_group_arg := ""
-	
-	// if the user (and group) is specified, supply it to the rpm_create function to set custom user/group
-	if server_user != "" {
-		builder.Env.Set("ServerUser", server_user)
-		builder.Env.Set("ServerGroup", server_group)
-
-		server_user_arg =  ",\n                          server_user=ServerUser"
-		server_group_arg = ",\n                          server_group=ServerGroup"
+			Set("ConfigPath", abs_config_path).
+			Set("ServiceUser", *server_debian_command_user).
+			Set("ServiceGroup", *server_debian_command_group),
 	}
 
 	query := fmt.Sprintf(`
@@ -160,7 +153,9 @@ func doServerDeb() error {
        FROM deb_create(exe=BinaryToPackage, server=TRUE,
                        directory_name=Output,
                        config=read_file(filename=ConfigPath, length=1000000),
-                       release=Release%s%s)`, server_user_arg, server_group_arg)
+                       service_user=ServiceUser,
+                       service_group=ServiceGroup,
+                       release=Release)`)
 
 	err = runQueryWithEnv(ctx, query, builder, "json")
 	if err != nil {

@@ -1,10 +1,10 @@
 package packaging
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"testing"
-	"fmt"
 
 	"github.com/google/rpmpack"
 	"github.com/stretchr/testify/suite"
@@ -135,15 +135,9 @@ func (self *PackagingTestSuite) TestRPMServer() {
 
 func (self *PackagingTestSuite) TestRPMServerWithCustomUser() {
 	spec := NewServerRPMSpec()
-	
-	// as supplied by cmdline
-	server_user := "myexistinguser"
-	server_group := ""
-	server_user_val, server_group_val, err := ValidateCustomServerUserGroup(server_user, server_group)
-	assert.NoError(self.T(), err)
 
-	spec.Expansion.ServerUser = server_user_val
-	spec.Expansion.ServerGroup = server_group_val
+	spec.Expansion.ServiceUser = "myexistinguser"
+	spec.Expansion.ServiceGroup = ""
 
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)
@@ -174,15 +168,9 @@ func (self *PackagingTestSuite) TestRPMServerWithCustomUser() {
 
 func (self *PackagingTestSuite) TestRPMServerWithCustomUserAndGroup() {
 	spec := NewServerRPMSpec()
-	
-	// as supplied by cmdline
-	server_user := "myexistinguser"
-	server_group := "myexistinggroup"
-	server_user_val, server_group_val, err := ValidateCustomServerUserGroup(server_user, server_group)
-	assert.NoError(self.T(), err)
 
-	spec.Expansion.ServerUser = server_user_val
-	spec.Expansion.ServerGroup = server_group_val
+	spec.Expansion.ServiceUser = "myexistinguser"
+	spec.Expansion.ServiceGroup = "myexistinggroup"
 
 	arch, err := getRPMArch(self.elf_data)
 	assert.NoError(self.T(), err)
