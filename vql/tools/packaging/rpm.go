@@ -104,6 +104,18 @@ func (self *RPMBuilder) Bytes(scope vfilter.Scope) ([]byte, error) {
 	return buff.Bytes(), err
 }
 
+func ValidateCustomServerUserGroup(server_user, server_group string) (string, string, error) {
+	if server_group != "" && server_user == "" {
+		return "", "", fmt.Errorf("--server_group requires --server_user")
+	}
+
+	if server_group == "" {
+		server_group = server_user
+	}
+
+	return server_user, server_group, nil
+}
+
 // Build a debug string representing the rpm so we can compare it for
 // tests. The output can be checked against the command:
 // rpm  -qp --scripts velociraptor_client_0.74.3_x86_64.rpm

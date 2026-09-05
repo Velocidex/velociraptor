@@ -13,6 +13,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/tools/packaging"
 )
 
 var (
@@ -192,7 +193,7 @@ func doServerRPM() error {
 		*rpm_command_release = "A"
 	}
 
-	server_user, server_group, err := validateCustomServerUserGroup(
+	server_user, server_group, err := packaging.ValidateCustomServerUserGroup(
 		*server_rpm_command_user, *server_rpm_command_group)
 	if err != nil {
 		return err
@@ -244,18 +245,6 @@ func doServerRPM() error {
 	}
 
 	return logger.Error
-}
-
-func validateCustomServerUserGroup(server_user, server_group string) (string, string, error) {
-	if server_group != "" && server_user == "" {
-		return "", "", fmt.Errorf("--server_group requires --server_user")
-	}
-
-	if server_group == "" {
-		server_group = server_user
-	}
-
-	return server_user, server_group, nil
 }
 
 func init() {
