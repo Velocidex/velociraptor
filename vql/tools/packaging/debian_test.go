@@ -88,11 +88,11 @@ func (self *PackagingTestSuite) TestDEBServerWithCustomUser() {
 	spec := NewServerDebSpec()
 
 	// As supplied by cmdline.
-	server_user := "myexistinguser"
-	server_group := ""
+	server_user_val := "myexistinguser"
+	server_group_val := ""
 
-	spec.Expansion.ServiceUser = server_user
-	spec.Expansion.ServiceGroup = server_group
+	spec.Expansion.ServiceUser = server_user_val
+	spec.Expansion.ServiceGroup = server_group_val
 
 	arch, err := getDebArch(self.elf_data)
 	assert.NoError(self.T(), err)
@@ -115,7 +115,7 @@ func (self *PackagingTestSuite) TestDEBServerWithCustomUser() {
 	postin, ok := builder.(*DEBBuilder).state.Get("postinst")
 	assert.True(self.T(), ok)
 	postin_body := postin.(string)
-	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent group %s", server_user_val))
+	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent group %s", server_group_val))
 	assert.Contains(self.T(), postin_body, fmt.Sprintf("getent passwd %s", server_user_val))
 	assert.NotContains(self.T(), postin_body, "getent passwd velociraptor")
 }
@@ -124,8 +124,10 @@ func (self *PackagingTestSuite) TestDEBServerWithCustomUserAndGroup() {
 	spec := NewServerDebSpec()
 
 	// As supplied by cmdline.
-	spec.Expansion.ServiceUser = "myexistinguser"
-	spec.Expansion.ServiceGroup = "myexistinggroup"
+	server_user_val := "myexistinguser"
+	server_group_val := "myexistinggroup"
+	spec.Expansion.ServiceUser = server_user_val
+	spec.Expansion.ServiceGroup = server_group_val
 
 	arch, err := getDebArch(self.elf_data)
 	assert.NoError(self.T(), err)
