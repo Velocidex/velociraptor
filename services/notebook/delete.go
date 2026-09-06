@@ -40,10 +40,13 @@ func (self *NotebookStoreImpl) DeleteNotebook(ctx context.Context,
 			return err
 		}
 
-		// Also remove it from our local cache.
+		// Also remove it from our local cache. Use nanosecond
+		// precision so a delete in the same second as the last index
+		// write is not masked by the second-granularity comparison in
+		// GetSharedNotebooks.
 		self.mu.Lock()
 		delete(self.global_notebooks, notebook_id)
-		self.last_deleted = utils.GetTime().Now().Unix()
+		self.last_deleted = utils.GetTime().Now().UnixNano()
 		self.mu.Unlock()
 	}
 

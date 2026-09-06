@@ -83,9 +83,11 @@ func (self *NotebookStoreImpl) Version() (res int64) {
 
 	res = self.last_deleted
 
+	// ModifiedTime is second granularity (proto) so convert to
+	// nanoseconds to compare with last_deleted.
 	for _, v := range self.global_notebooks {
-		if v.ModifiedTime > res {
-			res = v.ModifiedTime
+		if v.ModifiedTime*1000000000 > res {
+			res = v.ModifiedTime * 1000000000
 		}
 	}
 	return res

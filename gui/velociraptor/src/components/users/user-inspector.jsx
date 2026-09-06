@@ -394,17 +394,22 @@ class UsersOverview extends Component {
                  this.setACLsource.token).then(response=>{
                      if (response.cancel)
                          return;
+                     // Refresh the ACL but keep the current one visible
+                     // while the fetch is in flight (no flicker).
                      this.getACL(acl.name,
-                                 {id: acl.org, name: acl.org_name});
+                                 {id: acl.org, name: acl.org_name},
+                                 {reset: false});
                      this.props.updateUsers();
                  });
     }
 
-    getACL = (user_name, org) => {
+    getACL = (user_name, org, {reset = true} = {}) => {
         this.getACLsource.cancel();
         this.getACLsource = CancelToken.source();
 
-        this.setState({acl: {}});
+        if (reset) {
+            this.setState({acl: {}});
+        }
         let org_id = org && org.id;
 
         if (!user_name || !org_id) {

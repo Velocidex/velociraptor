@@ -32,6 +32,7 @@ class EditSecretDialog extends Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.setState({
+            secret: this.props.secret,
             new_users: this.props.secret.users,
             visible_to_all_orgs: this.props.secret.visible_to_all_orgs});
     }

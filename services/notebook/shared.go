@@ -43,7 +43,7 @@ func (self *NotebookManager) GetSharedNotebooks(
 
 	stat, err := file_store_factory.StatFile(index_filename)
 
-	if err == nil && stat.ModTime().Unix() >= self.Store.Version() {
+	if err == nil && stat.ModTime().UnixNano() >= self.Store.Version() {
 		return index_filename, nil
 	}
 
