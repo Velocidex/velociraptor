@@ -124,7 +124,20 @@ func maybeTransformResponse(response *actions_proto.VQLResponse, id int) *action
 		// contains a Hostname we need to transform it. This
 		// specifically targets Generic.Client.Info interrogation.
 		if utils.InString(response.Columns, "Hostname") {
-			rows, err := utils.ParseJsonToDicts([]byte(response.JSONLResponse))
+			// The response may be compressed by the launcher. In that
+			// case the JSONL payload is stored in
+			// CompressedJsonResponse and JSONLResponse is empty.
+			jsonl := response.JSONLResponse
+			if jsonl == "" && len(response.CompressedJsonResponse) > 0 {
+				decompressed, err := utils.Uncompress(
+					context.Background(), response.CompressedJsonResponse)
+				if err != nil {
+					return response
+				}
+				jsonl = string(decompressed)
+			}
+
+			rows, err := utils.ParseJsonToDicts([]byte(jsonl))
 			if err != nil || len(rows) == 0 {
 				return response
 			}
@@ -144,7 +157,13 @@ func maybeTransformResponse(response *actions_proto.VQLResponse, id int) *action
 				return response
 			}
 			result := proto.Clone(response).(*actions_proto.VQLResponse)
+
+			// The server falls back to handling uncompressed data so
+			// just clear the compressed field and pass the
+			// transformed rows uncompressed.
 			result.JSONLResponse = string(new_rows)
+			result.CompressedJsonResponse = nil
+			result.UncompressedSize = 0
 
 			return result
 		}
