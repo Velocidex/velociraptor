@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 // A writeback store that supports the windows registry.
@@ -122,6 +123,12 @@ func (self *RegistryWritebackStore) Load() *config_proto.Writeback {
 
 func GetFileWritebackStore(config_obj *config_proto.Config) WritebackStorer {
 	location, _ := WritebackLocation(config_obj)
+
+	// The pool client uses in-memory writebacks so no files are
+	// written to disk.
+	if strings.HasPrefix(location, "memory://") {
+		return &MemoryWritebackStore{}
+	}
 
 	if strings.HasPrefix(location, "HKLM\\") {
 		return &RegistryWritebackStore{
