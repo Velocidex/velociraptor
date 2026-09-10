@@ -1,0 +1,87 @@
+
+Test case 0: Signature of a plugin
+SELECT * FROM pslist(pid=1)
+SELECT * FROM pslist(p<--
+SignatureHelp:
+{
+ "signatures": [
+  {
+   "label": "pslist(pid: int64)",
+   "documentation": {
+    "kind": "markdown",
+    "value": "Enumerate running processes"
+   },
+   "parameters": [
+    {
+     "label": "pid: int64",
+     "documentation": {
+      "kind": "plaintext",
+      "value": "A process ID to list. If not provided list all processes."
+     }
+    }
+   ]
+  }
+ ],
+ "activeSignature": 0,
+ "activeParameter": 0
+}
+
+Test case 1: Signature of a function
+SELECT upcase(string='x') FROM scope()
+SELECT upcase(str<--
+SignatureHelp:
+{
+ "signatures": [
+  {
+   "label": "upcase(string: string)",
+   "documentation": {
+    "kind": "markdown",
+    "value": "Returns an uppercase version of the string"
+   },
+   "parameters": [
+    {
+     "label": "string: string",
+     "documentation": {
+      "kind": "plaintext",
+      "value": "The string to process"
+     }
+    }
+   ]
+  }
+ ],
+ "activeSignature": 0,
+ "activeParameter": 0
+}
+
+Test case 2: Signature of a nested function
+SELECT * FROM glob(globs=lowcase(string='*'))
+SELECT * FROM glob(globs=lowcase(stri<--
+SignatureHelp:
+{
+ "signatures": [
+  {
+   "label": "lowcase(string: string)",
+   "documentation": {
+    "kind": "markdown",
+    "value": "Returns the lowercase version of a string"
+   },
+   "parameters": [
+    {
+     "label": "string: string",
+     "documentation": {
+      "kind": "plaintext",
+      "value": "The string to process"
+     }
+    }
+   ]
+  }
+ ],
+ "activeSignature": 0,
+ "activeParameter": 0
+}
+
+Test case 3: No signature outside a call
+SELECT * FROM pslist(pid=1)
+SELECT * F<--
+SignatureHelp:
+null

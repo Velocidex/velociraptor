@@ -10,7 +10,7 @@ func (self *LSPServer) Diagnostic(ctx context.Context,
 	params *protocol.DocumentDiagnosticParams) (
 	protocol.DocumentDiagnosticReport, error) {
 
-	doc, err := self.getDoc(params.TextDocument.URI)
+	doc, err := self.GetDoc(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}

@@ -1,11 +1,26 @@
 
-Test case 0: Query with errors
+Test case 0: Query on one line
+---SELECT * FROM info()---
+Document URI file:///XXX0
+Errors
+Analysis State :
+TopLevelQueries:
+(1,1)-(1,21) SELECT * FROM info()
+Definitions:
+Callsites:
+(1,15)-(1,21) info (plugin)
+FullRange 1,1 (0) -> 1,21 (20) (length 20)
+Line Ranges:
+1,1 (0) -> 1,21 (20)
+"SELECT * FROM info()"
 
+Test case 1: Query with errors
+---
 LET X = 1
 SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo
 FROM glob(globs='*')
-
-Document URI file:///XXX0
+---
+Document URI file:///XXX1
 Errors
 (3,40) invalid_arg: Invalid arg XXX for function geoip()
 Analysis State :
@@ -21,9 +36,21 @@ Callsites:
    (3,40)-(3,45) XXX
 (4,6)-(5,1) glob (plugin)
    (4,11)-(4,20) globs
+FullRange 1,1 (0) -> 5,1 (85) (length 85)
+Line Ranges:
+1,1 (0) -> 1,2 (1)
+"\n"
+2,1 (1) -> 2,11 (11)
+"LET X = 1\n"
+3,1 (11) -> 3,54 (64)
+"SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo\n"
+4,1 (64) -> 4,22 (85)
+"FROM glob(globs='*')\n"
+5,1 (85) -> 5,1 (85)
+""
 
-Test case 1: Sub Query
-
+Test case 2: Sub Query
+---
 LET Add(X) = X + 1
 
 SELECT {
@@ -31,8 +58,8 @@ SELECT {
    FROM glob(globs='*', accessor=Add(X='file'))
 } AS B
 FROM scope()
-
-Document URI file:///XXX1
+---
+Document URI file:///XXX2
 Errors
 (5,43) invalid_arg: Invalid arg XXX for function geoip()
 Analysis State :
@@ -53,9 +80,29 @@ Callsites:
 (6,34)-(6,47) Add (function)
    (6,38)-(6,46) X
 (8,6)-(9,1) scope (plugin)
+FullRange 1,1 (0) -> 9,1 (154) (length 154)
+Line Ranges:
+1,1 (0) -> 1,2 (1)
+"\n"
+2,1 (1) -> 2,20 (20)
+"LET Add(X) = X + 1\n"
+3,1 (20) -> 3,2 (21)
+"\n"
+4,1 (21) -> 4,10 (30)
+"SELECT {\n"
+5,1 (30) -> 5,57 (86)
+"   SELECT geoip(db='Foo', ip='127.0.0.1', XXX=1) AS Foo\n"
+6,1 (86) -> 6,49 (134)
+"   FROM glob(globs='*', accessor=Add(X='file'))\n"
+7,1 (134) -> 7,8 (141)
+"} AS B\n"
+8,1 (141) -> 8,14 (154)
+"FROM scope()\n"
+9,1 (154) -> 9,1 (154)
+""
 
-Test case 2: Columns
-
+Test case 3: Columns
+---
 LET Session <= shell_session(argv=["XXXbash"])
 
 SELECT Session.IsRunning, version(function="shell_session")
@@ -75,8 +122,8 @@ LET _ <= background(query={
 })
 
 SELECT * FROM foreach(row=Session.Query)
-
-Document URI file:///XXX2
+---
+Document URI file:///XXX3
 Errors
 Analysis State :
 TopLevelQueries:
@@ -120,3 +167,47 @@ Callsites:
 (20,15)-(21,1) foreach (plugin)
    (20,23)-(20,40) row
 (20,27)-(20,40) Session.Query (symbol)
+FullRange 1,1 (0) -> 21,1 (535) (length 535)
+Line Ranges:
+1,1 (0) -> 1,2 (1)
+"\n"
+2,1 (1) -> 2,48 (48)
+"LET Session <= shell_session(argv=[\"XXXbash\"])\n"
+3,1 (48) -> 3,2 (49)
+"\n"
+4,1 (49) -> 4,61 (109)
+"SELECT Session.IsRunning, version(function=\"shell_session\")\n"
+5,1 (109) -> 5,14 (122)
+"FROM scope()\n"
+6,1 (122) -> 6,2 (123)
+"\n"
+7,1 (123) -> 7,29 (151)
+"LET _ <= background(query={\n"
+8,1 (151) -> 8,27 (177)
+"  SELECT * FROM chain(a={\n"
+9,1 (177) -> 9,50 (226)
+"    SELECT sleep(time=1), shell_session_control(\n"
+10,1 (226) -> 10,74 (299)
+"       stdin=format(format=\"echo hello %v\\n\\n\", args=_value)) AS Session\n"
+11,1 (299) -> 11,24 (322)
+"    FROM range(end=10)\n"
+12,1 (322) -> 12,26 (347)
+"    WHERE log(dedup= -1,\n"
+13,1 (347) -> 13,66 (412)
+"       message=\"Session.IsRunning = %v\", args=Session.IsRunning)\n"
+14,1 (412) -> 14,9 (420)
+" }, b={\n"
+15,1 (420) -> 15,51 (470)
+"   SELECT shell_session_control(close_stdin=TRUE)\n"
+16,1 (470) -> 16,17 (486)
+"   FROM scope()\n"
+17,1 (486) -> 17,5 (490)
+" })\n"
+18,1 (490) -> 18,4 (493)
+"})\n"
+19,1 (493) -> 19,2 (494)
+"\n"
+20,1 (494) -> 20,42 (535)
+"SELECT * FROM foreach(row=Session.Query)\n"
+21,1 (535) -> 21,1 (535)
+""

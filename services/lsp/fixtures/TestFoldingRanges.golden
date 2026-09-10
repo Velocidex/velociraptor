@@ -1,0 +1,36 @@
+
+Test case 0: Fold a multi line LET query
+LET X = SELECT *
+FROM pslist(pid=1)
+SELECT X FROM scope()
+
+Folding ranges:
+[
+ {
+  "startLine": 0,
+  "endLine": 2,
+  "kind": "region"
+ },
+ {
+  "startLine": 2,
+  "endLine": 3,
+  "kind": "region"
+ }
+]
+
+Test case 1: No fold for a single line
+SELECT * FROM pslist(pid=1)
+Folding ranges:
+[]
+
+Test case 2: Fold a multi line query
+SELECT *
+FROM pslist(pid=1)
+Folding ranges:
+[
+ {
+  "startLine": 0,
+  "endLine": 1,
+  "kind": "region"
+ }
+]
