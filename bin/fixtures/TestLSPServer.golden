@@ -16,12 +16,23 @@ Test Case 1 Initialize call:
    "completionProvider": {
     "triggerCharacters": [
      ".",
-     "(",
-     "?"
+     "("
     ]
    },
    "hoverProvider": true,
+   "signatureHelpProvider": {
+    "triggerCharacters": [
+     "(",
+     ","
+    ]
+   },
+   "referencesProvider": true,
    "documentSymbolProvider": true,
+   "codeActionProvider": true,
+   "workspaceSymbolProvider": true,
+   "documentFormattingProvider": true,
+   "renameProvider": true,
+   "foldingRangeProvider": true,
    "semanticTokensProvider": {
     "legend": {
      "tokenTypes": [
@@ -39,11 +50,7 @@ Test Case 1 Initialize call:
     },
     "full": true
    },
-   "diagnosticProvider": {
-    "identifier": "vql",
-    "interFileDependencies": false,
-    "workspaceDiagnostics": false
-   }
+   "inlayHintProvider": true
   },
   "serverInfo": {
    "name": "vql-lsp",

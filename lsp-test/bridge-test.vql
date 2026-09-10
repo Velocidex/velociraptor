@@ -1,2 +1,6 @@
+LET MyVar = 5
+LET OtherVar = SELECT * FROM pslist(pid=MyVar)
+LET MyFunc(X, Y) = X + Y
 SELECT * FROM Artifact.Windows.Sys.Users(foo=1)
 SELECT * FROM pslist(badarg=1)
+SELECT OtherVar FROM scope()

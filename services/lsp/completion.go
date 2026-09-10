@@ -22,8 +22,7 @@ import (
 //
 // If point is at the inner callsite we want to retrieve the most
 // specific callsite - in this case bar().
-func (self *Document) matchCallsite(pos lexer.Position) (
-	callsite *vfilter.CallSite, offset_at_point int, err error) {
+func (self *Document) matchCallsite(pos *lexer.Position) (callsite *vfilter.CallSite, err error) {
 
 	type prospect_t struct {
 		distance int
@@ -33,32 +32,20 @@ func (self *Document) matchCallsite(pos lexer.Position) (
 	// Find potential overlapping callsites
 	var prospects []*prospect_t
 
-	offset_at_point = -1
-
 	for _, cs := range self.AnalysisState.Callsites {
 		cs_pos := cs.Pos
 
 		// Potential prospect - the point is inside the callsite.
 		if isPosBetween(cs_pos, pos) {
-			if offset_at_point < 0 {
-				offset_at_point, err = getNextOffset(
-					self.Text, cs_pos.Pos, pos)
-				if err != nil {
-					// If we can not get the exact offset, then the
-					// text does not match the offset.
-					break
-				}
-			}
-
 			prospects = append(prospects, &prospect_t{
-				distance: offset_at_point - cs_pos.Pos.Offset,
+				distance: pos.Offset - cs_pos.Pos.Offset,
 				cs:       &cs,
 			})
 		}
 	}
 
 	if len(prospects) == 0 {
-		return nil, 0, utils.Wrap(
+		return nil, utils.Wrap(
 			utils.NotFoundError,
 			"matchCallsite: Coordinate %v are not found in text", pos)
 	}
@@ -69,13 +56,19 @@ func (self *Document) matchCallsite(pos lexer.Position) (
 
 	// Minimize the distance
 	best_cs := prospects[0].cs
-	return best_cs, offset_at_point, nil
+	return best_cs, nil
 }
 
 // Complete possible function names on callsite.
 func (self *LSPServer) complete_function_names(
-	cs *vfilter.CallSite,
-	match string) (items []protocol.CompletionItem) {
+	doc *Document,
+	cursor *lexer.Position,
+	cs *vfilter.CallSite) (items []protocol.CompletionItem) {
+
+	match := doc.GetFragment(cs.Pos.Pos.Offset, cursor.Offset)
+
+	desc_range := doc.WordAtPos(*cursor, '(')
+	identifier := doc.GetFragmentByRange(desc_range)
 
 	for _, desc := range LoadApiDescriptions() {
 		// A symbol can act as a plugin or a function.
@@ -83,21 +76,33 @@ func (self *LSPServer) complete_function_names(
 			strings.EqualFold(desc.Type, cs.Type)) &&
 			strings.HasPrefix(desc.Name, match) {
 
-			desc_range := protocolRange(cs.Pos)
-			desc_range.End = desc_range.Start
-			desc_range.End.Character += uint32(len(match) + 1)
+			// Replace the entire identifier with the new function.
+			replacement := desc.Name + "()"
+			if strings.HasSuffix(identifier, "(") {
+				// If the current identifier has a opening ( we assume
+				// there is a closing ) somewhere ahead so we just
+				// replace that.
+				replacement = desc.Name + "("
+			}
+
+			short_desc := shortDescription(desc.Description)
 
 			items = append(items, protocol.CompletionItem{
 				Label: desc.Name,
 				LabelDetails: &protocol.CompletionItemLabelDetails{
 					Detail:      &desc.Type,
-					Description: &desc.Description,
+					Description: &short_desc,
 				},
 				Detail: protocol.NewOptional("Built in " + desc.Type),
 				Kind:   getKind(desc),
+				Documentation: protocol.InlayHintTooltip(
+					&protocol.MarkupContent{
+						Kind:  markupKind(desc.Type),
+						Value: desc.Description,
+					}),
 				TextEdit: &protocol.TextEdit{
-					Range:   *desc_range,
-					NewText: desc.Name + "()",
+					Range:   *protocolRange(desc_range),
+					NewText: replacement,
 				},
 			})
 		}
@@ -106,28 +111,10 @@ func (self *LSPServer) complete_function_names(
 	return items
 }
 
-func (self *LSPServer) decorateArgWithTextEdit(
-	name string,
-	item *protocol.CompletionItem,
-	pos protocol.Position) {
-	desc_range := protocol.Range{
-		Start: pos,
-		End:   pos,
-	}
-	desc_range.End.Character--
-
-	item.TextEdit = &protocol.TextEdit{
-		Range:   desc_range,
-		NewText: name + "=",
-	}
-}
-
 func (self *LSPServer) complete_arg_names(
 	doc *Document,
+	cursor *lexer.Position,
 	cs *vfilter.CallSite,
-	offset_at_point int,
-	pos protocol.Position,
-	trigger_kind protocol.CompletionTriggerKind,
 ) (items []protocol.CompletionItem) {
 
 	// Find the description for the function
@@ -136,45 +123,19 @@ func (self *LSPServer) complete_arg_names(
 		return nil
 	}
 
-	found := make(map[string]bool)
+	id_range := doc.WordAtPos(*cursor, '=')
 
-	// Determine the arg that is on point
+	// match is the fragment between the start of the identifier and
+	// the current cursor.
+	match := doc.GetFragment(id_range.Pos.Offset, cursor.Offset)
+
+	// Keep a record of existing args to the function.
+	found := make(map[string]bool)
 	for _, arg := range cs.Args {
 		found[arg.Name] = true
-		distance_to_start_of_arg := offset_at_point - arg.Pos.Pos.Offset
-
-		if distance_to_start_of_arg > 0 &&
-			distance_to_start_of_arg < len(arg.Name) {
-			match := arg.Name[:distance_to_start_of_arg]
-
-			// Point is past the arg name - no completion available.
-			if len(match) > len(arg.Name) {
-				return items
-			}
-
-			for _, arg_desc := range desc.Args {
-				if strings.HasPrefix(arg_desc.Name, match) {
-					item := protocol.CompletionItem{
-						Label: arg_desc.Name,
-						LabelDetails: &protocol.CompletionItemLabelDetails{
-							Detail:      &arg_desc.Name,
-							Description: &arg_desc.Description,
-						},
-						Detail: protocol.NewOptional(desc.Type + " arg"),
-						Kind:   protocol.CompletionItemKindVariable,
-					}
-
-					if trigger_kind == protocol.CompletionTriggerKindTriggerCharacter {
-						self.decorateArgWithTextEdit(
-							arg_desc.Name, &item, pos)
-					}
-
-					items = append(items, item)
-				}
-			}
-		}
 	}
 
+	// Now complete all the other args
 	for _, arg_desc := range desc.Args {
 		_, pres := found[arg_desc.Name]
 		if pres {
@@ -182,19 +143,24 @@ func (self *LSPServer) complete_arg_names(
 		}
 
 		item := protocol.CompletionItem{
-			Label: arg_desc.Name,
+			Label:      arg_desc.Name,
+			FilterText: protocol.NewOptional(match),
 			LabelDetails: &protocol.CompletionItemLabelDetails{
 				Detail:      &arg_desc.Name,
 				Description: &arg_desc.Description,
 			},
 			Detail: protocol.NewOptional(desc.Type + " arg"),
 			Kind:   protocol.CompletionItemKindVariable,
+			Documentation: protocol.InlayHintTooltip(
+				&protocol.MarkupContent{
+					Kind:  markupKind(arg_desc.Type),
+					Value: arg_desc.Description,
+				}),
+			TextEdit: &protocol.TextEdit{
+				Range:   *protocolRange(id_range),
+				NewText: arg_desc.Name + "=",
+			},
 		}
-
-		if trigger_kind == protocol.CompletionTriggerKindTriggerCharacter {
-			self.decorateArgWithTextEdit(arg_desc.Name, &item, pos)
-		}
-
 		items = append(items, item)
 	}
 
@@ -207,31 +173,31 @@ func (self *LSPServer) Completion(
 
 	items := []protocol.CompletionItem{}
 
-	trigger := params.Context.TriggerKind
-
-	doc, err := self.getDoc(params.TextDocument.URI)
+	doc, err := self.GetDoc(params.TextDocument.URI)
 	if err != nil {
 		return nil, err
 	}
 
 	// Find the function at point
-	pos := lexerPositionFromProtocol(params.Position)
-	cs, offset_at_point, err := doc.matchCallsite(pos)
+	cursor := doc.LexerPositionFromProtocol(params.Position)
+	cs, err := doc.matchCallsite(cursor)
 
 	// The position is sitting inside a call site.
 	// The call site covers the function name and arg list.
 	if err == nil {
-		match := doc.getFragment(cs.Pos.Pos.Offset, offset_at_point)
+		// Make distinction between matching the callsite name itself
+		// and its args
+		distance_from_cs := cursor.Offset - cs.Pos.Pos.Offset
 
 		// Match is partial name - we need to complete the name:
 		// callsite: foobar(...)
 		// cs_to_point match: foo
-		if len(match) <= len(cs.Name) {
+		if distance_from_cs <= len(cs.Name) {
 			items = append(items, self.complete_function_names(
-				cs, match)...)
+				doc, cursor, cs)...)
 		} else {
 			items = append(items, self.complete_arg_names(
-				doc, cs, offset_at_point, params.Position, trigger)...)
+				doc, cursor, cs)...)
 		}
 	}
 
@@ -249,7 +215,7 @@ func getKind(desc *api_proto.Completion) protocol.CompletionItemKind {
 	}
 }
 
-func isPosBetween(rng vfilter.RangePosition, pos lexer.Position) bool {
+func isPosBetween(rng vfilter.RangePosition, pos *lexer.Position) bool {
 	start := rng.Pos
 	end := rng.EndPos
 
@@ -297,25 +263,13 @@ func getNextOffset(
 func (self *Document) getVQLFunctionDescription(
 	name, cs_type string) *api_proto.Completion {
 
-	mu.Lock()
-	// Manage the local global cache
-	if func_lookup == nil {
-		func_lookup = make(map[string]*api_proto.Completion)
-
-		for _, desc := range loadApiDescriptions() {
-			key := desc.Name
-			func_lookup[key] = desc
-		}
-	}
-
-	desc, pres := func_lookup[name]
-	if pres {
-		defer mu.Unlock()
+	// Try to resolve the function from the built in set.
+	desc := GetFuncDesc(name, cs_type)
+	if desc != nil {
 		return desc
 	}
-	mu.Unlock()
 
-	// Maybe the descriptor is a defined function
+	// Maybe the descriptor is a defined function in this VQL block
 	local_definition, ok := self.AnalysisState.Definitions[name]
 	if !ok {
 		return nil
@@ -332,4 +286,19 @@ func (self *Document) getVQLFunctionDescription(
 		})
 	}
 	return res
+}
+
+func shortDescription(desc string) string {
+	const max_len = 60
+	if len(desc) <= max_len {
+		return desc
+	}
+
+	cut := desc[:max_len]
+	idx := strings.LastIndex(cut, " ")
+	if idx > max_len/2 {
+		cut = cut[:idx]
+	}
+
+	return cut + " ..."
 }

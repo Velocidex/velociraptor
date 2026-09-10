@@ -206,14 +206,6 @@ func doThirdPartyUpload() error {
 		return err
 	}
 
-	err = inventory_manager.AddTool(ctx,
-		config_obj, tool, services.ToolOptions{
-			AdminOverride: true,
-		})
-	if err != nil {
-		return fmt.Errorf("Adding tool %s: %w", tool.Name, err)
-	}
-
 	// Does the user want to scrape releases from github?
 	if *third_party_upload_github_project != "" {
 		tool.GithubProject = *third_party_upload_github_project
@@ -224,23 +216,45 @@ func doThirdPartyUpload() error {
 	} else if url_regexp.FindString(*third_party_upload_binary_path) != "" {
 		tool.Url = *third_party_upload_binary_path
 
-	} else {
-		writer, err := inventory_manager.WriteTool(ctx, config_obj,
-			tool.Name, tool.Version)
-		if err != nil {
-			return fmt.Errorf("Unable to write to filestore: %w ", err)
-		}
-		defer writer.Close()
+	}
 
+	err = inventory_manager.AddTool(ctx,
+		config_obj, tool, services.ToolOptions{
+			AdminOverride: true,
+		})
+	if err != nil {
+		return fmt.Errorf("Adding tool %s: %w", tool.Name, err)
+	}
+
+	if *third_party_upload_binary_path != "" {
 		reader, err := os.Open(*third_party_upload_binary_path)
 		if err != nil {
 			return fmt.Errorf("Unable to read file: %w ", err)
 		}
 		defer reader.Close()
 
+		writer, err := inventory_manager.WriteTool(ctx, config_obj,
+			tool.Name, tool.Version)
+		if err != nil {
+			return fmt.Errorf("Unable to write to filestore: %w ", err)
+		}
+
 		_, err = io.Copy(writer, reader)
 		if err != nil {
+			writer.Close()
 			return fmt.Errorf("Uploading file: %w", err)
+		}
+
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+
+		// Refetch the tool with the latest info.
+		tool, err = inventory_manager.GetToolInfo(
+			ctx, config_obj, tool.Name, tool.Version)
+		if err != nil {
+			return err
 		}
 	}
 

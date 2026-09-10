@@ -1,0 +1,117 @@
+Diagnostics after valid change:
+[]
+Diagnostics after broken change:
+[]
+Completions after broken change:
+[
+ {
+  "label": "root",
+  "labelDetails": {
+   "detail": "root",
+   "description": "The root directory to glob from (default '')."
+  },
+  "kind": 6,
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "plaintext",
+   "value": "The root directory to glob from (default '')."
+  },
+  "filterText": "glo",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 25
+    }
+   },
+   "newText": "root="
+  }
+ },
+ {
+  "label": "nosymlink",
+  "labelDetails": {
+   "detail": "nosymlink",
+   "description": "If set we do not follow symlinks."
+  },
+  "kind": 6,
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "plaintext",
+   "value": "If set we do not follow symlinks."
+  },
+  "filterText": "glo",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 25
+    }
+   },
+   "newText": "nosymlink="
+  }
+ },
+ {
+  "label": "recursion_callback",
+  "labelDetails": {
+   "detail": "recursion_callback",
+   "description": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "kind": 6,
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "plaintext",
+   "value": "A VQL function that determines if a directory should be recursed (e.g. \"x=>NOT x.Name =~ 'proc'\")."
+  },
+  "filterText": "glo",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 25
+    }
+   },
+   "newText": "recursion_callback="
+  }
+ },
+ {
+  "label": "one_filesystem",
+  "labelDetails": {
+   "detail": "one_filesystem",
+   "description": "If set we do not follow links to other filesystems."
+  },
+  "kind": 6,
+  "detail": "Plugin arg",
+  "documentation": {
+   "kind": "plaintext",
+   "value": "If set we do not follow links to other filesystems."
+  },
+  "filterText": "glo",
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 19
+    },
+    "end": {
+     "line": 0,
+     "character": 25
+    }
+   },
+   "newText": "one_filesystem="
+  }
+ }
+]
+Completions after broken multi-statement change:
+[]

@@ -50,16 +50,16 @@ SELECT *
   "range": {
    "start": {
     "line": 0,
-    "character": 0
+    "character": 8
    },
    "end": {
     "line": 0,
-    "character": 0
+    "character": 8
    }
   },
   "severity": 1,
   "source": "vql",
-  "message": "(0,0) Generic Error: SELECT |: 1:9: unexpected token \"<EOF>\" (expected <from> _From (<where> _CommaExpression)? (<groupby> _CommaExpression)? (<orderby> <ident> <desc>?)? (<limit> <number>)?)"
+  "message": "(1,9) Generic Error: unexpected token \"<EOF>\" (expected <from> _From (<where> _CommaExpression)? (<groupby> _CommaExpression)? (<orderby> <ident> <desc>?)? (<limit> <number>)?)"
  }
 ]
 
