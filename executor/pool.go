@@ -115,59 +115,107 @@ func newPoolClientMux(ctx context.Context, config_obj *config_proto.Config) (*po
 	return self, nil
 }
 
-// Inspect the response and transform it if needed. Currently we only
-// need to replace the Hostname with the pool client's ID so it
-// appears to be a different client.
-func maybeTransformResponse(response *actions_proto.VQLResponse, id int) *actions_proto.VQLResponse {
-	if response != nil {
-		// We need to make the Hostname unique so if the response
-		// contains a Hostname we need to transform it. This
-		// specifically targets Generic.Client.Info interrogation.
-		if utils.InString(response.Columns, "Hostname") {
-			// The response may be compressed by the launcher. In that
-			// case the JSONL payload is stored in
-			// CompressedJsonResponse and JSONLResponse is empty.
-			jsonl := response.JSONLResponse
-			if jsonl == "" && len(response.CompressedJsonResponse) > 0 {
-				decompressed, err := utils.Uncompress(
-					context.Background(), response.CompressedJsonResponse)
-				if err != nil {
-					return response
-				}
-				jsonl = string(decompressed)
-			}
+// Inspect the response and transform it if needed. We replace the
+// Hostname and Fqdn with the pool client's emulated identity so the
+// response appears to come from a different client. This specifically
+// targets Generic.Client.Info interrogation.
+func maybeTransformResponse(response *actions_proto.VQLResponse, identity *PoolIdentity) *actions_proto.VQLResponse {
+	if response == nil || identity == nil {
+		return response
+	}
 
-			rows, err := utils.ParseJsonToDicts([]byte(jsonl))
-			if err != nil || len(rows) == 0 {
-				return response
-			}
-
-			// Replace the Hostname
-			hostname, pres := rows[0].Get("Hostname")
-			if !pres {
-				return response
-			}
-
-			new_hostname := fmt.Sprintf("%s-%d", hostname, id)
-			rows[0].Set("Fqdn", new_hostname)
-			rows[0].Set("Hostname", new_hostname)
-
-			new_rows, err := json.MarshalJsonl(rows)
+	// The BasicInformation source of Generic.Client.Info returns
+	// Hostname and Fqdn as columns.
+	if utils.InString(response.Columns, "Hostname") ||
+		utils.InString(response.Columns, "Fqdn") {
+		// The response may be compressed by the launcher. In that
+		// case the JSONL payload is stored in
+		// CompressedJsonResponse and JSONLResponse is empty.
+		jsonl := response.JSONLResponse
+		if jsonl == "" && len(response.CompressedJsonResponse) > 0 {
+			decompressed, err := utils.Uncompress(
+				context.Background(), response.CompressedJsonResponse)
 			if err != nil {
 				return response
 			}
-			result := proto.Clone(response).(*actions_proto.VQLResponse)
-
-			// The server falls back to handling uncompressed data so
-			// just clear the compressed field and pass the
-			// transformed rows uncompressed.
-			result.JSONLResponse = string(new_rows)
-			result.CompressedJsonResponse = nil
-			result.UncompressedSize = 0
-
-			return result
+			jsonl = string(decompressed)
 		}
+
+		rows, err := utils.ParseJsonToDicts([]byte(jsonl))
+		if err != nil || len(rows) == 0 {
+			return response
+		}
+
+		for _, row := range rows {
+			if _, pres := row.Get("Hostname"); pres {
+				row.Set("Hostname", identity.Hostname)
+			}
+			if _, pres := row.Get("Fqdn"); pres {
+				row.Set("Fqdn", identity.Fqdn)
+			}
+		}
+
+		new_rows, err := json.MarshalJsonl(rows)
+		if err != nil {
+			return response
+		}
+		result := proto.Clone(response).(*actions_proto.VQLResponse)
+
+		// The server falls back to handling uncompressed data so
+		// just clear the compressed field and pass the
+		// transformed rows uncompressed.
+		result.JSONLResponse = string(new_rows)
+		result.CompressedJsonResponse = nil
+		result.UncompressedSize = 0
+
+		return result
 	}
+
+	// The DetailedInfo source of Generic.Client.Info returns the
+	// info() plugin as Param/Value rows - transform the Hostname and
+	// Fqdn values there too.
+	if utils.InString(response.Columns, "Param") &&
+		utils.InString(response.Columns, "Value") {
+		jsonl := response.JSONLResponse
+		if jsonl == "" && len(response.CompressedJsonResponse) > 0 {
+			decompressed, err := utils.Uncompress(
+				context.Background(), response.CompressedJsonResponse)
+			if err != nil {
+				return response
+			}
+			jsonl = string(decompressed)
+		}
+
+		rows, err := utils.ParseJsonToDicts([]byte(jsonl))
+		if err != nil || len(rows) == 0 {
+			return response
+		}
+
+		for _, row := range rows {
+			param, pres := row.GetString("Param")
+			if !pres {
+				continue
+			}
+			switch param {
+			case "Hostname":
+				row.Set("Value", identity.Hostname)
+			case "Fqdn":
+				row.Set("Value", identity.Fqdn)
+			}
+		}
+
+		new_rows, err := json.MarshalJsonl(rows)
+		if err != nil {
+			return response
+		}
+		result := proto.Clone(response).(*actions_proto.VQLResponse)
+		result.JSONLResponse = string(new_rows)
+		result.CompressedJsonResponse = nil
+		result.UncompressedSize = 0
+
+		return result
+	}
+
 	return response
 }
 
@@ -285,8 +333,8 @@ func (self *poolClientMux) maybeUpdateEventTable(
 type PoolClientExecutor struct {
 	delegate  *poolClientMux
 	Outbound  chan *crypto_proto.VeloMessage
-	id        int
 	client_id string
+	identity  *PoolIdentity
 }
 
 func (self *PoolClientExecutor) Nanny() *NannyService {
@@ -311,8 +359,10 @@ func (self *PoolClientExecutor) SendToServer(message *crypto_proto.VeloMessage) 
 
 func (self *PoolClientExecutor) GetClientInfo() *actions_proto.ClientInfo {
 	result := self.delegate.GetClientInfo()
-	result.Hostname = fmt.Sprintf("%v-%d", result.Hostname, self.id)
-	result.Fqdn = fmt.Sprintf("%v-%d", result.Fqdn, self.id)
+	if self.identity != nil {
+		result.Hostname = self.identity.Hostname
+		result.Fqdn = self.identity.Fqdn
+	}
 
 	return result
 }
@@ -354,7 +404,7 @@ func (self *PoolClientExecutor) ProcessRequest(
 			response := proto.Clone(resp).(*crypto_proto.VeloMessage)
 			response.SessionId = message.SessionId
 			response.RequestId = message.RequestId
-			response.VQLResponse = maybeTransformResponse(resp.VQLResponse, self.id)
+			response.VQLResponse = maybeTransformResponse(resp.VQLResponse, self.identity)
 
 			select {
 			case <-ctx.Done():
@@ -379,7 +429,8 @@ func (self *PoolClientExecutor) ProcessRequest(
 func NewPoolClientExecutor(
 	ctx context.Context,
 	client_id string,
-	config_obj *config_proto.Config, id int) (result *PoolClientExecutor, err error) {
+	config_obj *config_proto.Config,
+	identity *PoolIdentity) (result *PoolClientExecutor, err error) {
 
 	pool_mu.Lock()
 	defer pool_mu.Unlock()
@@ -393,9 +444,9 @@ func NewPoolClientExecutor(
 
 	result = &PoolClientExecutor{
 		delegate:  rootClientExecutor,
-		id:        id,
 		Outbound:  make(chan *crypto_proto.VeloMessage, 10),
 		client_id: client_id,
+		identity:  identity,
 	}
 
 	rootClientExecutor.mu.Lock()

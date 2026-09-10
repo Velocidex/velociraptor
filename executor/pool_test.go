@@ -17,6 +17,11 @@ import (
 // the result uncompressed - the server falls back to handling
 // uncompressed data.
 func TestMaybeTransformResponseCompressed(t *testing.T) {
+	identity := &PoolIdentity{
+		Hostname: "brave-falcon",
+		Fqdn:     "brave-falcon.local",
+	}
+
 	rows := []*ordereddict.Dict{
 		ordereddict.NewDict().
 			Set("Hostname", "testhost").
@@ -34,7 +39,7 @@ func TestMaybeTransformResponseCompressed(t *testing.T) {
 		UncompressedSize:       uint64(len(jsonl)),
 	}
 
-	result := maybeTransformResponse(response, 42)
+	result := maybeTransformResponse(response, identity)
 	require.NotNil(t, result)
 
 	// The result must be uncompressed.
@@ -49,16 +54,21 @@ func TestMaybeTransformResponseCompressed(t *testing.T) {
 
 	hostname, pres := transformed_rows[0].GetString("Hostname")
 	require.True(t, pres)
-	assert.Equal(t, "testhost-42", hostname)
+	assert.Equal(t, "brave-falcon", hostname)
 
 	fqdn, pres := transformed_rows[0].GetString("Fqdn")
 	require.True(t, pres)
-	assert.Equal(t, "testhost-42", fqdn)
+	assert.Equal(t, "brave-falcon.local", fqdn)
 }
 
 // Test that the hostname transform still works on uncompressed
 // responses (older clients).
 func TestMaybeTransformResponseUncompressed(t *testing.T) {
+	identity := &PoolIdentity{
+		Hostname: "brave-falcon",
+		Fqdn:     "brave-falcon.local",
+	}
+
 	rows := []*ordereddict.Dict{
 		ordereddict.NewDict().
 			Set("Hostname", "testhost").
@@ -72,7 +82,7 @@ func TestMaybeTransformResponseUncompressed(t *testing.T) {
 		JSONLResponse: string(jsonl),
 	}
 
-	result := maybeTransformResponse(response, 7)
+	result := maybeTransformResponse(response, identity)
 	require.NotNil(t, result)
 
 	// The result must remain uncompressed.
@@ -86,12 +96,17 @@ func TestMaybeTransformResponseUncompressed(t *testing.T) {
 
 	hostname, pres := transformed_rows[0].GetString("Hostname")
 	require.True(t, pres)
-	assert.Equal(t, "testhost-7", hostname)
+	assert.Equal(t, "brave-falcon", hostname)
 }
 
 // Test that responses without a Hostname column are returned
 // unchanged.
 func TestMaybeTransformResponseNoHostname(t *testing.T) {
+	identity := &PoolIdentity{
+		Hostname: "brave-falcon",
+		Fqdn:     "brave-falcon.local",
+	}
+
 	rows := []*ordereddict.Dict{
 		ordereddict.NewDict().Set("Foo", "bar"),
 	}
@@ -107,7 +122,7 @@ func TestMaybeTransformResponseNoHostname(t *testing.T) {
 		UncompressedSize:       uint64(len(jsonl)),
 	}
 
-	result := maybeTransformResponse(response, 42)
+	result := maybeTransformResponse(response, identity)
 	require.NotNil(t, result)
 	assert.Equal(t, response, result)
 }

@@ -6,8 +6,10 @@ import (
 	"io/ioutil"
 	"regexp"
 	"runtime"
+	"sync"
 
 	"github.com/Velocidex/yaml/v2"
+	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -119,6 +121,44 @@ func (self *FileWritebackStore) Load() *config_proto.Writeback {
 	}
 
 	return wb
+}
+
+// An in-memory writeback store. This is used by the pool client to
+// keep each virtual client's writeback in memory only - no files are
+// written to disk and the client's identity is lost when the process
+// exits.
+type MemoryWritebackStore struct {
+	mu        sync.Mutex
+	writeback *config_proto.Writeback
+}
+
+func (self *MemoryWritebackStore) WriteL1(wb *config_proto.Writeback) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.writeback = proto.Clone(wb).(*config_proto.Writeback)
+	return nil
+}
+
+func (self *MemoryWritebackStore) WriteL2(wb *config_proto.Writeback) error {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.writeback = proto.Clone(wb).(*config_proto.Writeback)
+	return nil
+}
+
+func (self *MemoryWritebackStore) Load() *config_proto.Writeback {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	if self.writeback == nil {
+		self.writeback = &config_proto.Writeback{
+			InstallTime: uint64(utils.GetTime().Now().Unix()),
+		}
+	}
+
+	return proto.Clone(self.writeback).(*config_proto.Writeback)
 }
 
 // Return the location of the writeback file.

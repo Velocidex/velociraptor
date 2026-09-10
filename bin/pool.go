@@ -23,6 +23,7 @@ import (
 	"path"
 	"sync"
 
+	"github.com/Showmax/go-fqdn"
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
@@ -47,6 +48,10 @@ var (
 	pool_client_writeback_dir = pool_client_command.Flag(
 		"writeback_dir", "The directory to store all writebacks.").Default(".").
 		ExistingDir()
+
+	pool_client_no_writeback = pool_client_command.Flag(
+		"no_writeback", "Use in-memory writebacks so client identities are ephemeral.").
+		Bool()
 
 	pool_client_concurrency = pool_client_command.Flag(
 		"concurrency", "How many real queries to run.").Default("10").Int()
@@ -74,6 +79,10 @@ func (self *counter) Inc() {
 func doPoolClient() error {
 	logging.DisableLogging()
 
+	if *pool_client_no_writeback && *pool_client_writeback_dir != "." {
+		return fmt.Errorf("--no_writeback and --writeback_dir are mutually exclusive")
+	}
+
 	number_of_clients := *pool_client_number
 	if number_of_clients <= 0 {
 		number_of_clients = 2
@@ -81,7 +90,7 @@ func doPoolClient() error {
 
 	client_config, err := makeDefaultConfigLoader().
 		WithRequiredClient().
-		WithVerbose(*verbose_flag).WithWriteback().
+		WithVerbose(*verbose_flag).
 		LoadAndValidate()
 	if err != nil {
 		return fmt.Errorf("Unable to load config file: %w", err)
@@ -109,6 +118,12 @@ func doPoolClient() error {
 	serialized, _ := json.Marshal(client_config)
 	logger := logging.GetLogger(client_config, &logging.ClientComponent)
 
+	// Generate a unique identity (hostname and FQDN) for each client.
+	// The FQDN reuses the real host's domain so the emulated clients
+	// appear to belong to the same network.
+	identities := executor.GeneratePoolIdentities(
+		number_of_clients, fqdn.Get())
+
 	c := counter{}
 
 	// Do not ramp up the pool client too fast or it will cause the
@@ -127,15 +142,32 @@ func doPoolClient() error {
 				logger.Error("Copying configs: %v", err)
 				return
 			}
-			filename := fmt.Sprintf("pool_client.yaml.%d", i)
 
 			client_config.Client.DisableCheckpoints = true
-			client_config.Client.WritebackLinux = path.Join(
-				*pool_client_writeback_dir, filename)
+
+			// By default write the writebacks to the writeback
+			// directory so client identities persist between runs.
+			// If --no_writeback is specified, use an in-memory
+			// writeback so each client's identity is ephemeral and no
+			// files are written to disk.
+			if *pool_client_no_writeback {
+				client_config.Client.WritebackLinux = fmt.Sprintf(
+					"memory://pool_client.yaml.%d", i)
+			} else {
+				client_config.Client.WritebackLinux = path.Join(
+					*pool_client_writeback_dir,
+					fmt.Sprintf("pool_client.yaml.%d", i))
+			}
+			client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
+			client_config.Client.WritebackDarwin = client_config.Client.WritebackLinux
+
+			// The pool clients are ephemeral and their client info
+			// never changes, so there is no point in periodically
+			// updating it.
+			client_config.Client.ClientInfoUpdateTime = -1
 
 			// Create an in memory ring buffer because the file ring
 			// buffer assumes there is only one communicator!
-			client_config.Client.WritebackWindows = client_config.Client.WritebackLinux
 			if client_config.Client.LocalBuffer != nil {
 				client_config.Client.LocalBuffer.DiskSize = 0
 
@@ -144,10 +176,9 @@ func doPoolClient() error {
 			}
 			client_config.Client.Concurrency = uint64(*pool_client_concurrency)
 
-			// Disable client info updates in pool clients
-			client_config.Client.ClientInfoUpdateTime = -1
-
-			// Load existing writebacks if we need them
+			// Register the writeback with the writeback service. This
+			// generates a fresh private key and client id for this
+			// client if no writeback exists yet.
 			writeback_service := writeback.GetWritebackService()
 			_ = writeback_service.LoadWriteback(client_config)
 
@@ -165,7 +196,7 @@ func doPoolClient() error {
 			}
 
 			exe, err := executor.NewPoolClientExecutor(
-				ctx, wb.ClientId, client_config, i)
+				ctx, wb.ClientId, client_config, &identities[i])
 			if err != nil {
 				logger.Error("Can not create executor: %v", err)
 				return
