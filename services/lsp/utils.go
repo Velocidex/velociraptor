@@ -9,7 +9,13 @@ import (
 	"www.velocidex.com/golang/vfilter"
 )
 
-func (self *Document) getFragment(start, end int) string {
+// GetFragment Extract the substring from the query text as specified
+// by the exclusive range start and end. If start or end fall outside
+// the string they will be clamped to the length of the string.
+//
+// NOTE: The range is exclusive such that self.getChar(end-1) will
+// return the last character in the string.
+func (self *Document) GetFragment(start, end int) string {
 	if start < 0 {
 		start = 0
 	}
@@ -18,12 +24,16 @@ func (self *Document) getFragment(start, end int) string {
 		end = 0
 	}
 
-	if end < start {
-		return ""
-	}
-
 	if end > len(self.Text) {
 		end = len(self.Text)
+	}
+
+	if start > len(self.Text) {
+		start = len(self.Text)
+	}
+
+	if end <= start {
+		return ""
 	}
 
 	return self.Text[start:end]
@@ -64,11 +74,41 @@ func protocolPosition(in lexer.Position) protocol.Position {
 	}
 }
 
-// Convert from 0 based lsp protocol positions to 1 based lexer
-// positions.
-func lexerPositionFromProtocol(in protocol.Position) lexer.Position {
-	return lexer.Position{
-		Line:   int(in.Line + 1),
-		Column: int(in.Character + 1),
+// offsetToPosition converts a byte offset in the document to a 0
+// based LSP position. It is used by the features which work on raw
+// byte offsets (references, rename) to convert the offsets they
+// compute from the document text.
+func offsetToPosition(text string, offset int) protocol.Position {
+	if offset < 0 {
+		offset = 0
+	}
+	if offset > len(text) {
+		offset = len(text)
+	}
+
+	line := 0
+	for idx, char := range text {
+		if idx >= offset {
+			break
+		}
+		if char == '\n' {
+			line++
+		}
+	}
+
+	// Find the start of the line containing the offset.
+	line_start := 0
+	for idx, char := range text {
+		if idx >= offset {
+			break
+		}
+		if char == '\n' {
+			line_start = idx + 1
+		}
+	}
+
+	return protocol.Position{
+		Line:      uint32(line),
+		Character: uint32(offset - line_start),
 	}
 }
