@@ -29,9 +29,10 @@ type NotebookStoreImpl struct {
 	mu               sync.Mutex
 	global_notebooks map[string]*api_proto.NotebookMetadata
 
-	// Keep the last time for a notebook deletion to ensure we update
-	// the version when a notebook is deleted.
-	last_deleted int64
+	// Keep the store version bumped on every mutation (delete, set).
+	// Compared against the index file mtime in GetSharedNotebooks to
+	// decide whether the cached index is stale.
+	last_version int64
 
 	SuperTimelineStorer timelines.ISuperTimelineStorer
 }
@@ -81,16 +82,38 @@ func (self *NotebookStoreImpl) Version() (res int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	res = self.last_deleted
+	return self._Version()
+}
+
+// _Version computes the store version assuming the lock is held.
+func (self *NotebookStoreImpl) _Version() (res int64) {
+	res = self.last_version
 
 	// ModifiedTime is second granularity (proto) so convert to
-	// nanoseconds to compare with last_deleted.
+	// nanoseconds to compare with last_version.
 	for _, v := range self.global_notebooks {
 		if v.ModifiedTime*1000000000 > res {
 			res = v.ModifiedTime * 1000000000
 		}
 	}
 	return res
+}
+
+// bumpVersion ensures the store version strictly increases on every
+// mutation. Using pure wall-clock time as a version is racy: the clock
+// can go backwards (NTP adjustment) or tick coarser than the unit, so
+// two mutations can land on the same version and a stale index would
+// keep being served. Comparing against the current version and forcing
+// an increment guarantees the version always moves forward, making the
+// clock resolution irrelevant. Must be called with the lock held.
+func (self *NotebookStoreImpl) bumpVersion() {
+	now := utils.GetTime().Now().UnixNano()
+	current := self._Version()
+	if now > current {
+		self.last_version = now
+	} else {
+		self.last_version = current + 1
+	}
 }
 
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {
@@ -114,6 +137,13 @@ func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) erro
 
 	// Ensure the notebook reflects the last time it was set.
 	in.ModifiedTime = utils.GetTime().Now().Unix()
+
+	// Bump the store version so the index cache is invalidated. This is
+	// monotonic: even if ModifiedTime (second granularity) truncates to
+	// the same second as a previous delete, the version still moves
+	// ahead.
+	self.bumpVersion()
+
 	return db.SetSubject(self.config_obj, notebook_path_manager.Path(), in)
 }
 
