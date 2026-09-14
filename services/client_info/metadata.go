@@ -142,9 +142,6 @@ func (self *Store) ModifyMetadata(
 	client_id string, cb func(*ordereddict.Dict) (
 		*ordereddict.Dict, error)) error {
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	// Optionally update the index service.
 	indexer, err := services.GetIndexer(config_obj)
 	if err != nil {
@@ -174,47 +171,55 @@ func (self *Store) ModifyMetadata(
 		return nil
 	}
 
+	self.mu.Lock()
+	client_record, pres := self.data[client_id]
+	self.mu.Unlock()
+
 	// Modify the client record
-	client_info, err := self._GetRecord(client_id)
-	if err != nil {
-		return err
+	if !pres {
+		return utils.NotFoundError
 	}
 
-	// The client_info.Metadata only contains indexed fields
-	if client_info.Metadata != nil {
-		// Unindex all the existing fields
-		for k, v := range client_info.Metadata {
-			_ = indexer.UnsetIndex(client_id, k+":"+v)
-		}
-	}
-
-	// Clear the indexed record and start again.
-	client_info.Metadata = make(map[string]string)
+	// This stored object contains all the metadata fields.
 	stored_obj := &api_proto.ClientMetadata{ClientId: client_id}
 
-	for _, item := range new_metadata.Items() {
-		key := item.Key
-		if key == "client_id" || key == "metadata" {
-			continue
-		}
+	err = client_record.Modify(
+		func(client_info *services.ClientInfo) (
+			*services.ClientInfo, error) {
+			// The client_info.Metadata only contains indexed fields
+			if client_info.Metadata != nil {
+				// Unindex all the existing fields
+				for k, v := range client_info.Metadata {
+					_ = indexer.UnsetIndex(client_id, k+":"+v)
+				}
+			}
 
-		if utils.IsNil(item.Value) {
-			continue
-		}
+			// Clear the indexed record and start again.
+			client_info.Metadata = make(map[string]string)
 
-		value := utils.ToString(item.Value)
-		if indexed_fields[item.Key] {
-			client_info.Metadata[key] = value
-			_ = indexer.SetIndex(client_id, key+":"+value)
-		}
+			for _, item := range new_metadata.Items() {
+				key := item.Key
+				if key == "client_id" || key == "metadata" {
+					continue
+				}
 
-		stored_obj.Items = append(stored_obj.
-			Items, &api_proto.ClientMetadataItem{
-			Key: key, Value: value})
-	}
+				if utils.IsNil(item.Value) {
+					continue
+				}
 
-	// Set the modified record
-	err = self._SetRecord(config_obj, client_info)
+				value := utils.ToString(item.Value)
+				if indexed_fields[item.Key] {
+					client_info.Metadata[key] = value
+					_ = indexer.SetIndex(client_id, key+":"+value)
+				}
+
+				stored_obj.Items = append(stored_obj.
+					Items, &api_proto.ClientMetadataItem{
+					Key: key, Value: value})
+			}
+
+			return client_info, nil
+		})
 	if err != nil {
 		return err
 	}
