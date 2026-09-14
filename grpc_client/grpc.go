@@ -237,16 +237,13 @@ func (self GRPCAPIClient) GetAPIClient(
 		return nil, nil, err
 	}
 
-	// Channels should be reused so we can return the channel to the
-	// pool immediately.
-	defer channel.Close()
-
 	grpcCallCounter.Inc()
 	grpcStubs.Inc()
 	return api_proto.NewAPIClient(channel.ClientConn),
 		// This is called when the stub is done with.
 		func() error {
 			grpcStubs.Dec()
+			channel.Close()
 			return nil
 		},
 		err
