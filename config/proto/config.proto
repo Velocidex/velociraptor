@@ -782,6 +782,15 @@ message FrontendResourceControl {
     uint64 client_info_sync_time = 29;
     uint64 client_info_write_time = 30;
 
+    // Old versions on Velociraptor would write client records
+    // separately. This is not longer used as the records are combined
+    // into larger index files. However, it may still be worth writing
+    // the legacy records because it allows Velociraptor to rebuild
+    // the index if needed. This may prove to add too much to the load
+    // so we can turn it off.
+    bool client_info_skip_writing_legacy_records = 34;
+
+
     // The journal files are used to queue messages between event
     // generators and event consumers when the consumer is unable to
     // drain these quickly enough. The setting specifies the maximum

@@ -68,7 +68,40 @@ var (
 type clientRecord struct {
 	mu         sync.Mutex
 	serialized []byte
+	dirty      bool
 	owner      *Store
+}
+
+func (self *Store) newClientRecord(client_info *services.ClientInfo) (
+	*clientRecord, error) {
+
+	res := &clientRecord{
+		dirty: true,
+		owner: self,
+	}
+
+	if client_info != nil {
+		serialized, err := proto.Marshal(client_info)
+		if err != nil {
+			return nil, err
+		}
+		res.serialized = serialized
+	}
+	return res, nil
+}
+
+func (self *clientRecord) GetSerialized() []byte {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.serialized
+}
+
+func (self *clientRecord) IsDirty() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.dirty
 }
 
 func (self *clientRecord) GetRecord() (*actions_proto.ClientInfo, error) {
@@ -119,6 +152,7 @@ func (self *clientRecord) Modify(
 		return err
 	}
 
+	self.dirty = true
 	self.serialized = serialized
 	self.owner.SetDirty()
 
@@ -178,9 +212,7 @@ func (self *Store) Modify(
 	self.mu.Lock()
 	record, pres := self.data[client_id]
 	if !pres {
-		record = &clientRecord{
-			owner: self,
-		}
+		record, _ = self.newClientRecord(nil)
 		self.data[client_id] = record
 	}
 	self.mu.Unlock()
@@ -229,6 +261,7 @@ func (self *Store) SetRecord(
 	self.mu.Lock()
 	self.data[record.ClientId] = &clientRecord{
 		serialized: serialized,
+		dirty:      true,
 		owner:      self,
 	}
 	self._SetDirty()
@@ -287,6 +320,7 @@ func (self *Store) LoadFromSnapshot(
 
 		self.data[client_id] = &clientRecord{
 			serialized: record,
+			dirty:      true,
 			owner:      self,
 		}
 	}
@@ -307,7 +341,20 @@ func (self *Store) SaveSnapshot(
 		return nil
 	}
 
+	write_legacy_records := true
+	if config_obj.Frontend.Resources.ClientInfoSkipWritingLegacyRecords {
+		write_legacy_records = false
+	}
+
 	now := time.Now()
+
+	// Take an in memory snapshot of all the client records
+	type snapshot_record struct {
+		record    *clientRecord
+		client_id string
+	}
+
+	var snapshot []snapshot_record
 
 	// Critical Section....
 	self.mu.Lock()
@@ -318,27 +365,61 @@ func (self *Store) SaveSnapshot(
 		return nil
 	}
 
+	for client_id, client_record := range self.data {
+		// An empty placeholder record - do not flush to the index.
+		if client_record.GetSerialized() == nil {
+			continue
+		}
+		snapshot = append(snapshot, snapshot_record{
+			record:    client_record,
+			client_id: client_id,
+		})
+	}
+
+	self.dirty = false
+	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0)
+	self.mu.Unlock()
+
 	// Take a copy of the snapshot to ensure we don't block under lock.
 
 	// Write to memory buffer first then flush to disk in one
 	// operation to reduce IO overheads.
 	buffer := new(bytes.Buffer)
 
-	for client_id, client_record := range self.data {
-		// Use fmt to encode very quickly
-		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n", client_id,
-			hex.EncodeToString(client_record.serialized))
-		buffer.Write([]byte(line))
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
 	}
 
-	self.dirty = false
-	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0)
+	for _, snapshot_record := range snapshot {
+		// Use fmt to encode very quickly
+		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
+			snapshot_record.client_id,
+			hex.EncodeToString(
+				snapshot_record.record.GetSerialized()))
+		buffer.Write([]byte(line))
+
+		// Also write the legacy records anyway. This helps to recover
+		// when the index is lost. Is it worth it? Not sure - so we
+		// allow to tune it out.
+		if write_legacy_records &&
+			snapshot_record.record.IsDirty() {
+			client_path_manager := paths.NewClientPathManager(
+				snapshot_record.client_id)
+
+			record, err := snapshot_record.record.GetRecord()
+			if err == nil {
+				// Best effort writing.
+				_ = db.SetSubjectWithCompletion(self.config_obj,
+					client_path_manager.Path(), record,
+					utils.BackgroundWriter)
+			}
+		}
+
+	}
 
 	// Total number of records we flush to disk.
-	record_count := uint64(len(self.data))
-
-	// Release the lock here as we don't need it for the rest.
-	self.mu.Unlock()
+	record_count := uint64(len(snapshot))
 
 	final_completion := func() {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -462,17 +543,12 @@ func (self *Store) LoadSnapshotFromLegacyData(
 			client_info.LastEventTableVersion = ping_info.LastEventTableVersion
 		}
 
-		serialized, err := proto.Marshal(client_info)
-		if err != nil {
-			continue
-		}
-
 		self.mu.Lock()
-		self.data[client_id] = &clientRecord{
-			serialized: serialized,
-			owner:      self,
+		record, err := self.newClientRecord(client_info)
+		if err == nil {
+			self.data[client_id] = record
+			self._SetDirty()
 		}
-		self._SetDirty()
 		self.mu.Unlock()
 
 	}
