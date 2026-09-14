@@ -2342,6 +2342,13 @@ type FrontendResourceControl struct {
 	// How often to sync client info records (ms)
 	ClientInfoSyncTime  uint64 `protobuf:"varint,29,opt,name=client_info_sync_time,json=clientInfoSyncTime,proto3" json:"client_info_sync_time,omitempty"`
 	ClientInfoWriteTime uint64 `protobuf:"varint,30,opt,name=client_info_write_time,json=clientInfoWriteTime,proto3" json:"client_info_write_time,omitempty"`
+	// Old versions on Velociraptor would write client records
+	// separately. This is not longer used as the records are combined
+	// into larger index files. However, it may still be worth writing
+	// the legacy records because it allows Velociraptor to rebuild
+	// the index if needed. This may prove to add too much to the load
+	// so we can turn it off.
+	ClientInfoSkipWritingLegacyRecords bool `protobuf:"varint,34,opt,name=client_info_skip_writing_legacy_records,json=clientInfoSkipWritingLegacyRecords,proto3" json:"client_info_skip_writing_legacy_records,omitempty"`
 	// The journal files are used to queue messages between event
 	// generators and event consumers when the consumer is unable to
 	// drain these quickly enough. The setting specifies the maximum
@@ -2502,6 +2509,13 @@ func (x *FrontendResourceControl) GetClientInfoWriteTime() uint64 {
 		return x.ClientInfoWriteTime
 	}
 	return 0
+}
+
+func (x *FrontendResourceControl) GetClientInfoSkipWritingLegacyRecords() bool {
+	if x != nil {
+		return x.ClientInfoSkipWritingLegacyRecords
+	}
+	return false
 }
 
 func (x *FrontendResourceControl) GetMaxJournalBufferSize() int64 {
@@ -5391,7 +5405,7 @@ const file_config_proto_rawDesc = "" +
 	"dns_server\x18\a \x01(\tR\tdnsServer\x12\x1b\n" +
 	"\tapi_token\x18\t \x01(\tR\bapiToken\x12\x1b\n" +
 	"\tzone_name\x18\n" +
-	" \x01(\tR\bzoneName\"\x9d\t\n" +
+	" \x01(\tR\bzoneName\"\xf2\t\n" +
 	"\x17FrontendResourceControl\x124\n" +
 	"\x16connections_per_second\x18\x01 \x01(\x04R\x14connectionsPerSecond\x128\n" +
 	"\x18notifications_per_second\x18\x02 \x01(\x04R\x16notificationsPerSecond\x124\n" +
@@ -5409,7 +5423,8 @@ const file_config_proto_rawDesc = "" +
 	"\x18index_snapshot_frequency\x18\x1a \x01(\x04R\x16indexSnapshotFrequency\x12-\n" +
 	"\x13client_info_lru_ttl\x18\x1b \x01(\x04R\x10clientInfoLruTtl\x121\n" +
 	"\x15client_info_sync_time\x18\x1d \x01(\x04R\x12clientInfoSyncTime\x123\n" +
-	"\x16client_info_write_time\x18\x1e \x01(\x04R\x13clientInfoWriteTime\x125\n" +
+	"\x16client_info_write_time\x18\x1e \x01(\x04R\x13clientInfoWriteTime\x12S\n" +
+	"'client_info_skip_writing_legacy_records\x18\" \x01(\bR\"clientInfoSkipWritingLegacyRecords\x125\n" +
 	"\x17max_journal_buffer_size\x18\x1c \x01(\x03R\x14maxJournalBufferSize\x123\n" +
 	"\x16default_log_batch_time\x18\x1f \x01(\x04R\x13defaultLogBatchTime\x12H\n" +
 	"!default_monitoring_log_batch_time\x18  \x01(\x04R\x1ddefaultMonitoringLogBatchTime\x124\n" +

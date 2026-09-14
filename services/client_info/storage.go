@@ -65,13 +65,121 @@ var (
 	}, []string{"org"})
 )
 
+type clientRecord struct {
+	mu         sync.Mutex
+	serialized []byte
+	dirty      bool
+	owner      *Store
+}
+
+func (self *Store) newClientRecord(client_info *services.ClientInfo) (
+	*clientRecord, error) {
+
+	res := &clientRecord{
+		dirty: true,
+		owner: self,
+	}
+
+	if client_info != nil {
+		serialized, err := proto.Marshal(client_info)
+		if err != nil {
+			return nil, err
+		}
+		res.serialized = serialized
+	}
+	return res, nil
+}
+
+func (self *clientRecord) GetSerialized() []byte {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.serialized
+}
+
+func (self *clientRecord) IsDirty() bool {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.dirty
+}
+
+func (self *clientRecord) GetRecord() (*actions_proto.ClientInfo, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	client_info := &actions_proto.ClientInfo{}
+	err := proto.Unmarshal(self.serialized, client_info)
+	if err != nil {
+		return nil, err
+	}
+
+	return client_info, nil
+}
+
+func (self *clientRecord) Modify(
+	modifier func(client_info *services.ClientInfo) (
+		*services.ClientInfo, error)) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	var client_info *services.ClientInfo
+	if self.serialized != nil {
+		client_info = &services.ClientInfo{
+			ClientInfo: &actions_proto.ClientInfo{},
+		}
+		err := proto.Unmarshal(self.serialized, client_info.ClientInfo)
+		if err != nil {
+			return err
+		}
+	}
+
+	// If the record was not changed just ignore it.
+	new_record, err := modifier(client_info)
+	if err != nil {
+		return err
+	}
+
+	// Callback can indicate no change is needed by returning a nil
+	// for client_info.
+	if new_record == nil {
+		return nil
+	}
+
+	serialized, err := proto.Marshal(new_record)
+	if err != nil {
+		return err
+	}
+
+	self.dirty = true
+	self.serialized = serialized
+	self.owner.SetDirty()
+
+	return nil
+}
+
 type Store struct {
-	mu   sync.Mutex
-	data map[string][]byte
+	mu         sync.Mutex
+	data       map[string]*clientRecord
+	config_obj *config_proto.Config
 
 	uuid int64
 
 	dirty bool
+}
+
+func (self *Store) SetDirty() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self._SetDirty()
+}
+
+func (self *Store) _SetDirty() {
+	self.dirty = true
+	clientInfoDirty.WithLabelValues(self.config_obj.OrgId).Set(1.0)
+
+	self.dirty = true
 }
 
 func (self *Store) Keys() []string {
@@ -90,58 +198,31 @@ func (self *Store) Remove(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.dirty = true
-	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
+	self._SetDirty()
 	delete(self.data, client_id)
 }
 
+// Modifies a client record atomically. If the client record does not
+// exist, create it.
 func (self *Store) Modify(
 	ctx context.Context, config_obj *config_proto.Config, client_id string,
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self._Modify(ctx, config_obj, client_id, modifier)
-}
-
-func (self *Store) _Modify(
-	ctx context.Context, config_obj *config_proto.Config, client_id string,
-	modifier func(client_info *services.ClientInfo) (
-		*services.ClientInfo, error)) error {
-
-	client_info, _ := self._GetRecord(client_id)
-	var record *services.ClientInfo
-
-	if client_info != nil {
-		record = &services.ClientInfo{ClientInfo: client_info}
+	record, pres := self.data[client_id]
+	if !pres {
+		record, _ = self.newClientRecord(nil)
+		self.data[client_id] = record
 	}
-
-	// If the record was not changed just ignore it.
-	new_record, err := modifier(record)
-	if err != nil {
-		return err
-	}
-
-	// Callback can indicate no change is needed by returning a nil
-	// for client_info.
-	if new_record == nil {
-		return nil
-	}
+	self.mu.Unlock()
 
 	// Write the modified record to the LRU
-	return self._SetRecord(config_obj, new_record.ClientInfo)
+	return record.Modify(modifier)
 }
 
 func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self._GetRecord(client_id)
-}
-
-func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
+	// Not a real record - represents the server so we never store it.
 	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		return &actions_proto.ClientInfo{
 			ClientId: client_id,
@@ -150,35 +231,26 @@ func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, erro
 		}, nil
 	}
 
-	serialized, pres := self.data[client_id]
+	self.mu.Lock()
+	record, pres := self.data[client_id]
+	self.mu.Unlock()
 	if !pres {
 		return nil, utils.NotFoundError
 	}
 
-	client_info := &actions_proto.ClientInfo{}
-	err := proto.Unmarshal(serialized, client_info)
+	res, err := record.GetRecord()
 	if err != nil {
 		return nil, err
 	}
 
-	// Ensure the client id is populated in the provided record.
-	if client_info.ClientId == "" {
-		client_info.ClientId = client_id
+	if res.ClientId == "" {
+		res.ClientId = client_id
 	}
 
-	return client_info, nil
+	return res, nil
 }
 
 func (self *Store) SetRecord(
-	config_obj *config_proto.Config,
-	record *actions_proto.ClientInfo) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self._SetRecord(config_obj, record)
-}
-
-func (self *Store) _SetRecord(
 	config_obj *config_proto.Config,
 	record *actions_proto.ClientInfo) error {
 	serialized, err := proto.Marshal(record)
@@ -186,9 +258,15 @@ func (self *Store) _SetRecord(
 		return err
 	}
 
-	self.data[record.ClientId] = serialized
-	self.dirty = true
-	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
+	self.mu.Lock()
+	self.data[record.ClientId] = &clientRecord{
+		serialized: serialized,
+		dirty:      true,
+		owner:      self,
+	}
+	self._SetDirty()
+	self.mu.Unlock()
+
 	return nil
 }
 
@@ -217,7 +295,7 @@ func (self *Store) LoadFromSnapshot(
 
 	now := time.Now()
 
-	self.data = make(map[string][]byte)
+	self.data = make(map[string]*clientRecord)
 	self.dirty = false
 	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0.0)
 
@@ -240,7 +318,11 @@ func (self *Store) LoadFromSnapshot(
 			continue
 		}
 
-		self.data[client_id] = record
+		self.data[client_id] = &clientRecord{
+			serialized: record,
+			dirty:      true,
+			owner:      self,
+		}
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -259,7 +341,20 @@ func (self *Store) SaveSnapshot(
 		return nil
 	}
 
+	write_legacy_records := true
+	if config_obj.Frontend.Resources.ClientInfoSkipWritingLegacyRecords {
+		write_legacy_records = false
+	}
+
 	now := time.Now()
+
+	// Take an in memory snapshot of all the client records
+	type snapshot_record struct {
+		record    *clientRecord
+		client_id string
+	}
+
+	var snapshot []snapshot_record
 
 	// Critical Section....
 	self.mu.Lock()
@@ -270,27 +365,61 @@ func (self *Store) SaveSnapshot(
 		return nil
 	}
 
+	for client_id, client_record := range self.data {
+		// An empty placeholder record - do not flush to the index.
+		if client_record.GetSerialized() == nil {
+			continue
+		}
+		snapshot = append(snapshot, snapshot_record{
+			record:    client_record,
+			client_id: client_id,
+		})
+	}
+
+	self.dirty = false
+	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0)
+	self.mu.Unlock()
+
 	// Take a copy of the snapshot to ensure we don't block under lock.
 
 	// Write to memory buffer first then flush to disk in one
 	// operation to reduce IO overheads.
 	buffer := new(bytes.Buffer)
 
-	for client_id, serialized := range self.data {
-		// Use fmt to encode very quickly
-		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
-			client_id, hex.EncodeToString(serialized))
-		buffer.Write([]byte(line))
+	db, err := datastore.GetDB(config_obj)
+	if err != nil {
+		return err
 	}
 
-	self.dirty = false
-	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0)
+	for _, snapshot_record := range snapshot {
+		// Use fmt to encode very quickly
+		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
+			snapshot_record.client_id,
+			hex.EncodeToString(
+				snapshot_record.record.GetSerialized()))
+		buffer.Write([]byte(line))
+
+		// Also write the legacy records anyway. This helps to recover
+		// when the index is lost. Is it worth it? Not sure - so we
+		// allow to tune it out.
+		if write_legacy_records &&
+			snapshot_record.record.IsDirty() {
+			client_path_manager := paths.NewClientPathManager(
+				snapshot_record.client_id)
+
+			record, err := snapshot_record.record.GetRecord()
+			if err == nil {
+				// Best effort writing.
+				_ = db.SetSubjectWithCompletion(self.config_obj,
+					client_path_manager.Path(), record,
+					utils.BackgroundWriter)
+			}
+		}
+
+	}
 
 	// Total number of records we flush to disk.
-	record_count := uint64(len(self.data))
-
-	// Release the lock here as we don't need it for the rest.
-	self.mu.Unlock()
+	record_count := uint64(len(snapshot))
 
 	final_completion := func() {
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -414,15 +543,12 @@ func (self *Store) LoadSnapshotFromLegacyData(
 			client_info.LastEventTableVersion = ping_info.LastEventTableVersion
 		}
 
-		serialized, err := proto.Marshal(client_info)
-		if err != nil {
-			continue
-		}
-
 		self.mu.Lock()
-		self.data[client_id] = serialized
-		self.dirty = true
-		clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
+		record, err := self.newClientRecord(client_info)
+		if err == nil {
+			self.data[client_id] = record
+			self._SetDirty()
+		}
 		self.mu.Unlock()
 
 	}
@@ -433,9 +559,10 @@ func (self *Store) LoadSnapshotFromLegacyData(
 	return self.SaveSnapshot(ctx, config_obj, !SYNC_UPDATE)
 }
 
-func NewStorage(uuid int64) *Store {
+func NewStorage(uuid int64, config_obj *config_proto.Config) *Store {
 	return &Store{
-		data: make(map[string][]byte),
-		uuid: uuid,
+		data:       make(map[string]*clientRecord),
+		config_obj: config_obj,
+		uuid:       uuid,
 	}
 }
