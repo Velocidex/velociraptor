@@ -111,7 +111,7 @@ func (self *Store) Restore(ctx context.Context,
 	defer self.mu.Unlock()
 
 	// Clear the store
-	self.data = make(map[string][]byte)
+	self.data = make(map[string]*clientRecord)
 
 	for {
 		select {
@@ -141,7 +141,10 @@ func (self *Store) Restore(ctx context.Context,
 			}
 
 			count++
-			self.data[client_info.ClientId] = serialized
+			self.data[client_info.ClientId] = &clientRecord{
+				serialized: serialized,
+				owner:      self,
+			}
 		}
 	}
 }

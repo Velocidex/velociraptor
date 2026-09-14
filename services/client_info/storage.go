@@ -65,13 +65,87 @@ var (
 	}, []string{"org"})
 )
 
+type clientRecord struct {
+	mu         sync.Mutex
+	serialized []byte
+	owner      *Store
+}
+
+func (self *clientRecord) GetRecord() (*actions_proto.ClientInfo, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	client_info := &actions_proto.ClientInfo{}
+	err := proto.Unmarshal(self.serialized, client_info)
+	if err != nil {
+		return nil, err
+	}
+
+	return client_info, nil
+}
+
+func (self *clientRecord) Modify(
+	modifier func(client_info *services.ClientInfo) (
+		*services.ClientInfo, error)) error {
+
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	var client_info *services.ClientInfo
+	if self.serialized != nil {
+		client_info = &services.ClientInfo{
+			ClientInfo: &actions_proto.ClientInfo{},
+		}
+		err := proto.Unmarshal(self.serialized, client_info.ClientInfo)
+		if err != nil {
+			return err
+		}
+	}
+
+	// If the record was not changed just ignore it.
+	new_record, err := modifier(client_info)
+	if err != nil {
+		return err
+	}
+
+	// Callback can indicate no change is needed by returning a nil
+	// for client_info.
+	if new_record == nil {
+		return nil
+	}
+
+	serialized, err := proto.Marshal(new_record)
+	if err != nil {
+		return err
+	}
+
+	self.serialized = serialized
+	self.owner.SetDirty()
+
+	return nil
+}
+
 type Store struct {
-	mu   sync.Mutex
-	data map[string][]byte
+	mu         sync.Mutex
+	data       map[string]*clientRecord
+	config_obj *config_proto.Config
 
 	uuid int64
 
 	dirty bool
+}
+
+func (self *Store) SetDirty() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+	self._SetDirty()
+}
+
+func (self *Store) _SetDirty() {
+	self.dirty = true
+	clientInfoDirty.WithLabelValues(self.config_obj.OrgId).Set(1.0)
+
+	self.dirty = true
 }
 
 func (self *Store) Keys() []string {
@@ -90,58 +164,33 @@ func (self *Store) Remove(
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.dirty = true
-	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
+	self._SetDirty()
 	delete(self.data, client_id)
 }
 
+// Modifies a client record atomically. If the client record does not
+// exist, create it.
 func (self *Store) Modify(
 	ctx context.Context, config_obj *config_proto.Config, client_id string,
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
 
 	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self._Modify(ctx, config_obj, client_id, modifier)
-}
-
-func (self *Store) _Modify(
-	ctx context.Context, config_obj *config_proto.Config, client_id string,
-	modifier func(client_info *services.ClientInfo) (
-		*services.ClientInfo, error)) error {
-
-	client_info, _ := self._GetRecord(client_id)
-	var record *services.ClientInfo
-
-	if client_info != nil {
-		record = &services.ClientInfo{ClientInfo: client_info}
+	record, pres := self.data[client_id]
+	if !pres {
+		record = &clientRecord{
+			owner: self,
+		}
+		self.data[client_id] = record
 	}
-
-	// If the record was not changed just ignore it.
-	new_record, err := modifier(record)
-	if err != nil {
-		return err
-	}
-
-	// Callback can indicate no change is needed by returning a nil
-	// for client_info.
-	if new_record == nil {
-		return nil
-	}
+	self.mu.Unlock()
 
 	// Write the modified record to the LRU
-	return self._SetRecord(config_obj, new_record.ClientInfo)
+	return record.Modify(modifier)
 }
 
 func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self._GetRecord(client_id)
-}
-
-func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, error) {
+	// Not a real record - represents the server so we never store it.
 	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 		return &actions_proto.ClientInfo{
 			ClientId: client_id,
@@ -150,35 +199,26 @@ func (self *Store) _GetRecord(client_id string) (*actions_proto.ClientInfo, erro
 		}, nil
 	}
 
-	serialized, pres := self.data[client_id]
+	self.mu.Lock()
+	record, pres := self.data[client_id]
+	self.mu.Unlock()
 	if !pres {
 		return nil, utils.NotFoundError
 	}
 
-	client_info := &actions_proto.ClientInfo{}
-	err := proto.Unmarshal(serialized, client_info)
+	res, err := record.GetRecord()
 	if err != nil {
 		return nil, err
 	}
 
-	// Ensure the client id is populated in the provided record.
-	if client_info.ClientId == "" {
-		client_info.ClientId = client_id
+	if res.ClientId == "" {
+		res.ClientId = client_id
 	}
 
-	return client_info, nil
+	return res, nil
 }
 
 func (self *Store) SetRecord(
-	config_obj *config_proto.Config,
-	record *actions_proto.ClientInfo) error {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self._SetRecord(config_obj, record)
-}
-
-func (self *Store) _SetRecord(
 	config_obj *config_proto.Config,
 	record *actions_proto.ClientInfo) error {
 	serialized, err := proto.Marshal(record)
@@ -186,9 +226,14 @@ func (self *Store) _SetRecord(
 		return err
 	}
 
-	self.data[record.ClientId] = serialized
-	self.dirty = true
-	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
+	self.mu.Lock()
+	self.data[record.ClientId] = &clientRecord{
+		serialized: serialized,
+		owner:      self,
+	}
+	self._SetDirty()
+	self.mu.Unlock()
+
 	return nil
 }
 
@@ -217,7 +262,7 @@ func (self *Store) LoadFromSnapshot(
 
 	now := time.Now()
 
-	self.data = make(map[string][]byte)
+	self.data = make(map[string]*clientRecord)
 	self.dirty = false
 	clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(0.0)
 
@@ -240,7 +285,10 @@ func (self *Store) LoadFromSnapshot(
 			continue
 		}
 
-		self.data[client_id] = record
+		self.data[client_id] = &clientRecord{
+			serialized: record,
+			owner:      self,
+		}
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -276,10 +324,10 @@ func (self *Store) SaveSnapshot(
 	// operation to reduce IO overheads.
 	buffer := new(bytes.Buffer)
 
-	for client_id, serialized := range self.data {
+	for client_id, client_record := range self.data {
 		// Use fmt to encode very quickly
-		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
-			client_id, hex.EncodeToString(serialized))
+		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n", client_id,
+			hex.EncodeToString(client_record.serialized))
 		buffer.Write([]byte(line))
 	}
 
@@ -420,9 +468,11 @@ func (self *Store) LoadSnapshotFromLegacyData(
 		}
 
 		self.mu.Lock()
-		self.data[client_id] = serialized
-		self.dirty = true
-		clientInfoDirty.WithLabelValues(config_obj.OrgId).Set(1.0)
+		self.data[client_id] = &clientRecord{
+			serialized: serialized,
+			owner:      self,
+		}
+		self._SetDirty()
 		self.mu.Unlock()
 
 	}
@@ -433,9 +483,10 @@ func (self *Store) LoadSnapshotFromLegacyData(
 	return self.SaveSnapshot(ctx, config_obj, !SYNC_UPDATE)
 }
 
-func NewStorage(uuid int64) *Store {
+func NewStorage(uuid int64, config_obj *config_proto.Config) *Store {
 	return &Store{
-		data: make(map[string][]byte),
-		uuid: uuid,
+		data:       make(map[string]*clientRecord),
+		config_obj: config_obj,
+		uuid:       uuid,
 	}
 }
