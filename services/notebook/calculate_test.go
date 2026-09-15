@@ -426,7 +426,7 @@ sources:
 }
 
 func TestNotebookManager(t *testing.T) {
-	defer rand.DisableRand()
+	defer rand.DisableRand()()
 	suite.Run(t, &NotebookManagerTestSuite{
 		client_id: "C.1235",
 	})
