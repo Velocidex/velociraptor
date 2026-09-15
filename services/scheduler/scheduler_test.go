@@ -21,11 +21,12 @@ func (self *SchedulerTestSuite) SetupTest() {
 	self.ConfigObj.Services.NotebookService = true
 	self.ConfigObj.Services.SchedulerService = true
 	self.ConfigObj.Services.ApiServer = true
+	self.ConfigObj.Defaults.NotebookWaitTimeForWorkerMs = 100
 	self.TestSuite.SetupTest()
 }
 
 func (self *SchedulerTestSuite) TestScheduler() {
-	defer rand.DisableRand()
+	defer rand.DisableRand()()
 
 	scheduler, err := services.GetSchedulerService(self.ConfigObj)
 	assert.NoError(self.T(), err)

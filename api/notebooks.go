@@ -217,6 +217,7 @@ func (self *ApiServer) UpdateNotebook(
 	// When updating an existing notebook only certain fields may
 	// be changed by the user - definitely not the creator, created time or notebookId.
 	in.ModifiedTime = time.Now().Unix()
+	in.Version = old_notebook.Version + 1
 	in.Creator = old_notebook.Creator
 	in.CreatedTime = old_notebook.CreatedTime
 	in.NotebookId = old_notebook.NotebookId

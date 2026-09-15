@@ -95,9 +95,7 @@ class Notebooks extends React.Component {
                 let selected_notebook_id = selected_notebook.notebook_id;
 
                 let current_selected_notebook = this.state.selected_notebook || {};
-
-                // Only modify the notebook if it has changed
-                if (selected_notebook.modified_time != current_selected_notebook.modified_time) {
+                if (selected_notebook.version != current_selected_notebook.version) {
                     this.setState({
                         selected_notebook: selected_notebook,
                         loading: false});
