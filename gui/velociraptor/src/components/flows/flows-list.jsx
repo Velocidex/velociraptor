@@ -630,7 +630,7 @@ class FlowsList extends React.Component {
                               }}
                               variant="default">
                         <FontAwesomeIcon icon="user" />
-                        <span className="sr-only">{T("Show only my hunts")}</span>
+                        <span className="sr-only">{T("Show only my collections")}</span>
                       </Button>
                     </ToolTip>
                     :
@@ -641,7 +641,7 @@ class FlowsList extends React.Component {
                               }}
                               variant="default">
                         <FontAwesomeIcon icon="user-large-slash" />
-                        <span className="sr-only">{T("Show all hunts")}</span>
+                        <span className="sr-only">{T("Show all collections")}</span>
                       </Button>
                     </ToolTip>
                   }

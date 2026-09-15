@@ -209,6 +209,11 @@ func (self *Store) Modify(
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
 
+	// The server record can not be modified anyway
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		return nil
+	}
+
 	self.mu.Lock()
 	record, pres := self.data[client_id]
 	if !pres {
@@ -342,7 +347,9 @@ func (self *Store) SaveSnapshot(
 	}
 
 	write_legacy_records := true
-	if config_obj.Frontend.Resources.ClientInfoSkipWritingLegacyRecords {
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.ClientInfoSkipWritingLegacyRecords {
 		write_legacy_records = false
 	}
 

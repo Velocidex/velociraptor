@@ -30,21 +30,31 @@ func checkNotebookAccess(notebook *api_proto.NotebookMetadata, user string) bool
 	return notebook.Creator == user || utils.InString(notebook.Collaborators, user)
 }
 
-// Returns all the notebooks which are either owned or shared with the
-// user. This view is only called from the global notebook view so it
-// only needs to return a brief version of the notebooks - it does not
-// include uploads and timelines.
 func (self *NotebookManager) GetSharedNotebooks(
+	ctx context.Context, username string) (api.FSPathSpec, error) {
+	return self.Store.GetSharedNotebooks(ctx, username)
+}
+
+// Returns a result set of all the notebooks which are either owned or
+// shared with the user. This is used in the GUI to show the user's
+// notebook view using the standard table widget. This code keeps it
+// in sync with the global notebooks view.
+func (self *NotebookStoreImpl) GetSharedNotebooks(
 	ctx context.Context, username string) (api.FSPathSpec, error) {
 
 	notebook_path_manager := paths.NewNotebookPathManager("")
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	index_filename := notebook_path_manager.NotebookIndexForUser(username)
 
-	stat, err := file_store_factory.StatFile(index_filename)
-
-	if err == nil && stat.ModTime().Unix() >= self.Store.Version() {
-		return index_filename, nil
+	// Check if the file exists and is fresh enough
+	_, err := file_store_factory.StatFile(index_filename)
+	if err == nil {
+		self.mu.Lock()
+		last_user_version, pres := self.last_shared_results[username]
+		self.mu.Unlock()
+		if pres && last_user_version >= self.last_version {
+			return index_filename, nil
+		}
 	}
 
 	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
@@ -81,6 +91,10 @@ func (self *NotebookManager) GetSharedNotebooks(
 			Set("Creator", notebook.Creator).
 			Set("Collaborators", notebook.Collaborators))
 	}
+
+	self.mu.Lock()
+	self.last_shared_results[username] = self.last_version
+	self.mu.Unlock()
 
 	return index_filename, nil
 }

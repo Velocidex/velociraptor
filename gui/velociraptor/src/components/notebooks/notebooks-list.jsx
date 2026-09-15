@@ -309,7 +309,7 @@ class NotebooksList extends React.Component {
                       <Button onClick={()=>this.setState({showNotebookCopyDialog: true})}
                               variant="default">
                         <FontAwesomeIcon icon="copy"/>
-                        <span className="sr-only">{T("New Notebook")}</span>
+                        <span className="sr-only">{T("Copy Notebook")}</span>
                       </Button>
                     </ToolTip>
                     <ToolTip tooltip={T("Delete Notebook")}>

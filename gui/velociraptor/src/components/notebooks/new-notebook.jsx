@@ -249,7 +249,7 @@ export class NewNotebook extends React.Component {
                   setParameters={this.setNotebookParameters}
                   paginator={new NotebookPaginationBuilder(
                       T("Configure Notebook"),
-                      T("New Notebook: Configure Parameters"))}
+                      T("New Notebook: Configure Notebook"))}
                 />
                 <NewCollectionSelectArtifacts
                   artifacts={this.state.artifacts}

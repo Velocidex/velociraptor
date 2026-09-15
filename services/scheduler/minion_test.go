@@ -129,6 +129,7 @@ func (self *MinionSchedulerTestSuite) TestNotebookMinionScheduler() {
 	assert.NoError(self.T(), err)
 
 	cell.Timestamp = 0
+	cell.Version = 0
 	golden := ordereddict.NewDict().
 		Set("Updated Cell", cell)
 
