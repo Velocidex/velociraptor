@@ -178,6 +178,8 @@ func (self Builder) Run() error {
 
 	args := []string{
 		"build",
+		// Uncomment this to force a rebuild.
+		// "-a",
 		"-o", filepath.Join("output", self.Name()),
 		"-tags", self.tags(),
 		"-ldflags= " + self.ldflags(),

@@ -33,7 +33,7 @@ BOOL WINAPI certEnumSystemStoreCallback(const void* systemStore,
     LPCWSTR store_name = (LPCWSTR)systemStore;
     HCERTSTORE hCertStore = CertOpenSystemStoreW(0, store_name);
     if (hCertStore == NULL) {
-        printf("Failed to open cert store %S with %ld\n",
+        printf("Failed to open cert store %S with %d\n",
                (wchar_t *)systemStore, (uint32_t)GetLastError());
         return FALSE;
     }

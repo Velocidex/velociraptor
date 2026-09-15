@@ -8,8 +8,8 @@ require (
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799
-	github.com/Velocidex/go-magic v0.0.0-20260623224109-5dd5a41c69ac
-	github.com/Velocidex/go-yara v1.1.10-0.20260806050527-f3bfad52e4eb
+	github.com/Velocidex/go-magic v0.0.0-20260915105357-ee314c304181
+	github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
@@ -67,11 +67,11 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
+	golang.org/x/crypto v0.55.0
 	golang.org/x/mod v0.41.0
+	golang.org/x/net v0.58.0
 	golang.org/x/sys v0.48.0
 	golang.org/x/text v0.42.0
-	golang.org/x/crypto v0.55.0
-	golang.org/x/net v0.58.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.264.0
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
@@ -383,7 +383,7 @@ require (
 // replace github.com/Velocidex/yaml/v2 => ../yaml
 // replace www.velocidex.com/golang/go-prefetch => ../go-prefetch
 // replace github.com/Velocidex/go-magic => ../go-magic
-// replace github.com/Velocidex/go-yara => ../go-yara-velocidex
+// replace github.com/Velocidex/go-yara => ../go-yara
 // replace github.com/Velocidex/json => ../json
 // replace github.com/russross/blackfriday/v2 => ../blackfriday
 // replace www.velocidex.com/golang/vtypes => ../vtypes
