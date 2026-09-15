@@ -32,7 +32,6 @@ class EditSecretDialog extends Component {
     componentDidMount = () => {
         this.source = CancelToken.source();
         this.setState({
-            secret: this.props.secret,
             new_users: this.props.secret.users,
             visible_to_all_orgs: this.props.secret.visible_to_all_orgs});
     }
@@ -64,7 +63,6 @@ class EditSecretDialog extends Component {
     }
 
     state = {
-        secret: {},
         new_users: [],
     }
 
@@ -81,7 +79,7 @@ class EditSecretDialog extends Component {
                 <Modal.Title>{T("Edit Secret properties")}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
-                <h1>{T("Edit Secret")} { this.state.secret.name } </h1>
+                <h1>{T("Edit Secret")} { this.props.secret.name } </h1>
                 {T("Share secret with these users")}
                 <UserForm
                   includeSuperuser={true}

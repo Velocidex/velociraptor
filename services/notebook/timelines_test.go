@@ -50,6 +50,8 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelines(t *assert.R)
 		return err == nil
 	})
 
+	notebook.Version = 0
+
 	assert.Equal(t, len(notebook.CellMetadata), 1)
 	golden.Set("Notebook Metadata", notebook)
 
@@ -111,7 +113,7 @@ func (self *NotebookManagerTestSuite) TestNotebookManagerTimelineAnnotations() {
 
 func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 	t *assert.R) {
-	defer rand.DisableRand()
+	defer rand.DisableRand()()
 
 	closer := utils.MockTime(utils.NewMockClock(time.Unix(1715775587, 0)))
 	defer closer()
@@ -161,6 +163,8 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 		return err == nil
 	})
 
+	notebook.Version = 0
+
 	assert.Equal(t, len(notebook.CellMetadata), 1)
 	golden.Set("Notebook Metadata", notebook)
 
@@ -180,6 +184,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerTimelineAnnotations(
 		notebook.NotebookId, services.INCLUDE_UPLOADS)
 	assert.NoError(t, err)
 
+	notebook_metadata.Version = 0
 	golden.Set("Notebook Metadata After Annotation", notebook_metadata)
 
 	// Check that GetAllNotebooks() returns this notebook now.

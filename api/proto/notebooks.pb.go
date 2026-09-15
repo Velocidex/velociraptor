@@ -456,10 +456,12 @@ type NotebookMetadata struct {
 	// order to set up the parameters.
 	Requests []*proto2.VQLCollectorArgs `protobuf:"bytes,23,rep,name=requests,proto3" json:"requests,omitempty"`
 	// If this is set, the notebook is public.
-	Public       bool   `protobuf:"varint,13,opt,name=public,proto3" json:"public,omitempty"`
-	CreatedTime  int64  `protobuf:"varint,4,opt,name=created_time,json=createdTime,proto3" json:"created_time,omitempty"`
-	ModifiedTime int64  `protobuf:"varint,5,opt,name=modified_time,json=modifiedTime,proto3" json:"modified_time,omitempty"`
-	NotebookId   string `protobuf:"bytes,7,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
+	Public       bool  `protobuf:"varint,13,opt,name=public,proto3" json:"public,omitempty"`
+	CreatedTime  int64 `protobuf:"varint,4,opt,name=created_time,json=createdTime,proto3" json:"created_time,omitempty"`
+	ModifiedTime int64 `protobuf:"varint,5,opt,name=modified_time,json=modifiedTime,proto3" json:"modified_time,omitempty"`
+	// A strictly incrementing version of this notebook.
+	Version    int64  `protobuf:"varint,24,opt,name=version,proto3" json:"version,omitempty"`
+	NotebookId string `protobuf:"bytes,7,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
 	// Deprecated
 	Cells              []string            `protobuf:"bytes,6,rep,name=cells,proto3" json:"cells,omitempty"`
 	CellMetadata       []*NotebookCell     `protobuf:"bytes,11,rep,name=cell_metadata,json=cellMetadata,proto3" json:"cell_metadata,omitempty"`
@@ -589,6 +591,13 @@ func (x *NotebookMetadata) GetCreatedTime() int64 {
 func (x *NotebookMetadata) GetModifiedTime() int64 {
 	if x != nil {
 		return x.ModifiedTime
+	}
+	return 0
+}
+
+func (x *NotebookMetadata) GetVersion() int64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -726,9 +735,12 @@ type NotebookCell struct {
 	Messages []string `protobuf:"bytes,5,rep,name=messages,proto3" json:"messages,omitempty"`
 	// True if there are more messages than are included in the
 	// messages field above.
-	MoreMessages bool  `protobuf:"varint,12,opt,name=more_messages,json=moreMessages,proto3" json:"more_messages,omitempty"`
-	Timestamp    int64 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	Duration     int64 `protobuf:"varint,10,opt,name=duration,proto3" json:"duration,omitempty"`
+	MoreMessages bool `protobuf:"varint,12,opt,name=more_messages,json=moreMessages,proto3" json:"more_messages,omitempty"`
+	// Last modified time.
+	Timestamp int64 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
+	// A monotonic incremented version of this cell.
+	Version  int64 `protobuf:"varint,18,opt,name=version,proto3" json:"version,omitempty"`
+	Duration int64 `protobuf:"varint,10,opt,name=duration,proto3" json:"duration,omitempty"`
 	// The type of this cell.
 	Type              string   `protobuf:"bytes,7,opt,name=type,proto3" json:"type,omitempty"`
 	CurrentlyEditing  bool     `protobuf:"varint,8,opt,name=currently_editing,json=currentlyEditing,proto3" json:"currently_editing,omitempty"`
@@ -830,6 +842,13 @@ func (x *NotebookCell) GetMoreMessages() bool {
 func (x *NotebookCell) GetTimestamp() int64 {
 	if x != nil {
 		return x.Timestamp
+	}
+	return 0
+}
+
+func (x *NotebookCell) GetVersion() int64 {
+	if x != nil {
+		return x.Version
 	}
 	return 0
 }
@@ -1077,7 +1096,7 @@ const file_notebooks_proto_rawDesc = "" +
 	"\x0eevent_artifact\x18\x05 \x01(\tR\reventArtifact\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x06 \x01(\x03R\tstartTime\x12\x19\n" +
-	"\bend_time\x18\a \x01(\x03R\aendTime\"\xc5\a\n" +
+	"\bend_time\x18\a \x01(\x03R\aendTime\"\xdf\a\n" +
 	"\x10NotebookMetadata\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x18\n" +
@@ -1092,7 +1111,8 @@ const file_notebooks_proto_rawDesc = "" +
 	"\brequests\x18\x17 \x03(\v2\x17.proto.VQLCollectorArgsR\brequests\x12\x16\n" +
 	"\x06public\x18\r \x01(\bR\x06public\x12!\n" +
 	"\fcreated_time\x18\x04 \x01(\x03R\vcreatedTime\x12#\n" +
-	"\rmodified_time\x18\x05 \x01(\x03R\fmodifiedTime\x12\x1f\n" +
+	"\rmodified_time\x18\x05 \x01(\x03R\fmodifiedTime\x12\x18\n" +
+	"\aversion\x18\x18 \x01(\x03R\aversion\x12\x1f\n" +
 	"\vnotebook_id\x18\a \x01(\tR\n" +
 	"notebookId\x12\x14\n" +
 	"\x05cells\x18\x06 \x03(\tR\x05cells\x128\n" +
@@ -1108,7 +1128,7 @@ const file_notebooks_proto_rawDesc = "" +
 	"\fcolumn_types\x18\x11 \x03(\v2\x11.proto.ColumnTypeR\vcolumnTypes\x12<\n" +
 	"\vsuggestions\x18\x13 \x03(\v2\x1a.proto.NotebookCellRequestR\vsuggestions\":\n" +
 	"\tNotebooks\x12-\n" +
-	"\x05items\x18\x01 \x03(\v2\x17.proto.NotebookMetadataR\x05items\"\x8e\x04\n" +
+	"\x05items\x18\x01 \x03(\v2\x17.proto.NotebookMetadataR\x05items\"\xa8\x04\n" +
 	"\fNotebookCell\x12\x1f\n" +
 	"\vnotebook_id\x18\x10 \x01(\tR\n" +
 	"notebookId\x12\x14\n" +
@@ -1119,7 +1139,8 @@ const file_notebooks_proto_rawDesc = "" +
 	"\acell_id\x18\x04 \x01(\tR\x06cellId\x12\x1a\n" +
 	"\bmessages\x18\x05 \x03(\tR\bmessages\x12#\n" +
 	"\rmore_messages\x18\f \x01(\bR\fmoreMessages\x12\x1c\n" +
-	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\x12\x1a\n" +
+	"\ttimestamp\x18\x06 \x01(\x03R\ttimestamp\x12\x18\n" +
+	"\aversion\x18\x12 \x01(\x03R\aversion\x12\x1a\n" +
 	"\bduration\x18\n" +
 	" \x01(\x03R\bduration\x12\x12\n" +
 	"\x04type\x18\a \x01(\tR\x04type\x12+\n" +

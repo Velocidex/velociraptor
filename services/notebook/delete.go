@@ -40,13 +40,11 @@ func (self *NotebookStoreImpl) DeleteNotebook(ctx context.Context,
 			return err
 		}
 
-		// Also remove it from our local cache and bump the store
-		// version. The bump is monotonic (see bumpVersion) so a delete
-		// is never masked by the second-granularity comparison in
-		// GetSharedNotebooks, regardless of clock resolution.
 		self.mu.Lock()
 		delete(self.global_notebooks, notebook_id)
-		self.bumpVersion()
+
+		// Bump the version of the store to reflect changes.
+		_ = self._GetNextVersion()
 		self.mu.Unlock()
 	}
 

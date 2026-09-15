@@ -95,20 +95,7 @@ class Notebooks extends React.Component {
                 let selected_notebook_id = selected_notebook.notebook_id;
 
                 let current_selected_notebook = this.state.selected_notebook || {};
-
-                // Only modify the notebook if it has changed. modified_time
-                // has second granularity so also compare the latest cell id
-                // and cell count — otherwise a cell added/deleted in the
-                // same second as the last fetch is never rendered.
-                let changed =
-                    selected_notebook.modified_time !=
-                        current_selected_notebook.modified_time ||
-                    selected_notebook.latest_cell_id !=
-                        current_selected_notebook.latest_cell_id ||
-                    (selected_notebook.cell_metadata || []).length !=
-                        (current_selected_notebook.cell_metadata || []).length;
-
-                if (changed) {
+                if (selected_notebook.version != current_selected_notebook.version) {
                     this.setState({
                         selected_notebook: selected_notebook,
                         loading: false});

@@ -29,10 +29,10 @@ type NotebookStoreImpl struct {
 	mu               sync.Mutex
 	global_notebooks map[string]*api_proto.NotebookMetadata
 
-	// Keep the store version bumped on every mutation (delete, set).
-	// Compared against the index file mtime in GetSharedNotebooks to
-	// decide whether the cached index is stale.
+	// The latest known version of all notebooks.
 	last_version int64
+
+	last_shared_results map[string]int64
 
 	SuperTimelineStorer timelines.ISuperTimelineStorer
 }
@@ -41,7 +41,10 @@ func MakeNotebookStore(
 	config_obj *config_proto.Config,
 	SuperTimelineStorer timelines.ISuperTimelineStorer) *NotebookStoreImpl {
 	return &NotebookStoreImpl{
-		config_obj:          config_obj,
+		config_obj: config_obj,
+		// Pick something relatively unique but not too large as a starting point.
+		last_version:        utils.GetTime().Now().Unix() * 1000,
+		last_shared_results: make(map[string]int64),
 		SuperTimelineStorer: SuperTimelineStorer,
 	}
 }
@@ -75,6 +78,7 @@ func NewNotebookStore(
 		}
 	}()
 
+	// Make the first sync now so we populate the store.
 	return result, result.syncAllNotebooks()
 }
 
@@ -82,38 +86,19 @@ func (self *NotebookStoreImpl) Version() (res int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self._Version()
+	return self.last_version
 }
 
-// _Version computes the store version assuming the lock is held.
-func (self *NotebookStoreImpl) _Version() (res int64) {
-	res = self.last_version
+func (self *NotebookStoreImpl) GetNextVersion() int64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
-	// ModifiedTime is second granularity (proto) so convert to
-	// nanoseconds to compare with last_version.
-	for _, v := range self.global_notebooks {
-		if v.ModifiedTime*1000000000 > res {
-			res = v.ModifiedTime * 1000000000
-		}
-	}
-	return res
+	return self._GetNextVersion()
 }
 
-// bumpVersion ensures the store version strictly increases on every
-// mutation. Using pure wall-clock time as a version is racy: the clock
-// can go backwards (NTP adjustment) or tick coarser than the unit, so
-// two mutations can land on the same version and a stale index would
-// keep being served. Comparing against the current version and forcing
-// an increment guarantees the version always moves forward, making the
-// clock resolution irrelevant. Must be called with the lock held.
-func (self *NotebookStoreImpl) bumpVersion() {
-	now := utils.GetTime().Now().UnixNano()
-	current := self._Version()
-	if now > current {
-		self.last_version = now
-	} else {
-		self.last_version = current + 1
-	}
+func (self *NotebookStoreImpl) _GetNextVersion() int64 {
+	self.last_version++
+	return self.last_version
 }
 
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {
@@ -124,6 +109,9 @@ func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error
 }
 
 func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) error {
+	// Ensure the notebook reflects the last time it was set.
+	in.ModifiedTime = utils.GetTime().Now().Unix()
+
 	if utils.IsGlobalNotebooks(in.NotebookId) {
 		self.global_notebooks[in.NotebookId] = in
 	}
@@ -134,15 +122,6 @@ func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) erro
 	}
 
 	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
-
-	// Ensure the notebook reflects the last time it was set.
-	in.ModifiedTime = utils.GetTime().Now().Unix()
-
-	// Bump the store version so the index cache is invalidated. This is
-	// monotonic: even if ModifiedTime (second granularity) truncates to
-	// the same second as a previous delete, the version still moves
-	// ahead.
-	self.bumpVersion()
 
 	return db.SetSubject(self.config_obj, notebook_path_manager.Path(), in)
 }
@@ -194,6 +173,9 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 
 	in.NotebookId = notebook_id
 
+	// Tag the cell with a version
+	in.Version = self._GetNextVersion()
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return err
@@ -212,7 +194,7 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 		return err
 	}
 
-	now := utils.GetTime().Now().UnixNano()
+	now := utils.GetTime().Now().Unix()
 
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
@@ -234,6 +216,8 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
+	notebook.Version = self._GetNextVersion()
+
 	return self._SetNotebook(notebook)
 }
 
@@ -310,7 +294,7 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 		return err
 	}
 
-	now := utils.GetTime().Now().UnixNano()
+	now := utils.GetTime().Now().Unix()
 
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
@@ -329,6 +313,8 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
+	notebook.Version = self._GetNextVersion()
+
 	return self._SetNotebook(notebook)
 }
 
@@ -449,6 +435,12 @@ func (self *NotebookStoreImpl) syncAllNotebooks() error {
 			continue
 		}
 		self.global_notebooks[notebook.NotebookId] = notebook
+
+		// Update the global version to at least the latest version of
+		// the notebooks..
+		if notebook.Version > self.last_version {
+			self.last_version = notebook.Version
+		}
 	}
 
 	return nil

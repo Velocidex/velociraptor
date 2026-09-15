@@ -95,6 +95,9 @@ message NotebookMetadata {
     int64 created_time = 4;
     int64 modified_time = 5;
 
+    // A strictly incrementing version of this notebook.
+    int64 version = 24;
+
     string notebook_id = 7;
 
     // Deprecated
@@ -142,7 +145,11 @@ message NotebookCell {
     // messages field above.
     bool more_messages = 12;
 
+    // Last modified time.
     int64 timestamp = 6;
+
+    // A monotonic incremented version of this cell.
+    int64 version = 18;
     int64 duration = 10;
 
     // The type of this cell.

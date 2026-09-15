@@ -155,6 +155,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R
 	assert.Equal(r, notebook.CellMetadata[0].CurrentVersion, "03")
 	assert.Equal(r, notebook.CellMetadata[0].AvailableVersions, []string{"03"})
 
+	notebook.Version = 0
 	golden.Set("Notebook Metadata", notebook)
 
 	// Now update the cell to some markdown
@@ -167,6 +168,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R
 		})
 	assert.NoError(r, err)
 
+	cell.Version = 0
 	golden.Set("Markdown Cell", cell)
 
 	cell, err = notebook_manager.UpdateNotebookCell(self.Ctx, notebook,
@@ -188,12 +190,14 @@ func (self *NotebookManagerTestSuite) _TestNotebookManagerUpdateCell(r *assert.R
 
 	// The cell that is returned from the UpdateNotebookCell contains
 	// all the data.
+	cell.Version = 0
 	golden.Set("VQL Cell", cell)
 
 	// The notebook itself should only contain summary cells.
 	new_notebook, err := notebook_manager.GetNotebook(
 		self.Ctx, notebook.NotebookId, services.DO_NOT_INCLUDE_UPLOADS)
 	assert.NoError(r, err)
+	new_notebook.Version = 0
 	golden.Set("Full Notebook after update", new_notebook)
 
 	result := normalizeOutput(json.MustMarshalIndent(golden))
@@ -293,6 +297,8 @@ func (self *NotebookManagerTestSuite) _TestNotebookFromTemplate(r *assert.R) {
 		}
 	}
 
+	notebook.Version = 0
+	cell.Version = 0
 	golden := ordereddict.NewDict().
 		Set("Notebook", notebook).
 		Set("Cell", cell)
@@ -317,6 +323,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookFromTemplate(r *assert.R) {
 		}
 	}
 
+	updated_notebook.Version = 0
 	golden.Set("UpdatedNotebook", updated_notebook)
 
 	// Cell must be recalculated to pick up new env
@@ -330,6 +337,7 @@ func (self *NotebookManagerTestSuite) _TestNotebookFromTemplate(r *assert.R) {
 		})
 	assert.NoError(self.T(), err)
 
+	updated_cell.Version = 0
 	golden.Set("UpdatedCell", updated_cell)
 
 	// Remove things that may change
