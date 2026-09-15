@@ -45,6 +45,10 @@ linux_sumo:
 windows_sumo:
 	go run make.go -v WindowsSumo
 
+# A build with the race detector enabled.
+windows_test:
+	go run make.go -v WindowsTest
+
 linux_arm64:
 	go run make.go -v LinuxArm64
 

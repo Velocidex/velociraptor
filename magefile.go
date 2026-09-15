@@ -38,9 +38,11 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/Velocidex/fileb0x/runner"
+	"github.com/Velocidex/ordereddict"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
 	"gopkg.in/yaml.v2"
+	"www.velocidex.com/golang/velociraptor/build"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 )
@@ -55,14 +57,9 @@ var (
 
 	index_template = "gui/velociraptor/build/index.html"
 
-	// apt-get install gcc-mingw-w64-x86-64
-	mingw_xcompiler = "x86_64-w64-mingw32-gcc"
-
-	// apt-get install gcc-mingw-w64
-	mingw_xcompiler_32 = "i686-w64-mingw32-gcc"
-	musl_xcompiler     = "musl-gcc"
-	name               = "velociraptor"
-	version            = "v" + constants.VERSION
+	musl_xcompiler = "musl-gcc"
+	name           = "velociraptor"
+	version        = "v" + constants.VERSION
 
 	// https://github.com/googleapis/google-cloud-go/issues/11448
 	// google cloud suddenly increased its dependency size by about
@@ -126,37 +123,47 @@ func (self Builder) Name() string {
 }
 
 func (self *Builder) Env() map[string]string {
-	env := make(map[string]string)
+	env := ordereddict.NewDict()
 
-	env["GOOS"] = self.goos
-	env["GOARCH"] = self.arch
+	env.Set("GOOS", self.goos)
+	env.Set("GOARCH", self.arch)
 
 	if self.disable_cgo {
-		env["CGO_ENABLED"] = "0"
+		env.Set("CGO_ENABLED", "0")
 	} else {
-		env["CGO_ENABLED"] = "1"
+		env.Set("CGO_ENABLED", "1")
 	}
 
-	// If we are cross compiling, set the right compiler.
-	if (runtime.GOOS == "linux" || runtime.GOOS == "darwin") &&
-		self.goos == "windows" {
-
-		if self.arch == "amd64" {
-			if mingwxcompiler_exists() {
-				env["CC"] = mingw_xcompiler
-			}
-		} else {
-			if mingwxcompiler32_exists() {
-				env["CC"] = mingw_xcompiler_32
-			}
-		}
-	}
-
+	// This is a cross compiled target
 	if self.cc != "" {
-		env["CC"] = self.cc
+		env.Set("CC", self.cc)
 	}
-	fmt.Printf("Build Environment: %v\n", json.MustMarshalString(env))
-	return env
+	fmt.Printf("Build Environment: %v\n",
+		json.MustMarshalString(env))
+
+	res := make(map[string]string)
+	for _, item := range env.Items() {
+		res[item.Key] = item.Value.(string)
+	}
+
+	return res
+}
+
+func (self *Builder) tags() string {
+	tags := base_tags + self.extra_tags
+	if self.sumo {
+		tags += " sumo "
+	}
+	return tags
+}
+
+func (self Builder) ldflags() string {
+	basic_flags := "-w -s "
+	if self.debug_build {
+		basic_flags = ""
+	}
+
+	return basic_flags + self.extra_ldflags + flags()
 }
 
 func (self Builder) Run() error {
@@ -169,22 +176,11 @@ func (self Builder) Run() error {
 		return err
 	}
 
-	basic_flags := "-w -s "
-	if self.debug_build {
-		basic_flags = ""
-	}
-
-	tags := base_tags + self.extra_tags
-	if self.sumo {
-		tags += " sumo "
-	}
-
 	args := []string{
 		"build",
 		"-o", filepath.Join("output", self.Name()),
-		"-tags", tags,
-		"-ldflags= " + basic_flags +
-			self.extra_ldflags + flags(),
+		"-tags", self.tags(),
+		"-ldflags= " + self.ldflags(),
 	}
 	args = append(args, self.extra_flags...)
 	args = append(args, "./bin/")
@@ -231,20 +227,22 @@ func Release() error {
 	}
 
 	if runtime.GOOS == "linux" {
+		// Build all these targets in the Linux release.
 		err := Linux()
 		if err != nil {
 			return err
 		}
 
-		if mingwxcompiler_exists() {
-			err := Windows()
-			if err != nil {
-				return err
-			}
-			return Windowsx86()
+		err = Windows()
+		if err != nil {
+			return err
 		}
+
+		return Windowsx86()
+
 	}
 
+	// On MacOS we only build the macos release
 	if runtime.GOOS == "darwin" {
 		return Darwin()
 	}
@@ -395,7 +393,15 @@ func LinuxMips() error {
 // Builds a Development binary. This does not embed things like GUI
 // resources to allow them to be loaded from the local directory.
 func Dev() error {
-	return Builder{goos: "linux", arch: "amd64",
+	cc, err := getToolchainCC("windows/amd64")
+	if err != nil {
+		return err
+	}
+
+	return Builder{
+		goos:        "linux",
+		arch:        "amd64",
+		cc:          cc,
 		extra_flags: []string{"-race"}}.Run()
 }
 
@@ -403,66 +409,103 @@ func Dev() error {
 // not run the race detector because the ubuntu distribution of mingw
 // does not include tsan.
 func Windows() error {
+	cc, err := getToolchainCC("windows/amd64")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
 		extra_tags: " release yara ",
 		goos:       "windows",
+		cc:         cc,
 		arch:       "amd64"}.Run()
 }
 
 func WindowsSumo() error {
+	cc, err := getToolchainCC("windows/amd64")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
 		extra_tags: " release yara ",
 		goos:       "windows",
 		sumo:       true,
+		cc:         cc,
 		arch:       "amd64"}.Run()
 }
 
 // Windows client without a gui.
 func WindowsBare() error {
+	cc, err := getToolchainCC("windows/amd64")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
 		extra_tags:  " release yara disable_gui ",
 		goos:        "windows",
 		disable_cgo: true,
+		cc:          cc,
 		arch:        "amd64"}.Run()
 }
 
 func WindowsDev() error {
+	cc, err := getToolchainCC("windows/amd64")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
 		goos:       "windows",
 		extra_tags: " release yara ",
+		cc:         cc,
 		filename:   "velociraptor",
 		arch:       "amd64"}.Run()
 }
 
-// Windows binary with race detection. This requires building on
-// windows (ie not cross compiling). You will need to install gcc
-// first using https://jmeubank.github.io/tdm-gcc/ as well as the Go
-// windows distribution and optionally the windows node distribution
-// (for the GUI).
 func WindowsTest() error {
+	cc, err := getToolchainCC("windows/amd64")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
 		goos:        "windows",
 		extra_tags:  " release yara ",
 		filename:    "velociraptor",
+		cc:          cc,
 		arch:        "amd64",
 		extra_flags: []string{"-race"}}.Run()
 }
 
 func Windowsx86() error {
+	cc, err := getToolchainCC("windows/386")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
 		extra_tags: " release yara ",
+		cc:         cc,
 		goos:       "windows",
 		arch:       "386"}.Run()
 }
 
 func WindowsArm() error {
+	cc, err := getToolchainCC("windows/aarch64")
+	if err != nil {
+		return err
+	}
+
 	return Builder{
-		extra_tags:  " release yara ",
-		goos:        "windows",
-		disable_cgo: true,
-		arch:        "arm64"}.Run()
+		extra_tags: " release yara ",
+		cc:         cc,
+		goos:       "windows",
+		arch:       "arm64"}.Run()
 }
 
+// Must be built on MacOS - no cross compiles
 func Darwin() error {
 	return Builder{goos: "darwin",
 		extra_tags: " release yara ",
@@ -619,18 +662,8 @@ func ensure_assets() error {
 	return UpdateDependentTools()
 }
 
-func mingwxcompiler_exists() bool {
-	err := sh.Run(mingw_xcompiler, "--version")
-	return err == nil
-}
-
 func musl_exists() bool {
 	err := sh.Run(musl_xcompiler, "--version")
-	return err == nil
-}
-
-func mingwxcompiler32_exists() bool {
-	err := sh.Run(mingw_xcompiler_32, "--version")
 	return err == nil
 }
 
@@ -942,4 +975,13 @@ func Container() error {
 
 	// Upload the image to the repository
 	return sh.Run("docker", "push", image)
+}
+
+func getToolchainCC(target string) (string, error) {
+	desc, err := build.InstallToolChain("./build/toolchain", false)
+	if err != nil {
+		return "", err
+	}
+
+	return desc.GCC(target)
 }
