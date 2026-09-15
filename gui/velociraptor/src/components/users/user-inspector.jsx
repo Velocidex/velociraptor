@@ -391,7 +391,7 @@ class UsersOverview extends Component {
         this.setACLsource = CancelToken.source();
 
         // Set the ACL in the gui immediately and wait for the server
-        // to reupdate it. This avoids flicker.
+        // to update it. This avoids flicker.
         this.setState({acl: acl});
 
         api.post("v1/SetUserRoles", acl,
