@@ -56,7 +56,7 @@ func (self *NotebookManager) NewNotebookCell(
 	}
 
 	added := false
-	now := utils.GetTime().Now().UnixNano()
+	now := utils.GetTime().Now().Unix()
 
 	new_cell_md := []*api_proto.NotebookCell{}
 
@@ -82,6 +82,7 @@ func (self *NotebookManager) NewNotebookCell(
 	notebook.LatestCellId = new_cell.CellId
 	notebook.CellMetadata = new_cell_md
 	notebook.ModifiedTime = new_cell.Timestamp
+	notebook.Version += 1
 
 	err = self.Store.SetNotebook(notebook)
 	if err != nil {

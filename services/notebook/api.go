@@ -46,6 +46,15 @@ type NotebookStore interface {
 	// The latest time of all the global notebooks. Used to work out
 	// if we need to rebuild the notebook index.
 	Version() int64
+
+	// Get the next available version number to tag notebooks.
+	GetNextVersion() int64
+
+	// Returns a result set of all the notebooks which are either
+	// owned or shared with the user.
+	GetSharedNotebooks(
+		ctx context.Context,
+		username string) (api.FSPathSpec, error)
 }
 
 type AttachmentManager interface {
