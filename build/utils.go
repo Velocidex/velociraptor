@@ -2,15 +2,20 @@ package build
 
 import (
 	"archive/tar"
+	"archive/zip"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
+	"strings"
 
 	"github.com/ulikunitz/xz"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -37,17 +42,95 @@ var (
 )
 
 type ToolchainDesc struct {
-	basedir  string
-	verbose  bool
+	// Should be an absolute path for unpacking the toolchain
+	basedir string
+
+	// Enable for extract messages.
+	verbose bool
+
+	// The download URL for the package.
 	Download string
-	_GCC     map[string]string
+
+	// A map of compilers keyed by architectures
+	_GCC map[string]string
 }
 
 func NewToolchainDesc(basedir string, verbose bool) *ToolchainDesc {
-	res := package_url_ubuntu_amd64
+	var res ToolchainDesc
+	// When building on Windows use these tool chains.
+	if runtime.GOOS == "windows" {
+		res = package_url_windows_amd64
+	} else {
+		res = package_url_ubuntu_amd64
+	}
+
 	res.basedir = basedir
 	res.verbose = verbose
 	return &res
+}
+
+func (self *ToolchainDesc) extractZip(
+	ctx context.Context, reader io.Reader) error {
+	// Zip files need to be copied to a tempfile for unpacking.
+	tempfile_fd, err := tempfile.TempFile("")
+	if err != nil {
+		return err
+	}
+
+	_, err = utils.Copy(ctx, tempfile_fd, reader)
+	if err != nil {
+		return err
+	}
+	defer tempfile_fd.Close()
+
+	defer os.Remove(tempfile_fd.Name())
+
+	stat, err := os.Lstat(tempfile_fd.Name())
+	if err == nil && stat.Mode().IsDir() {
+		return nil
+	}
+
+	z, err := zip.NewReader(tempfile_fd, stat.Size())
+	if err != nil {
+		return err
+	}
+
+	for _, member := range z.File {
+		if member.FileInfo().IsDir() {
+			continue
+		}
+
+		output_path := utils.Join(self.basedir, member.Name)
+		if self.verbose {
+			fmt.Printf("Creating %v (%v bytes)\n", output_path,
+				member.FileInfo().Size())
+		}
+		err = os.MkdirAll(filepath.Dir(output_path), 0700)
+		if err != nil {
+			return err
+		}
+		out_fd, err := os.OpenFile(output_path,
+			os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
+		if err != nil {
+			return err
+		}
+
+		in_fd, err := member.Open()
+		if err != nil {
+			out_fd.Close()
+			return err
+		}
+
+		_, err = utils.Copy(ctx, out_fd, in_fd)
+		if err != nil {
+			in_fd.Close()
+			out_fd.Close()
+			return err
+		}
+		in_fd.Close()
+		out_fd.Close()
+	}
+	return nil
 }
 
 func (self *ToolchainDesc) extractXZ(reader io.Reader) error {
@@ -128,19 +211,16 @@ func (self *ToolchainDesc) GCC(target string) (string, error) {
 		return "", fmt.Errorf("Unsupported target %v", target)
 	}
 
-	fullpath, err := filepath.Abs(filepath.Join(
-		self.basedir, filename))
-	if err != nil {
-		return "", err
-	}
+	fullpath := filepath.Join(self.basedir, filename)
 
 	cmd := exec.Command(fullpath, "--version")
-	_, err = cmd.CombinedOutput()
+	_, err := cmd.CombinedOutput()
 	return fullpath, err
 }
 
-func InstallToolChain(dst string, verbose bool) (*ToolchainDesc, error) {
-	var err error
+func InstallToolChain(
+	ctx context.Context,
+	dst string, verbose bool) (*ToolchainDesc, error) {
 
 	desc := NewToolchainDesc(dst, verbose)
 
@@ -151,11 +231,41 @@ func InstallToolChain(dst string, verbose bool) (*ToolchainDesc, error) {
 		return desc, nil
 	}
 
-	resp, err := http.Get(package_url_ubuntu_amd64.Download)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+	var reader io.Reader
+	filename := filepath.Join(dst, "../packages",
+		filepath.Base(desc.Download))
+	_, err = os.Lstat(filename)
+	if err == nil {
+		fd, err := os.Open(filename)
+		if err != nil {
+			return nil, err
+		}
+		defer fd.Close()
+		reader = fd
+		fmt.Printf("Got a local package %v\n", filename)
 
-	return desc, desc.extractXZ(resp.Body)
+	} else {
+		req, err := http.NewRequestWithContext(
+			ctx, "GET", desc.Download, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		reader = resp.Body
+		defer resp.Body.Close()
+	}
+
+	if strings.HasSuffix(filename, ".xz") {
+		return desc, desc.extractXZ(reader)
+	}
+
+	if strings.HasSuffix(filename, ".zip") {
+		return desc, desc.extractZip(ctx, reader)
+	}
+
+	return nil, fmt.Errorf("Unknown compression for %v", filename)
 }

@@ -23,6 +23,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"errors"
 	"fmt"
 	"io"
@@ -980,7 +981,13 @@ func Container() error {
 }
 
 func getToolchainCC(target string) (string, error) {
-	desc, err := build.InstallToolChain("./build/toolchain", false)
+	abs_path, err := filepath.Abs("./build/toolchain")
+	if err != nil {
+		return "", err
+	}
+
+	desc, err := build.InstallToolChain(
+		context.Background(), abs_path, false)
 	if err != nil {
 		return "", err
 	}
