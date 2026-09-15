@@ -342,7 +342,9 @@ func (self *Store) SaveSnapshot(
 	}
 
 	write_legacy_records := true
-	if config_obj.Frontend.Resources.ClientInfoSkipWritingLegacyRecords {
+	if config_obj.Frontend != nil &&
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.ClientInfoSkipWritingLegacyRecords {
 		write_legacy_records = false
 	}
 
