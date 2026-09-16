@@ -1,4 +1,4 @@
-//+build windows,amd64
+//go:build windows && (amd64 || arm64)
 
 package process
 
