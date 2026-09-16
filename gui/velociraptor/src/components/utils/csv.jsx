@@ -1,5 +1,5 @@
-import parse from 'csv-parse/lib/browser/sync.js';
-import stringify from 'csv-stringify/lib/browser/sync.js';
+import { parse } from 'csv-parse';
+import { stringify } from 'csv-stringify';
 import api from '../core/api-service.jsx';
 import _ from 'lodash';
 
