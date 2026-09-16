@@ -26,8 +26,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	kingpin "github.com/alecthomas/kingpin/v2"
 	errors "github.com/go-errors/errors"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
