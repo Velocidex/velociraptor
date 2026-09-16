@@ -1,5 +1,7 @@
-//go:build windows && amd64 && cgo
-// +build windows,amd64,cgo
+//go:build windows && (amd64 || arm64) && cgo
+// +build windows
+// +build amd64 arm64
+// +build cgo
 
 // References: https://www.geoffchappell.com/studies/windows/km/ntoskrnl/api/ex/sysinfo/query.htm
 // https://processhacker.sourceforge.io/
