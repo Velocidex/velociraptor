@@ -3,6 +3,7 @@ package build
 import (
 	"archive/tar"
 	"archive/zip"
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -15,7 +16,6 @@ import (
 
 	"github.com/ulikunitz/xz"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
 var (
@@ -40,6 +40,12 @@ var (
 		},
 	}
 )
+
+type ToolChainOptions struct {
+	BaseDir         string
+	PackageCacheDir string
+	Verbose         bool
+}
 
 type ToolchainDesc struct {
 	// Should be an absolute path for unpacking the toolchain
@@ -70,32 +76,25 @@ func NewToolchainDesc(basedir string, verbose bool) *ToolchainDesc {
 }
 
 func (self *ToolchainDesc) extractZip(
-	ctx context.Context, reader io.Reader) error {
-	// Zip files need to be copied to a tempfile for unpacking.
-	tempfile_fd, err := tempfile.TempFile("")
-	if err != nil {
-		return err
-	}
+	ctx context.Context, fd *os.File) error {
 
-	_, err = utils.Copy(ctx, tempfile_fd, reader)
-	if err != nil {
-		return err
-	}
-	defer tempfile_fd.Close()
-
-	defer os.Remove(tempfile_fd.Name())
-
-	stat, err := os.Lstat(tempfile_fd.Name())
+	stat, err := os.Lstat(fd.Name())
 	if err == nil && stat.Mode().IsDir() {
 		return nil
 	}
 
-	z, err := zip.NewReader(tempfile_fd, stat.Size())
+	z, err := zip.NewReader(fd, stat.Size())
 	if err != nil {
 		return err
 	}
 
+	buffer := make([]byte, 10*1024*1024)
+
 	for _, member := range z.File {
+		if utils.IsCtxDone(ctx) {
+			return utils.CancelledError
+		}
+
 		if member.FileInfo().IsDir() {
 			continue
 		}
@@ -121,7 +120,7 @@ func (self *ToolchainDesc) extractZip(
 			return err
 		}
 
-		_, err = utils.Copy(ctx, out_fd, in_fd)
+		_, err = utils.CopyWithBuffer(ctx, out_fd, in_fd, buffer)
 		if err != nil {
 			in_fd.Close()
 			out_fd.Close()
@@ -133,14 +132,21 @@ func (self *ToolchainDesc) extractZip(
 	return nil
 }
 
-func (self *ToolchainDesc) extractXZ(reader io.Reader) error {
-	gzr, err := xz.NewReader(reader)
+func (self *ToolchainDesc) extractXZ(
+	ctx context.Context, fd *os.File) error {
+	gzr, err := xz.NewReader(bufio.NewReader(fd))
 	if err != nil {
 		return err
 	}
 
+	buffer := make([]byte, 10*1024*1024)
+
 	tr := tar.NewReader(gzr)
 	for {
+		if utils.IsCtxDone(ctx) {
+			return utils.CancelledError
+		}
+
 		header, err := tr.Next()
 
 		switch {
@@ -184,12 +190,13 @@ func (self *ToolchainDesc) extractXZ(reader io.Reader) error {
 			if self.verbose {
 				fmt.Printf("Creating %v (%v bytes)\n", target, header.Size)
 			}
+
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
 				return err
 			}
 
-			_, err = io.Copy(f, tr)
+			_, err = utils.CopyWithBuffer(ctx, f, tr, buffer)
 			if err != nil {
 				return err
 			}
@@ -218,54 +225,92 @@ func (self *ToolchainDesc) GCC(target string) (string, error) {
 	return fullpath, err
 }
 
+func fetchFile(
+	ctx context.Context, url, output string) error {
+	// Download the package locally
+	out_fd, err := os.OpenFile(output,
+		os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0700)
+	if err != nil {
+		return err
+	}
+	defer out_fd.Close()
+
+	req, err := http.NewRequestWithContext(
+		ctx, "GET", url, nil)
+	if err != nil {
+		return err
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = utils.Copy(ctx, out_fd, resp.Body)
+	return err
+}
+
 func InstallToolChain(
 	ctx context.Context,
-	dst string, verbose bool) (*ToolchainDesc, error) {
+	options ToolChainOptions) (*ToolchainDesc, error) {
 
-	desc := NewToolchainDesc(dst, verbose)
+	if options.BaseDir == "" || options.PackageCacheDir == "" {
+		return nil, fmt.Errorf(
+			"Both BaseDir and PackageCacheDir must be provided")
+	}
 
-	stat, err := os.Lstat(dst)
+	desc := NewToolchainDesc(
+		options.BaseDir, options.Verbose)
+
+	stat, err := os.Lstat(options.BaseDir)
 	// If the directory already exists, we assume the toolchain is
 	// already downloaded.
 	if err == nil && stat.Mode().IsDir() {
 		return desc, nil
 	}
 
-	var reader io.Reader
-	filename := filepath.Join(dst, "../packages",
-		filepath.Base(desc.Download))
-	_, err = os.Lstat(filename)
+	package_filename := filepath.Join(
+		options.PackageCacheDir, filepath.Base(desc.Download))
+
+	_, err = os.Lstat(package_filename)
 	if err == nil {
-		fd, err := os.Open(filename)
-		if err != nil {
-			return nil, err
-		}
-		defer fd.Close()
-		reader = fd
-		fmt.Printf("Got a local package %v\n", filename)
+		fmt.Printf("Reusing cached package %v\n", package_filename)
 
 	} else {
-		req, err := http.NewRequestWithContext(
-			ctx, "GET", desc.Download, nil)
-		if err != nil {
+		if os.IsNotExist(err) {
+			fmt.Printf("Downloading package %v into %v\n",
+				desc.Download, package_filename)
+
+			err := fetchFile(ctx, desc.Download, package_filename)
+			if err != nil {
+				return nil, err
+			}
+		} else {
 			return nil, err
 		}
-
-		resp, err := http.DefaultClient.Do(req)
-		if err != nil {
-			return nil, err
-		}
-		reader = resp.Body
-		defer resp.Body.Close()
 	}
 
-	if strings.HasSuffix(filename, ".xz") {
-		return desc, desc.extractXZ(reader)
+	fd, err := os.Open(package_filename)
+	if err != nil {
+		return nil, err
+	}
+	defer fd.Close()
+
+	if strings.HasSuffix(package_filename, ".xz") {
+		fmt.Printf("Unpacking %v to %v\n", package_filename,
+			options.BaseDir)
+		defer fmt.Printf("Done!\n")
+		return desc, desc.extractXZ(ctx, fd)
 	}
 
-	if strings.HasSuffix(filename, ".zip") {
-		return desc, desc.extractZip(ctx, reader)
+	if strings.HasSuffix(package_filename, ".zip") {
+		fmt.Printf("Unpacking %v to %v\n", package_filename,
+			options.BaseDir)
+		defer fmt.Printf("Done!\n")
+		return desc, desc.extractZip(ctx, fd)
 	}
 
-	return nil, fmt.Errorf("Unknown compression for %v", filename)
+	return nil, fmt.Errorf("Unknown compression for %v",
+		package_filename)
 }

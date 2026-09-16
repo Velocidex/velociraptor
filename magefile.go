@@ -48,6 +48,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 )
 
+// Run with DEBUG=1 environment variable to see more debug messages.
+
 var (
 	assets = []string{
 		"artifacts/b0x.yaml",
@@ -67,6 +69,10 @@ var (
 	// 20mb without warning. This little documented tag is used to
 	// remove useless bloat.
 	base_tags = " server_vql extras disable_grpc_modules "
+
+	// Where we store the toolchains and package caches
+	toolchain_dir     = "./build/toolchain"
+	package_cache_dir = "./build/packages"
 )
 
 func ReadAllWithLimit(
@@ -208,7 +214,7 @@ func AutoDev() error {
 
 // Build all the release versions. Darwin we build separately on a
 // Mac.
-func Release() error {
+func Release(ctx context.Context) error {
 	err := Clean()
 	if err != nil {
 		return err
@@ -236,12 +242,12 @@ func Release() error {
 			return err
 		}
 
-		err = Windows()
+		err = Windows(ctx)
 		if err != nil {
 			return err
 		}
 
-		return Windowsx86()
+		return Windowsx86(ctx)
 
 	}
 
@@ -250,7 +256,7 @@ func Release() error {
 		return Darwin()
 	}
 
-	return Windows()
+	return Windows(ctx)
 }
 
 func Linux() error {
@@ -395,8 +401,8 @@ func LinuxMips() error {
 
 // Builds a Development binary. This does not embed things like GUI
 // resources to allow them to be loaded from the local directory.
-func Dev() error {
-	cc, err := getToolchainCC("windows/amd64")
+func Dev(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
@@ -411,8 +417,8 @@ func Dev() error {
 // Cross compile the windows binary using mingw. Note that this does
 // not run the race detector because the ubuntu distribution of mingw
 // does not include tsan.
-func Windows() error {
-	cc, err := getToolchainCC("windows/amd64")
+func Windows(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
@@ -424,8 +430,8 @@ func Windows() error {
 		arch:       "amd64"}.Run()
 }
 
-func WindowsSumo() error {
-	cc, err := getToolchainCC("windows/amd64")
+func WindowsSumo(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
@@ -439,8 +445,8 @@ func WindowsSumo() error {
 }
 
 // Windows client without a gui.
-func WindowsBare() error {
-	cc, err := getToolchainCC("windows/amd64")
+func WindowsBare(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
@@ -453,8 +459,8 @@ func WindowsBare() error {
 		arch:        "amd64"}.Run()
 }
 
-func WindowsDev() error {
-	cc, err := getToolchainCC("windows/amd64")
+func WindowsDev(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
@@ -467,8 +473,8 @@ func WindowsDev() error {
 		arch:       "amd64"}.Run()
 }
 
-func WindowsTest() error {
-	cc, err := getToolchainCC("windows/amd64")
+func WindowsTest(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
@@ -482,8 +488,8 @@ func WindowsTest() error {
 		extra_flags: []string{"-race"}}.Run()
 }
 
-func Windowsx86() error {
-	cc, err := getToolchainCC("windows/386")
+func Windowsx86(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/386")
 	if err != nil {
 		return err
 	}
@@ -495,8 +501,8 @@ func Windowsx86() error {
 		arch:       "386"}.Run()
 }
 
-func WindowsArm() error {
-	cc, err := getToolchainCC("windows/aarch64")
+func WindowsArm(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/aarch64")
 	if err != nil {
 		return err
 	}
@@ -553,6 +559,16 @@ func Clean() error {
 	}
 
 	return nil
+}
+
+func CleanToolchains() error {
+	toolchain_dir_abs, err := filepath.Abs(toolchain_dir)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Removing toolchain directory %v\n",
+		toolchain_dir_abs)
+	return sh.Rm(toolchain_dir_abs)
 }
 
 // Only build the assets without building the actual code.
@@ -980,14 +996,34 @@ func Container() error {
 	return sh.Run("docker", "push", image)
 }
 
-func getToolchainCC(target string) (string, error) {
-	abs_path, err := filepath.Abs("./build/toolchain")
+func getToolchainCC(
+	ctx context.Context, target string) (string, error) {
+	toolchain_dir_abs, err := filepath.Abs(toolchain_dir)
 	if err != nil {
 		return "", err
 	}
 
-	desc, err := build.InstallToolChain(
-		context.Background(), abs_path, false)
+	package_cache_dir_abs, err := filepath.Abs(package_cache_dir)
+	if err != nil {
+		return "", err
+	}
+
+	debug := false
+
+	debug_str, pres := os.LookupEnv("DEBUG")
+	if pres {
+		debug_int, err := strconv.Atoi(debug_str)
+		if err == nil && debug_int > 0 {
+			debug = true
+		}
+	}
+
+	desc, err := build.InstallToolChain(ctx,
+		build.ToolChainOptions{
+			BaseDir:         toolchain_dir_abs,
+			PackageCacheDir: package_cache_dir_abs,
+			Verbose:         debug,
+		})
 	if err != nil {
 		return "", err
 	}

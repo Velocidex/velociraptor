@@ -89,6 +89,9 @@ windowsarm:
 clean:
 	go run make.go -v clean
 
+clean_toolchain:
+	go run make.go -v cleantoolchains
+
 generate:
 	go generate ./vql/windows/
 	go generate ./api/mock/
