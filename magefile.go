@@ -477,7 +477,7 @@ func WindowsDev(ctx context.Context) error {
 // c compiler to build - this does not need to download the toolchain
 // because it is already present on the CI Windows machines.
 func WindowsTest(ctx context.Context) (err error) {
-	cc, err = getToolchainCC(ctx, "windows/amd64")
+	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
 		return err
 	}
