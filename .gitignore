@@ -29,3 +29,4 @@ __debug*
 debug.test*
 artifacts/testdata/server/hunts/H.*
 artifacts/testdata/server/users/
+build/packages/
