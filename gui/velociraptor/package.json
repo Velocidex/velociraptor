@@ -15,7 +15,7 @@
         "axios-retry": "3.9.1",
         "bootstrap": "5.3.8",
         "classnames": "^2.5.1",
-        "csv-parse": "4.16.3",
+        "csv-parse": "7.0.2",
         "csv-stringify": "5.6.5",
         "dompurify": "3.4.13",
         "env-cmd": "^10.1.0",

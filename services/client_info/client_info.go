@@ -132,6 +132,11 @@ func (self *ClientInfoManager) UpdateStats(
 		func(record *services.ClientInfo) (*services.ClientInfo, error) {
 			var changed bool
 
+			// If there is no record, then create one.
+			if record == nil {
+				return nil, fmt.Errorf("Client %v: %w", client_id, utils.NotFoundError)
+			}
+
 			if stats.Ping > 0 && stats.Ping > record.Ping {
 				self.mutation_manager.AddPing(client_id, stats.Ping)
 				record.Ping = stats.Ping
@@ -474,6 +479,9 @@ func (self *ClientInfoManager) ProcessPing(
 			}
 			err := self.storage.Modify(ctx, self.config_obj, client_id,
 				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, fmt.Errorf("Client %v: %w", client_id, utils.NotFoundError)
+					}
 					client_info.Ping = uint64(value)
 					return client_info, nil
 				})
@@ -492,6 +500,9 @@ func (self *ClientInfoManager) ProcessPing(
 			}
 			err := self.storage.Modify(ctx, self.config_obj, client_id,
 				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, utils.NotFoundError
+					}
 					client_info.IpAddress = value
 					return client_info, nil
 				})
@@ -511,6 +522,10 @@ func (self *ClientInfoManager) ProcessPing(
 
 			err := self.storage.Modify(ctx, self.config_obj, client_id,
 				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, utils.NotFoundError
+					}
+
 					client_info.LastHuntTimestamp = uint64(value)
 					return client_info, nil
 				})
@@ -530,6 +545,10 @@ func (self *ClientInfoManager) ProcessPing(
 
 			err := self.storage.Modify(ctx, self.config_obj, client_id,
 				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, utils.NotFoundError
+					}
+
 					client_info.LastEventTableVersion = uint64(value)
 					return client_info, nil
 				})

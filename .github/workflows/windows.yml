@@ -54,8 +54,6 @@ jobs:
 
     - name: Build
       if: success()
-      env:
-        CC: x86_64-w64-mingw32-gcc
       shell: bash
       run: |
         go run make.go -v BasicAssets

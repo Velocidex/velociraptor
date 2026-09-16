@@ -1,5 +1,7 @@
-//go:build windows && cgo
-// +build windows,cgo
+//go:build windows && cgo && (amd64 || arm64)
+// +build windows
+// +build cgo
+// +build amd64 arm64
 
 /*
    Velociraptor - Dig Deeper
