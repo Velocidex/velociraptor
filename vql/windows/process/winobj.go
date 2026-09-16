@@ -1,5 +1,6 @@
-//go:build windows && amd64
-// +build windows,amd64
+//go:build windows && (amd64 || arm64)
+// +build windows
+// +build amd64 arm64
 
 // References
 // http://blogs.microsoft.co.il/pavely/2014/02/05/creating-a-winobj-like-tool/

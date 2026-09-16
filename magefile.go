@@ -504,7 +504,7 @@ func Windowsx86(ctx context.Context) error {
 		arch:       "386"}.Run()
 }
 
-func WindowsArm(ctx context.Context) error {
+func WindowsArm64(ctx context.Context) error {
 	cc, err := getToolchainCC(ctx, "windows/aarch64")
 	if err != nil {
 		return err
@@ -513,6 +513,20 @@ func WindowsArm(ctx context.Context) error {
 	return Builder{
 		extra_tags: " release yara ",
 		cc:         cc,
+		goos:       "windows",
+		arch:       "arm64"}.Run()
+}
+
+func WindowsArm64Sumo(ctx context.Context) error {
+	cc, err := getToolchainCC(ctx, "windows/aarch64")
+	if err != nil {
+		return err
+	}
+
+	return Builder{
+		extra_tags: " release yara ",
+		cc:         cc,
+		sumo:       true,
 		goos:       "windows",
 		arch:       "arm64"}.Run()
 }
