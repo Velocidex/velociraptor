@@ -14,7 +14,7 @@ Output: [
    "Level": 4,
    "Task": 104,
    "Opcode": 0,
-   "Keywords": 4620693217682128896,
+   "Keywords": "0x4020000000000000",
    "TimeCreated": {
     "SystemTime": 1549731924.6727583
    },
@@ -33,10 +33,10 @@ Output: [
     "SubjectUserSid": "S-1-5-21-546003962-2713609280-610790815-1001",
     "SubjectUserName": "test",
     "SubjectDomainName": "TESTCOMPUTER",
-    "SubjectLogonId": 135562
+    "SubjectLogonId": "0x2118a"
    }
   },
-  "Message": "The audit log was cleared.\nSubject:\n\tSecurity ID:\tS-1-5-21-546003962-2713609280-610790815-1001\n\tAccount Name:\ttest\n\tDomain Name:\tTESTCOMPUTER\n\tLogon ID:\t135562\r\n"
+  "Message": "The audit log was cleared.\nSubject:\n\tSecurity ID:\tS-1-5-21-546003962-2713609280-610790815-1001\n\tAccount Name:\ttest\n\tDomain Name:\tTESTCOMPUTER\n\tLogon ID:\t0x2118a\r\n"
  }
 ]
 
@@ -51,7 +51,7 @@ Output: [
     "SubjectUserSid": "S-1-5-21-546003962-2713609280-610790815-1001",
     "SubjectUserName": "test",
     "SubjectDomainName": "TESTCOMPUTER",
-    "SubjectLogonId": 135562
+    "SubjectLogonId": "0x2118a"
    }
   }
  }
@@ -164,7 +164,7 @@ Output: [
    "SubjectUserSid": "S-1-5-21-128822557-2730879828-3162054034-1000",
    "SubjectUserName": "yolo",
    "SubjectDomainName": "RE-DEV",
-   "SubjectLogonId": 200302,
+   "SubjectLogonId": "0x30e6e",
    "TaskName": "\\T1053_005_powershell",
    "TaskContent": {
     "Actions": {
@@ -237,7 +237,7 @@ Output: [
    "SubjectUserSid": "S-1-5-21-128822557-2730879828-3162054034-1000",
    "SubjectUserName": "yolo",
    "SubjectDomainName": "RE-DEV",
-   "SubjectLogonId": 200302,
+   "SubjectLogonId": "0x30e6e",
    "TaskName": "\\T1053_005_powershell",
    "TaskContent": "",
    "ClientProcessStartKey": 5348024557502636,
