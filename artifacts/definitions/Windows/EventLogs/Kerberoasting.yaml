@@ -4,7 +4,7 @@ author: Matt Green - @mgreen27
 description: |
   Detects Kerberoasting attempts by extracting Kerberos TGS requests
   (EID 4769) with RC4 encryption from the Security log.
-  
+
   This Artifact will return all successful Kerberos TGS Ticket events
   for Service Accounts (SPN attribute) implemented with weak
   encryption. These tickets are vulnerable to brute force attack and
@@ -17,7 +17,7 @@ description: |
   often have elevated privileges. Kerberoasting can be used for
   privilege escalation or persistence by adding a SPN attribute to an
   unexpected account.
-  
+
   Log Source: Windows Security Event Log (Domain Controllers).
   Event ID: 4769
   Status: 0x0 (Audit Success)
@@ -67,10 +67,10 @@ sources:
                     EventData.ServiceName as ServiceName,
                     EventData.ServiceSid as ServiceSid,
                     EventData.TargetUserName as TargetUserName,
-                    format(format="0x%x", args=EventData.Status) as Status,
+                    EventData.Status as Status,
                     EventData.TargetDomainName as TargetDomainName,
-                    format(format="0x%x", args=EventData.TicketEncryptionType) as TicketEncryptionType,
-                    format(format="0x%x", args=EventData.TicketOptions) as TicketOptions,
+                    EventData.TicketEncryptionType as TicketEncryptionType,
+                    EventData.TicketOptions as TicketOptions,
                     EventData.TransmittedServices as TransmittedServices,
                     EventData.IpAddress as IpAddress,
                     EventData.IpPort as IpPort,

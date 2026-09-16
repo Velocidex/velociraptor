@@ -1141,8 +1141,8 @@ software.sslmate.com/src/go-pkcs12 v0.2.0 h1:nlFkj7bTysH6VkC4fGphtjXRbezREPgrHuJ
 software.sslmate.com/src/go-pkcs12 v0.2.0/go.mod h1:23rNcYsMabIc1otwLpTkCCPwUq6kQsTyowttG/as0kQ=
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e h1:uf1AsYiIzUMJMIdFsVdrIw/BjrGzZbrsnz9xmeZmlYU=
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e/go.mod h1:jk+uZGukrJZWgnNH6q9tJLUnbugHEDPCQdIOmBBMXY4=
-www.velocidex.com/golang/evtx v0.2.1-0.20260908102352-dad8dd3da0da h1:zMBwtS6c2xicZnldL9t/JyIjYc5sYcN2bk2EvYjwhlg=
-www.velocidex.com/golang/evtx v0.2.1-0.20260908102352-dad8dd3da0da/go.mod h1:AEH50xeMcAUGiCXLAueUOq800jFgFyqngyPt88fDzow=
+www.velocidex.com/golang/evtx v0.2.1-0.20260916104054-0ef2ce4e83a8 h1:Me1/9DB8ZMH6+ZNFWPlfn3JEFgZNH59Cfk83wcQ2PEk=
+www.velocidex.com/golang/evtx v0.2.1-0.20260916104054-0ef2ce4e83a8/go.mod h1:AEH50xeMcAUGiCXLAueUOq800jFgFyqngyPt88fDzow=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57 h1:CRdOpwPmVFzjfSrJXLj+xHOMyKfK4+WlJTf9IDMdXtk=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57/go.mod h1:H1Gw62XkspXEtZPT2ep+L57GgdKIDHwueazxKnn5EXc=
 www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5 h1:GDqKvZ2fdZVHQRSMczl41u2DPJEgbYdK6aaVkCBB8Jc=
