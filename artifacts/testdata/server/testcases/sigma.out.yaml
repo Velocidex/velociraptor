@@ -13,7 +13,7 @@ Output: [
    "Level": 4,
    "Task": 1,
    "Opcode": 0,
-   "Keywords": 9223372036854775808,
+   "Keywords": "0x8000000000000000",
    "TimeCreated": {
     "SystemTime": 1590282834.1201713
    },
@@ -44,7 +44,7 @@ Output: [
    "CurrentDirectory": "C:\\Windows\\system32\\",
    "User": "NT AUTHORITY\\SYSTEM",
    "LogonGuid": "747F3D96-BDD1-5EC9-0000-0020E7030000",
-   "LogonId": 999,
+   "LogonId": "0x3e7",
    "TerminalSessionId": 1,
    "IntegrityLevel": "System",
    "Hashes": "SHA1=47D7864D26FC67E0D60391CBF170D33DA518C322,MD5=43C2D3293AD939241DF61B3630A9D3B6,SHA256=1D5491E3C468EE4B4EF6EDFF4BBC7D06EE83180F6F0B1576763EA2EFE049493A,IMPHASH=7FF0758B766F747CE57DFAC70743FB88",

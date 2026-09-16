@@ -1,3 +1,6 @@
+//go:build config_check
+// +build config_check
+
 package main
 
 import (
@@ -9,8 +12,8 @@ import (
 	"unicode"
 
 	"github.com/Velocidex/yaml/v2"
+	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/davecgh/go-spew/spew"
-	kingpin "gopkg.in/alecthomas/kingpin.v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"

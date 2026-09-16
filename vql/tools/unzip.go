@@ -175,19 +175,21 @@ func (self *UnzipPlugin) unpackZip(
 		if err != nil {
 			return err
 		}
-		defer out_fd.Close()
 
 		in_fd, err := member.Open()
 		if err != nil {
+			out_fd.Close()
 			return err
 		}
 
 		n, err := utils.Copy(ctx, out_fd, in_fd)
 		if err != nil {
 			in_fd.Close()
+			out_fd.Close()
 			return err
 		}
 		in_fd.Close()
+		out_fd.Close()
 
 		output := &UnzipResponse{
 			OriginalPath: member.Name,
