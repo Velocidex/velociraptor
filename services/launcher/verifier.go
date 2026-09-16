@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
@@ -195,7 +196,7 @@ func (self *ApiDescription) init() error {
 		self.functions = make(map[string]CallDescriptor)
 		self.plugins = make(map[string]CallDescriptor)
 
-		apis, err := utils.LoadApiDescription()
+		apis, err := assets.LoadApiDescription()
 		if err != nil {
 			return err
 		}

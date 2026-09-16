@@ -1,4 +1,6 @@
 // +build windows
+// +build cgo
+// +build amd64 arm64
 
 // References:
 // https://www.codeproject.com/Articles/10539/Making-WMI-Queries-In-C
@@ -323,6 +325,6 @@ void Error(void *go_ctx, char *function, HRESULT hres) {
     // store the HRESULT - users can lookup the MSDN to figure out
     // what it means.
     char buf[512];
-    snprintf(buf, 512, "%s: Error code %#lx", function, (uint32_t)hres);
+    snprintf(buf, 512, "%s: Error code %#x", function, (uint32_t)hres);
     log_error(go_ctx, buf);
 }

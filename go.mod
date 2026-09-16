@@ -7,9 +7,9 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Showmax/go-fqdn v1.0.0
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
-	github.com/Velocidex/etw v0.0.0-20251027041548-6d97883fd588
-	github.com/Velocidex/go-magic v0.0.0-20260623224109-5dd5a41c69ac
-	github.com/Velocidex/go-yara v1.1.10-0.20260806050527-f3bfad52e4eb
+	github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799
+	github.com/Velocidex/go-magic v0.0.0-20260915105357-ee314c304181
+	github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
@@ -67,22 +67,21 @@ require (
 	github.com/xor-gate/ar v0.0.0-20170530204233-5c72ae81e2b7
 	github.com/xor-gate/debpkg v1.0.0
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
-	golang.org/x/crypto v0.54.0
-	golang.org/x/mod v0.38.0
-	golang.org/x/net v0.57.0
-	golang.org/x/sys v0.47.0
-	golang.org/x/text v0.41.0
+	golang.org/x/crypto v0.55.0
+	golang.org/x/mod v0.41.0
+	golang.org/x/net v0.58.0
+	golang.org/x/sys v0.48.0
+	golang.org/x/text v0.42.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.264.0
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
-	google.golang.org/grpc v1.83.1
+	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.11
-	gopkg.in/alecthomas/kingpin.v2 v2.2.6
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	howett.net/plist v1.0.0
-	www.velocidex.com/golang/evtx v0.2.1-0.20260612024815-7947209eb310
+	www.velocidex.com/golang/evtx v0.2.1-0.20260916104054-0ef2ce4e83a8
 	www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5
 	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9
@@ -156,6 +155,7 @@ require (
 	github.com/rogpeppe/go-internal v1.14.1
 	github.com/shirou/gopsutil/v4 v4.25.1
 	github.com/syndtr/goleveldb v1.0.0
+	github.com/ulikunitz/xz v0.5.15
 	github.com/valyala/fastjson v1.6.4
 	github.com/vincent-petithory/dataurl v1.0.0
 	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459
@@ -194,7 +194,6 @@ require (
 	github.com/RoaringBitmap/roaring/v2 v2.14.5 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/participle v0.7.1 // indirect
-	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/atotto/clipboard v0.1.4 // indirect
@@ -245,7 +244,7 @@ require (
 	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/exp/strings v0.0.0-20241209212528-0eec74ecaa6f // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
-	github.com/cilium/ebpf v0.20.1-0.20251215101449-df5c3096bd8c // indirect
+	github.com/cilium/ebpf v0.22.0 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
@@ -339,7 +338,6 @@ require (
 	github.com/tinylib/msgp v1.6.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
-	github.com/ulikunitz/xz v0.5.15 // indirect
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
@@ -361,7 +359,7 @@ require (
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/arch v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
-	golang.org/x/sync v0.22.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
 	golang.org/x/term v0.45.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260724162435-b2f20204f0df // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect
@@ -383,7 +381,7 @@ require (
 // replace github.com/Velocidex/yaml/v2 => ../yaml
 // replace www.velocidex.com/golang/go-prefetch => ../go-prefetch
 // replace github.com/Velocidex/go-magic => ../go-magic
-// replace github.com/Velocidex/go-yara => ../go-yara-velocidex
+// replace github.com/Velocidex/go-yara => ../go-yara
 // replace github.com/Velocidex/json => ../json
 // replace github.com/russross/blackfriday/v2 => ../blackfriday
 // replace www.velocidex.com/golang/vtypes => ../vtypes

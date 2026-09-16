@@ -45,6 +45,10 @@ linux_sumo:
 windows_sumo:
 	go run make.go -v WindowsSumo
 
+# A build with the race detector enabled.
+windows_test:
+	go run make.go -v WindowsTest
+
 linux_arm64:
 	go run make.go -v LinuxArm64
 
@@ -85,6 +89,9 @@ windowsarm:
 clean:
 	go run make.go -v clean
 
+clean_toolchain:
+	go run make.go -v cleantoolchains
+
 generate:
 	go generate ./vql/windows/
 	go generate ./api/mock/
@@ -122,7 +129,7 @@ translations:
 	python3 ./scripts/find_i8n_translations.py ./gui/velociraptor/src/components/i8n/
 
 config_check:
-	go run ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
+	go run -tags config_check ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
 
 deadcode:
 	go run make.go -v deadcode
