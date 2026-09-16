@@ -9,7 +9,7 @@ import (
 
 // The EVTX parser emits a HexInt type for integers to allow them to
 // be encoded as hex strings. But they may still need to be
-// compareable with an integer.
+// comparable with an integer.
 type _HexIntEq struct{}
 
 func (self _HexIntEq) Eq(scope types.Scope, a types.Any, b types.Any) bool {
