@@ -29,10 +29,6 @@ jobs:
 
     - run: go version
 
-    - name: Get dependencies
-      run: |
-        go get -v -t -d ./...
-
     - name: Use Node.js
       uses: actions/setup-node@48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e
 
@@ -53,7 +49,7 @@ jobs:
         go run make.go -v DarwinBase
         go run make.go -v Windows
         go run make.go -v WindowsSumo
-        go run make.go -v Windowsx86
+        go run make.go -v WindowsArm
 
     - name: StoreBinaries
       uses: actions/upload-artifact@4cec3d8aa04e39d1a68397de0c4cd6fb9dce8ec1
