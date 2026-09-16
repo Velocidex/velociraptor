@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -56,7 +57,7 @@ func loadApiDescriptions() []*api_proto.Completion {
 	}
 
 	func_lookup = make(map[string]*api_proto.Completion)
-	descriptions, err := utils.LoadApiDescription()
+	descriptions, err := assets.LoadApiDescription()
 	if err != nil || len(descriptions) == 0 {
 		// The embedded reference document is compiled into every
 		// build so this should never happen - but if it does we
