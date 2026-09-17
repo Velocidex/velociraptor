@@ -147,7 +147,8 @@ func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.Note
 	// Try to get it from cache if possible.
 	res, pres := self.global_notebooks[notebook_id]
 	if pres {
-		return res, nil
+		// Return a copy of the notebook so it can not be modified.
+		return proto.Clone(res).(*api_proto.NotebookMetadata), nil
 	}
 
 	db, err := datastore.GetDB(self.config_obj)
