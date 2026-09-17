@@ -130,10 +130,27 @@ func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.Noteb
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self._GetNotebook(notebook_id)
+	res, err := self._GetNotebook(notebook_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// This could be a legacy notebook we need to update.
+	if res.Version == 0 {
+		res.Version = self._GetNextVersion()
+		_ = self._SetNotebook(res)
+	}
+	return res, nil
 }
 
 func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error) {
+	// Try to get it from cache if possible.
+	res, pres := self.global_notebooks[notebook_id]
+	if pres {
+		// Return a copy of the notebook so it can not be modified.
+		return proto.Clone(res).(*api_proto.NotebookMetadata), nil
+	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -159,6 +176,12 @@ func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.Note
 	for _, v := range cell_metadata.Values() {
 		notebook.CellMetadata = append(notebook.CellMetadata,
 			v.(*api_proto.NotebookCell))
+	}
+
+	// This might be a legacy notebook without a version, make sure to
+	// touch it.
+	if notebook.Version == 0 {
+		//notebook.Version = self.GetNextVersion()
 	}
 
 	return notebook, err

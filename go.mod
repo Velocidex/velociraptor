@@ -135,7 +135,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/glaslos/tlsh v0.2.0
 	github.com/go-errors/errors v1.4.2
-	github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68
+	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/gorilla/websocket v1.5.3
 	github.com/hanwen/go-fuse/v2 v2.5.1
@@ -160,7 +160,7 @@ require (
 	github.com/vincent-petithory/dataurl v1.0.0
 	github.com/virtuald/go-paniclog v0.0.0-20190812204905-43a7fa316459
 	go.lsp.dev/jsonrpc2 v1.0.1
-	go.lsp.dev/protocol v1.0.1
+	go.lsp.dev/protocol v1.0.2-0.20260831102204-fd045959937f
 	go.lsp.dev/uri v1.0.1
 	golang.org/x/oauth2 v0.36.0
 	google.golang.org/genproto/googleapis/api v0.0.0-20260526163538-3dc84a4a5aaa

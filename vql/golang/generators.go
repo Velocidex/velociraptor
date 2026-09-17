@@ -8,6 +8,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -136,6 +137,8 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		cancel()
 	}
 
+	principal := utils.GetSuperuserName(config_obj)
+
 	go func() {
 		defer close(generator_chan)
 
@@ -157,7 +160,10 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 			select {
 			case <-sub_ctx.Done():
 				return
-			case generator_chan <- materialized:
+
+				// Tag the row with the source that generated it.
+			case generator_chan <- materialized.
+				Set("_Source", principal):
 			}
 		}
 	}()
