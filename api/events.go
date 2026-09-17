@@ -43,6 +43,7 @@ func (self *ApiServer) PushEvents(
 	user_name := user_record.Name
 
 	// Now check permissions in the org if the user is not the superuser.
+	// For superuser users, we trust the username they relayed.
 	if user_name != utils.GetSuperuserName(org_config_obj) {
 		token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 		if err != nil {

@@ -57,7 +57,7 @@ const (
 )
 
 var (
-	Factory APIClientFactory = &DummyGRPCAPIClient{}
+	Factory APIClientFactory = NewDirectConnectionClient()
 
 	grpcCallCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "grpc_client_calls",
@@ -372,7 +372,7 @@ func (self *gRPCPool) EnsureInit(
 	}
 
 	self.pool, err = grpcpool.NewWithContext(ctx,
-		factory, 1, max_size,
+		factory, max_size, max_size,
 		time.Duration(max_wait)*time.Second,
 		time.Duration(max_wait)*time.Second)
 	if err != nil {
