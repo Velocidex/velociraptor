@@ -68,7 +68,7 @@ var (
 	// google cloud suddenly increased its dependency size by about
 	// 20mb without warning. This little documented tag is used to
 	// remove useless bloat.
-	base_tags = " server_vql extras disable_grpc_modules "
+	base_tags = " server_vql extras disable_grpc_modules goexperiment.nojsonv2 "
 
 	// Where we store the toolchains and package caches
 	toolchain_dir     = "./build/toolchain"
@@ -430,6 +430,7 @@ func Windows(ctx context.Context) error {
 		arch:       "amd64"}.Run()
 }
 
+// An AMD64 Windows binary with all optional plugins enabled.
 func WindowsSumo(ctx context.Context) error {
 	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
@@ -459,6 +460,8 @@ func WindowsBare(ctx context.Context) error {
 		arch:        "amd64"}.Run()
 }
 
+// A target that builds a regular windows binary and places it in
+// output/velociraptor.exe
 func WindowsDev(ctx context.Context) error {
 	cc, err := getToolchainCC(ctx, "windows/amd64")
 	if err != nil {
@@ -491,6 +494,7 @@ func WindowsTest(ctx context.Context) (err error) {
 		extra_flags: []string{"-race"}}.Run()
 }
 
+// A 32 bit windows binary.
 func Windowsx86(ctx context.Context) error {
 	cc, err := getToolchainCC(ctx, "windows/386")
 	if err != nil {
@@ -504,6 +508,7 @@ func Windowsx86(ctx context.Context) error {
 		arch:       "386"}.Run()
 }
 
+// A Windows binary for Windows on Arm64 (e.g. Snapdragon)
 func WindowsArm64(ctx context.Context) error {
 	cc, err := getToolchainCC(ctx, "windows/aarch64")
 	if err != nil {
@@ -517,6 +522,8 @@ func WindowsArm64(ctx context.Context) error {
 		arch:       "arm64"}.Run()
 }
 
+// A Windows binary for Windows on Arm64 (e.g. Snapdragon) includes
+// all optional plugins
 func WindowsArm64Sumo(ctx context.Context) error {
 	cc, err := getToolchainCC(ctx, "windows/aarch64")
 	if err != nil {
@@ -566,6 +573,7 @@ func DarwinBase() error {
 		arch:        "amd64"}.Run()
 }
 
+// Clean all build artifacts (e.g. assets, GUI etc)
 func Clean() error {
 	for _, target := range assets {
 		go_target := filepath.Join(filepath.Dir(target), "ab0x.go")
@@ -578,6 +586,7 @@ func Clean() error {
 	return nil
 }
 
+// Clean downloaded cross compiler toolchains.
 func CleanToolchains() error {
 	toolchain_dir_abs, err := filepath.Abs(toolchain_dir)
 	if err != nil {
