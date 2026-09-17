@@ -169,21 +169,29 @@ func (self *MemoryFileStore) WriteFileWithCompletion(
 func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error) {
 	defer api.InstrumentWithDelay("stat", "MemoryFileStore", nil)()
 
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
 	filename := pathSpecToPath(self.db, self.config_obj, path)
 	self.Trace("StatFile", filename)
+
+	res := &vtesting.MockFileInfo{
+		Name_:     path.Base(),
+		FullPath_: filename,
+	}
+
+	chunk_fd, err := self.ReadFile(
+		path.SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+	if err == nil {
+		chunk_index := api.NewChunkIndex(chunk_fd)
+		res.Size_ = chunk_index.FileSize()
+		return res, nil
+	}
+
 	buff, pres := self.Data.Get(filename)
 	if !pres {
 		return nil, utils.NotFoundError
 	}
 
-	return &vtesting.MockFileInfo{
-		Name_:     path.Base(),
-		FullPath_: filename,
-		Size_:     int64(len(buff.([]byte))),
-	}, nil
+	res.Size_ = int64(len(buff.([]byte)))
+	return res, nil
 }
 
 func (self *MemoryFileStore) Move(src, dest api.FSPathSpec) error {
