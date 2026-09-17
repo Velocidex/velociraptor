@@ -1,5 +1,5 @@
 // Pin csv-parse to v4 - later versions import node built in which are
-// not polifilled on client code.
+// not polyfill on client code.
 import parse from 'csv-parse/lib/browser/sync.js';
 import stringify from 'csv-stringify/lib/browser/sync.js';
 import api from '../core/api-service.jsx';
