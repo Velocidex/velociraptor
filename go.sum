@@ -396,6 +396,8 @@ github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68 h1:KZaTBSyshWX3MP5jukJcNSuXDQTO+rNpt0J564dX/eg=
 github.com/go-json-experiment/json v0.0.0-20260623181947-01eb4420fa68/go.mod h1:tphK2c80bpPhMOI4v6bIc2xWywPfbqi1Z06+RcrMkDg=
+github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3 h1:UADEEmDKgfXbtnGJZ97beY5XLo9ZechG1nlU4KnRrkE=
+github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3/go.mod h1:tphK2c80bpPhMOI4v6bIc2xWywPfbqi1Z06+RcrMkDg=
 github.com/go-logr/logr v1.2.2/go.mod h1:jdQByPbusPIv2/zmleS9BjJVeZ6kBagPoEUsqbVz/1A=
 github.com/go-logr/logr v1.4.3 h1:CjnDlHq8ikf6E492q6eKboGOC0T8CDaOvkHCIg8idEI=
 github.com/go-logr/logr v1.4.3/go.mod h1:9T104GzyrTigFIr8wt5mBrctHMim0Nb2HLGrmQ40KvY=
@@ -861,6 +863,8 @@ go.lsp.dev/jsonrpc2 v1.0.1 h1:JZAchpm6RcOuwEOnZ7kF3kA1EpEjdJZ/6rMSfOF3+F4=
 go.lsp.dev/jsonrpc2 v1.0.1/go.mod h1:WN+TesqrPumBmUdsuWyn9DHq3zl4i85L/qG0NLdj8qg=
 go.lsp.dev/protocol v1.0.1 h1:kLWUIk1v/deXxo1D0VO4avjZnfeuZ82mouJgJd/NbdU=
 go.lsp.dev/protocol v1.0.1/go.mod h1:e//i41aEqc9ml32xiNuneUwbjOjuvTA4+uv+AkssJgk=
+go.lsp.dev/protocol v1.0.2-0.20260831102204-fd045959937f h1:u7pIQKnBO1tlaLmL2/NP1C90FUVa3DTm01DO0J2mTZo=
+go.lsp.dev/protocol v1.0.2-0.20260831102204-fd045959937f/go.mod h1:e//i41aEqc9ml32xiNuneUwbjOjuvTA4+uv+AkssJgk=
 go.lsp.dev/uri v1.0.1 h1:ywxJN1UXoQ+v0I9lkoQNMmsm7lub5G9ZG7KXT8YTx30=
 go.lsp.dev/uri v1.0.1/go.mod h1:06a0ghafs4PuqkLsJGUmlgPHw6+kH79edRXjOT/rA8s=
 go.mongodb.org/mongo-driver v1.11.4/go.mod h1:PTSz5yu21bkT/wXpkS7WR5f0ddqw5quethTUn9WM+2g=

@@ -14,6 +14,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type ClientMetadataFunctionArgs struct {
@@ -22,6 +23,10 @@ type ClientMetadataFunctionArgs struct {
 
 type ClientMetadataFunction struct {
 	name string
+}
+
+func (self *ClientMetadataFunction) Copy() types.FunctionInterface {
+	return self
 }
 
 func (self *ClientMetadataFunction) Call(ctx context.Context,
@@ -90,6 +95,10 @@ type ClientSetMetadataFunctionArgs struct {
 
 type ClientSetMetadataFunction struct {
 	name string
+}
+
+func (self *ClientSetMetadataFunction) Copy() types.FunctionInterface {
+	return self
 }
 
 func (self *ClientSetMetadataFunction) Call(ctx context.Context,
