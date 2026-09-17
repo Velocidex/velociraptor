@@ -194,15 +194,43 @@ func (self *DirectoryFileStore) StatFile(
 
 	defer api.Instrument("stat", "DirectoryFileStore", filename)()
 
+	// First check if the file is compressed.
+	chunk_file_path := datastore.AsFilestoreFilename(
+		self.db, self.config_obj, filename.
+			SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+
+	err := checkPath(chunk_file_path)
+	if err != nil {
+		return nil, err
+	}
+
+	// If there is a chunk file we report the size of the uncompressed
+	// file .
+	chunk_fd, err := os.Open(chunk_file_path)
+	if err == nil {
+		chunk_index := api.NewChunkIndex(&api.FileAdapter{File: chunk_fd})
+		file_stat, err := chunk_fd.Stat()
+		if err != nil {
+			return nil, err
+		}
+
+		res := file_store_file_info.NewFileStoreFileInfo(
+			self.config_obj, filename, file_stat)
+
+		res.SizeOverride_ = chunk_index.FileSize()
+		return res, nil
+	}
+
 	file_path := datastore.AsFilestoreFilename(
 		self.db, self.config_obj, filename)
-	file, err := os.Stat(file_path)
+
+	file_stat, err := os.Stat(file_path)
 	if err != nil {
 		return nil, err
 	}
 
 	return file_store_file_info.NewFileStoreFileInfo(
-		self.config_obj, filename, file), nil
+		self.config_obj, filename, file_stat), nil
 }
 
 func (self *DirectoryFileStore) WriteFile(
