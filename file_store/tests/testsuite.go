@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
@@ -372,6 +373,27 @@ func (self *FileStoreTestSuite) TestFileUpdatePastEndOfFile() {
 	assert.Equal(self.T(),
 		"this is some a long string that should extend the file",
 		string(buff[:n]))
+}
+
+func (self *FileStoreTestSuite) TestCompressedStat() {
+	filename := path_specs.NewSafeFilestorePath("compressed", "file_stat")
+	// Write some data.
+	test_str := []byte(strings.Repeat("Some data", 100))
+	buffer, err := utils.Compress(test_str)
+	assert.NoError(self.T(), err)
+
+	fd, err := self.Filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
+
+	_, err = fd.WriteCompressed(buffer, 0, len(test_str))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	stat, err := self.Filestore.StatFile(filename)
+	assert.NoError(self.T(), err)
+
+	// The size should report the uncompressed size of the data.
+	assert.Equal(self.T(), stat.Size(), int64(len(test_str)))
 }
 
 func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
