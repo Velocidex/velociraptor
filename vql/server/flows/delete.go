@@ -86,11 +86,13 @@ func (self DeleteFlowPlugin) Call(
 
 func (self DeleteFlowPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "delete_flow",
-		Doc:      "Delete all the files that make up a flow.",
-		ArgType:  type_map.AddType(scope, &DeleteFlowPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
-		Version:  2,
+		Name:    "delete_flow",
+		Doc:     "Delete all the files that make up a flow.",
+		ArgType: type_map.AddType(scope, &DeleteFlowPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.DELETE_RESULTS).Build(),
+		Version: 2,
 	}
 }
 

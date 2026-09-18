@@ -110,8 +110,9 @@ func (self CreateNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 		Name:    "notebook_create",
 		Doc:     "Create a new notebook.",
 		ArgType: type_map.AddType(scope, &CreateNotebookFunctionArg{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 

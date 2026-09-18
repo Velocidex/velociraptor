@@ -38,6 +38,7 @@ import (
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -63,6 +64,10 @@ var (
 	query_command_collect_cpu_limit = query.Flag(
 		"cpu_limit", "A number between 0 to 100 representing maximum CPU utilization.").
 		Default("0").Float64()
+
+	query_command_minion_mode = query.Flag(
+		"minion_mode", "Run the query in minion mode: Some functions will delegate to the API but most will run locally").
+		Bool()
 
 	format = query.Flag("format", "Output format to use (text,json,csv,jsonl).").
 		Default("json").Enum("text", "json", "csv", "jsonl")
@@ -200,11 +205,12 @@ func doRemoteQuery(
 
 	for {
 		response, err := stream.Recv()
-		if response == nil && err == io.EOF {
-			break
-		}
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return err
+		}
+
+		if response == nil {
+			break
 		}
 
 		if response.Log != "" {
@@ -212,6 +218,7 @@ func doRemoteQuery(
 			continue
 		}
 
+		// Response can be line at a time, or a chunk of rows.
 		json_response := response.Response
 		if json_response == "" {
 			json_response = response.JSONLResponse
@@ -281,6 +288,14 @@ func doQuery() error {
 		return err
 	}
 	defer sm.Close()
+
+	// Enable minion VQL mode if needed
+	if *query_command_minion_mode {
+		err := frontend.InitializeMinionVQL(config_obj)
+		if err != nil {
+			return err
+		}
+	}
 
 	env := ordereddict.NewDict()
 	for k, v := range *env_map {

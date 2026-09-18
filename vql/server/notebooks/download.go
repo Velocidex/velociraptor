@@ -65,11 +65,13 @@ func (self *CreateNotebookDownload) Call(ctx context.Context,
 
 func (self CreateNotebookDownload) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "create_notebook_download",
-		Doc:      "Creates a notebook export zip file.",
-		ArgType:  type_map.AddType(scope, &CreateNotebookDownloadArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
-		Version:  2,
+		Name:    "create_notebook_download",
+		Doc:     "Creates a notebook export zip file.",
+		ArgType: type_map.AddType(scope, &CreateNotebookDownloadArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.PREPARE_RESULTS).Build(),
+		Version: 2,
 	}
 }
 

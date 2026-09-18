@@ -66,10 +66,12 @@ func (self *AddSecretFunction) Call(ctx context.Context,
 func (self AddSecretFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "secret_add",
-		Doc:      "Add a new secret",
-		ArgType:  type_map.AddType(scope, &AddSecretFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Name:    "secret_add",
+		Doc:     "Add a new secret",
+		ArgType: type_map.AddType(scope, &AddSecretFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

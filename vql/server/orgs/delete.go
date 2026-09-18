@@ -80,11 +80,13 @@ func (self OrgDeleteFunction) Call(
 
 func (self OrgDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "org_delete",
-		Doc:      "Deletes an Org from the server.",
-		ArgType:  type_map.AddType(scope, &OrgDeleteFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.ORG_ADMIN).Build(),
-		Version:  2,
+		Name:    "org_delete",
+		Doc:     "Deletes an Org from the server.",
+		ArgType: type_map.AddType(scope, &OrgDeleteFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.ORG_ADMIN).Build(),
+		Version: 2,
 	}
 }
 

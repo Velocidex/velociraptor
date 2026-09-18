@@ -63,6 +63,9 @@ func (self SetPasswordFunction) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:    "passwd",
 		Doc:     "Updates the user's password.",
 		ArgType: type_map.AddType(scope, &SetPasswordFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 	}
 }
 

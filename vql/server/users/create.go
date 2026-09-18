@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -116,6 +117,9 @@ func (self UserCreateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Name:    "user_create",
 		Doc:     "Creates a new user from the server, or updates their permissions or reset their password.",
 		ArgType: type_map.AddType(scope, &UserCreateFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 		Version: 3,
 	}
 }

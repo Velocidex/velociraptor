@@ -175,8 +175,9 @@ func (self UpdateNotebookCellFunction) Info(scope vfilter.Scope, type_map *vfilt
 		Name:    "notebook_update_cell",
 		Doc:     "Update a notebook cell.",
 		ArgType: type_map.AddType(scope, &UpdateNotebookCellFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_SERVER).Build(),
 		Version: 2,
 	}
 }
@@ -293,8 +294,9 @@ func (self UpdateNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.T
 		Name:    "notebook_update",
 		Doc:     "Update a notebook metadata.",
 		ArgType: type_map.AddType(scope, &UpdateNotebookFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_SERVER).Build(),
 	}
 }
 
