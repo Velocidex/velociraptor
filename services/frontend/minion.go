@@ -12,7 +12,7 @@ import (
 
 // Initializes the VQL environment for a minion.  This global change
 // overrides plugins and functions which are not allowed to run on the
-// minion wil redirects to the master. The minion can then process
+// minion will redirects to the master. The minion can then process
 // notebook VQL safely with some critical functionality directed to
 // the master node.
 func InitializeMinionVQL(config_obj *config_proto.Config) error {
