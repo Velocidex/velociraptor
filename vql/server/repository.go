@@ -178,8 +178,10 @@ func (self ArtifactSetFunction) Info(
 		Name:    "artifact_set",
 		Doc:     "Sets an artifact into the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.ARTIFACT_WRITER,
+				acls.SERVER_ARTIFACT_WRITER).Build(),
 		Version: 2,
 	}
 }
@@ -262,8 +264,10 @@ func (self ArtifactDeleteFunction) Info(
 		Name:    "artifact_delete",
 		Doc:     "Deletes an artifact from the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.ARTIFACT_WRITER,
+				acls.SERVER_ARTIFACT_WRITER).Build(),
 	}
 }
 
@@ -390,10 +394,12 @@ func (self ArtifactsPlugin) Call(
 
 func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "artifact_definitions",
-		Doc:      "Dump artifact definitions.",
-		ArgType:  type_map.AddType(scope, &ArtifactsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "artifact_definitions",
+		Doc:     "Dump artifact definitions.",
+		ArgType: type_map.AddType(scope, &ArtifactsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

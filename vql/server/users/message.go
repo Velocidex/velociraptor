@@ -64,10 +64,13 @@ func (self UserMessageFunction) Call(
 
 func (self UserMessageFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:         "user_message",
-		Doc:          "Send the user a message which will appear in the user notification view.",
-		ArgType:      type_map.AddType(scope, &UserMessageFunctionArgs{}),
-		Version:      1,
+		Name:    "user_message",
+		Doc:     "Send the user a message which will appear in the user notification view.",
+		ArgType: type_map.AddType(scope, &UserMessageFunctionArgs{}),
+		Version: 1,
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 		FreeFormArgs: true,
 	}
 }
@@ -164,6 +167,9 @@ func (self UserMessages) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Doc:     "Emit the user's console messages.",
 		ArgType: type_map.AddType(scope, &UserMessagesArgs{}),
 		Version: 1,
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 	}
 }
 

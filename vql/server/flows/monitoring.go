@@ -250,8 +250,10 @@ func (self WatchMonitoringPlugin) Info(scope vfilter.Scope,
 		Doc: "Watch clients' monitoring log. This is an event plugin. If " +
 			"client_id is not provided we watch the global journal which contains " +
 			"events from all clients.",
-		ArgType:  type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		ArgType: type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
