@@ -585,10 +585,11 @@ func (self FlowResultsPlugin) Call(
 
 func (self FlowResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "flow_results",
-		Doc:      "Retrieve the results of a flow.",
-		ArgType:  type_map.AddType(scope, &FlowResultsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "flow_results",
+		Doc:     "Retrieve the results of a flow.",
+		ArgType: type_map.AddType(scope, &FlowResultsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

@@ -105,7 +105,9 @@ func init() {
 	RegisterPlugin(
 		vfilter.GenericListPlugin{
 			PluginName: "info",
-			Metadata:   VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+			Metadata: VQLMetadata().
+				ExecutionContext(MasterExecutionContext).
+				Permissions(acls.MACHINE_STATE).Build(),
 			Function: func(
 				ctx context.Context,
 				scope vfilter.Scope,

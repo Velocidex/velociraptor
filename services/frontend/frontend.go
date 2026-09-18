@@ -461,6 +461,13 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 		return manager, manager.Start(ctx, wg, config_obj)
 	}
 
+	// Start the minion frontend.
+	// Initialize the global VQL mode to minion mode.
+	err := InitializeMinionVQL(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	manager := &MinionFrontendManager{config_obj: config_obj}
 	return manager, manager.Start(ctx, wg, config_obj)
 }

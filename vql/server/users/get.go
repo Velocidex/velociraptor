@@ -65,6 +65,9 @@ func (self UserFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 		Name:    "user",
 		Doc:     "Retrieves information about the Velociraptor user.",
 		ArgType: type_map.AddType(scope, &UserFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 	}
 }
 

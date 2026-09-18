@@ -143,11 +143,13 @@ func (self NewClientFunction) Call(ctx context.Context,
 func (self NewClientFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "client_create",
-		Doc:      "Create a new client in the data store.",
-		ArgType:  type_map.AddType(scope, &NewClientArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
-		Version:  2,
+		Name:    "client_create",
+		Doc:     "Create a new client in the data store.",
+		ArgType: type_map.AddType(scope, &NewClientArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
+		Version: 2,
 	}
 }
 

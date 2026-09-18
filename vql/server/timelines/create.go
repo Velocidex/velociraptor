@@ -120,11 +120,13 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 func (self AddTimelineFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "timeline_add",
-		Doc:      "Add a new query to a timeline.",
-		ArgType:  type_map.AddType(scope, &AddTimelineFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
-		Version:  2,
+		Name:    "timeline_add",
+		Doc:     "Add a new query to a timeline.",
+		ArgType: type_map.AddType(scope, &AddTimelineFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
+		Version: 2,
 	}
 }
 

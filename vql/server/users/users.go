@@ -92,6 +92,9 @@ func (self UsersPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name:    "gui_users",
 		Doc:     "Retrieve the list of users on the server.",
 		ArgType: type_map.AddType(scope, &UsersPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 	}
 }
 

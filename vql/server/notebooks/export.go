@@ -114,10 +114,12 @@ func (self ExportNotebookFunction) Call(ctx context.Context,
 
 func (self ExportNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "notebook_export",
-		Doc:      "Exports a notebook to a zip file or HTML.",
-		ArgType:  type_map.AddType(scope, &ExportNotebookArg{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.PREPARE_RESULTS).Build(),
+		Name:    "notebook_export",
+		Doc:     "Exports a notebook to a zip file or HTML.",
+		ArgType: type_map.AddType(scope, &ExportNotebookArg{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.PREPARE_RESULTS).Build(),
 	}
 }
 

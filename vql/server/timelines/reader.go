@@ -110,11 +110,13 @@ func (self TimelinePlugin) Call(
 
 func (self TimelinePlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "timeline",
-		Doc:      "Read a timeline. You can create a timeline with the timeline_add() function",
-		ArgType:  type_map.AddType(scope, &TimelinePluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
-		Version:  2,
+		Name:    "timeline",
+		Doc:     "Read a timeline. You can create a timeline with the timeline_add() function",
+		ArgType: type_map.AddType(scope, &TimelinePluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
+		Version: 2,
 	}
 }
 
@@ -195,10 +197,12 @@ func (self TimelineListPlugin) Call(
 
 func (self TimelineListPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "timelines",
-		Doc:      "List all timelines in a notebook",
-		ArgType:  type_map.AddType(scope, &TimelineListPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "timelines",
+		Doc:     "List all timelines in a notebook",
+		ArgType: type_map.AddType(scope, &TimelineListPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

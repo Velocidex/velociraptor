@@ -137,11 +137,13 @@ func (self FlowsPlugin) Call(
 
 func (self FlowsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "flows",
-		Doc:      "Retrieve the flows launched on each client.",
-		ArgType:  type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
-		Version:  3,
+		Name:    "flows",
+		Doc:     "Retrieve the flows launched on each client.",
+		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
+		Version: 3,
 	}
 }
 
@@ -207,8 +209,10 @@ func (self CancelFlowFunction) Info(
 		Name:    "cancel_flow",
 		Doc:     "Cancels the flow.",
 		ArgType: type_map.AddType(scope, &CancelFlowFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(
+				acls.COLLECT_SERVER, acls.COLLECT_CLIENT).Build(),
 		Version: 3,
 	}
 }
@@ -282,8 +286,9 @@ func (self EnumerateFlowPlugin) Info(
 		Name:    "enumerate_flow",
 		Doc:     "Enumerate all the files that make up a flow.",
 		ArgType: type_map.AddType(scope, &CancelFlowFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 		Version: 3,
 	}
 }
@@ -350,8 +355,10 @@ func (self GetFlowFunction) Info(
 		Name:    "get_flow",
 		Doc:     "Gets flow details.",
 		ArgType: type_map.AddType(scope, &FlowsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_CLIENT, acls.COLLECT_SERVER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_CLIENT,
+				acls.COLLECT_SERVER).Build(),
 		Version: 3,
 	}
 }

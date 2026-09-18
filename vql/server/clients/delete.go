@@ -101,10 +101,12 @@ func (self DeleteClientPlugin) Call(ctx context.Context,
 func (self DeleteClientPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "client_delete",
-		Doc:      "Delete all information related to a client. ",
-		ArgType:  type_map.AddType(scope, &DeleteClientArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.DELETE_RESULTS).Build(),
+		Name:    "client_delete",
+		Doc:     "Delete all information related to a client. ",
+		ArgType: type_map.AddType(scope, &DeleteClientArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.DELETE_RESULTS).Build(),
 	}
 }
 
