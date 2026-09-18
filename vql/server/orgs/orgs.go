@@ -72,6 +72,9 @@ func (self OrgsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 	return &vfilter.PluginInfo{
 		Name: "orgs",
 		Doc:  "Retrieve the list of orgs on this server.",
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 	}
 }
 

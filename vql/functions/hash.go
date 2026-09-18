@@ -144,13 +144,18 @@ func (self *HashFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 
 		default:
+			// Charge an op for each buffer we read
+			scope.ChargeOp()
+
 			n, err := file.Read(buf)
 
 			count += uint64(n)
 			if count > arg.MaxSize {
 				DeduplicatedLog(
 					ctx, scope, "Hash of %v aborted due to exceeding size", arg.Path)
-				n = 0
+
+				// Return NULL to indicate the hashing failed.
+				return vfilter.Null{}
 			}
 
 			// We are done!
@@ -190,8 +195,6 @@ func (self *HashFunction) Call(ctx context.Context,
 				_, _ = result.sha256.Write(buf[:n])
 			}
 
-			// Charge an op for each buffer we read
-			scope.ChargeOp()
 		}
 	}
 }

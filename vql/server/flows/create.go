@@ -201,8 +201,10 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 		Name:    "collect_client",
 		Doc:     "Launch an artifact collection against a client.",
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_CLIENT, acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_CLIENT,
+				acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
 		Version: 3,
 	}
 }

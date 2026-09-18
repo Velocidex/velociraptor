@@ -82,10 +82,12 @@ func (self BackupPlugin) Call(
 func (self BackupPlugin) Info(scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "backup",
-		Doc:      "Generates a backup file.",
-		ArgType:  type_map.AddType(scope, &BackupPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Name:    "backup",
+		Doc:     "Generates a backup file.",
+		ArgType: type_map.AddType(scope, &BackupPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 
@@ -191,8 +193,9 @@ func (self RestoreBackupPlugin) Info(scope vfilter.Scope,
 		Name:    "backup_restore",
 		Doc:     "Restore state from a backup file.",
 		ArgType: type_map.AddType(scope, &RestoreBackupPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.SERVER_ADMIN).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 		Version: 2,
 	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -81,6 +82,9 @@ func (self UserDeleteFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeM
 		Doc:     "Deletes a user from the server.",
 		ArgType: type_map.AddType(scope, &UserDeleteFunctionArgs{}),
 		Version: 2,
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

@@ -118,6 +118,9 @@ func (self UserOptionsFunction) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:    "user_options",
 		Doc:     "Update and read the user options",
 		ArgType: type_map.AddType(scope, &UserOptionsFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Build(),
 	}
 }
 

@@ -93,6 +93,9 @@ func (self GrantFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Name:    "user_grant",
 		Doc:     "Grants the user the specified roles.",
 		ArgType: type_map.AddType(scope, &GrantFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 		Version: 2,
 	}
 }

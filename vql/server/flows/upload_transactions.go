@@ -82,10 +82,11 @@ func (self UploadTransactionsPlugin) Call(
 
 func (self UploadTransactionsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "upload_transactions",
-		Doc:      "View the outstanding transactions for uploads.",
-		ArgType:  type_map.AddType(scope, &UploadTransactionsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "upload_transactions",
+		Doc:     "View the outstanding transactions for uploads.",
+		ArgType: type_map.AddType(scope, &UploadTransactionsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

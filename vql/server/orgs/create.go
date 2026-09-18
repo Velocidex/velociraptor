@@ -85,10 +85,12 @@ func (self OrgCreateFunction) Call(
 
 func (self OrgCreateFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "org_create",
-		Doc:      "Creates a new organization.",
-		ArgType:  type_map.AddType(scope, &OrgCreateFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.ORG_ADMIN).Build(),
+		Name:    "org_create",
+		Doc:     "Creates a new organization.",
+		ArgType: type_map.AddType(scope, &OrgCreateFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.ORG_ADMIN).Build(),
 	}
 }
 
