@@ -15,12 +15,16 @@ import (
 func WriteProfile(ctx context.Context,
 	scope vfilter.Scope, output_chan chan vfilter.Row) {
 
-	if gEbpfManager == nil {
+	mu.Lock()
+	ebpf_manager := gEbpfManager
+	mu.Unlock()
+
+	if ebpf_manager == nil {
 		output_chan <- ordereddict.NewDict().
 			Set("Error", "EBPF Manager not initialized yet - run the watch_ebpf() plugin to initialize.")
 
 	} else {
-		stats := gEbpfManager.Stats()
+		stats := ebpf_manager.Stats()
 
 		if len(stats.Listeners) == 0 {
 			output_chan <- ordereddict.NewDict().
