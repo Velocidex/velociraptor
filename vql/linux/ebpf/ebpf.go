@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/tracee_velociraptor/manager"
@@ -20,7 +21,9 @@ import (
 )
 
 var (
-	gEbpfManager *manager.EBPFManager
+	mu              sync.Mutex
+	gEbpfManager    *manager.EBPFManager
+	gEbpfIncludeEnv bool
 )
 
 type EBPFEventPluginArgs struct {
@@ -75,27 +78,10 @@ func (self EBPFEventPlugin) Call(
 			arg.Policy = generateDefaultPolicy(arg.EventNames)
 		}
 
-		if gEbpfManager == nil {
-			config_obj, _ := vql_subsystem.GetServerConfig(scope)
-			logger := NewLogger(config_obj)
-			logger.SetScope(scope)
-
-			config := manager.Config{
-				Options: manager.OptTranslateFDFilePath,
-			}
-
-			if arg.IncludeEnv {
-				config.Options |= manager.OptExecEnv |
-					manager.OptTranslateFDFilePath
-			}
-
-			gEbpfManager, err = manager.NewEBPFManager(
-				context.Background(), config, logger)
-			if err != nil {
-				scope.Log("watch_ebpf: %v", err)
-				return
-			}
-
+		ebpf_manager, err := getEbpfManager(scope, arg)
+		if err != nil {
+			scope.Log("watch_ebpf: %v", err)
+			return
 		}
 
 		opts := manager.EBPFWatchOptions{
@@ -112,7 +98,7 @@ func (self EBPFEventPlugin) Call(
 			opts.Prefilter = re.Match
 		}
 
-		events_chan, closer, err := gEbpfManager.Watch(ctx, opts)
+		events_chan, closer, err := ebpf_manager.Watch(ctx, opts)
 		if err != nil {
 			scope.Log("watch_ebpf: %v", err)
 			return
@@ -136,6 +122,44 @@ func (self EBPFEventPlugin) Call(
 	}()
 
 	return output_chan
+}
+
+// The manager is process wide and each instance loads its own copy
+// of the eBPF collection. Event artifacts with several sources call
+// watch_ebpf() in the same instant, so creation must be serialized
+// or every source builds its own manager.
+func getEbpfManager(scope vfilter.Scope,
+	arg *EBPFEventPluginArgs) (*manager.EBPFManager, error) {
+	mu.Lock()
+	defer mu.Unlock()
+
+	if gEbpfManager != nil {
+		if arg.IncludeEnv && !gEbpfIncludeEnv {
+			scope.Log("watch_ebpf: include_env ignored - the eBPF manager was already started without it")
+		}
+		return gEbpfManager, nil
+	}
+
+	config_obj, _ := vql_subsystem.GetServerConfig(scope)
+	logger := NewLogger(config_obj)
+	logger.SetScope(scope)
+
+	config := manager.Config{
+		Options: manager.OptTranslateFDFilePath,
+	}
+	if arg.IncludeEnv {
+		config.Options |= manager.OptExecEnv
+	}
+
+	ebpf_manager, err := manager.NewEBPFManager(
+		context.Background(), config, logger)
+	if err != nil {
+		return nil, err
+	}
+
+	gEbpfManager = ebpf_manager
+	gEbpfIncludeEnv = arg.IncludeEnv
+	return ebpf_manager, nil
 }
 
 func generateDefaultPolicy(events []string) string {
