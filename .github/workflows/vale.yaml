@@ -18,6 +18,10 @@ jobs:
         # https://github.com/vale-cli/vale-action/releases/tag/2.1.2
         uses: vale-cli/vale-action@85f9f7f2c5f449ac0ae5b66662961bae3f77ca6a
         with:
+          # Pin the Vale version. 3.22.0 regressed inline-HTML/markdown-link
+          # tokenization (concatenating adjacent words into single tokens),
+          # so `version: latest` would pick up the regression. Bump deliberately.
+          version: 3.21.0
           # Set to true when we want to start having errors fail the
           # pipeline.
           fail_on_error: false
