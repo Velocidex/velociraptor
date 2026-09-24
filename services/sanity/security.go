@@ -1,6 +1,8 @@
 package sanity
 
 import (
+	"fmt"
+	"regexp"
 	"runtime"
 
 	"www.velocidex.com/golang/velociraptor/accessors"
@@ -9,6 +11,10 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql/common"
+)
+
+var (
+	ClientSelfLabelRegex *regexp.Regexp
 )
 
 func (self *SanityChecks) CheckSecuritySettings(
@@ -97,6 +103,17 @@ func (self *SanityChecks) CheckSecuritySettings(
 	// Populate any additional environ vars that need to be shadowed.
 	common.ShadowedEnv = append(common.ShadowedEnv,
 		config_obj.Security.ShadowedEnvVars...)
+
+	// Are clients allowd to label themselves?
+	if len(config_obj.Security.ClientSelfLabelsRegex) > 0 {
+		var err error
+		ClientSelfLabelRegex, err = regexp.Compile(config_obj.Security.ClientSelfLabelsRegex)
+		if err != nil {
+			return fmt.Errorf(
+				"While compiling regex for Security.client_self_labels_regex: %v",
+				err)
+		}
+	}
 
 	return nil
 }

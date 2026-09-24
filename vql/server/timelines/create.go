@@ -111,7 +111,9 @@ func (self *AddTimelineFunction) Call(ctx context.Context,
 				Set("Action", "AddTimeline").
 				Set("Timeline", arg.Name).
 				Set("TimestampColumn", arg.Key),
-			artifacts.TIMELINE_ADD.WithUser(principal))
+			artifacts.TIMELINE_ADD.
+				WithUser(principal).
+				WithFrom(principal))
 	}
 
 	return super

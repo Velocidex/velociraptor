@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -114,9 +115,12 @@ func (self *ServerUploader) Upload(
 		Set("Size", result.Size).
 		Set("UploadedSize", result.Size)
 
+	principal := vql_subsystem.GetPrincipal(scope)
+
 	err = journal.PushRowsToArtifact(ctx, self.config_obj,
 		[]*ordereddict.Dict{row},
 		artifacts.UPLOAD_COMPLETION.
+			WithSuperUser().WithFrom(principal).
 			WithClientId(constants.VELOCIRAPTOR_SERVER_CLIENT_ID).
 			WithFlowId(self.session_id))
 	closer(result)

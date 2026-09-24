@@ -21,6 +21,8 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/vfilter"
@@ -60,10 +62,13 @@ func streamEvents(
 		return err
 	}
 
+	queue_name := artifact_modes.QueueName(in.Queue)
+
 	// Special case this so the caller can immediately initialize the
 	// watchers.
-	if in.Queue == "Server.Internal.MasterRegistrations" {
-		result := ordereddict.NewDict().Set("Events", journal.GetWatchers())
+	if queue_name == artifacts.MASTER_REGISTRATIONS.Queue() {
+		result := ordereddict.NewDict().
+			Set("Events", journal.GetWatchers())
 		serialized, _ := result.MarshalJSON()
 		err := stream.Send(&api_proto.EventResponse{
 			Jsonl: serialized,
@@ -76,8 +81,8 @@ func streamEvents(
 
 	// The API service is running on the master only! This means
 	// the journal service is local.
-	output_chan, cancel := journal.WatchArtifact(
-		ctx, in.Queue, "replication-"+in.WatcherName)
+	output_chan, cancel := journal.WatchQueue(
+		ctx, queue_name, "replication-"+in.WatcherName)
 	defer cancel()
 
 	for {

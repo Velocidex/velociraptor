@@ -63,6 +63,7 @@ func (self *SendEventFunction) Call(ctx context.Context,
 			ArtifactName: arg.Artifact,
 			ClientId:     arg.ClientId,
 			Username:     principal,
+			From:         principal,
 		})
 	if err != nil {
 		scope.Log("send_event: %v", err)

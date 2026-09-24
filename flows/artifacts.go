@@ -136,7 +136,9 @@ func NewCollectionContext(
 		if err == nil {
 			journal.PushRowsToArtifactAsync(ctx,
 				config_obj, row,
-				artifact_paths.FLOW_COMPLETION.WithClientId(self.ClientId))
+				artifact_paths.FLOW_COMPLETION.
+					WithSuperUser().WithFrom(self.ClientId).
+					WithClientId(self.ClientId))
 		}
 	})
 
@@ -634,6 +636,7 @@ func appendUploadDataToFile(
 		return journal.PushRowsToArtifact(ctx, config_obj,
 			[]*ordereddict.Dict{row},
 			artifact_paths.UPLOAD_COMPLETION.
+				WithSuperUser().WithFrom(message.Source).
 				WithClientId(message.Source).
 				WithFlowId(collection_context.SessionId))
 	}

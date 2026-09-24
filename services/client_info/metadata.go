@@ -318,5 +318,6 @@ func auditMetadataChange(
 				Set("principal", principal).
 				Set("client_id", client_id).
 				Set("updated_keys", updated_keys),
-		}, artifacts.CLIENT_METADATA_MODIFICATION)
+		}, artifacts.CLIENT_METADATA_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 }

@@ -122,7 +122,9 @@ func (self *notebookCellLogger) processAlert(msg string) error {
 	return journal.PushJsonlToArtifact(
 		self.ctx, self.config_obj,
 		serialized, 1,
-		artifacts.ALERT_QUEUE.WithUser(principal))
+		artifacts.ALERT_QUEUE.
+			WithSuperUser().
+			WithFrom(principal))
 }
 
 func (self *notebookCellLogger) Messages() []string {

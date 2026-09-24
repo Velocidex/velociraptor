@@ -160,8 +160,10 @@ func (self LogsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfi
 
 		// Requires SERVER_ADMIN because this provides access to all
 		// server logs
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
-		Version:  2,
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.SERVER_ADMIN).Build(),
+		Version: 2,
 	}
 }
 

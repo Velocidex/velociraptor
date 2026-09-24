@@ -4735,8 +4735,13 @@ type Security struct {
 	// This allows communication with very old clients (pre
 	// 0.68). Definitely not recommended.
 	AllowAncientClients bool `protobuf:"varint,61,opt,name=allow_ancient_clients,json=allowAncientClients,proto3" json:"allow_ancient_clients,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Clients can include labels baked into their configuration file
+	// (See `Client.labels` ).  The below regex controls which labels
+	// are accepted. By default a regex is not specified, meaning that
+	// clients may not label themselves.
+	ClientSelfLabelsRegex string `protobuf:"bytes,62,opt,name=client_self_labels_regex,json=clientSelfLabelsRegex,proto3" json:"client_self_labels_regex,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Security) Reset() {
@@ -4886,6 +4891,13 @@ func (x *Security) GetAllowAncientClients() bool {
 		return x.AllowAncientClients
 	}
 	return false
+}
+
+func (x *Security) GetClientSelfLabelsRegex() string {
+	if x != nil {
+		return x.ClientSelfLabelsRegex
+	}
+	return ""
 }
 
 type Config struct {
@@ -5638,7 +5650,7 @@ const file_config_proto_rawDesc = "" +
 	"\bhostname\x18\x06 \x01(\tR\bhostname\x12\x1f\n" +
 	"\x03env\x18\a \x03(\v2\r.proto.VQLEnvR\x03env\x12-\n" +
 	"\x12disabled_functions\x18\b \x03(\tR\x11disabledFunctions\x12)\n" +
-	"\x10disabled_plugins\x18\t \x03(\tR\x0fdisabledPlugins\"\x8a\a\n" +
+	"\x10disabled_plugins\x18\t \x03(\tR\x0fdisabledPlugins\"\xc3\a\n" +
 	"\bSecurity\x12?\n" +
 	"\x1callowed_file_accessor_prefix\x18\x01 \x03(\tR\x19allowedFileAccessorPrefix\x12=\n" +
 	"\x1bdenied_file_accessor_prefix\x18; \x03(\tR\x18deniedFileAccessorPrefix\x12;\n" +
@@ -5658,7 +5670,8 @@ const file_config_proto_rawDesc = "" +
 	"secretsDek\x12/\n" +
 	"\x14vql_must_use_secrets\x18\x05 \x01(\bR\x11vqlMustUseSecrets\x12*\n" +
 	"\x11shadowed_env_vars\x18\x04 \x03(\tR\x0fshadowedEnvVars\x122\n" +
-	"\x15allow_ancient_clients\x18= \x01(\bR\x13allowAncientClients\"\x96\r\n" +
+	"\x15allow_ancient_clients\x18= \x01(\bR\x13allowAncientClients\x127\n" +
+	"\x18client_self_labels_regex\x18> \x01(\tR\x15clientSelfLabelsRegex\"\x96\r\n" +
 	"\x06Config\x12F\n" +
 	"\aversion\x18\b \x01(\v2\x0e.proto.VersionB\x1c\xe2\xfc\xe3\xc4\x01\x16\x12\x14Version information.R\aversion\x12J\n" +
 	"\x06Client\x18\x01 \x01(\v2\x13.proto.ClientConfigB\x1d\xe2\xfc\xe3\xc4\x01\x17\x12\x15Client configuration.R\x06Client\x12P\n" +

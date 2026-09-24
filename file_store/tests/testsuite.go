@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
@@ -691,19 +692,25 @@ func (self *QueueManagerTestSuite) FilestoreGet(path api.FSPathSpec) string {
 func (self *QueueManagerTestSuite) TestPush() {
 	artifact_name := "System.Hunt.Participation"
 
+	log_path := path_specs.NewUnsafeFilestorePath("log_path")
+	path_manager := MockPathManager{
+		Path:         log_path,
+		ArtifactName: artifact_name,
+		Mode:         artifact_modes.MODE_INTERNAL,
+	}
+
+	queue_name := path_manager.GetQueueName()
+
 	payload := []*ordereddict.Dict{
 		ordereddict.NewDict().Set("foo", 1),
 		ordereddict.NewDict().Set("foo", 2)}
 
 	ctx := context.Background()
-	output, cancel := self.manager.Watch(ctx, artifact_name, nil)
+	output, cancel := self.manager.Watch(ctx, queue_name, nil)
 	defer cancel()
 
-	log_path := path_specs.NewUnsafeFilestorePath("log_path")
 	err := self.manager.PushEventRows(
-		MockPathManager{log_path, artifact_name},
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		payload)
+		path_manager, payload)
 
 	assert.NoError(self.T(), err)
 
@@ -736,14 +743,15 @@ func NewQueueManagerTestSuite(
 type MockPathManager struct {
 	Path         api.FSPathSpec
 	ArtifactName string
+	Mode         artifact_modes.ArtifactMode
 }
 
 func (self MockPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	return self.Path, nil
 }
 
-func (self MockPathManager) GetQueueName() string {
-	return self.ArtifactName
+func (self MockPathManager) GetQueueName() artifact_modes.QueueName {
+	return artifact_modes.NewQueueName(self.ArtifactName, self.Mode)
 }
 
 func (self MockPathManager) GetAvailableFiles(

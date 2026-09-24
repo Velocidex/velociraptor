@@ -171,6 +171,7 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntWithRequest() {
 	hunt_obj, err := master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
 		acl_manager, &api_proto.Hunt{
 			HuntId:    hunt_id,
+			Creator:   "User",
 			State:     api_proto.Hunt_RUNNING,
 			Version:   now,
 			StartTime: uint64(now),
@@ -378,6 +379,7 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 	hunt_obj, err := master_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
 		acl_manager, &api_proto.Hunt{
 			HuntId:    hunt_id,
+			Creator:   "User",
 			State:     api_proto.Hunt_RUNNING,
 			Version:   now,
 			StartTime: uint64(now),

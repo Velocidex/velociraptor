@@ -10,6 +10,8 @@ import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { JSONparse } from '../utils/json_parse.jsx';
+import {escapeIdentifer, quoteString} from '../utils/escapes.jsx';
+
 
 // components/core/table.jsx getFormatter
 const column_types = [
@@ -140,7 +142,8 @@ export default class FormatTableDialog extends Component {
             // Build the VQL for ColumnTypes
             let vql = "LET ColumnTypes<=dict("+
                 _.map(this.state.selection,
-                      x=>"`"+x.column+"`='"+x.type+"'").join(",") + ")\n\n";
+                      x=>escapeIdentifer(x.column)+
+                      "="+quoteString(x.type)).join(",") + ")\n\n";
             let cell = this.props.cell;
             cell.input = this.state.prefix + vql + this.state.suffix;
 

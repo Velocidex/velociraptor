@@ -233,7 +233,8 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 			Set("ClientId", client_id).
 			Set("OrgId", self.config_obj.OrgId).
 			Set("Principal", principal)},
-		artifacts.CLIENT_DELETE_QUEUE)
+		artifacts.CLIENT_DELETE_QUEUE.
+			WithSuperUser().WithFrom(principal))
 
 	if err != nil {
 		return err
@@ -266,5 +267,6 @@ func (self *ClientInfoManager) reallyDeleteClient(ctx context.Context,
 			Set("ClientId", client_id).
 			Set("OrgId", self.config_obj.OrgId).
 			Set("Principal", principal)},
-		artifacts.CLIENT_DELETE_QUEUE)
+		artifacts.CLIENT_DELETE_QUEUE.
+			WithSuperUser().WithFrom(principal))
 }

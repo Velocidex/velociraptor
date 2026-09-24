@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -45,7 +46,7 @@ type Listener struct {
 
 	id uint64
 
-	name    string
+	name    artifact_modes.QueueName
 	options api.QueueOptions
 
 	// The consumer interested in these events. The consumer may
@@ -293,7 +294,7 @@ func (self *Listener) pumpFileBufferToOutput(ctx context.Context) {
 
 func NewListener(
 	config_obj *config_proto.Config,
-	ctx context.Context, name string,
+	ctx context.Context, name artifact_modes.QueueName,
 	options api.QueueOptions) (*Listener, error) {
 
 	subctx, cancel := context.WithCancel(ctx)

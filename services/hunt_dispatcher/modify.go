@@ -55,6 +55,7 @@ func (self *HuntDispatcher) MutateHunt(
 		ordereddict.NewDict().
 			Set("hunt_id", mutation.HuntId).
 			Set("mutation", mutation),
-		artifacts.HUNT_MODIFICATIONS)
+		artifacts.HUNT_MODIFICATIONS.
+			WithSuperUser().WithFrom(mutation.HuntId))
 	return nil
 }

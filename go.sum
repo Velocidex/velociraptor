@@ -140,8 +140,8 @@ github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZ
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1/go.mod h1:UpFVihkMZWl2JRkVRiZYie0e2l7Ry+vjlCHCs6XVKGU=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250 h1:GhiTVVoHNhb0mzUDgieUwjfJeEaUHCHIVvV/mHzLQOI=
 github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250/go.mod h1:ukLFs2t1+ud7MC4oN+zImhtTRP/eQHaDL3TwLs58uUA=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260920161859-b172a317e4ef h1:+JHbHf3M+zDu7GLpiXbOM1IEoTBuUcDUbaOMCbn/v9g=
-github.com/Velocidex/tracee_velociraptor v0.0.0-20260920161859-b172a317e4ef/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260921030823-6d8e34ce73b1 h1:H+I4DQNsW+t5OInN/2RDtLPFXxZjAjXTe7Keatm9j6s=
+github.com/Velocidex/tracee_velociraptor v0.0.0-20260921030823-6d8e34ce73b1/go.mod h1:yKAS4I7VYdd6FzlEitbrqxGLoLAIeujjqpbP6OOTKxU=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130 h1:+QujZ0D7KSy3WJVchkOhMkvAUab6/CIisO5LCoN48q4=
 github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130/go.mod h1:3/pI9BBAF7gydBWvMVtV7W1qRwshEG9lBwed/d8xfFg=
 github.com/Velocidex/velociraptor-site-search v0.0.0-20260316064028-d30384722e4b h1:syRrijiG7G/sYOwJpPwnZiO4KFL6o9rKSHJbJJa9ShA=
@@ -280,8 +280,8 @@ github.com/blevesearch/zapx/v16 v16.3.1 h1:ERxZUSC9UcuKggCQ6b3y4sTkyL4WnGOWuopzg
 github.com/blevesearch/zapx/v16 v16.3.1/go.mod h1:zCFjv7McXWm1C8rROL+3mUoD5WYe2RKsZP3ufqcYpLY=
 github.com/bmatcuk/doublestar v1.3.4 h1:gPypJ5xD31uhX6Tf54sDPUOBXTqKH4c9aPY66CyQrS0=
 github.com/bmatcuk/doublestar v1.3.4/go.mod h1:wiQtGV+rzVYxB7WIlirSN++5HPtPlXEo9MEoZQC/PmE=
-github.com/bmatcuk/doublestar/v4 v4.10.1 h1:WmIq9zirOet2IiLta/lAAdb7amMCKO+BP4FZXcgU3qY=
-github.com/bmatcuk/doublestar/v4 v4.10.1/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
+github.com/bmatcuk/doublestar/v4 v4.10.0 h1:zU9WiOla1YA122oLM6i4EXvGW62DvKZVxIe6TYWexEs=
+github.com/bmatcuk/doublestar/v4 v4.10.0/go.mod h1:xBQ8jztBU6kakFMg+8WGxn0c6z1fTSPVIjEY1Wr7jzc=
 github.com/bradfitz/gomemcache v0.0.0-20170208213004-1952afaa557d/go.mod h1:PmM6Mmwb0LSuEubjR8N7PtNe1KxZLtOUHtbeikc5h60=
 github.com/bradleyjkemp/cupaloy/v2 v2.6.0 h1:knToPYa2xtfg42U3I6punFEjaGFKWQRXJwj0JTv4mTs=
 github.com/bradleyjkemp/cupaloy/v2 v2.6.0/go.mod h1:bm7JXdkRd4BHJk9HpwqAI8BoAY1lps46Enkdqw6aRX0=
@@ -1149,8 +1149,8 @@ www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5 h1:GDqKvZ2
 www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5/go.mod h1:4MSO8W9iNMXyBpjSpxApWfMjJUb9IWFD2Yis5JPZaSY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9 h1:y5nOjOAyjH36mEGZsX2Wx3XpS78e9Jk2wK1M99rn4TY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9/go.mod h1:rEueOnxvtbV/uFfCeD44KvC6TL9ts/1S3VNmRudSaAc=
-www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb h1:GW6agTdjRKf0mO5ZAivSo09TwqHb2sPoBCXLGSoEUE4=
-www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb/go.mod h1:eAhul/F2+kIBGGEsf8xVq68O5kKwg85x2Rg2I65uVwU=
+www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980 h1:YZhTjoaHG0/wuIOYHDg4q5nlKLx4BOkfORsiv8hWmxw=
+www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980/go.mod h1:eAhul/F2+kIBGGEsf8xVq68O5kKwg85x2Rg2I65uVwU=
 www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959 h1:qJlm0T616aOJtwD3dWUcYz3cldYyO3/tWB9EGv32ibU=
 www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959/go.mod h1:wjOPwI3Vy6TP0AhF6NjjXV/to93E5A1tjA04liHvf5E=
 www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7 h1:BMX/37sYwX+8JhHt+YNbPfbx7dXG1w1L1mXonNBtjt0=

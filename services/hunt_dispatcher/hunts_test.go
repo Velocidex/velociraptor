@@ -64,6 +64,7 @@ sources:
 		ArtifactIsBuiltIn: true})
 
 	request := &api_proto.Hunt{
+		Creator:         "User",
 		HuntDescription: "My hunt",
 		StartRequest: &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},

@@ -83,13 +83,14 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	assert.NoError(self.T(), err)
 
 	request := &api_proto.Hunt{
+		Creator:         "Admin",
 		HuntDescription: "My hunt",
 		StartRequest: &flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifact", "AnotherTestArtifact"},
 		},
 	}
 
-	acl_manager := acl_managers.NullACLManager{}
+	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, "admin")
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
@@ -380,7 +381,7 @@ func (self *TestSuite) makeScope() vfilter.Scope {
 	// Now create a download of this collection.
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}

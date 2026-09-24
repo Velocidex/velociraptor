@@ -34,6 +34,12 @@ func (self *MetadataBuilder) Build() *ordereddict.Dict {
 	return self.Dict
 }
 
+// Marks the plugins as an event plugin
+func (self *MetadataBuilder) Event() *MetadataBuilder {
+	self.Set("event", true)
+	return self
+}
+
 // Used to tag plugins or functions that only run on the master node.
 func (self *MetadataBuilder) ExecutionContext(
 	ctx ...ExecutionContext) *MetadataBuilder {

@@ -6,6 +6,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/sanity"
 )
 
 // Process ClientInfo messages. These are processed directly on the
@@ -79,10 +80,14 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 	}
 
 	// Now update any labels baked into the client.
-	if len(client_info.Labels) > 0 {
+	if len(client_info.Labels) > 0 && sanity.ClientSelfLabelRegex != nil {
 		labeler := services.GetLabeler(self.config_obj)
 
 		for _, label := range client_info.Labels {
+			if !sanity.ClientSelfLabelRegex.MatchString(label) {
+				continue
+			}
+
 			err = labeler.SetClientLabel(ctx, self.config_obj, client_id, label)
 			if err != nil {
 				return err

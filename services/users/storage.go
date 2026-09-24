@@ -288,7 +288,9 @@ func (self *UserStorageManager) sendMutation(
 	}
 
 	return journal_service.PushRowsToArtifact(ctx, self.config_obj,
-		[]*ordereddict.Dict{event}, artifacts.USER_MANAGER)
+		[]*ordereddict.Dict{event},
+		artifacts.USER_MANAGER.
+			WithSuperUser().WithFrom(mutation.From))
 }
 
 // Update fixed fields in the options to override user choices. This

@@ -437,7 +437,8 @@ func (self *Store) SaveSnapshot(
 			journal.PushRowsToArtifactAsync(ctx, config_obj,
 				ordereddict.NewDict().
 					Set("From", self.uuid),
-				artifacts.CLIENT_INFO_SNAPSHOT_READY)
+				artifacts.CLIENT_INFO_SNAPSHOT_READY.
+					WithSuperUser().WithFrom("ClientInfoManager.Store"))
 		}
 
 		logger.Info("<green>ClientInfo Manager</> Written snapshot for org %v in %v (%v records)",

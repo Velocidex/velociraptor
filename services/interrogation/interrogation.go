@@ -432,7 +432,8 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	journal.PushRowsToArtifactAsync(ctx, config_obj,
 		ordereddict.NewDict().
 			Set("ClientId", client_id),
-		artifacts.INTERROGATION_QUEUE)
+		artifacts.INTERROGATION_QUEUE.
+			WithSuperUser().WithFrom("EnrollmentService"))
 
 	return nil
 }

@@ -1540,6 +1540,12 @@ message Security {
     // This allows communication with very old clients (pre
     // 0.68). Definitely not recommended.
     bool allow_ancient_clients = 61;
+
+    // Clients can include labels baked into their configuration file
+    // (See `Client.labels` ).  The below regex controls which labels
+    // are accepted. By default a regex is not specified, meaning that
+    // clients may not label themselves.
+    string client_self_labels_regex = 62;
 }
 
 

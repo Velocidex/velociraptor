@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 )
 
 type QueueOptions struct {
@@ -22,15 +23,23 @@ type QueueOptions struct {
 type QueueManager interface {
 	// Broadcast events only for local listeners without writing to
 	// storage.
-	// Source is the writer who sends the broadcast.
-	Broadcast(path_manager PathManager, source string, rows []*ordereddict.Dict)
-	GetWatchers() []string
+	Broadcast(
+		queue_name artifact_modes.QueueName,
+		rows []*ordereddict.Dict)
 
-	PushEventRows(path_manager PathManager, source string, rows []*ordereddict.Dict) error
+	GetWatchers() []artifact_modes.QueueName
 
-	PushEventJsonl(path_manager PathManager, source string, jsonl []byte, row_count int) error
+	PushEventRows(
+		path_manager PathManager,
+		rows []*ordereddict.Dict) error
 
-	Watch(ctx context.Context, queue_name string, queue_options *QueueOptions) (
+	PushEventJsonl(
+		path_manager PathManager,
+		jsonl []byte, row_count int) error
+
+	Watch(ctx context.Context,
+		queue_name artifact_modes.QueueName,
+		queue_options *QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func())
 }
 
@@ -47,7 +56,7 @@ type PathManager interface {
 
 	// The name of the queue we will use to watch for any rows
 	// inserted into this result set.
-	GetQueueName() string
+	GetQueueName() artifact_modes.QueueName
 
 	// Generate paths for reading linked result sets.
 	GetAvailableFiles(ctx context.Context) []*ResultSetFileProperties

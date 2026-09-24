@@ -362,6 +362,8 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
+
 	// Relaunch the collection.
 	if arg.Relaunch {
 		hunt_dispatcher, err := services.GetHuntDispatcher(config_obj)
@@ -441,7 +443,8 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 						FlowId:   arg.FlowId,
 					},
 				})},
-			artifacts.HUNT_MODIFICATIONS)
+			artifacts.HUNT_MODIFICATIONS.
+				WithSuperUser().WithFrom(principal))
 
 	} else {
 		err = journal.PushRowsToArtifact(ctx, config_obj,
@@ -449,7 +452,8 @@ func (self *AddToHuntFunction) Call(ctx context.Context,
 				Set("HuntId", arg.HuntId).
 				Set("ClientId", arg.ClientId).
 				Set("Override", true)},
-			artifacts.HUNT_PARTICIPATION)
+			artifacts.HUNT_PARTICIPATION.
+				WithSuperUser().WithFrom(principal))
 	}
 
 	if err != nil {

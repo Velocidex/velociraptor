@@ -144,22 +144,30 @@ func flushMonitoringLogs(
 	ctx context.Context, config_obj *config_proto.Config,
 	collection_context *CollectionContext) error {
 
+	client_id := collection_context.ClientId
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return err
 	}
 
 	for query_name, jsonl_buff := range collection_context.monitoring_batch {
+		opts := services.JournalOptions{
+			ArtifactName: query_name,
+			Username:     client_id,
+			ClientId:     client_id,
+			FlowId:       collection_context.SessionId,
+			From:         client_id,
+		}
+
+		wk_opts, ok := artifact_paths.GetWellKnownQueue(query_name)
+		if ok {
+			opts.EventFilter = wk_opts.EventFilter
+		}
+
 		err := journal.PushJsonlToArtifact(
-			ctx,
-			config_obj,
-			jsonl_buff.Bytes(), jsonl_buff.row_count,
-			services.JournalOptions{
-				ArtifactName: query_name,
-				Username:     collection_context.ClientId,
-				ClientId:     collection_context.ClientId,
-				FlowId:       collection_context.SessionId,
-			})
+			ctx, config_obj,
+			jsonl_buff.Bytes(), jsonl_buff.row_count, opts)
 		if err != nil {
 			return err
 		}
