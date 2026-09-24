@@ -37,7 +37,7 @@ name: Server.Internal.HuntModification
 type: INTERNAL
 `, `
 name: Server.Audit.Logs
-type: INTERNAL
+type: SERVER_EVENT
 `, `
 name: Server.Internal.ClientInfoSnapshot
 type: INTERNAL

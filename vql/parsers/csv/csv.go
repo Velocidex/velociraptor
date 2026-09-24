@@ -226,8 +226,10 @@ func (self _WatchCSVPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name: "watch_csv",
 		Doc: "Watch a CSV file and stream events from it. " +
 			"Note: This is an event plugin which does not complete.",
-		ArgType:  type_map.AddType(scope, &ParseCSVPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		ArgType: type_map.AddType(scope, &ParseCSVPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

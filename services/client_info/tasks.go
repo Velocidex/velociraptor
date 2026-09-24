@@ -115,7 +115,9 @@ func (self *ClientInfoManager) QueueMessagesForClient(
 				ordereddict.NewDict().
 					Set("ClientId", client_id).
 					Set("Notify", notify),
-				artifacts.CLIENT_INFO_TASK)
+				artifacts.CLIENT_INFO_TASK.
+					WithSuperUser().
+					WithFrom("QueueMessagesForClient"))
 		}
 
 		if notify {
@@ -194,7 +196,8 @@ func (self *ClientInfoManager) QueueMessageForClient(
 			ordereddict.NewDict().
 				Set("ClientId", client_id).
 				Set("Notify", notify),
-			artifacts.CLIENT_INFO_TASK)
+			artifacts.CLIENT_INFO_TASK.
+				WithSuperUser().WithFrom(client_id))
 
 		if notify {
 			notifier, err := services.GetNotifier(self.config_obj)
@@ -595,7 +598,8 @@ func (self *ClientInfoManager) GetClientTasks(
 			ordereddict.NewDict().
 				Set("ClientId", client_id).
 				Set("InFlight", inflight_flows),
-			artifacts.CLIENT_INFO_SCHEDULED)
+			artifacts.CLIENT_INFO_SCHEDULED.
+				WithSuperUser().WithFrom(client_id))
 	}
 
 	return result, nil

@@ -712,6 +712,19 @@ type VerifierError struct {
 	Pos     vfilter.RangePosition
 }
 
+func (self *VerifierError) AsProto() *api_proto.VerifierError {
+	res := &api_proto.VerifierError{
+		Name:    self.Name,
+		Message: self.Message,
+	}
+
+	for _, arg := range self.Args {
+		res.Args = append(res.Args, utils.ToString(arg))
+	}
+
+	return res
+}
+
 func (self *VerifierError) Error() string {
 	prefix := fmt.Sprintf("(%d,%d) %s: ", self.Pos.Pos.Line,
 		self.Pos.Pos.Column, self.Name)

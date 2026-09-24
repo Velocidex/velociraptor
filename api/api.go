@@ -828,21 +828,21 @@ func (self *ApiServer) SetArtifactFile(
 
 		// report the errors and warnings
 		if len(state.Errors) != 0 || len(state.Warnings) != 0 {
-			warnings := make([]string, 0, len(state.Warnings))
-			for _, w := range state.Warnings {
-				warnings = append(warnings, w.Error())
-			}
 			res := &api_proto.SetArtifactResponse{
-				Error:    true,
-				Warnings: warnings,
+				Error: true,
 			}
 
-			errors := make([]string, 0, len(state.Errors))
+			for _, w := range state.Warnings {
+				res.Warnings = append(res.Warnings, w.Error())
+				res.VerifierWarnings = append(
+					res.VerifierWarnings, w.AsProto())
+			}
+
 			for _, e := range state.Errors {
-				errors = append(errors, e.Error())
+				res.Errors = append(res.Errors, e.Error())
+				res.VerifierErrors = append(
+					res.VerifierErrors, e.AsProto())
 			}
-
-			res.Errors = append(res.Errors, errors...)
 
 			return res, nil
 		}

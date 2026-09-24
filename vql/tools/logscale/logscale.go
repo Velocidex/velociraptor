@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -353,7 +354,10 @@ func (self *LogScaleQueue) Open(parentCtx context.Context, scope vfilter.Scope,
 	// If we Close() it as part of the queue Close(), it will flush its queue
 	// and then cancel its own internal context, cleaning itself up.
 	ctx := context.Background()
-	self.listener, err = directory.NewListener(self.config, ctx, options.OwnerName, options)
+	self.listener, err = directory.NewListener(
+		self.config, ctx,
+		artifact_modes.QueueName(options.OwnerName),
+		options)
 	if err != nil {
 		return err
 	}

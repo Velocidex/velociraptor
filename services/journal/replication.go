@@ -89,7 +89,7 @@ type ReplicationService struct {
 	retryDuration time.Duration
 
 	// The set of events the master is interested in.
-	masterRegistrations map[string]bool
+	masterRegistrations map[artifact_modes.QueueName]bool
 
 	// Store rows for async push
 	batch map[string]*jsonBatch
@@ -109,11 +109,12 @@ func (self *ReplicationService) SetRetryDuration(duration time.Duration) {
 	self.retryDuration = duration
 }
 
-func (self *ReplicationService) isEventRegistered(artifact string) bool {
+func (self *ReplicationService) isEventRegistered(
+	queue_name artifact_modes.QueueName) bool {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	ok, pres := self.masterRegistrations[artifact]
+	ok, pres := self.masterRegistrations[queue_name]
 	return pres && ok
 }
 
@@ -260,6 +261,11 @@ func (self *ReplicationService) Start(
 			defer wg.Done()
 			defer self.Close()
 
+			logger := logging.GetLogger(
+				self.config_obj, &logging.FrontendComponent)
+			dedup_logger, closer := utils.NewDeduplicatedLogger(time.Second)
+			defer closer()
+
 			for {
 				select {
 				case <-ctx.Done():
@@ -286,9 +292,8 @@ func (self *ReplicationService) Start(
 					timer.ObserveDuration()
 
 					if err != nil {
-						logger := logging.GetLogger(
-							self.config_obj, &logging.FrontendComponent)
-						logger.Error("Sending event to %v: %v", request.Artifact, err)
+						dedup_logger.Log(logger.Error,
+							"Sending event to %v: %v", request.Artifact, err)
 						replicationTotalSendErrors.Inc()
 
 						// Attempt to push the events
@@ -326,12 +331,13 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 	if ok {
 		// -----
 		self.mu.Lock()
-		self.masterRegistrations = make(map[string]bool)
+		self.masterRegistrations = make(map[artifact_modes.QueueName]bool)
 
 		for _, name := range names {
 			name_str, ok := name.(string)
 			if ok {
-				self.masterRegistrations[name_str] = true
+				queue_name := artifact_modes.QueueName(name_str)
+				self.masterRegistrations[queue_name] = true
 			}
 		}
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
@@ -497,8 +503,12 @@ func (self *ReplicationService) pushRowsToLocalQueueManager(
 			return errors.New("Filestore not initialized")
 		}
 
-		err := self.qm.PushEventRows(
-			path_manager, opts.Username, rows)
+		err := opts.TagRows(config_obj, rows)
+		if err != nil {
+			return err
+		}
+
+		err = self.qm.PushEventRows(path_manager, rows)
 		if err != nil {
 			return err
 		}
@@ -544,8 +554,13 @@ func (self *ReplicationService) pushJsonlToLocalQueueManager(
 			return errors.New("Filestore not initialized")
 		}
 
-		err := self.qm.PushEventJsonl(
-			path_manager, opts.Username, jsonl, row_count)
+		jsonl, err = opts.TagJsonl(config_obj, jsonl)
+		if err != nil {
+			return err
+		}
+
+		err = self.qm.PushEventJsonl(
+			path_manager, jsonl, row_count)
 		if err != nil {
 			return err
 		}
@@ -582,7 +597,7 @@ func (self *ReplicationService) PushJsonlToArtifact(
 	}
 
 	// Do not replicate the event if the master does not care about it.
-	if !self.isEventRegistered(opts.ArtifactName) {
+	if !self.isEventRegistered(opts.Queue()) {
 		return nil
 	}
 
@@ -629,7 +644,7 @@ func (self *ReplicationService) PushRowsToArtifact(
 	}
 
 	// Do not replicate the event if the master does not care about it.
-	if !self.isEventRegistered(opts.ArtifactName) {
+	if !self.isEventRegistered(opts.Queue()) {
 		return nil
 	}
 
@@ -656,7 +671,7 @@ func (self *ReplicationService) PushRowsToArtifact(
 	}
 }
 
-func (self *ReplicationService) GetWatchers() []string {
+func (self *ReplicationService) GetWatchers() []artifact_modes.QueueName {
 	return nil
 }
 
@@ -664,12 +679,14 @@ func (self *ReplicationService) Watch(
 	ctx context.Context, queue services.JournalOptions,
 	watcher_name string) (<-chan *ordereddict.Dict, func()) {
 
-	return self.WatchArtifact(ctx, queue.ArtifactName, watcher_name)
+	return self.WatchQueue(ctx, queue.Queue(), watcher_name)
 }
 
 // Watch the master for new events
-func (self *ReplicationService) WatchArtifact(
-	ctx context.Context, queue, watcher_name string) (
+func (self *ReplicationService) WatchQueue(
+	ctx context.Context,
+	queue artifact_modes.QueueName,
+	watcher_name string) (
 	<-chan *ordereddict.Dict, func()) {
 
 	output_chan := make(chan *ordereddict.Dict)
@@ -677,7 +694,8 @@ func (self *ReplicationService) WatchArtifact(
 
 	go func() {
 		for {
-			in_chan := self.watchOnce(subctx, queue, watcher_name)
+			in_chan := self.watchOnce(
+				subctx, string(queue), watcher_name)
 
 		retry:
 			for {
@@ -818,7 +836,7 @@ func NewReplicationService(
 	service := &ReplicationService{
 		config_obj:          config_obj,
 		locks:               make(map[string]*sync.Mutex),
-		masterRegistrations: make(map[string]bool),
+		masterRegistrations: make(map[artifact_modes.QueueName]bool),
 		batch:               make(map[string]*jsonBatch),
 	}
 

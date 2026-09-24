@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ttlcache/v2"
-	"www.velocidex.com/golang/vfilter"
 )
 
 type logCacheEntry struct {
@@ -17,7 +16,8 @@ type DeduplicatedLogger struct {
 }
 
 func (self *DeduplicatedLogger) Log(
-	scope vfilter.Scope, message string, args ...interface{}) {
+	log_func func(message string, args ...interface{}),
+	message string, args ...interface{}) {
 
 	// Do we need to dedup it?
 	now := GetTime().Now()
@@ -34,7 +34,7 @@ func (self *DeduplicatedLogger) Log(
 	}
 	self.lru.Set(message, log_cache_entry)
 
-	scope.Log(message, args...)
+	log_func(message, args...)
 }
 
 func NewDeduplicatedLogger(dedup_time time.Duration) (

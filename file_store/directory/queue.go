@@ -36,6 +36,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
@@ -50,7 +51,7 @@ type QueuePool struct {
 
 	config_obj *config_proto.Config
 
-	registrations map[string][]*Listener
+	registrations map[artifact_modes.QueueName][]*Listener
 }
 
 func (self *QueuePool) Stats() *ordereddict.Dict {
@@ -63,16 +64,17 @@ func (self *QueuePool) Stats() *ordereddict.Dict {
 		for _, l := range listeners {
 			stats = append(stats, l.Stats())
 		}
-		res.Set(k, stats)
+		res.Set(string(k), stats)
 	}
 	return res
 }
 
-func (self *QueuePool) GetWatchers() []string {
+func (self *QueuePool) GetWatchers() []artifact_modes.QueueName {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	result := make([]string, 0, len(self.registrations))
+	result := make([]artifact_modes.QueueName,
+		0, len(self.registrations))
 	for name := range self.registrations {
 		result = append(result, name)
 	}
@@ -81,19 +83,20 @@ func (self *QueuePool) GetWatchers() []string {
 }
 
 func (self *QueuePool) Register(
-	ctx context.Context, vfs_path string,
+	ctx context.Context, queue_name artifact_modes.QueueName,
 	options api.QueueOptions) (<-chan *ordereddict.Dict, func()) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	registrations := self.registrations[vfs_path]
+	registrations := self.registrations[queue_name]
 
 	subctx, cancel := context.WithCancel(ctx)
-	new_registration, err := NewListener(self.config_obj, subctx, vfs_path, options)
+	new_registration, err := NewListener(
+		self.config_obj, subctx, queue_name, options)
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Warn("Failed to register QueuePool for %s: %v", vfs_path, err)
+		logger.Warn("Failed to register QueuePool for %s: %v", queue_name, err)
 		cancel()
 		output_chan := make(chan *ordereddict.Dict)
 		close(output_chan)
@@ -102,21 +105,23 @@ func (self *QueuePool) Register(
 
 	registrations = append(registrations, new_registration)
 
-	self.registrations[vfs_path] = registrations
+	self.registrations[queue_name] = registrations
 
 	return new_registration.Output(), func() {
-		self.unregister(vfs_path, new_registration.id)
+		self.unregister(queue_name, new_registration.id)
 		cancel()
 	}
 }
 
 // This holds a lock on the entire pool and it is used when the system
 // shuts down so not very often.
-func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
+func (self *QueuePool) unregister(
+	queue_name artifact_modes.QueueName,
+	id uint64) (found bool) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	registrations, pres := self.registrations[vfs_path]
+	registrations, pres := self.registrations[queue_name]
 	if pres {
 		new_registrations := make([]*Listener, 0, len(registrations))
 		for _, item := range registrations {
@@ -129,9 +134,9 @@ func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 			}
 		}
 
-		self.registrations[vfs_path] = new_registrations
+		self.registrations[queue_name] = new_registrations
 		if len(new_registrations) == 0 {
-			delete(self.registrations, vfs_path)
+			delete(self.registrations, queue_name)
 		}
 	}
 
@@ -140,11 +145,12 @@ func (self *QueuePool) unregister(vfs_path string, id uint64) (found bool) {
 
 // Make a copy of the registrations under lock and then we can take
 // our time to send them later.
-func (self *QueuePool) getRegistrations(vfs_path string) []*Listener {
+func (self *QueuePool) getRegistrations(
+	queue_name artifact_modes.QueueName) []*Listener {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	registrations, ok := self.registrations[vfs_path]
+	registrations, ok := self.registrations[queue_name]
 	if ok {
 		// Make a copy of the registrations for sending this
 		// message.
@@ -154,16 +160,18 @@ func (self *QueuePool) getRegistrations(vfs_path string) []*Listener {
 	return nil
 }
 
-func (self *QueuePool) Broadcast(vfs_path string, source string, row *ordereddict.Dict) {
+func (self *QueuePool) Broadcast(
+	queue_name artifact_modes.QueueName, row *ordereddict.Dict) {
 	// Ensure we do not hold the lock for very long here.
-	for _, item := range self.getRegistrations(vfs_path) {
-		item.Send(row.Update("_Source", source))
+	for _, item := range self.getRegistrations(queue_name) {
+		item.Send(row)
 	}
 }
 
-func (self *QueuePool) BroadcastJsonl(vfs_path string, source string, jsonl []byte) {
+func (self *QueuePool) BroadcastJsonl(
+	queue_name artifact_modes.QueueName, jsonl []byte) {
 	// Ensure we do not hold the lock for very long here.
-	registrations := self.getRegistrations(vfs_path)
+	registrations := self.getRegistrations(queue_name)
 	if len(registrations) > 0 {
 		// If there are any registrations, we must parse the JSON and
 		// relay each row to each listener - this is expensive but
@@ -171,7 +179,6 @@ func (self *QueuePool) BroadcastJsonl(vfs_path string, source string, jsonl []by
 		rows, err := utils.ParseJsonToDicts(jsonl)
 		if err == nil {
 			for _, row := range rows {
-				row.Set("_Source", source)
 				for _, item := range registrations {
 					item.Send(row)
 				}
@@ -190,7 +197,7 @@ func (self *QueuePool) Debug() *ordereddict.Dict {
 		for idx, l := range v {
 			listeners.Set(fmt.Sprintf("%v", idx), l.Debug())
 		}
-		result.Set(k, listeners)
+		result.Set(string(k), listeners)
 	}
 	return result
 }
@@ -198,7 +205,7 @@ func (self *QueuePool) Debug() *ordereddict.Dict {
 func NewQueuePool(config_obj *config_proto.Config) *QueuePool {
 	return &QueuePool{
 		config_obj:    config_obj,
-		registrations: make(map[string][]*Listener),
+		registrations: make(map[artifact_modes.QueueName][]*Listener),
 	}
 }
 
@@ -214,16 +221,18 @@ func (self *DirectoryQueueManager) Debug() *ordereddict.Dict {
 
 // Sends the events without writing them to the filestore.
 func (self *DirectoryQueueManager) Broadcast(
-	path_manager api.PathManager, source string, dict_rows []*ordereddict.Dict) {
+	queue_name artifact_modes.QueueName,
+	dict_rows []*ordereddict.Dict) {
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
 		row.Set("_ts", int(utils.GetTime().Now().Unix()))
-		self.queue_pool.Broadcast(path_manager.GetQueueName(), source, row)
+		self.queue_pool.Broadcast(queue_name, row)
 	}
 }
 
 func (self *DirectoryQueueManager) PushEventRows(
-	path_manager api.PathManager, source string, dict_rows []*ordereddict.Dict) error {
+	path_manager api.PathManager,
+	dict_rows []*ordereddict.Dict) error {
 
 	// Writes are asynchronous.
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
@@ -237,14 +246,14 @@ func (self *DirectoryQueueManager) PushEventRows(
 	for _, row := range dict_rows {
 		// Set a timestamp per event for easier querying.
 		row.Set("_ts", int(utils.GetTime().Now().Unix()))
-		rs_writer.Write(row.Set("_Source", source))
-		self.queue_pool.Broadcast(path_manager.GetQueueName(), source, row)
+		rs_writer.Write(row)
+		self.queue_pool.Broadcast(path_manager.GetQueueName(), row)
 	}
 	return nil
 }
 
 func (self *DirectoryQueueManager) PushEventJsonl(
-	path_manager api.PathManager, source string,
+	path_manager api.PathManager,
 	jsonl []byte, row_count int) error {
 
 	// Writes are asynchronous.
@@ -258,20 +267,19 @@ func (self *DirectoryQueueManager) PushEventJsonl(
 
 	jsonl = json.AppendJsonlItem(jsonl, "_ts",
 		int(utils.GetTime().Now().Unix()))
-	jsonl = json.AppendJsonlItem(jsonl, "_Source", source)
 
 	rs_writer.WriteJSONL(jsonl, row_count)
-	self.queue_pool.BroadcastJsonl(path_manager.GetQueueName(), source, jsonl)
+	self.queue_pool.BroadcastJsonl(path_manager.GetQueueName(), jsonl)
 
 	return nil
 }
 
-func (self *DirectoryQueueManager) GetWatchers() []string {
+func (self *DirectoryQueueManager) GetWatchers() []artifact_modes.QueueName {
 	return self.queue_pool.GetWatchers()
 }
 
 func (self *DirectoryQueueManager) Watch(
-	ctx context.Context, queue_name string,
+	ctx context.Context, queue_name artifact_modes.QueueName,
 	queue_options *api.QueueOptions) (<-chan *ordereddict.Dict, func()) {
 
 	if queue_options == nil {

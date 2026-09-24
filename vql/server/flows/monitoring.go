@@ -222,8 +222,9 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		// Ask the journal service to watch the event queue for us.
-		qm_chan, cancel := journal.WatchArtifact(
-			ctx, arg.Artifact, "watch_monitoring plugin")
+		qm_chan, cancel := journal.WatchQueue(
+			ctx, artifact_modes.NewQueueName(arg.Artifact, mode),
+			"watch_monitoring plugin")
 
 		// Make sure to call this at shutdown (defer is not guaranteed
 		// to run).
@@ -234,8 +235,7 @@ func (self WatchMonitoringPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case output_chan <- row.
-				Update("_Source", arg.Artifact):
+			case output_chan <- row:
 			}
 		}
 	}()
@@ -252,6 +252,7 @@ func (self WatchMonitoringPlugin) Info(scope vfilter.Scope,
 			"events from all clients.",
 		ArgType: type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().
+			Event().
 			ExecutionContext(vql_subsystem.MasterExecutionContext).
 			Permissions(acls.READ_RESULTS).Build(),
 	}

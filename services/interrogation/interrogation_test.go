@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
@@ -71,6 +72,8 @@ func (self *ServicesTestSuite) EmulateCollection(
 		services.JournalOptions{
 			ArtifactName: artifact,
 			ClientId:     self.client_id,
+			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			From:         constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			FlowId:       self.flow_id})
 	assert.NoError(self.T(), err)
 
@@ -83,7 +86,8 @@ func (self *ServicesTestSuite) EmulateCollection(
 				ClientId:             self.client_id,
 				SessionId:            self.flow_id,
 				ArtifactsWithResults: []string{artifact}})},
-		artifacts.FLOW_COMPLETION,
+		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(self.client_id),
 	)
 	assert.NoError(self.T(), err)
 
@@ -157,7 +161,8 @@ func (self *ServicesTestSuite) TestEnrollService() {
 		[]*ordereddict.Dict{
 			enroll_message, enroll_message, enroll_message, enroll_message,
 		},
-		artifacts.ENROLLMENT_QUEUE)
+		artifacts.ENROLLMENT_QUEUE.
+			WithSuperUser().WithFrom(self.client_id))
 	assert.NoError(self.T(), err)
 
 	// Wait here until the client is enrolled

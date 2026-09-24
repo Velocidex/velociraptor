@@ -277,7 +277,8 @@ func (self *InventoryService) saveInventory(
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().Set("id", self.id),
 		},
-		artifacts.INVENTORY_UPDATED)
+		artifacts.INVENTORY_UPDATED.
+			WithSuperUser().WithFrom("InventoryService"))
 }
 
 // Actually download and resolve the tool and make sure it is

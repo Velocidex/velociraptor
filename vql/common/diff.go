@@ -216,10 +216,10 @@ func (self _DiffPlugin) Info(
 	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "diff",
-		Doc:  "Executes 'query' periodically and emit differences from the last query.",
-
-		ArgType: type_map.AddType(scope, &_DiffPluginArgs{}),
+		Name:     "diff",
+		Doc:      "Executes 'query' periodically and emit differences from the last query.",
+		Metadata: vql_subsystem.VQLMetadata().Event().Build(),
+		ArgType:  type_map.AddType(scope, &_DiffPluginArgs{}),
 	}
 }
 

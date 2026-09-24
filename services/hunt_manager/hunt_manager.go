@@ -314,7 +314,8 @@ func (self *HuntManager) participateInRunningHunts(ctx context.Context,
 	// Now send the messages without the lock.
 	for _, r := range rows {
 		journal.PushRowsToArtifactAsync(ctx, config_obj, r,
-			artifacts.HUNT_PARTICIPATION)
+			artifacts.HUNT_PARTICIPATION.
+				WithSuperUser().WithFrom("HuntManager"))
 	}
 
 	return nil

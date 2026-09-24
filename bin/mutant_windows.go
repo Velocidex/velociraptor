@@ -1,3 +1,4 @@
+//go:build windows
 // +build windows
 
 package main
@@ -6,12 +7,14 @@ import (
 	"fmt"
 	"syscall"
 	"unsafe"
+
+	"www.velocidex.com/golang/velociraptor/vql/windows"
 )
 
 var (
 	global_mutant_name = app.Flag("mutant", "When specified we use this mutant to ensure only one copy of the client is allowed to run.").String()
 
-	kernel32        = syscall.NewLazyDLL("kernel32.dll")
+	kernel32        = windows.NewLazySystemDLL("kernel32.dll")
 	procCreateMutex = kernel32.NewProc("CreateMutexW")
 )
 

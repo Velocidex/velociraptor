@@ -97,12 +97,12 @@ func (self *TestSuite) TestCreateAndImportCollection() {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	acl_manager := acl_managers.NullACLManager{}
+	acl_manager := acl_managers.NewServerACLManager(self.ConfigObj, "admin")
 
 	// Now create a download of this collection.
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_manager,
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -186,7 +186,7 @@ func (self *TestSuite) TestImportCollectionFromFixture() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -276,7 +276,7 @@ func (self *TestSuite) TestImportX509CollectionFromFixture() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -317,7 +317,7 @@ func (self *TestSuite) TestImportCollectionInvalidClientID() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}

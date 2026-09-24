@@ -6,9 +6,8 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/sirupsen/logrus"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
+	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -43,10 +42,6 @@ func (self *AuditManager) LogAudit(
 	// make sure to write it synchronously.
 	return journal.PushRowsToArtifact(
 		ctx, config_obj, []*ordereddict.Dict{record},
-		services.JournalOptions{
-			ArtifactName: "Server.Audit.Logs",
-			ArtifactType: artifact_modes.MODE_SERVER_EVENT,
-			ClientId:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-			Username:     principal,
-		})
+		artifacts.AUDIT_LOGS.
+			WithSuperUser().WithFrom(principal))
 }

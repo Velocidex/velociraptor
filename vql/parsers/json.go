@@ -685,10 +685,12 @@ type WatchJsonlPlugin struct{}
 
 func (self WatchJsonlPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "watch_jsonl",
-		Doc:      "Watch a jsonl file and stream events from it.",
-		ArgType:  type_map.AddType(scope, &syslog.ScannerPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "watch_jsonl",
+		Doc:     "Watch a jsonl file and stream events from it.",
+		ArgType: type_map.AddType(scope, &syslog.ScannerPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
