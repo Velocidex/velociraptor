@@ -4732,9 +4732,6 @@ type Security struct {
 	// variables. Environment Vars sometimes may contain secrets and
 	// confidential information.
 	ShadowedEnvVars []string `protobuf:"bytes,4,rep,name=shadowed_env_vars,json=shadowedEnvVars,proto3" json:"shadowed_env_vars,omitempty"`
-	// This allows communication with very old clients (pre
-	// 0.68). Definitely not recommended.
-	AllowAncientClients bool `protobuf:"varint,61,opt,name=allow_ancient_clients,json=allowAncientClients,proto3" json:"allow_ancient_clients,omitempty"`
 	// Clients can include labels baked into their configuration file
 	// (See `Client.labels` ).  The below regex controls which labels
 	// are accepted. By default a regex is not specified, meaning that
@@ -4884,13 +4881,6 @@ func (x *Security) GetShadowedEnvVars() []string {
 		return x.ShadowedEnvVars
 	}
 	return nil
-}
-
-func (x *Security) GetAllowAncientClients() bool {
-	if x != nil {
-		return x.AllowAncientClients
-	}
-	return false
 }
 
 func (x *Security) GetClientSelfLabelsRegex() string {
@@ -5650,7 +5640,7 @@ const file_config_proto_rawDesc = "" +
 	"\bhostname\x18\x06 \x01(\tR\bhostname\x12\x1f\n" +
 	"\x03env\x18\a \x03(\v2\r.proto.VQLEnvR\x03env\x12-\n" +
 	"\x12disabled_functions\x18\b \x03(\tR\x11disabledFunctions\x12)\n" +
-	"\x10disabled_plugins\x18\t \x03(\tR\x0fdisabledPlugins\"\xc3\a\n" +
+	"\x10disabled_plugins\x18\t \x03(\tR\x0fdisabledPlugins\"\x8f\a\n" +
 	"\bSecurity\x12?\n" +
 	"\x1callowed_file_accessor_prefix\x18\x01 \x03(\tR\x19allowedFileAccessorPrefix\x12=\n" +
 	"\x1bdenied_file_accessor_prefix\x18; \x03(\tR\x18deniedFileAccessorPrefix\x12;\n" +
@@ -5669,8 +5659,7 @@ const file_config_proto_rawDesc = "" +
 	"\vsecrets_dek\x18\x03 \x01(\tR\n" +
 	"secretsDek\x12/\n" +
 	"\x14vql_must_use_secrets\x18\x05 \x01(\bR\x11vqlMustUseSecrets\x12*\n" +
-	"\x11shadowed_env_vars\x18\x04 \x03(\tR\x0fshadowedEnvVars\x122\n" +
-	"\x15allow_ancient_clients\x18= \x01(\bR\x13allowAncientClients\x127\n" +
+	"\x11shadowed_env_vars\x18\x04 \x03(\tR\x0fshadowedEnvVars\x127\n" +
 	"\x18client_self_labels_regex\x18> \x01(\tR\x15clientSelfLabelsRegex\"\x96\r\n" +
 	"\x06Config\x12F\n" +
 	"\aversion\x18\b \x01(\v2\x0e.proto.VersionB\x1c\xe2\xfc\xe3\xc4\x01\x16\x12\x14Version information.R\aversion\x12J\n" +
