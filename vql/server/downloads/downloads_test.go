@@ -63,7 +63,7 @@ sources:
 - query: SELECT * FROM info()
 `, `
 name: Server.Audit.Logs
-type: INTERNAL
+type: SERVER_EVENT
 `, `
 name: TestArtifact
 type: SERVER
