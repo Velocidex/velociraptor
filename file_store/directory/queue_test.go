@@ -12,13 +12,13 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/config"
-	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/file_store/tests"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -98,24 +98,26 @@ func (self *TestSuite) TestQueueManager() {
 	// Push some rows to the queue manager
 	ctx := context.Background()
 
-	reader, cancel := manager.Watch(ctx, "TestQueue", &api.QueueOptions{
+	queue_name := artifact_modes.NewQueueName("TestQueue",
+		artifact_modes.MODE_SERVER_EVENT)
+
+	reader, cancel := manager.Watch(ctx, queue_name, &api.QueueOptions{
 		FileBufferLeaseSize: 1,
 	})
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx, self.ConfigObj,
-		"C.123", "", "TestQueue")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, "C.123", "", "TestQueue",
+		artifact_modes.MODE_SERVER_EVENT)
 
 	// Query the state of the manager for testing.
 	dbg := manager.Debug()
 	// The initial size is zero
-	assert.Equal(self.T(), int64(0), utils.GetInt64(dbg, "TestQueue.0.Size"))
+	assert.Equal(self.T(), int64(0), utils.GetInt64(dbg, "TestQueue:SERVER_EVENT.0.Size"))
 
 	// Push some rows without reading - this should write to the
 	// file buffer and not block.
 	for i := 0; i < 10; i++ {
-		err = manager.PushEventRows(
-			path_manager, constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		err = manager.PushEventRows(path_manager,
 			[]*ordereddict.Dict{
 				ordereddict.NewDict().
 					Set("Foo", "Bar"),
@@ -127,12 +129,12 @@ func (self *TestSuite) TestQueueManager() {
 		// The file should contain all the rows now.  File size is not
 		// exact due to timestamps but it should be larger than 300.
 		dbg = manager.Debug()
-		return utils.GetInt64(dbg, "TestQueue.0.Size") > int64(300) &&
-			utils.GetString(dbg, "TestQueue.0.BackingFile") != ""
+		return utils.GetInt64(dbg, "TestQueue:SERVER_EVENT.0.Size") > int64(300) &&
+			utils.GetString(dbg, "TestQueue:SERVER_EVENT.0.BackingFile") != ""
 	})
 
 	dbg = manager.Debug()
-	backing_file := utils.GetString(dbg, "TestQueue.0.BackingFile")
+	backing_file := utils.GetString(dbg, "TestQueue:SERVER_EVENT.0.BackingFile")
 
 	// Now read 10 rows from the file.
 	count := 0
@@ -149,7 +151,7 @@ func (self *TestSuite) TestQueueManager() {
 	// Now check the file - it should be truncated since we read all
 	// messages. This will also clear the tempfile.
 	dbg = manager.Debug()
-	assert.Equal(self.T(), "", utils.GetString(dbg, "TestQueue.0.BackingFile"))
+	assert.Equal(self.T(), "", utils.GetString(dbg, "TestQueue:SERVER_EVENT.0.BackingFile"))
 
 	// Now cancel the watcher - further reads from the channel
 	// should not block - the channel is closed.
@@ -197,7 +199,6 @@ func (self *TestSuite) TestQueueManagerJsonl() {
 		// For performance critical parts it is more efficient to
 		// build the JSONL manually
 		err = manager.PushEventJsonl(path_manager,
-			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			[]byte(fmt.Sprintf("{\"Foo\":%q}\n", "Bar")), 1)
 		assert.NoError(self.T(), err)
 	}

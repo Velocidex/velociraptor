@@ -75,5 +75,7 @@ func (self *serverLogger) processAlert(msg string) error {
 		return err
 	}
 	return journal.PushJsonlToArtifact(self.ctx, self.config_obj,
-		serialized, 1, artifact_paths.ALERT_QUEUE.WithUser(self.principal))
+		serialized, 1, artifact_paths.ALERT_QUEUE.
+			WithSuperUser().
+			WithFrom(self.principal))
 }

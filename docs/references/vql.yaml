@@ -1314,6 +1314,8 @@
     type: int64
     description: Wait this many ms between events.
   category: event
+  metadata:
+    event: "true"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2227,6 +2229,8 @@
     type: int64
     description: Number of seconds between evaluation of the query.
   category: event
+  metadata:
+    event: "true"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2896,6 +2900,8 @@
     type: bool
     description: If specified we flush all rows from cache after the call.
   category: event
+  metadata:
+    event: "true"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -5562,6 +5568,7 @@
     type: bool
   category: server
   metadata:
+    event: "true"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -6850,6 +6857,8 @@
     type: int
     description: Maximum size of line buffer.
   category: parsers
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
 - name: parse_binary
@@ -12508,6 +12517,9 @@
     type: int
     description: Maximum size of line buffer.
   category: event
+  metadata:
+    event: "true"
+    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
 - name: watch_csv
@@ -12542,6 +12554,7 @@
     repeated: true
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12631,6 +12644,7 @@
     description: A regex that must match the raw buffer before we process it.
   category: linux
   metadata:
+    event: "true"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -12848,6 +12862,7 @@
       (default 1).
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12872,6 +12887,7 @@
     description: Emit raw events (not parsed).
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12896,6 +12912,7 @@
     description: Maximum size of line buffer.
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12915,6 +12932,7 @@
     required: true
   category: event
   metadata:
+    event: "true"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -12982,6 +13000,7 @@
       Rows must have an OSPath column.
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12998,6 +13017,9 @@
     description: The device file to open (as an NTFS device).
     required: true
   category: event
+  metadata:
+    event: "true"
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo

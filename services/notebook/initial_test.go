@@ -324,8 +324,9 @@ func (self *NotebookManagerTestSuite) createFlow(
 	assert.NoError(self.T(), err)
 	_, err = hunt_dispatcher.CreateHunt(self.Ctx, self.ConfigObj,
 		acl_manager, &api_proto.Hunt{
-			HuntId: "H.1234",
-			State:  api_proto.Hunt_RUNNING,
+			HuntId:  "H.1234",
+			Creator: "User",
+			State:   api_proto.Hunt_RUNNING,
 			StartRequest: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Generic.Client.Info"},
 				Specs: []*flows_proto.ArtifactSpec{{

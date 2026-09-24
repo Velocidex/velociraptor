@@ -179,7 +179,8 @@ func (self *RepositoryManager) SetArtifactMetadata(
 				Set("op", "metadata").
 				Set("metadata", metadata).
 				Set("id", self.id),
-		}, artifacts.ARTIFACT_MODIFICATION)
+		}, artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 
 	return err
 }
@@ -282,7 +283,8 @@ func (self *RepositoryManager) SetArtifactFile(
 				Set("definition", definition).
 				Set("id", self.id),
 		},
-		artifacts.ARTIFACT_MODIFICATION)
+		artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 
 	return artifact, err
 }
@@ -328,7 +330,8 @@ func (self *RepositoryManager) DeleteArtifactFile(
 				Set("op", "delete").
 				Set("id", self.id),
 		},
-		artifacts.ARTIFACT_MODIFICATION)
+		artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 
 	if err != nil {
 		return err

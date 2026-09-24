@@ -32,6 +32,13 @@ func (self *ArtifactPathManager) Mode() artifact_modes.ArtifactMode {
 	return self.mode
 }
 
+func (self *ArtifactPathManager) JournalOpts() services.JournalOptions {
+	return services.JournalOptions{
+		ArtifactName: self.base_artifact_name,
+		ArtifactType: self.mode,
+	}
+}
+
 func NewArtifactPathManagerWithMode(
 	config_obj *config_proto.Config,
 	client_id, flow_id, full_artifact_name string,
@@ -88,8 +95,8 @@ func (self *ArtifactPathManager) Logs() *ArtifactLogPathManager {
 	return &ArtifactLogPathManager{self}
 }
 
-func (self *ArtifactPathManager) GetQueueName() string {
-	return self.FullArtifactName
+func (self *ArtifactPathManager) GetQueueName() artifact_modes.QueueName {
+	return artifact_modes.NewQueueName(self.FullArtifactName, self.mode)
 }
 
 func (self *ArtifactPathManager) Path() api.FSPathSpec {

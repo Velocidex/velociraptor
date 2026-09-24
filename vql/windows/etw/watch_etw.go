@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/etw"
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/sys/windows"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -52,6 +53,12 @@ func (self WatchETWPlugin) Call(
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_etw: %s", err.Error())
+			return
+		}
+
+		err = vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("watch_usn: %s", err)
 			return
 		}
 
@@ -190,6 +197,9 @@ func (self WatchETWPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:    "watch_etw",
 		Doc:     "Watch for events from an ETW provider.",
 		ArgType: type_map.AddType(scope, &WatchETWArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.MACHINE_STATE).Build(),
 		Version: 2,
 	}
 }

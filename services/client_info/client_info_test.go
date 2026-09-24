@@ -54,7 +54,7 @@ name: Server.Internal.MetadataModifications
 type: SERVER_EVENT
 `, `
 name: Server.Audit.Logs
-type: INTERNAL
+type: SERVER_EVENT
 `, `
 name: Client.Test
 type: CLIENT

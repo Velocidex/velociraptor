@@ -86,7 +86,9 @@ func (self *JournalTestSuite) TestJournalWriting() {
 				Set("Foo", "Bar").
 				Set("i", i),
 			},
-			artifacts.FLOW_COMPLETION.WithClientId("C.1234"))
+			artifacts.FLOW_COMPLETION.
+				WithSuperUser().WithFrom("C.1234").
+				WithClientId("C.1234"))
 		assert.NoError(self.T(), err)
 	}
 
@@ -135,7 +137,9 @@ func (self *JournalTestSuite) TestJournalJsonlWriting() {
 	for i := 0; i < 10; i++ {
 		err = journal.PushJsonlToArtifact(self.Ctx, self.ConfigObj,
 			[]byte(fmt.Sprintf("{\"For\":%q,\"i\":%d}\n", "Bar", i)), 1,
-			artifacts.FLOW_COMPLETION.WithClientId("C.1234"))
+			artifacts.FLOW_COMPLETION.
+				WithSuperUser().WithFrom("C.1234").
+				WithClientId("C.1234"))
 		assert.NoError(self.T(), err)
 	}
 

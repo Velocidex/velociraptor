@@ -155,9 +155,12 @@ func (self *TestSuite) TestHuntsSource() {
 	hunt_dispatcher, err := services.GetHuntDispatcher(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
+	acl_manager := acl_managers.NullACLManager{}
+
 	new_hunt, err := hunt_dispatcher.CreateHunt(ctx,
-		self.ConfigObj, acl_managers.NullACLManager{},
+		self.ConfigObj, acl_manager,
 		&api_proto.Hunt{
+			Creator: "admin",
 			StartRequest: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Test.Artifact"},
 			},

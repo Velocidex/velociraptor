@@ -62,3 +62,33 @@
 // store in the database.
 
 package flows
+
+import (
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
+	artifacts "www.velocidex.com/golang/velociraptor/artifacts"
+	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+)
+
+var (
+	uploadCounter = promauto.NewCounter(prometheus.CounterOpts{
+		Name: "uploaded_files",
+		Help: "Total number of Uploaded Files.",
+	})
+
+	uploadBytes = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "uploaded_bytes",
+		Help: "Total bytes of Uploaded Files.",
+	})
+)
+
+func deobfuscateNames(config_obj *config_proto.Config,
+	names []string) []string {
+	deobfuscated_names := make([]string, 0, len(names))
+	for _, n := range names {
+		deobfuscated_names = append(deobfuscated_names,
+			artifacts.DeobfuscateString(config_obj, n))
+	}
+
+	return deobfuscated_names
+}

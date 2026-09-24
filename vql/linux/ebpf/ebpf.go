@@ -40,8 +40,9 @@ func (self EBPFEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap)
 		Name:    "watch_ebpf",
 		Doc:     "Watch for events from eBPF.",
 		ArgType: type_map.AddType(scope, &EBPFEventPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.MACHINE_STATE).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.MACHINE_STATE).Build(),
 		Version: 2,
 	}
 }

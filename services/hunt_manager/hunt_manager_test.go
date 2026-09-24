@@ -72,6 +72,7 @@ func (self *HuntTestSuite) TestHuntManager() {
 	// The hunt will launch the Generic.Client.Info on the client.
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
+		Creator:      "User",
 		StartRequest: self.expected,
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
@@ -94,7 +95,8 @@ func (self *HuntTestSuite) TestHuntManager() {
 			Set("HuntId", self.hunt_id).
 			Set("ClientId", self.client_id),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -129,6 +131,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -160,7 +163,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientNoLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -203,6 +207,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -239,7 +244,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabelDifferentCase() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -270,6 +276,7 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 
 	// Hunt is paused so normally will not receive any clients.
 	hunt_obj := &api_proto.Hunt{
+		Creator:      "User",
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
 		State:        api_proto.Hunt_PAUSED,
@@ -294,7 +301,8 @@ func (self *HuntTestSuite) TestHuntWithOverride() {
 			Set("ClientId", self.client_id).
 			Set("Override", true),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -331,6 +339,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -365,7 +374,8 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
 	assert.NoError(t, err)
 
 	indexer, err := services.GetIndexer(self.ConfigObj)
@@ -401,6 +411,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -446,7 +457,9 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasExcludedLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
+
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -465,6 +478,7 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasOnlyExcludedLabel() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -504,7 +518,9 @@ func (self *HuntTestSuite) TestHuntWithLabelClientHasOnlyExcludedLabel() {
 			Set("ClientId", self.client_id).
 			Set("Fqdn", "MyHost"),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
+
 	assert.NoError(t, err)
 
 	time.Sleep(time.Second)
@@ -523,6 +539,7 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -581,7 +598,9 @@ func (self *HuntTestSuite) TestHuntClientOSCondition() {
 				Set("ClientId", client_id_2).
 				Set("Fqdn", "MyHost2"),
 		},
-		artifacts.HUNT_PARTICIPATION)
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.hunt_id))
+
 	assert.NoError(t, err)
 
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
@@ -623,6 +642,7 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -670,7 +690,8 @@ func (self *HuntTestSuite) TestHuntClientOSConditionInterrogation() {
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", self.client_id),
 		},
-		artifacts.INTERROGATION_QUEUE))
+		artifacts.INTERROGATION_QUEUE.
+			WithSuperUser().WithFrom(self.client_id)))
 
 	// Ensure the hunt is collected on the client.
 	mdb := test_utils.GetMemoryDataStore(self.T(), self.ConfigObj)
@@ -690,6 +711,7 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -713,7 +735,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 			Set("HuntId", hunt_obj.HuntId).
 			Set("ClientId", self.client_id),
 		},
-		artifacts.HUNT_PARTICIPATION))
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.client_id)))
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -750,7 +773,9 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 			Set("FlowId", flow_id).
 			Set("ClientId", self.client_id),
 		},
-		artifacts.FLOW_COMPLETION.WithClientId(self.client_id)))
+		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(self.client_id).
+			WithClientId(self.client_id)))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		h, pres := dispatcher.GetHunt(self.Ctx,
@@ -771,7 +796,8 @@ func (self *HuntTestSuite) TestHuntManagerMutations() {
 				State:  api_proto.Hunt_STOPPED,
 			}),
 		},
-		artifacts.HUNT_MODIFICATIONS))
+		artifacts.HUNT_MODIFICATIONS.
+			WithSuperUser().WithFrom(hunt_obj.HuntId)))
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		h, pres := dispatcher.GetHunt(self.Ctx,
@@ -793,6 +819,7 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 	hunt_obj := &api_proto.Hunt{
 		HuntId:       self.hunt_id,
 		StartRequest: self.expected,
+		Creator:      "User",
 		State:        api_proto.Hunt_RUNNING,
 		Stats:        &api_proto.HuntStats{},
 		Expires:      uint64(time.Now().Add(7*24*time.Hour).UTC().UnixNano() / 1000),
@@ -815,7 +842,8 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 			Set("HuntId", hunt_obj.HuntId).
 			Set("ClientId", self.client_id),
 		},
-		artifacts.HUNT_PARTICIPATION))
+		artifacts.HUNT_PARTICIPATION.
+			WithSuperUser().WithFrom(self.client_id)))
 
 	// This will schedule a hunt on this client.
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
@@ -843,7 +871,9 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 			Set("FlowId", flow_id).
 			Set("ClientId", self.client_id),
 		},
-		artifacts.FLOW_COMPLETION.WithClientId(self.client_id)))
+		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(self.client_id).
+			WithClientId(self.client_id)))
 
 	// Both TotalClientsWithResults and TotalClientsWithErrors should
 	// increase.

@@ -89,6 +89,7 @@ func (self *ApiServer) PushEvents(
 		ClientId:     in.ClientId,
 		FlowId:       in.FlowId,
 		Username:     in.Username,
+		From:         in.Username,
 	}
 
 	// only broadcast the events for local listeners. Minions

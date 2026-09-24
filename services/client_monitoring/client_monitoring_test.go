@@ -174,7 +174,7 @@ func (self *ClientMonitoringTestSuite) TestUpdatingArtifacts() {
 
 	ctx := self.Ctx
 	_, err = repository_manager.SetArtifactFile(ctx,
-		self.ConfigObj, "", `
+		self.ConfigObj, "User", `
 name: TestArtifact
 type: CLIENT_EVENT
 sources:
@@ -205,7 +205,7 @@ sources:
 
 	// Now delete the artifact completely
 	repository_manager.DeleteArtifactFile(
-		ctx, self.ConfigObj, "", "TestArtifact")
+		ctx, self.ConfigObj, "User", "TestArtifact")
 
 	// The table should magically be updated!
 	table_json := ""
@@ -232,7 +232,8 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTable() {
 	defer closer()
 
 	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj, "", `
+	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj,
+		"User", `
 name: TestArtifact
 type: CLIENT_EVENT
 sources:
@@ -282,7 +283,8 @@ func (self *ClientMonitoringTestSuite) TestUpdatingClientTableMultiFrontend() {
 	defer closer()
 
 	repository_manager, _ := services.GetRepositoryManager(self.ConfigObj)
-	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj, "", `
+	repository_manager.SetArtifactFile(self.Ctx, self.ConfigObj,
+		"User", `
 name: TestArtifact
 type: CLIENT_EVENT
 sources:

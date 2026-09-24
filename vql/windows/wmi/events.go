@@ -188,10 +188,12 @@ func (self WmiEventPlugin) Call(
 
 func (self WmiEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "wmi_events",
-		Doc:      "Executes an evented WMI queries asynchronously.",
-		ArgType:  type_map.AddType(scope, &WmiEventPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name:    "wmi_events",
+		Doc:     "Executes an evented WMI queries asynchronously.",
+		ArgType: type_map.AddType(scope, &WmiEventPluginArgs{}),
+		Metadata: vql.VQLMetadata().
+			Event().
+			Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

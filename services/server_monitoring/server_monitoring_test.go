@@ -132,7 +132,7 @@ func (self *ServerMonitoringTestSuite) TestMultipleArtifacts() {
 
 	// Install the two event artifacts.
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Server.Clock", "Server.Clock2"},
 			Specs: []*flows_proto.ArtifactSpec{
@@ -212,7 +212,7 @@ func (self *ServerMonitoringTestSuite) TestAlertEvent() {
 
 	// Install the two event artifacts.
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"EventTest.Alert"},
 		})
@@ -267,7 +267,7 @@ sources:
 
 	// Install a table with a sleep artifact.
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"Sleep"},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -280,7 +280,7 @@ sources:
 
 	// Now install an empty table - all queries should quit.
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -324,7 +324,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 	assert.NoError(self.T(), err)
 
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"WaitForCancel"},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -338,7 +338,7 @@ func (self *ServerMonitoringTestSuite) TestQueriesAreCancelled() {
 
 	// Now install an empty table - all queries should quit.
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -392,7 +392,7 @@ func (self *ServerMonitoringTestSuite) TestConcurrentUpdatesDoNotLeakQueries() {
 					name = "WaitForCancel2"
 				}
 				err := event_table.Update(self.Ctx,
-					self.ConfigObj, "",
+					self.ConfigObj, "User",
 					&flows_proto.ArtifactCollectorArgs{
 						Artifacts: []string{name},
 					})
@@ -407,7 +407,7 @@ func (self *ServerMonitoringTestSuite) TestConcurrentUpdatesDoNotLeakQueries() {
 	// the orphaned queries can never be cancelled and run_count stays
 	// above zero.
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{},
 			Specs:     []*flows_proto.ArtifactSpec{},
@@ -540,7 +540,7 @@ sources:
 	assert.NoError(self.T(), err)
 
 	err = event_table.Update(self.Ctx,
-		self.ConfigObj, "",
+		self.ConfigObj, "User",
 		&flows_proto.ArtifactCollectorArgs{
 			Artifacts: []string{"TestArtifactCount"},
 			Specs:     []*flows_proto.ArtifactSpec{},

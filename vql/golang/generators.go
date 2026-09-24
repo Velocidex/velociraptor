@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -14,7 +15,7 @@ import (
 )
 
 type Generator struct {
-	name                   string
+	name                   artifact_modes.QueueName
 	description            string
 	disable_file_buffering bool
 }
@@ -107,12 +108,15 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	// A channel to send our events on
 	generator_chan := make(chan *ordereddict.Dict)
 
+	queue_name := artifact_modes.NewQueueName(
+		arg.Name, artifact_modes.MODE_NOTEBOOK)
+
 	// Try to register this generator but if it is already registered
 	// just wrap the existing one and return it.
-	err = b.RegisterGenerator(generator_chan, arg.Name)
+	err = b.RegisterGenerator(generator_chan, queue_name)
 	if err == services.AlreadyRegisteredError {
 		return Generator{
-			name:                   arg.Name,
+			name:                   queue_name,
 			description:            arg.Description,
 			disable_file_buffering: !arg.WithFileBuffering,
 		}
@@ -145,7 +149,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 		}
 
 		if arg.FanOut > 0 {
-			b.WaitForListeners(sub_ctx, arg.Name, arg.FanOut)
+			b.WaitForListeners(sub_ctx, queue_name, arg.FanOut)
 		}
 
 		for item := range arg.Query.Eval(sub_ctx, scope) {
@@ -159,7 +163,7 @@ func (self *GeneratorFunction) Call(ctx context.Context,
 	}()
 
 	return Generator{
-		name:                   arg.Name,
+		name:                   queue_name,
 		disable_file_buffering: !arg.WithFileBuffering,
 	}
 }
