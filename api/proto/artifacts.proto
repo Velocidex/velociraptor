@@ -70,12 +70,21 @@ message SetArtifactRequest {
         }];
 }
 
+message VerifierError {
+    string name = 1;
+    string message = 2;
+    repeated string args = 3;
+}
+
 message SetArtifactResponse {
     bool error = 1;
     string error_message = 2;
 
     repeated string errors = 3;
+    repeated VerifierError verifier_errors = 5;
+
     repeated string warnings = 4;
+    repeated VerifierError verifier_warnings = 6;
 }
 
 message LoadArtifactError {

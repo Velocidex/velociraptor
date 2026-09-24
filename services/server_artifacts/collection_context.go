@@ -338,6 +338,8 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 		logger.Error("<red>maybeSendCompletionMessage WriteFlow</> %v", err)
 	}
 
+	// Send a flow completion to trigger any post processing/hunts
+	// etc.
 	row := ordereddict.NewDict().
 		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
 		Set("Flow", flow_context).
@@ -350,8 +352,10 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	}
 	journal.PushRowsToArtifactAsync(
 		ctx, self.config_obj, row,
-		artifact_paths.FLOW_COMPLETION.WithClientId(
-			constants.VELOCIRAPTOR_SERVER_CLIENT_ID))
+		artifact_paths.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(
+			constants.VELOCIRAPTOR_SERVER_CLIENT_ID).
+			WithClientId(constants.VELOCIRAPTOR_SERVER_CLIENT_ID))
 }
 
 func (self *contextManager) RunQuery(

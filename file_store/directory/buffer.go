@@ -17,6 +17,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
 )
 
@@ -305,7 +306,7 @@ func NewFileBasedRingBuffer(
 
 	result := &FileBasedRingBuffer{
 		config_obj: config_obj,
-		base_name:  base_name,
+		base_name:  utils.SanitizeString(base_name),
 		header:     header,
 		read_buf:   make([]byte, 8),
 		write_buf:  make([]byte, 8),

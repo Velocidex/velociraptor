@@ -445,7 +445,9 @@ func (self *ClientInfoManager) MutationSync(
 					ordereddict.NewDict().
 						Set("Mutation", self.mutation_manager.GetMutation()).
 						Set("From", self.uuid),
-					artifacts.CLIENT_INFO_SYNC)
+					artifacts.CLIENT_INFO_SYNC.
+						WithSuperUser().WithFrom(
+						utils.ToString(self.uuid)))
 			}
 		}
 	}

@@ -318,7 +318,8 @@ func ws_send_client_messages(
 				[]*ordereddict.Dict{
 					ordereddict.NewDict().
 						Set("ClientId", source)},
-				artifacts.ENROLLMENT_QUEUE)
+				artifacts.ENROLLMENT_QUEUE.
+					WithSuperUser().WithFrom(source))
 			if err != nil {
 				return send_error(ws, err, http.StatusServiceUnavailable)
 			}
@@ -343,8 +344,10 @@ func ws_send_client_messages(
 					Set("ClientId", source).
 					Set("RemoteAddr", message_info.RemoteAddr).
 					Set("UserAgent", req.UserAgent())
-				journal.PushRowsToArtifactAsync(ctx, org_config_obj,
-					info, artifacts.CLIENT_CONFLICT)
+				journal.PushRowsToArtifactAsync(
+					ctx, org_config_obj, info,
+					artifacts.CLIENT_CONFLICT.
+						WithSuperUser().WithFrom(source))
 			}
 			return send_error(ws, conflictError, http.StatusConflict)
 		}

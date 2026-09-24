@@ -7,6 +7,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 )
 
 // The broadcast service allows VQL to implement fan out
@@ -54,8 +55,8 @@ func GetBroadcastService(
 }
 
 type BroadcastService interface {
-	RegisterGenerator(input <-chan *ordereddict.Dict, name string) error
-	Watch(ctx context.Context, name string, options api.QueueOptions) (
+	RegisterGenerator(input <-chan *ordereddict.Dict, name artifact_modes.QueueName) error
+	Watch(ctx context.Context, name artifact_modes.QueueName, options api.QueueOptions) (
 		output <-chan *ordereddict.Dict, cancel func(), err error)
-	WaitForListeners(ctx context.Context, name string, count int64)
+	WaitForListeners(ctx context.Context, name artifact_modes.QueueName, count int64)
 }

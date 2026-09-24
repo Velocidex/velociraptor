@@ -141,6 +141,12 @@ func (self USNPlugin) Call(
 			return
 		}
 
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("parse_usn: %s", err)
+			return
+		}
+
 		ntfs_ctx, usn_stream, err := arg.GetStreams(scope)
 		if err != nil {
 			scope.Log("parse_usn: %v", err)
@@ -205,13 +211,15 @@ func (self USNPlugin) Call(
 	return output_chan
 }
 
-func (self USNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+func (self USNPlugin) Info(
+	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "parse_usn",
-		Doc:      "Parse the USN journal from a device.",
-		ArgType:  type_map.AddType(scope, &USNPluginArgs{}),
-		Version:  2,
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "parse_usn",
+		Doc:     "Parse the USN journal from a device.",
+		ArgType: type_map.AddType(scope, &USNPluginArgs{}),
+		Version: 2,
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 
@@ -236,6 +244,12 @@ func (self WatchUSNPlugin) Call(
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 		if err != nil {
 			scope.Log("watch_usn: %v", err)
+			return
+		}
+
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("watch_usn: %s", err)
 			return
 		}
 
@@ -289,6 +303,9 @@ func (self WatchUSNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:    "watch_usn",
 		Doc:     "Watch the USN journal from a device.",
 		ArgType: type_map.AddType(scope, &WatchUSNPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

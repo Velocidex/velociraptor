@@ -85,7 +85,7 @@ require (
 	www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57
 	www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5
 	www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9
-	www.velocidex.com/golang/go-prefetch v0.0.0-20251027080408-85407689d0cb
+	www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
 	www.velocidex.com/golang/vfilter v0.0.0-20260820173147-f8fe490bf569
@@ -102,7 +102,7 @@ require (
 	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def
 	github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
-	github.com/Velocidex/fileb0x v1.1.2-0.20251122021447-f71ad8da5502
+	github.com/Velocidex/fileb0x v1.1.2-0.20260924031635-cd9b52cfe09c
 	github.com/Velocidex/go-elasticsearch/v9 v9.0.0-20260310165104-23947f88cc85
 	github.com/Velocidex/go-ewf v0.0.0-20260301075014-ed09cb7887b6
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
@@ -114,7 +114,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
-	github.com/Velocidex/tracee_velociraptor v0.0.0-20260920161859-b172a317e4ef
+	github.com/Velocidex/tracee_velociraptor v0.0.0-20260921030823-6d8e34ce73b1
 	github.com/Velocidex/velociraptor-site-search v0.0.0-20260316064028-d30384722e4b
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
@@ -234,7 +234,7 @@ require (
 	github.com/blevesearch/zapx/v15 v15.4.3 // indirect
 	github.com/blevesearch/zapx/v16 v16.3.1 // indirect
 	github.com/bmatcuk/doublestar v1.3.4 // indirect
-	github.com/bmatcuk/doublestar/v4 v4.10.1 // indirect
+	github.com/bmatcuk/doublestar/v4 v4.10.0 // indirect
 	github.com/catppuccin/go v0.2.0 // indirect
 	github.com/cavaliergopher/cpio v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -295,15 +295,13 @@ require (
 	github.com/klauspost/pgzip v1.2.6 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
-	github.com/labstack/echo v3.3.10+incompatible // indirect
-	github.com/labstack/gommon v0.4.2 // indirect
 	github.com/lestrrat-go/strftime v1.0.5 // indirect
 	github.com/libp2p/go-sockaddr v0.1.1 // indirect
 	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/mattermost/xml-roundtrip-validator v0.1.0 // indirect
 	github.com/mattn/go-localereader v0.0.1 // indirect
-	github.com/mattn/go-runewidth v0.0.23 // indirect
+	github.com/mattn/go-runewidth v0.0.30 // indirect
 	github.com/minio/crc64nvme v1.1.1 // indirect
 	github.com/minio/md5-simd v1.1.2 // indirect
 	github.com/mitchellh/hashstructure/v2 v2.0.2 // indirect
@@ -316,7 +314,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.15.3-0.20240618155329-98d742f6907a // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
-	github.com/nsf/termbox-go v1.1.1 // indirect
+	github.com/nsf/termbox-go v1.1.2 // indirect
 	github.com/paulmach/orb v0.10.0 // indirect
 	github.com/philhofer/fwd v1.2.0 // indirect
 	github.com/pierrec/lz4/v4 v4.1.21 // indirect
@@ -338,7 +336,6 @@ require (
 	github.com/tinylib/msgp v1.6.3 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
-	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/xhit/go-str2duration/v2 v2.1.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.etcd.io/bbolt v1.4.3 // indirect

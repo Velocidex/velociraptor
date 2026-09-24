@@ -155,7 +155,9 @@ func CheckClientStatus(
 			ordereddict.NewDict().
 				Set("HuntId", hunt.HuntId).
 				Set("ClientId", client_id),
-			artifacts.HUNT_PARTICIPATION)
+			artifacts.HUNT_PARTICIPATION.
+				WithSuperUser().
+				WithFrom(hunt.HuntId))
 
 		if hunt.StartTime > latest_timestamp {
 			latest_timestamp = hunt.StartTime

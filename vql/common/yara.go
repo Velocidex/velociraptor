@@ -305,7 +305,7 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 	buf := make([]byte, self.blocksize)
 
 	if self.log_level >= 1 {
-		self.logger.Log(self.scope,
+		self.logger.Log(self.scope.Log,
 			"Scanning %v from %#0x to %#0x", self.filename, start, end)
 	}
 
@@ -356,7 +356,7 @@ func (self *scanReporter) scanRange(start, end uint64, f accessors.ReadSeekClose
 		self.reader = nil
 
 		if self.log_level >= 2 {
-			self.logger.Log(self.scope,
+			self.logger.Log(self.scope.Log,
 				"Range %v from %#0x to %#0x: Got to %#0x (%d %%)",
 				self.filename, start, end, self.base_offset,
 				100*(self.base_offset-start)/(end-start))

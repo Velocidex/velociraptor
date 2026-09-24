@@ -171,7 +171,8 @@ func (self *Labeler) notifyClient(
 			Set("client_id", client_id).
 			Set("Operation", operation).
 			Set("Label", new_label),
-		artifacts.LABEL_QUEUE)
+		artifacts.LABEL_QUEUE.
+			WithSuperUser().WithFrom("Labeler"))
 	return nil
 }
 

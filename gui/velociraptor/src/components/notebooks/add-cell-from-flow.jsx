@@ -3,6 +3,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 
 import { SimpleFlowsList } from '../flows/flows-list.jsx';
+import { quoteString } from '../utils/escapes.jsx';
 
 import api from '../core/api-service.jsx';
 import Modal from 'react-bootstrap/Modal';
@@ -53,12 +54,13 @@ export default class AddCellFromFlowDialog extends React.Component {
             return;
         }
 
-        query += "    artifact='" + sources[0] + "',\n";
+        query += "    artifact=" + quoteString(sources[0]) + ",\n";
+
         for (var i=1; i<sources.length; i++) {
-            query += "    -- artifact='" + sources[i] + "',\n";
+            query += "    -- artifact=" + quoteString(sources[i]) + ",\n";
         }
-        query += "    client_id='" + client_id + "',\n    flow_id='" +
-            flow_id + "', hunt_id='')\nLIMIT 50\n";
+        query += "    client_id=" + quoteString(client_id) +
+            ",\n    flow_id=" + quoteString(flow_id) + ", hunt_id='')\nLIMIT 50\n";
 
         this.props.addCell(query, "VQL");
         this.props.closeDialog();

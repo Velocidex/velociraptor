@@ -200,11 +200,13 @@ func (self _WatchEvtxPlugin) Call(
 
 func (self _WatchEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "watch_evtx",
-		Doc:      "Watch an EVTX file and stream events from it. ",
-		ArgType:  type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
-		Version:  2,
+		Name:    "watch_evtx",
+		Doc:     "Watch an EVTX file and stream events from it. ",
+		ArgType: type_map.AddType(scope, &_ParseEvtxPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.FILESYSTEM_READ).Build(),
+		Version: 2,
 	}
 }
 

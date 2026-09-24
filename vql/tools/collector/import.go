@@ -174,6 +174,8 @@ func (self ImportCollectionFunction) importHunt(
 		return nil, err
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
+
 	for _, item := range directory_listing {
 		if !item.IsDir() || item.Name() == "results" || item.Name() == "uploads" {
 			continue
@@ -204,7 +206,8 @@ func (self ImportCollectionFunction) importHunt(
 						FlowId:   flow.SessionId,
 					},
 				})},
-			artifacts.HUNT_MODIFICATIONS)
+			artifacts.HUNT_MODIFICATIONS.
+				WithSuperUser().WithFrom(principal))
 	}
 
 	return hunt_info, nil
@@ -346,6 +349,8 @@ func (self ImportCollectionFunction) importFlow(
 		Set("FlowId", collection_context.SessionId).
 		Set("ClientId", collection_context.ClientId)
 
+	principal := vql_subsystem.GetPrincipal(scope)
+
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
 		return nil, err
@@ -353,6 +358,7 @@ func (self ImportCollectionFunction) importFlow(
 	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row},
 		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(principal).
 			WithClientId(collection_context.ClientId).
 			WithFlowId(collection_context.SessionId))
 

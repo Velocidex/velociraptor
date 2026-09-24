@@ -237,7 +237,8 @@ func (self *Notifier) ProcessPing(ctx context.Context,
 			Set("NotifyTarget", notify_target).
 			Set("From", self.uuid).
 			Set("Connected", is_client_connected)},
-		artifacts.PONG)
+		artifacts.PONG.
+			WithSuperUser().WithFrom("NotificationService"))
 }
 
 func (self *Notifier) ListenForNotification(client_id string) (chan bool, func()) {
@@ -263,7 +264,8 @@ func (self *Notifier) NotifyListener(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("Tag", tag).
 			Set("Target", id)},
-		artifacts.NOTIFICATION_QUEUE)
+		artifacts.NOTIFICATION_QUEUE.
+			WithSuperUser().WithFrom("NotificationService"))
 }
 
 func (self *Notifier) NotifyDirectListener(client_id string) {
@@ -287,7 +289,8 @@ func (self *Notifier) NotifyListenerAsync(
 		ordereddict.NewDict().
 			Set("Tag", tag).
 			Set("Target", id),
-		artifacts.NOTIFICATION_QUEUE)
+		artifacts.NOTIFICATION_QUEUE.
+			WithSuperUser().WithFrom("Notifier"))
 }
 
 func (self *Notifier) IsClientDirectlyConnected(client_id string) bool {
@@ -368,7 +371,8 @@ func (self *Notifier) IsClientConnected(
 		[]*ordereddict.Dict{ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("NotifyTarget", id)},
-		artifacts.PING)
+		artifacts.PING.
+			WithSuperUser().WithFrom(client_id))
 	if err != nil {
 		return false
 	}

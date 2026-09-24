@@ -148,10 +148,12 @@ func (self WatchJournaldPlugin) Call(
 
 func (self WatchJournaldPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "watch_journald",
-		Doc:      "Watch a journald file and stream events from it. ",
-		ArgType:  type_map.AddType(scope, &WatchJournalPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
+		Name:    "watch_journald",
+		Doc:     "Watch a journald file and stream events from it. ",
+		ArgType: type_map.AddType(scope, &WatchJournalPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
 

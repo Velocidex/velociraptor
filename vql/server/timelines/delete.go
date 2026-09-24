@@ -81,7 +81,9 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 				Set("SuperTimelineName", arg.Timeline).
 				Set("Component", arg.Component).
 				Set("Action", "Delete"),
-			artifacts.TIMELINE_ADD.WithUser(principal))
+			artifacts.TIMELINE_ADD.
+				WithUser(principal).
+				WithFrom(principal))
 	}
 
 	return true

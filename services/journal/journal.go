@@ -33,7 +33,7 @@ import (
 var (
 	notInitializedError = errors.New("Not initialized")
 
-	PushRowsToArtifactAsyncIsSynchrnous = false
+	PushRowsToArtifactAsyncIsSynchrnous = true
 )
 
 type JournalService struct {
@@ -48,7 +48,7 @@ type JournalService struct {
 	pool pond.Pool
 }
 
-func (self *JournalService) GetWatchers() []string {
+func (self *JournalService) GetWatchers() []artifact_modes.QueueName {
 	return self.qm.GetWatchers()
 }
 
@@ -57,7 +57,9 @@ func (self *JournalService) publishWatchers(ctx context.Context) {
 		self.PushRowsToArtifact(ctx, self.config_obj,
 			[]*ordereddict.Dict{ordereddict.NewDict().
 				Set("Events", self.GetWatchers())},
-			artifacts.MASTER_REGISTRATIONS)
+			artifacts.MASTER_REGISTRATIONS.
+				WithSuperUser().
+				WithFrom("JournalService"))
 	}
 }
 
@@ -65,14 +67,17 @@ func (self *JournalService) Watch(
 	ctx context.Context, queue services.JournalOptions,
 	watcher_name string) (<-chan *ordereddict.Dict, func()) {
 
-	sub_ctx, cancel := context.WithCancel(ctx)
-	child_chan, closer := self.WatchArtifact(ctx, queue.ArtifactName, watcher_name)
+	child_chan, closer := self.WatchQueue(
+		ctx, queue.Queue(), watcher_name)
 
+	// No filtering required
 	if queue.EventFilter == nil {
 		return child_chan, closer
 	}
 
+	// Filter each event
 	output_chan := make(chan *ordereddict.Dict)
+	sub_ctx, cancel := context.WithCancel(ctx)
 
 	go func() {
 		defer close(output_chan)
@@ -88,8 +93,22 @@ func (self *JournalService) Watch(
 					return
 				}
 
-				if !queue.EventFilter(self.config_obj,
-					queue, watcher_name, row) {
+				// Extract the authorizing user from the row.
+				row_opts, err := queue.FromRow(row)
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj,
+						&logging.FrontendComponent)
+					logger.Error("JournalService.Watch: %v", err)
+					continue
+				}
+
+				// Filter the row
+				err = row_opts.EventFilter(
+					row_opts, self.config_obj)
+				if err != nil {
+					logger := logging.GetLogger(self.config_obj,
+						&logging.FrontendComponent)
+					logger.Error("JournalService.Watch: %v", err)
 					continue
 				}
 
@@ -108,8 +127,9 @@ func (self *JournalService) Watch(
 	}
 }
 
-func (self *JournalService) WatchArtifact(
-	ctx context.Context, queue_name string,
+func (self *JournalService) WatchQueue(
+	ctx context.Context,
+	queue_name artifact_modes.QueueName,
 	watcher_name string) (<-chan *ordereddict.Dict, func()) {
 
 	if self == nil || self.qm == nil {
@@ -125,15 +145,17 @@ func (self *JournalService) WatchArtifact(
 
 	logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 	logger.Info("%s: Watching for events from %v", watcher_name, queue_name)
-	res, cancel := self.qm.Watch(ctx, queue_name, &api.QueueOptions{
-		OwnerName:            watcher_name,
-		DisableFileBuffering: disable_file_buffering,
-	})
+
+	child_chan, cancel := self.qm.Watch(
+		ctx, queue_name, &api.QueueOptions{
+			OwnerName:            watcher_name,
+			DisableFileBuffering: disable_file_buffering,
+		})
 
 	// Advertise new watchers
 	self.publishWatchers(ctx)
 
-	return res, func() {
+	return child_chan, func() {
 		cancel()
 
 		// Advertise that a watcher was removed.
@@ -264,7 +286,14 @@ func (self *JournalService) Broadcast(
 	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		config_obj, opts.ClientId, opts.FlowId, opts.ArtifactName, mode)
 
-	self.qm.Broadcast(path_manager, opts.Username, rows)
+	// Check the user is allowed to send the message in the first
+	// place and tag it with the authorizing username.
+	err = opts.TagRows(config_obj, rows)
+	if err != nil {
+		return err
+	}
+
+	self.qm.Broadcast(path_manager.GetQueueName(), rows)
 	return nil
 }
 
@@ -289,8 +318,13 @@ func (self *JournalService) PushJsonlToArtifact(
 			return errors.New("Filestore not initialized")
 		}
 
+		jsonl, err = opts.TagJsonl(config_obj, jsonl)
+		if err != nil {
+			return err
+		}
+
 		err := self.qm.PushEventJsonl(
-			path_manager, opts.Username, jsonl, row_count)
+			path_manager, jsonl, row_count)
 		if err != nil {
 			return err
 		}
@@ -388,8 +422,12 @@ func (self *JournalService) PushRowsToArtifact(
 			return errors.New("Filestore not initialized")
 		}
 
-		err := self.qm.PushEventRows(
-			path_manager, opts.Username, rows)
+		err := opts.TagRows(config_obj, rows)
+		if err != nil {
+			return err
+		}
+
+		err = self.qm.PushEventRows(path_manager, rows)
 		if err != nil {
 			return err
 		}
@@ -421,7 +459,9 @@ func (self *JournalService) Start(config_obj *config_proto.Config) error {
 }
 
 func NewJournalService(
-	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) (services.JournalService, error) {
+	ctx context.Context,
+	wg *sync.WaitGroup,
+	config_obj *config_proto.Config) (services.JournalService, error) {
 	// Are we running on a minion frontend? If so we try to start
 	// our replication service.
 	if !services.IsMaster(config_obj) {

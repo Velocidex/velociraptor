@@ -13,6 +13,9 @@ const (
 	MODE_SERVER_EVENT
 	MODE_NOTEBOOK
 	MODE_INTERNAL
+
+	// Mode used by VQL queries - generators.
+	MODE_VQL
 )
 
 func (self ArtifactMode) String() string {
@@ -29,6 +32,8 @@ func (self ArtifactMode) String() string {
 		return "NOTEBOOK"
 	case MODE_INTERNAL:
 		return "INTERNAL"
+	case MODE_VQL:
+		return "MODE_VQL"
 	default:
 		return "INVALID"
 	}
@@ -77,6 +82,8 @@ func ModeNameToMode(name string) ArtifactMode {
 		return MODE_NOTEBOOK
 	case "INTERNAL":
 		return MODE_INTERNAL
+	case "MODE_VQL":
+		return MODE_VQL
 	}
 	return MODE_INVALID
 }

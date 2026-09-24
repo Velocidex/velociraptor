@@ -3,6 +3,7 @@ import _ from 'lodash';
 import PropTypes from 'prop-types';
 import React, { Component } from 'react';
 
+import {escapeMultiLine} from "../utils/escapes.jsx";
 import Modal from 'react-bootstrap/Modal';
 import T from '../i8n/i8n.jsx';
 import Button from 'react-bootstrap/Button';
@@ -61,7 +62,7 @@ export default class CopyCellToNotebookDialog extends Component {
                     case "FlowId":
                     case "ClientId":
                     case "HuntId":
-                    new_cell.input = `LET ${x.key} <= '''${x.value}''' \n` + new_cell.input;
+                    new_cell.input = `LET ${x.key} <= ${escapeMultiLine(x.value)} \n`;
                 }
             });
         }

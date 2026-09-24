@@ -54,5 +54,6 @@ func enroll(
 		[]*ordereddict.Dict{
 			ordereddict.NewDict().
 				Set("ClientId", client_id)},
-		artifacts.ENROLLMENT_QUEUE)
+		artifacts.ENROLLMENT_QUEUE.
+			WithSuperUser().WithFrom(client_id))
 }

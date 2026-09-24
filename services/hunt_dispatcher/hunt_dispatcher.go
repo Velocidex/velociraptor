@@ -112,7 +112,8 @@ func (self *HuntDispatcher) participateAllConnectedClients(
 			ordereddict.NewDict().
 				Set("HuntId", hunt_id).
 				Set("ClientId", c),
-			artifacts.HUNT_PARTICIPATION)
+			artifacts.HUNT_PARTICIPATION.
+				WithSuperUser().WithFrom(hunt_id))
 	}
 
 	return nil
@@ -188,7 +189,8 @@ func (self *HuntDispatcher) ModifyHuntObject(
 								Set("Hunt", hunt_copy).
 								Set("TriggerParticipation", true),
 						},
-						artifacts.HUNT_UPDATE)
+						artifacts.HUNT_UPDATE.
+							WithSuperUser().WithFrom(hunt_id))
 				}
 				return services.HuntTriggerParticipation
 
@@ -209,7 +211,8 @@ func (self *HuntDispatcher) ModifyHuntObject(
 								Set("HuntId", hunt_record.HuntId).
 								Set("Hunt", hunt_copy),
 						},
-						artifacts.HUNT_UPDATE)
+						artifacts.HUNT_UPDATE.
+							WithSuperUser().WithFrom(hunt_id))
 				}
 				return services.HuntPropagateChanges
 
@@ -396,7 +399,9 @@ func (self *HuntDispatcher) CreateHunt(
 
 	err = journal.PushRowsToArtifact(ctx, config_obj,
 		[]*ordereddict.Dict{row},
-		artifacts.HUNT_CREATION)
+		artifacts.HUNT_CREATION.
+			WithSuperUser().
+			WithFrom(hunt.Creator))
 	if err != nil {
 		return nil, err
 	}

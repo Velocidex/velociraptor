@@ -245,10 +245,10 @@ func (self _FIFOPlugin) Info(
 	scope vfilter.Scope,
 	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name: "fifo",
-		Doc:  "Executes 'query' and cache a number of rows from it. For each invocation we present the set of past rows.",
-
-		ArgType: type_map.AddType(scope, &_FIFOPluginArgs{}),
+		Name:     "fifo",
+		Doc:      "Executes 'query' and cache a number of rows from it. For each invocation we present the set of past rows.",
+		Metadata: vql_subsystem.VQLMetadata().Event().Build(),
+		ArgType:  type_map.AddType(scope, &_FIFOPluginArgs{}),
 	}
 }
 
