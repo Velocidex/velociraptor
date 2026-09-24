@@ -21,7 +21,6 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -50,7 +49,7 @@ type collectionManager struct {
 	log_file         *reporting.ContainerResultSetWriter
 
 	start_time         time.Time
-	collection_context *flows.CollectionContext
+	collection_context *flows_proto.ArtifactCollectorContext
 	logger             *logWriter
 
 	// The VQL requests we actually collected. We store those in the
@@ -492,15 +491,14 @@ func newCollectionManager(
 	}
 
 	return &collectionManager{
-		ctx:        subctx,
-		cancel:     cancel,
-		config_obj: config_obj,
-		collection_context: flows.NewCollectionContext(
-			ctx, config_obj, &flows_proto.ArtifactCollectorContext{}),
-		concurrency: utils.NewConcurrencyControl(concurrency, time.Hour),
-		output_chan: output_chan,
-		scope:       scope,
-		throttler:   &throttler.DummyThrottler{},
+		ctx:                subctx,
+		cancel:             cancel,
+		config_obj:         config_obj,
+		collection_context: &flows_proto.ArtifactCollectorContext{},
+		concurrency:        utils.NewConcurrencyControl(concurrency, time.Hour),
+		output_chan:        output_chan,
+		scope:              scope,
+		throttler:          &throttler.DummyThrottler{},
 	}
 }
 
@@ -547,7 +545,7 @@ func (self *collectionManager) Close() error {
 		self.collection_context.StartTime = uint64(self.start_time.UnixNano())
 		self.collection_context.CreateTime = uint64(self.start_time.UnixNano())
 
-		launcher.UpdateFlowStats(self.collection_context.ArtifactCollectorContext)
+		launcher.UpdateFlowStats(self.collection_context)
 
 		// Merge in the container stats
 		container_stats := self.container.Stats()
