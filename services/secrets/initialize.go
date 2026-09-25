@@ -42,6 +42,7 @@ var (
 			"password",
 			"private_key",
 			"hostname",
+			"hostkey",
 		},
 		Template: map[string]string{
 			"username": "uploader",

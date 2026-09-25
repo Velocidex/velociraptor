@@ -56,10 +56,17 @@ func GetSSHClient(scope vfilter.Scope) (
 	}
 
 	if arg.Secret != "" {
-		arg, err = getSecret(ctx, scope, arg.Secret)
+		secret_args, err := getSecret(ctx, scope, arg.Secret)
 		if err != nil {
 			return nil, nil, err
 		}
+
+		// The secret is authoritative for the connection details, so
+		// the args it provides replace those from SSH_CONFIG. The host
+		// key is the exception - secrets predate the hostkey field and
+		// most do not carry one, so we keep any host key the caller
+		// set explicitly rather than silently dropping it.
+		arg = mergeSecretArgs(arg, secret_args)
 	}
 
 	config := &ssh.ClientConfig{
@@ -146,6 +153,31 @@ func maybeForceSecrets(
 	return utils.SecretsEnforced
 }
 
+// Combine the args given in SSH_CONFIG with those recovered from a
+// secret. The secret wins for the credentials it defines, because it
+// may be shared between users and is the authoritative record of how
+// to reach the remote system.
+//
+// The host key is treated differently: a secret is not required to
+// carry one, so an explicitly configured hostkey is only used when the
+// secret does not define its own. This keeps a host key enforced by a
+// secret from being overridden, while still allowing a caller to pin a
+// key for a secret that has none.
+func mergeSecretArgs(from_config *SSHAccessorArgs, from_secret *SSHAccessorArgs) *SSHAccessorArgs {
+	if from_config == nil {
+		return from_secret
+	}
+	if from_secret == nil {
+		return from_config
+	}
+
+	merged := *from_secret
+	if merged.HostKey == "" {
+		merged.HostKey = from_config.HostKey
+	}
+	return &merged
+}
+
 func getSecret(
 	ctx context.Context,
 	scope vfilter.Scope,
@@ -174,6 +206,7 @@ func getSecret(
 		Hostname:   secret_record.GetString("hostname"),
 		Password:   secret_record.GetString("password"),
 		PrivateKey: secret_record.GetString("private_key"),
+		HostKey:    secret_record.GetString("hostkey"),
 	}
 	return arg, nil
 }
