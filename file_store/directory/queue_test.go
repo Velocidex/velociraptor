@@ -183,9 +183,9 @@ func (self *TestSuite) TestQueueManagerJsonl() {
 	manager := directory.NewDirectoryQueueManager(
 		self.ConfigObj, file_store).(*directory.DirectoryQueueManager)
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx, self.ConfigObj,
-		"C.123", "", "TestQueue")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(self.ConfigObj,
+		"C.123", "", "TestQueue",
+		artifact_modes.MODE_SERVER_EVENT)
 
 	// Query the state of the manager for testing.
 	dbg := manager.Debug()

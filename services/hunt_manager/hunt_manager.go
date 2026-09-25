@@ -160,6 +160,18 @@ func (self *HuntManager) ProcessInterrogation(
 		return errors.New("ClientId not found")
 	}
 
+	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Hunts only run on clients.
+	err = client_info_manager.ValidateClientId(
+		client_id, !services.SERVER_OK)
+	if err != nil {
+		return err
+	}
+
 	return self.participateInRunningHunts(ctx, config_obj, client_id,
 		// When a new client is interrogated, it can only really
 		// affect hunts with OS conditions.

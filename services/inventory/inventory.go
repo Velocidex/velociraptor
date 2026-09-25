@@ -140,7 +140,7 @@ func (self *InventoryService) ProbeToolInfo(
 		if err == nil {
 			// Add all the parent's versions into our own repository.
 			for _, v := range tool.Versions {
-				err := self.AddTool(ctx, config_obj, v, services.ToolOptions{
+				err := self.addTool(ctx, config_obj, v, services.ToolOptions{
 					ArtifactDefinition: true,
 				})
 				if err != nil {
@@ -392,6 +392,13 @@ func (self *InventoryService) AddTool(
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	return self.addTool(ctx, config_obj, tool_request, opts)
+}
+
+func (self *InventoryService) addTool(
+	ctx context.Context, config_obj *config_proto.Config,
+	tool_request *artifacts_proto.Tool, opts services.ToolOptions) (err error) {
 
 	// Clear out the system managed fields.
 	tool_request.Versions = nil

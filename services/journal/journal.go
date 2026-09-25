@@ -371,7 +371,8 @@ func GetArtifactMode(
 	switch mode {
 	case artifact_modes.MODE_CLIENT,
 		artifact_modes.MODE_CLIENT_EVENT:
-		err := client_info_manager.ValidateClientId(opts.ClientId)
+		err := client_info_manager.ValidateClientId(
+			opts.ClientId, !services.SERVER_OK)
 		if err != nil {
 			return mode, fmt.Errorf(
 				"Client ID invalid to write to a CLIENT artifact_type: %w",

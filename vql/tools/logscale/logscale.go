@@ -27,6 +27,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/networking"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -464,9 +465,10 @@ func (self *LogScaleQueue) shouldRetryRequest(ctx context.Context, resp *http.Re
 	return retryablehttp.ErrorPropagatedRetryPolicy(ctx, resp, err)
 }
 
-func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
-	rows []*ordereddict.Dict) error {
-	nRows := len(rows)
+func (self *LogScaleQueue) postEvents(
+	ctx context.Context, scope vfilter.Scope,
+	rows *vtesting.RowCollector) error {
+	nRows := rows.Len()
 	opts := vql_subsystem.EncOptsFromScope(scope)
 
 	self.Debug(scope, "posting %v events", nRows)
@@ -479,7 +481,7 @@ func (self *LogScaleQueue) postEvents(ctx context.Context, scope vfilter.Scope,
 	clock := utils.GetTime()
 
 	payloads := []*LogScalePayload{}
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		payloads = append(payloads, self.rowToPayload(ctx, scope, row))
 	}
 
@@ -578,7 +580,7 @@ func (self *LogScaleQueue) debugEvents(count int) {
 }
 
 func (self *LogScaleQueue) processEvents(ctx context.Context, scope vfilter.Scope) {
-	postData := []*ordereddict.Dict{}
+	var postData vtesting.RowCollector
 	eventCount := 0
 	dropEvents := false
 	totalEventCount := 0
@@ -586,7 +588,7 @@ func (self *LogScaleQueue) processEvents(ctx context.Context, scope vfilter.Scop
 	defer self.workerWg.Done()
 	defer self.Debug(scope, "worker exited")
 	defer func() {
-		_ = self.postEvents(ctx, scope, postData)
+		_ = self.postEvents(ctx, scope, &postData)
 	}()
 
 	self.Debug(scope, "worker started")
@@ -621,11 +623,11 @@ func (self *LogScaleQueue) processEvents(ctx context.Context, scope vfilter.Scop
 				continue
 			}
 
-			postData = append(postData, row)
+			postData.Push(row)
 			eventCount += 1
 			totalEventCount += 1
 
-			self.Debug(scope, "dequeued event/2 %v %v", totalEventCount, len(postData))
+			self.Debug(scope, "dequeued event/2 %v %v", totalEventCount, postData.Len())
 			if eventCount >= self.eventBatchSize {
 				postEvents = true
 			}
@@ -636,12 +638,12 @@ func (self *LogScaleQueue) processEvents(ctx context.Context, scope vfilter.Scop
 			// if the server is down or the network is disrupted.  This is why
 			// we use a ring buffer to queue.  There are cases in which a failure
 			// is permanent. Those will be logged and events dropped.
-			err := self.postEvents(ctx, scope, postData)
+			err := self.postEvents(ctx, scope, &postData)
 			if err != nil {
 				dropEvents = ctx.Err() != nil
 			}
 
-			postData = []*ordereddict.Dict{}
+			postData.Reset()
 			eventCount = 0
 		}
 	}

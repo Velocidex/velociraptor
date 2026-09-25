@@ -2,6 +2,7 @@ package launcher
 
 import (
 	"context"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -16,7 +17,7 @@ import (
 
 /*
   For fast access in the GUI we keep a flows index. The index has flow
-  summaries in sorted order stores as a regular result set. The GUI
+  summaries in sorted order stored as a regular result set. The GUI
   can then access the summaries index and apply transformations like
   sorting and filtering in the same way as any other result set.
 
@@ -77,13 +78,36 @@ import (
 
 */
 
+// Manage deletions by delaying them until the housekeeping run.
+type DeletionManager struct {
+	mu sync.Mutex
+}
+
+func (self *DeletionManager) DeleteFlow(
+	ctx context.Context, config_obj *config_proto.Config,
+	storage *FlowStorageManager,
+	client_id, flow_id string, sync bool) error {
+
+	if sync {
+		// Delete immediately by removing the flow from the index.
+		return storage.GetIndexBuilder(client_id).
+			RemoveClientFlowsFromIndex(ctx, config_obj, storage,
+				map[string]bool{
+					flow_id: true,
+				})
+	}
+
+	// Schedule deletion for later.
+	return self.WriteFlowJournal(config_obj, client_id, flow_id)
+}
+
 // The journal keeps a list of deleted flows to be removed from the
 // main index.
-func (self *FlowStorageManager) writeFlowJournal(
+func (self *DeletionManager) WriteFlowJournal(
 	config_obj *config_proto.Config, client_id, flow_id string) error {
 	// Serialize access to the journal with the housekeeping thread.
-	self.flow_journal_mu.Lock()
-	defer self.flow_journal_mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	journal, err := services.GetJournal(config_obj)
 	if err != nil {
@@ -101,7 +125,7 @@ func (self *FlowStorageManager) writeFlowJournal(
 		})
 }
 
-func (self *FlowStorageManager) clearJournal(
+func (self *DeletionManager) clearJournal(
 	config_obj *config_proto.Config) error {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -116,14 +140,21 @@ func (self *FlowStorageManager) clearJournal(
 	return nil
 }
 
-func (self *FlowStorageManager) RemoveFlowsFromJournal(
-	ctx context.Context, config_obj *config_proto.Config) error {
+// Called by the housekeeping thread to replay the journal more
+// efficiently. Used for asynchronous deletions to amortize IO.
+func (self *DeletionManager) RebuildPendingIndexes(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	storage *FlowStorageManager) error {
 
-	self.flow_journal_mu.Lock()
-	defer self.flow_journal_mu.Unlock()
+	self.mu.Lock()
+	defer self.mu.Unlock()
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
+	// Build sets of pending work so we can remove these more
+	// efficiently:
+	//
 	// ClientId: Set(FlowId)
 	id_map := make(map[string]map[string]bool)
 
@@ -163,8 +194,10 @@ func (self *FlowStorageManager) RemoveFlowsFromJournal(
 
 	var r_err error
 	for client_id, flows := range id_map {
-		err := self.RemoveClientFlowsFromIndex(ctx, config_obj, client_id, flows)
+		err := storage.GetIndexBuilder(client_id).
+			RemoveClientFlowsFromIndex(ctx, config_obj, storage, flows)
 		if err != nil {
+			// On error keep going with the next client.
 			r_err = err
 		}
 	}

@@ -40,6 +40,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -381,11 +382,8 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	defer cancel()
 
 	file_store_factory := file_store.GetFileStore(config_obj)
-	path_manager, err := artifacts.NewArtifactPathManager(ctx, config_obj,
-		client_id, flow_id, artifact)
-	if err != nil {
-		return err
-	}
+	path_manager := artifacts.NewArtifactPathManagerWithMode(config_obj,
+		client_id, flow_id, artifact, artifact_modes.MODE_CLIENT)
 
 	rs_reader, err := result_sets.NewResultSetReader(
 		file_store_factory, path_manager.Path())
@@ -395,6 +393,13 @@ func (self *EnrollmentService) ProcessInterrogateResults(
 	defer rs_reader.Close()
 
 	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	if err != nil {
+		return err
+	}
+
+	// Make sure this is a real client.
+	err = client_info_manager.ValidateClientId(
+		client_id, !services.SERVER_OK)
 	if err != nil {
 		return err
 	}

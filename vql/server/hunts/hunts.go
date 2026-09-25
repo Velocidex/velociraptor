@@ -29,6 +29,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -270,15 +271,14 @@ func (self HuntResultsPlugin) Call(
 					artifact_name += "/" + arg.Source
 				}
 
-				// Read individual flow's results.
-				path_manager, err := artifact_paths.NewArtifactPathManager(
-					ctx, org_config_obj,
+				// Read individual flow's results. Flows must be of
+				// type MODE_CLIENT because hunts never run on the
+				// server.
+				path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+					org_config_obj,
 					flow_details.Context.ClientId,
 					flow_details.Context.SessionId,
-					artifact_name)
-				if err != nil {
-					continue
-				}
+					artifact_name, artifact_modes.MODE_CLIENT)
 
 				file_store_factory := file_store.GetFileStore(org_config_obj)
 

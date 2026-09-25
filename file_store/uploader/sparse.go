@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 func (self *FileStoreUploader) maybeCollectSparseFile(ctx context.Context,
@@ -40,7 +41,7 @@ func (self *FileStoreUploader) maybeCollectSparseFile(ctx context.Context,
 	end_offset := int64(0)
 
 	// An index array for sparse files.
-	index := []*ordereddict.Dict{}
+	var index vtesting.RowCollector
 	is_sparse := false
 
 	for _, rng := range range_reader.Ranges() {
@@ -49,7 +50,7 @@ func (self *FileStoreUploader) maybeCollectSparseFile(ctx context.Context,
 			file_length = 0
 		}
 
-		index = append(index, ordereddict.NewDict().
+		index.Push(ordereddict.NewDict().
 			Set("file_offset", count).
 			Set("original_offset", rng.Offset).
 			Set("file_length", file_length).
@@ -85,7 +86,7 @@ func (self *FileStoreUploader) maybeCollectSparseFile(ctx context.Context,
 		}
 		defer writer.Close()
 
-		serialized, err := utils.DictsToJson(index, nil)
+		serialized, err := utils.DictsToJson(index.Get(), nil)
 		if err != nil {
 			return &uploads.UploadResponse{
 				Error: err.Error(),

@@ -2,8 +2,10 @@ package ssh
 
 import (
 	"context"
+	"encoding/base64"
 	"errors"
 	"fmt"
+	"net"
 
 	"golang.org/x/crypto/ssh"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -22,6 +24,7 @@ type SSHAccessorArgs struct {
 	Password   string `vfilter:"optional,field=password,doc=The password to use to log into the remote system."`
 	PrivateKey string `vfilter:"optional,field=private_key,doc=A private key to use to log into the remote system instead of a password."`
 	Hostname   string `vfilter:"optional,field=hostname,doc=The hostname to log into."`
+	HostKey    string `vfilter:"optional,field=hostkey,doc=A base64 encoded host key. If specified we reject connections that do not present this host key."`
 }
 
 func GetSSHClient(scope vfilter.Scope) (
@@ -60,8 +63,34 @@ func GetSSHClient(scope vfilter.Scope) (
 	}
 
 	config := &ssh.ClientConfig{
-		User:            arg.Username,
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		User: arg.Username,
+		// The SSH accessor is used to log into remote systems to
+		// perform read-only analysis. Typically it is hard to know in
+		// advance the host key since VQL queries run
+		// non-interactively.
+		//
+		// If there is MITM attack then the accessor may receive
+		// incorrect or fake results. This is acceptable as the risk
+		// is the same as a rogue client or a compromised endpoint.
+		//
+		// As a compromise we log the host key we receive here. Users
+		// can use this information to detect a potential MITM attack
+		// in post analysis review.
+		HostKeyCallback: func(hostname string,
+			remote net.Addr, key ssh.PublicKey) error {
+			encoded_key := string(base64.StdEncoding.EncodeToString(key.Marshal()))
+			if arg.HostKey != "" {
+				if arg.HostKey == encoded_key {
+					scope.Log("ssh: Accepted host key %v", encoded_key)
+					return nil
+				}
+				return fmt.Errorf("Rejected host key %v: Did not match %v",
+					encoded_key, arg.HostKey)
+			}
+
+			scope.Log("ssh: Accepted host key %v", encoded_key)
+			return nil
+		},
 	}
 
 	if arg.Password != "" {

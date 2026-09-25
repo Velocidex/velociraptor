@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -326,11 +327,11 @@ func reduceRecurse(obj vfilter.Any, ctx context.Context, scope vfilter.Scope) (v
 	case vfilter.StoredQuery:
 		{
 			row_channel := t.Eval(ctx, scope)
-			rows := []*ordereddict.Dict{}
+			var rows vtesting.RowCollector
 			for row := range row_channel {
-				rows = append(rows, vfilter.RowToDict(ctx, scope, row))
+				rows.Push(vfilter.RowToDict(ctx, scope, row))
 			}
-			return rows, nil
+			return rows.Get(), nil
 		}
 	default:
 		return obj, nil
