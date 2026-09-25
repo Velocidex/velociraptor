@@ -663,7 +663,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	}
 
 	client_id := collector_request.ClientId
-	err = client_manager.ValidateClientId(client_id)
+	err = client_manager.ValidateClientId(client_id, services.SERVER_OK)
 	if err != nil {
 		return "", err
 	}

@@ -689,7 +689,7 @@ func (self *LogScaleQueueTestSuite) TestPostBytesNoEvents() {
 }
 
 func (self *LogScaleQueueTestSuite) TestPostEventsEmpty() {
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
 	server := self.startMockServer()
 	defer server.Close()
@@ -697,14 +697,14 @@ func (self *LogScaleQueueTestSuite) TestPostEventsEmpty() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	err = self.queue.postEvents(self.ctx, self.scope, rows)
+	err = self.queue.postEvents(self.ctx, self.scope, &rows)
 	require.NoError(self.T(), err)
 }
 
 func (self *LogScaleQueueTestSuite) TestPostEventsSingle() {
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
-	rows = append(rows, generateRow())
+	rows.Push(generateRow())
 
 	server := self.startMockServer()
 	defer server.Close()
@@ -712,22 +712,22 @@ func (self *LogScaleQueueTestSuite) TestPostEventsSingle() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	err = self.queue.postEvents(self.ctx, self.scope, rows)
-	require.Equal(self.T(), 1, len(rows))
+	err = self.queue.postEvents(self.ctx, self.scope, &rows)
+	require.Equal(self.T(), 1, rows.Len())
 	require.NoError(self.T(), err)
 }
 
 func (self *LogScaleQueueTestSuite) TestPostEventsSingleConnRefused() {
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
 	self.wantConnRefused = true
 
-	rows = append(rows, generateRow())
+	rows.Push(generateRow())
 
 	err := self.queue.Open(self.ctx, self.scope, "http://localhost:1", validAuthToken)
 	require.NoError(self.T(), err)
 
-	err = self.queue.postEvents(self.ctx, self.scope, rows)
+	err = self.queue.postEvents(self.ctx, self.scope, &rows)
 	require.NotNil(self.T(), err)
 	expectedErr := errMaxRetriesExceeded{}
 	require.ErrorAs(self.T(), err, &expectedErr)
@@ -735,12 +735,12 @@ func (self *LogScaleQueueTestSuite) TestPostEventsSingleConnRefused() {
 }
 
 func (self *LogScaleQueueTestSuite) TestPostEventsMultiple() {
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
 
 	server := self.startMockServer()
 	defer server.Close()
@@ -748,24 +748,24 @@ func (self *LogScaleQueueTestSuite) TestPostEventsMultiple() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	err = self.queue.postEvents(self.ctx, self.scope, rows)
+	err = self.queue.postEvents(self.ctx, self.scope, &rows)
 	require.NoError(self.T(), err)
 }
 
 func (self *LogScaleQueueTestSuite) TestPostEventsMultipleConnRefused() {
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
 	self.wantConnRefused = true
 
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
 
 	err := self.queue.Open(self.ctx, self.scope, "http://localhost:1", validAuthToken)
 	require.NoError(self.T(), err)
 
-	err = self.queue.postEvents(self.ctx, self.scope, rows)
+	err = self.queue.postEvents(self.ctx, self.scope, &rows)
 	require.NotNil(self.T(), err)
 	expectedErr := errMaxRetriesExceeded{}
 	require.ErrorAs(self.T(), err, &expectedErr)
@@ -783,21 +783,22 @@ func (self *LogScaleQueueTestSuite) TestQueueEvents_Queued() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
 
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		self.queue.QueueEvent(row)
 	}
 
-	require.Equal(self.T(), len(rows), int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
+	require.Equal(self.T(), rows.Len(),
+		int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
 
 	// Nothing is clearing the queue, so clear it so we don't get stuck during close
-	for range rows {
+	for range rows.Get() {
 		<-self.queue.listener.Output()
 	}
 }
@@ -813,12 +814,11 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_Dequeued() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	rows := []*ordereddict.Dict{}
-
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
+	var rows vtesting.RowCollector
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
 
 	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(1)*time.Second)
 
@@ -840,22 +840,23 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_Dequeued() {
 				}
 
 				// Don't build up a list, just push one at a time for testing
-				post := []*ordereddict.Dict{row}
-				err = self.queue.postEvents(ctx, self.scope, post)
+				var post vtesting.RowCollector
+				post.Push(row)
+				err = self.queue.postEvents(ctx, self.scope, &post)
 				require.NoError(self.T(), err)
 
 				count += 1
 			}
 		}
-		require.Equal(self.T(), len(rows), count)
+		require.Equal(self.T(), rows.Len(), count)
 	}()
 
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		self.queue.QueueEvent(row)
 	}
 
 	wg.Wait()
-	require.Equal(self.T(), len(rows), int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
+	require.Equal(self.T(), rows.Len(), int(atomic.LoadInt64(&self.queue.currentQueueDepth)))
 	require.Equal(self.T(), 4, int(atomic.LoadInt64(&self.queue.postedEvents)))
 	require.Equal(self.T(), 0, int(atomic.LoadInt64(&self.queue.failedEvents)))
 	cancel()
@@ -872,12 +873,11 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedFailure() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	rows := []*ordereddict.Dict{}
-
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
+	var rows vtesting.RowCollector
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
 
 	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(5)*time.Second)
 
@@ -907,8 +907,10 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedFailure() {
 				}
 
 				// Don't build up a list, just push one at a time for testing
-				post := []*ordereddict.Dict{row}
-				err = self.queue.postEvents(ctx, self.scope, post)
+				var post vtesting.RowCollector
+				post.Push(row)
+
+				err = self.queue.postEvents(ctx, self.scope, &post)
 				if count >= 2 {
 					require.NotNil(self.T(), err)
 					expectedErr := errMaxRetriesExceeded{}
@@ -919,15 +921,15 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedFailure() {
 
 				count += 1
 			}
-			if count >= len(rows) {
+			if count >= rows.Len() {
 				break
 			}
 		}
 		self.queue.Close(self.scope)
-		require.Equal(self.T(), len(rows), count)
+		require.Equal(self.T(), rows.Len(), count)
 	}()
 
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		self.queue.QueueEvent(row)
 	}
 
@@ -950,12 +952,12 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedConnRefused() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
-	rows = append(rows, generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
+	rows.Push(generateRow())
 
 	ctx, cancel := context.WithTimeout(self.ctx, time.Duration(5)*time.Second)
 
@@ -982,8 +984,10 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedConnRefused() {
 				}
 
 				// Don't build up a list, just push one at a time for testing
-				post := []*ordereddict.Dict{row}
-				err = self.queue.postEvents(ctx, self.scope, post)
+				var post vtesting.RowCollector
+				post.Push(row)
+
+				err = self.queue.postEvents(ctx, self.scope, &post)
 				if count >= 2 {
 					require.NotNil(self.T(), err)
 					expectedErr := errMaxRetriesExceeded{}
@@ -994,15 +998,15 @@ func (self *LogScaleQueueTestSuite) TestQueueEventsOpen_DequeuedConnRefused() {
 
 				count += 1
 			}
-			if count >= len(rows) {
+			if count >= rows.Len() {
 				break
 			}
 		}
 		self.queue.Close(self.scope)
-		require.Equal(self.T(), len(rows), count)
+		require.Equal(self.T(), rows.Len(), count)
 	}()
 
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		self.queue.QueueEvent(row)
 	}
 
@@ -1023,13 +1027,13 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_Working() {
 	err := self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
 	for i := 0; i < nRows; i += 1 {
-		rows = append(rows, generateRow())
+		rows.Push(generateRow())
 	}
 
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		self.queue.QueueEvent(row)
 	}
 
@@ -1062,15 +1066,15 @@ func (self *LogScaleQueueTestSuite) TestProcessEvents_ShutdownWhileFailing() {
 	err = self.queue.Open(self.ctx, self.scope, server.URL, validAuthToken)
 	require.NoError(self.T(), err)
 
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 
 	for i := 0; i < nRows; i += 1 {
-		rows = append(rows, generateRow())
+		rows.Push(generateRow())
 	}
 
 	require.NoError(self.T(), err)
 
-	for _, row := range rows {
+	for _, row := range rows.Get() {
 		self.queue.QueueEvent(row)
 	}
 

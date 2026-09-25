@@ -13,10 +13,17 @@ func TestJsonlShortcuts(t *testing.T) {
 		Set("Nested", string(AppendJsonlItem([]byte("{\"foo\":1}\n"), "bar",
 			ordereddict.NewDict().Set("F", 1).Set("B", 2)))).
 
-		// Handle malformed JSON
+		// Handle malformed JSON - We drop the invalid lines.
 		Set("Empty String", string(AppendJsonlItem([]byte(""), "bar", 2))).
 		Set("Malformed", string(AppendJsonlItem([]byte("}"), "bar", 2))).
-		Set("Malformed2", string(AppendJsonlItem([]byte("}\n"), "bar", 2)))
+		Set("Malformed2", string(AppendJsonlItem([]byte("}\n"), "bar", 2))).
+		Set("Array", string(AppendJsonlItem([]byte("[\"foo\",\"bar\"]\n"), "bar", 2))).
+
+		// We forward lines that start and end with {} but they may
+		// not actually be valid JSON - this is ok, they will be
+		// dropped later.
+		Set("MalformedButLooksOk", string(AppendJsonlItem(
+			[]byte("{{{{{\"foo\":1}\n"), "bar", 2)))
 	goldie.Assert(t, "TestJsonlShortcuts", MustMarshalIndent(result))
 }
 
@@ -35,7 +42,7 @@ func TestAppendJsonlItem(t *testing.T) {
 		"{\"Foo\":1}\n",
 		"{\"Foo\":1}\n{\"Bar\":2}\n{\"Baz\":2}\n",
 
-		// Invalid input
+		// Invalid input - Missing final \n. We add the \n anyway.
 		"{\"Foo\":1}",
 		"{\"Foo\":1}\n{\"Bar\":2}\n{\"Baz\":2}",
 

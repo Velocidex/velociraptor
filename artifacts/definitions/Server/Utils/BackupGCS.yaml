@@ -37,7 +37,7 @@ sources:
       LET gcskey <= if(condition=GCSKey, then=GCSKey,
            else=server_metadata().DefaultGCSKey)
 
-      LET completions = SELECT *,
+      LET completions = SELECT ClientId, FlowId,
          client_info(client_id=ClientId).os_info.fqdn AS Fqdn,
          create_flow_download(client_id=ClientId,
              flow_id=FlowId, wait=TRUE) AS FlowDownload

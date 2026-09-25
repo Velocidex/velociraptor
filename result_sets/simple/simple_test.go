@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -52,12 +53,10 @@ func (self *ResultSetTestSuite) SetupTest() {
 }
 
 func (self *ResultSetTestSuite) TestResultSetSimple() {
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id,
-		self.flow_id,
-		"Generic.Client.Info/BasicInformation")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, self.flow_id,
+		"Generic.Client.Info/BasicInformation",
+		artifact_modes.MODE_CLIENT)
 
 	writer, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager.Path(),

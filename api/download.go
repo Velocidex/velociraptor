@@ -57,6 +57,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/reporting"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -418,9 +419,10 @@ func getRows(
 
 	// We want an event table.
 	if request.Type == "CLIENT_EVENT" || request.Type == "SERVER_EVENT" {
-		path_manager, err := artifacts.NewArtifactPathManager(ctx,
+		path_manager := artifacts.NewArtifactPathManagerWithMode(
 			config_obj, request.ClientId, request.FlowId,
-			request.Artifact)
+			request.Artifact,
+			artifact_modes.ModeNameToMode(request.Type))
 		if err != nil {
 			return nil, nil, nil, err
 		}

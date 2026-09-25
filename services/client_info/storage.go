@@ -118,6 +118,7 @@ func (self *clientRecord) GetRecord() (*actions_proto.ClientInfo, error) {
 }
 
 func (self *clientRecord) Modify(
+	client_id string,
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
 
@@ -146,6 +147,9 @@ func (self *clientRecord) Modify(
 	if new_record == nil {
 		return nil
 	}
+
+	// Enforce this invariant.
+	new_record.ClientId = client_id
 
 	serialized, err := proto.Marshal(new_record)
 	if err != nil {
@@ -223,7 +227,7 @@ func (self *Store) Modify(
 	self.mu.Unlock()
 
 	// Write the modified record to the LRU
-	return record.Modify(modifier)
+	return record.Modify(client_id, modifier)
 }
 
 func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error) {

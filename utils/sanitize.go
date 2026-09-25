@@ -241,6 +241,24 @@ var (
 	artifactComponentRegex = regexp.MustCompile("^[0-9]")
 )
 
+func ValidateArtifactNameAndSource(name string) error {
+	parts := strings.Split(name, "/")
+	err := ValidateArtifactName(parts[0])
+	if err != nil {
+		return err
+	}
+
+	if len(parts) == 1 {
+		return nil
+	}
+
+	if len(parts) == 2 {
+		return ValidateArtifactName(parts[1])
+	}
+
+	return errors.New("Artifact name can only have one source")
+}
+
 func ValidateArtifactName(name string) error {
 	if !artifactNameRegex.MatchString(name) {
 		return errors.New(

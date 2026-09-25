@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -26,28 +27,34 @@ import (
 
 type path_tests_t struct {
 	client_id, flow_id, full_artifact_name string
+	mode                                   artifact_modes.ArtifactMode
 	expected                               string
 }
 
 var path_tests = []path_tests_t{
 	// Regular client artifact
 	{"C.123", "F.123", "Windows.Sys.Users",
+		artifact_modes.MODE_CLIENT,
 		"/clients/C.123/artifacts/Windows.Sys.Users/F.123.json"},
 
 	// Artifact with source
 	{"C.123", "F.123", "Generic.Client.Info/Users",
+		artifact_modes.MODE_CLIENT,
 		"/clients/C.123/artifacts/Generic.Client.Info/F.123/Users.json"},
 
 	// Server artifacts
 	{"C.123", "F.123", "Server.Utils.CreateCollector",
+		artifact_modes.MODE_SERVER,
 		"/clients/server/artifacts/Server.Utils.CreateCollector/F.123.json"},
 
 	// Server events
 	{"C.123", "F.123", "Elastic.Flows.Upload",
+		artifact_modes.MODE_SERVER_EVENT,
 		"/server_artifacts/Elastic.Flows.Upload/2020-04-25.json"},
 
 	// Client events
 	{"C.123", "F.123", "Windows.Events.ProcessCreation",
+		artifact_modes.MODE_CLIENT_EVENT,
 		"/clients/C.123/monitoring/Windows.Events.ProcessCreation/2020-04-25.json"},
 }
 
@@ -103,12 +110,9 @@ func (self *PathManageTestSuite) TestPathManager() {
 	assert.NoError(self.T(), err)
 
 	for _, testcase := range path_tests {
-		path_manager, err := artifacts.NewArtifactPathManager(
-			self.Ctx, self.ConfigObj,
-			testcase.client_id,
-			testcase.flow_id,
-			testcase.full_artifact_name)
-		assert.NoError(self.T(), err)
+		path_manager := artifacts.NewArtifactPathManagerWithMode(
+			self.ConfigObj, testcase.client_id, testcase.flow_id,
+			testcase.full_artifact_name, testcase.mode)
 
 		path, err := path_manager.GetPathForWriting()
 		assert.NoError(self.T(), err)

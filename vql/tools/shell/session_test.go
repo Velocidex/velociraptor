@@ -18,6 +18,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/http_comms/e2e"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -345,9 +346,9 @@ func (self *ShellSessionTestSuite) TestExpiredBashShell() {
 func (self *ShellSessionTestSuite) getRows(
 	artifact_name, flow_id string) (res []vfilter.Row) {
 	// Read the logs
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj, self.ClientId, flow_id, artifact_name)
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.ClientId, flow_id, artifact_name,
+		artifact_modes.MODE_CLIENT)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	rs_reader, err := result_sets.NewResultSetReader(

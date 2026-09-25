@@ -1,0 +1,9 @@
+{
+ "Foo.Bar.Baz": "OK",
+ "Foo Bar Bar": "Invalid artifact name. Can only contain characters in this set 'a-zA-Z0-9_.'",
+ "Foo/Bar/Baz": "Artifact name can only have one source",
+ "4E23": "Invalid artifact name. Name parts can not start with a number'",
+ "E23.23": "Invalid artifact name. Name parts can not start with a number'",
+ "Foo3/Boo4": "OK",
+ "Foo3.Boo4": "OK"
+}

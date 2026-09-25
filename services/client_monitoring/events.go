@@ -11,6 +11,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -33,11 +34,15 @@ func listAvailableEventTimestamps(
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, in.ClientId, "", in.Artifact)
-	if err != nil {
-		return nil, err
+	// Allow deleting events from artifacts that are no longer
+	// registered.
+	mode := artifact_modes.MODE_CLIENT_EVENT
+	if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		mode = artifact_modes.MODE_SERVER_EVENT
 	}
+
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, in.ClientId, "", in.Artifact, mode)
 
 	result := &api_proto.ListAvailableEventResultsResponse{
 		Logs: []*api_proto.AvailableEvent{
@@ -88,24 +93,18 @@ func listAvailableEventArtifacts(
 	in *api_proto.ListAvailableEventResultsRequest) (
 	*api_proto.ListAvailableEventResultsResponse, error) {
 
-	// Figure out where all the monitoring artifacts logs are
-	// stored by looking at some examples.
-	exemplar := "Generic.Client.Stats"
-	if in.ClientId == "" ||
-		in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
-		exemplar = "Server.Monitor.Health"
+	mode := artifact_modes.MODE_CLIENT_EVENT
+	if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		mode = artifact_modes.MODE_SERVER_EVENT
 	}
 
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, in.ClientId, "", exemplar)
-	if err != nil {
-		return nil, err
-	}
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, in.ClientId, "", "XXX", mode)
 
 	// getAllArtifacts analyses the path name from disk and adds
 	// to the events list.
 	seen := make(map[string]*api_proto.AvailableEvent)
-	err = getAllArtifacts(ctx, config_obj, path_manager.GetRootPath(), seen)
+	err := getAllArtifacts(ctx, config_obj, path_manager.GetRootPath(), seen)
 	if err != nil {
 		return nil, err
 	}

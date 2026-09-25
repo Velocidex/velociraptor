@@ -22,6 +22,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -90,10 +91,16 @@ func (self MonitoringPlugin) Call(
 			arg.Source = ""
 		}
 
-		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-			config_obj, arg.ClientId, "", arg.Artifact)
-		if err != nil {
-			scope.Log("monitoring: %v", err)
+		mode := artifact_modes.MODE_CLIENT_EVENT
+		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+			mode = artifact_modes.MODE_SERVER_EVENT
+		}
+
+		path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+			config_obj, arg.ClientId, "", arg.Artifact, mode)
+
+		if !path_manager.Mode().IsEvent() {
+			scope.Log("monitoring: can only read monitoring results")
 			return
 		}
 
@@ -143,10 +150,11 @@ func (self MonitoringPlugin) Call(
 
 func (self MonitoringPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "monitoring",
-		Doc:      "Read event monitoring log from a client (i.e. that was collected using client event artifacts).",
-		ArgType:  type_map.AddType(scope, &MonitoringPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "monitoring",
+		Doc:     "Read event monitoring log from a client (i.e. that was collected using client event artifacts).",
+		ArgType: type_map.AddType(scope, &MonitoringPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

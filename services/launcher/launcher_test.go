@@ -1472,8 +1472,10 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	// index is out of step).
 	vtesting.WaitUntil(10*time.Second, t, func() bool {
 		// Force the housekeep thread to run immediately.
-		launcher.Storage().(*launcher_mod.FlowStorageManager).
-			RemoveFlowsFromJournal(self.Ctx, self.ConfigObj)
+		storage := launcher.Storage().(*launcher_mod.FlowStorageManager)
+
+		storage.DeletionManager.RebuildPendingIndexes(
+			self.Ctx, self.ConfigObj, storage)
 
 		datastore.FlushDatastore(self.ConfigObj)
 

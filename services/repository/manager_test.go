@@ -12,6 +12,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/repository"
@@ -59,9 +60,10 @@ name: TestArtifact
 	assert.Contains(self.T(), string(data), "Custom.TestArtifact")
 
 	// Make sure a creation event was written
-	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
-		self.ConfigObj, "", "", "Server.Internal.ArtifactModification")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, "", "",
+		"Server.Internal.ArtifactModification",
+		artifact_modes.MODE_SERVER_EVENT)
 
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)

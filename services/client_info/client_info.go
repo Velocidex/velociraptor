@@ -607,7 +607,7 @@ func (self *ClientInfoManager) Set(
 		return invalidClientError
 	}
 
-	err := self.ValidateClientId(client_info.ClientId)
+	err := self.ValidateClientId(client_info.ClientId, services.SERVER_OK)
 	if err != nil {
 		return err
 	}

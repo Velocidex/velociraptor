@@ -1,42 +1,45 @@
 package json
 
 import (
+	"bufio"
+	"bytes"
 	"fmt"
 )
 
 // These are shortcut methods used to operate on valid JSONL strings
 // without needing to parse them and re-encode them.
 func AppendJsonlItem(jsonl []byte, name string, value interface{}) []byte {
-	result := make([]byte, 0, len(jsonl)+4096)
+	result := bytes.NewBuffer(nil)
 	serialized, err := Marshal(value)
 	if err != nil {
-		return jsonl
+		return nil
 	}
+	// Add the extra on the end of each line.
+	extra := []byte(fmt.Sprintf(",%q:%s}\n", name, string(serialized)))
 
-	if len(jsonl) == 0 {
-		return jsonl
-	}
-
-	// Ensure the jsonl is valid and properly terminated.
-	if jsonl[len(jsonl)-1] != '\n' {
-		jsonl = append(jsonl, '\n')
-	}
-
-	extra := fmt.Sprintf(",%q:%s", name, string(serialized))
-
-	for i := 0; i < len(jsonl); i++ {
-		if i+1 < len(jsonl) &&
-			jsonl[i] == '}' &&
-			jsonl[i+1] == '\n' {
-			for j := 0; j < len(extra); j++ {
-				result = append(result, extra[j])
-			}
+	// Read single lines
+	scanner := bufio.NewScanner(bytes.NewReader(jsonl))
+	for scanner.Scan() {
+		line := scanner.Bytes()
+		// At a minimum the line should be {}
+		if len(line) < 2 {
+			continue
 		}
 
-		result = append(result, jsonl[i])
+		// Drop invalid lines
+		if line[0] != '{' || line[len(line)-1] != '}' {
+			continue
+		}
+
+		// Drop the final }
+		line = line[:len(line)-1]
+
+		// Append the extra
+		result.Write(line)
+		result.Write(extra)
 	}
 
-	return result
+	return result.Bytes()
 }
 
 func memcat(dest *[]byte, src []byte) {

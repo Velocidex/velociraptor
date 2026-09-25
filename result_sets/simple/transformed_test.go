@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/simple"
@@ -15,10 +16,10 @@ import (
 )
 
 func (self *ResultSetTestSuite) TestTransformed() {
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj, self.client_id, self.flow_id,
-		"Generic.Client.Info/BasicInformation")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, self.flow_id,
+		"Generic.Client.Info/BasicInformation",
+		artifact_modes.MODE_CLIENT)
 
 	writer, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager.Path(),
@@ -66,10 +67,10 @@ func (self *ResultSetTestSuite) TestTransformed() {
 }
 
 func (self *ResultSetTestSuite) TestTransformFilter() {
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj, self.client_id, self.flow_id,
-		"Generic.Client.Info/BasicInformation")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, self.flow_id,
+		"Generic.Client.Info/BasicInformation",
+		artifact_modes.MODE_CLIENT)
 
 	writer, err := result_sets.NewResultSetWriter(
 		self.file_store, path_manager.Path(),

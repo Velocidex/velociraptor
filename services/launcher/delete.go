@@ -11,6 +11,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/alitto/pond/v2"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -31,6 +32,13 @@ func (self *FlowStorageManager) DeleteFlow(
 	client_id string, flow_id string, principal string,
 	options services.DeleteFlowOptions) (
 	[]*services.DeleteFlowResponse, error) {
+
+	// Allow deleting events from artifacts that are no longer
+	// registered.
+	mode := artifact_modes.MODE_CLIENT
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		mode = artifact_modes.MODE_SERVER
+	}
 
 	launcher, err := services.GetLauncher(config_obj)
 	if err != nil {
@@ -76,6 +84,7 @@ func (self *FlowStorageManager) DeleteFlow(
 		seen:         make(map[string]bool),
 		pool:         pond.NewPool(100),
 	}
+
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
 		file_store_factory, flow_path_manager.UploadMetadata())
@@ -107,8 +116,8 @@ func (self *FlowStorageManager) DeleteFlow(
 
 	// Remove all result sets from artifacts.
 	for _, artifact_name := range collection_context.ArtifactsWithResults {
-		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-			config_obj, client_id, flow_id, artifact_name)
+		path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+			config_obj, client_id, flow_id, artifact_name, mode)
 		if err != nil {
 			continue
 		}
@@ -130,36 +139,23 @@ func (self *FlowStorageManager) DeleteFlow(
 	r.emit_notebook("Notebook", flow_path_manager.Notebook())
 
 	if options.ReallyDoIt {
-		// User specified the flow must be removed immediately.
-		if options.Sync {
-			err = self.RemoveClientFlowsFromIndex(
-				ctx, config_obj, client_id, map[string]bool{
-					flow_id: true,
-				})
-		} else {
-			// Otherwise we just mark the index as pending a rebuild
-			// and move on.
-			err = self.writeFlowJournal(config_obj, client_id, flow_id)
-		}
-	}
-	r.wait()
+		self.DeletionManager.DeleteFlow(
+			ctx, config_obj, self, client_id, flow_id, options.Sync)
 
-	// Wait for all the deletions to finish then delete anything left
-	// over that we missed. This should help trap future missed items
-	if options.ReallyDoIt {
+		r.wait()
+
+		// Wait for all the deletions to finish then delete anything
+		// left over that we missed. This should help trap future
+		// missed items
 		r.reset()
+
 		r.emit_walk_fs("Unknown",
 			flow_path_manager.Path().AsFilestorePath().
 				SetType(api.PATH_TYPE_FILESTORE_ANY))
-		r.wait()
 	}
+	r.wait()
 
-	// Sort responses to keep output stable
-	sort.Slice(r.responses, func(i, j int) bool {
-		return r.responses[i].Id < r.responses[j].Id
-	})
-
-	return r.responses, err
+	return r.get_responses(), err
 }
 
 type reporter struct {
@@ -171,6 +167,18 @@ type reporter struct {
 	mu           sync.Mutex
 	id           int
 	pool         pond.Pool
+}
+
+func (self *reporter) get_responses() []*services.DeleteFlowResponse {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	// Sort responses to keep output stable
+	sort.Slice(self.responses, func(i, j int) bool {
+		return self.responses[i].Id < self.responses[j].Id
+	})
+
+	return self.responses[:]
 }
 
 func (self *reporter) reset() {
@@ -362,12 +370,11 @@ func (self *Launcher) DeleteEvents(
 	options services.DeleteFlowOptions) (
 	[]*services.DeleteFlowResponse, error) {
 
-	mode, err := artifact_paths.GetArtifactMode(ctx, config_obj, artifact)
-	if err != nil {
-		return nil, err
-	}
-	if !artifact_modes.IsEvent(mode) {
-		return nil, fmt.Errorf("Artifact %v is not an event artifact", artifact)
+	// Allow deleting events from artifacts that are no longer
+	// registered.
+	mode := artifact_modes.MODE_CLIENT_EVENT
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		mode = artifact_modes.MODE_SERVER_EVENT
 	}
 
 	path_manager := artifact_paths.NewArtifactPathManagerWithMode(
@@ -406,11 +413,9 @@ func (self *Launcher) DeleteEvents(
 		}
 	}
 
-	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(ctx,
-		config_obj, client_id, "", artifact)
-	if err != nil {
-		return nil, err
-	}
+	log_path_manager := artifact_paths.NewArtifactLogPathManagerWithMode(
+		config_obj, client_id, "", artifact, mode)
+
 	for _, f := range log_path_manager.GetAvailableFiles(ctx) {
 		if f.EndTime.After(start_time) &&
 			f.StartTime.Before(end_time) {

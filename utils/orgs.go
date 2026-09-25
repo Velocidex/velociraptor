@@ -19,7 +19,10 @@ func ClientIdFromConfigObj(source string,
 	return source
 }
 
+// Builds a standard client id for the client - this includes the org
+// id and the client id: e.g. C.1234-O123
 func ClientIdFromSourceAndOrg(source, org_id string) string {
+	source = ClientIdFromSource(source)
 	if IsRootOrg(org_id) {
 		return source
 	}
@@ -27,6 +30,7 @@ func ClientIdFromSourceAndOrg(source, org_id string) string {
 	return source + "-" + org_id
 }
 
+// Extracts the org id from the client id
 func OrgIdFromClientId(client_id string) string {
 	parts := strings.SplitN(client_id, "-", 2)
 	if len(parts) > 1 {
@@ -35,11 +39,13 @@ func OrgIdFromClientId(client_id string) string {
 	return ""
 }
 
+// Extracts the pure client id from the client_id dropping the org id.
 func ClientIdFromSource(client_id string) string {
 	parts := strings.Split(client_id, "-")
 	return parts[0]
 }
 
+// Is the root id representing the Root org.
 func IsRootOrg(org_id string) bool {
 	return org_id == "" || org_id == "root"
 }
