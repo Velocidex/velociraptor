@@ -84,11 +84,12 @@ sources:
              'tcp', 'dport', '{', DstPort, '}', 'ct', 'state', 'established,new', 'accept')
 
        // extract Velociraptor config for policy
-       LET extracted_config <= SELECT get_domain(URL=_value) AS DstAddr,
-                                      get_port(URL=_value) AS DstPort,
-                                      'VelociraptorFrontEnd' AS Description,
-                                      _value AS URL
-         FROM foreach(row=config.server_urls)
+       LET extracted_config <= SELECT
+           host(name=get_domain(URL=_value))[0] || get_domain(URL=_value) AS DstAddr,
+           get_port(URL=_value) AS DstPort,
+           'VelociraptorFrontEnd' AS Description,
+           _value AS URL
+        FROM foreach(row=config.server_urls)
 
        LET send_message_box(Msg) = SELECT timestamp(epoch=now()) AS Time,
                                           Result

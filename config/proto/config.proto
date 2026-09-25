@@ -519,7 +519,7 @@ message Authenticator {
     // When this is set we emit detailed logging.
     bool oidc_debug = 26;
 
-    // In many IdP the email address change be changed and is not
+    // In many IdP the email address can be changed and is not
     // verified. By default Velociraptor OIDC authenticator pins the
     // email address to the immutable sub GUID reported by the OIDC
     // server. This stops email addresss hijacking in some situation
@@ -782,8 +782,8 @@ message FrontendResourceControl {
     uint64 client_info_sync_time = 29;
     uint64 client_info_write_time = 30;
 
-    // Old versions on Velociraptor would write client records
-    // separately. This is not longer used as the records are combined
+    // Old versions of Velociraptor would write client records
+    // separately. This is no longer used as the records are combined
     // into larger index files. However, it may still be worth writing
     // the legacy records because it allows Velociraptor to rebuild
     // the index if needed. This may prove to add too much to the load
