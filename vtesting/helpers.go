@@ -23,10 +23,13 @@ package vtesting
 import (
 	"io/ioutil"
 	"runtime/debug"
+	"sort"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -107,4 +110,48 @@ func RunPlugin(in <-chan types.Row) []types.Row {
 	}
 
 	return result
+}
+
+type RowCollector struct {
+	mu   sync.Mutex
+	rows []*ordereddict.Dict
+}
+
+func (self *RowCollector) Push(row *ordereddict.Dict) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.rows = append(self.rows, row)
+}
+
+func (self *RowCollector) Get() []*ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.rows[:]
+}
+
+func (self *RowCollector) Reset() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.rows = nil
+}
+
+func (self *RowCollector) Len() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return len(self.rows)
+}
+
+func (self *RowCollector) Sort() {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	sort.Slice(self.rows, func(i, j int) bool {
+		ps1, _ := self.rows[i].MarshalJSON()
+		ps2, _ := self.rows[j].MarshalJSON()
+		return string(ps1) < string(ps2)
+	})
 }

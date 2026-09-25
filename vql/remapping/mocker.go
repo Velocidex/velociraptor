@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -51,7 +52,7 @@ func (self MockingScopeContext) GetFunction(name string) *MockerFunction {
 func (self *MockingScopeContext) Reset() {
 	for _, pl := range self.plugins {
 		pl.ctx.call_count = 0
-		pl.ctx.recordings = nil
+		pl.ctx.recordings.Reset()
 		pl.ctx.results = nil
 	}
 
@@ -63,7 +64,7 @@ func (self *MockingScopeContext) Reset() {
 type _MockerCtx struct {
 	mu         sync.Mutex
 	results    []types.Any
-	recordings []*ordereddict.Dict
+	recordings vtesting.RowCollector
 
 	call_count int
 }
@@ -97,7 +98,7 @@ func (self MockerPlugin) Call(ctx context.Context,
 		}
 		result := self.ctx.results[self.ctx.call_count%len(self.ctx.results)]
 		self.ctx.call_count += 1
-		self.ctx.recordings = append(self.ctx.recordings, args)
+		self.ctx.recordings.Push(args)
 		self.ctx.mu.Unlock()
 
 		a_value := reflect.Indirect(reflect.ValueOf(result))
@@ -424,7 +425,7 @@ func (self *MockReplayFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		return mock_plugin.ctx.recordings
+		return mock_plugin.ctx.recordings.Get()
 	}
 
 	if arg.Function != "" {
@@ -434,7 +435,7 @@ func (self *MockReplayFunction) Call(ctx context.Context,
 			return vfilter.Null{}
 		}
 
-		return mock_plugin.ctx.recordings
+		return mock_plugin.ctx.recordings.Get()
 	}
 
 	return vfilter.Null{}

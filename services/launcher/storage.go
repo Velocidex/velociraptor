@@ -28,12 +28,11 @@ type FlowStorageManager struct {
 
 	indexBuilders map[string]*flowIndexBuilder
 
-	// Protects the global flows journal
-	flow_journal_mu sync.Mutex
-
 	// Throttle index rebuilds so they are not too frequent.
 	throttler          *utils.Throttler
 	concurrencyControl *utils.Concurrency
+
+	DeletionManager *DeletionManager
 }
 
 func (self *FlowStorageManager) WriteFlow(
@@ -119,8 +118,8 @@ func (self *FlowStorageManager) WriteFlowStats(
 		config_obj, flow_path_manager.Stats(), flow, completion)
 }
 
-// Write the flow to the flow resultset index - this is only used for
-// the GUI.
+// Write the flow to the flow resultset index synchronously - this is
+// only used for the GUI.
 func (self *FlowStorageManager) WriteFlowIndex(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -128,14 +127,6 @@ func (self *FlowStorageManager) WriteFlowIndex(
 
 	return self.GetIndexBuilder(flow.ClientId).WriteFlowIndex(
 		ctx, config_obj, flow)
-}
-
-func (self *FlowStorageManager) RemoveClientFlowsFromIndex(
-	ctx context.Context, config_obj *config_proto.Config,
-	client_id string, flows map[string]bool) error {
-
-	return self.GetIndexBuilder(client_id).
-		RemoveClientFlowsFromIndex(ctx, config_obj, self, flows)
 }
 
 func (self *FlowStorageManager) WriteTask(
@@ -290,9 +281,10 @@ func (self *FlowStorageManager) houseKeeping(
 				continue
 			}
 
-			err := self.RemoveFlowsFromJournal(ctx, config_obj)
+			err := self.DeletionManager.RebuildPendingIndexes(
+				ctx, config_obj, self)
 			if err != nil {
-				logger.Error("RemoveFlowsFromJournal: %v", err)
+				logger.Error("RebuildPendingIndexes: %v", err)
 			}
 		}
 	}
@@ -460,6 +452,8 @@ func NewFlowStorageManager(
 		// and use the old index snapshot.
 		concurrencyControl: utils.NewConcurrencyControl(
 			1, 100*time.Millisecond),
+
+		DeletionManager: &DeletionManager{},
 	}
 
 	// We need the client info manager to be up first

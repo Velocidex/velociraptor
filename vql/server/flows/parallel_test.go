@@ -17,6 +17,7 @@ import (
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -67,10 +68,9 @@ func (self *TestSuite) TestArtifactSource() {
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
 		self.ConfigObj, self.client_id, self.flow_id,
-		"Test.Artifact")
-	assert.NoError(self.T(), err)
+		"Test.Artifact", artifact_modes.MODE_CLIENT)
 
 	// Append logs to messages from previous packets.
 	rs_writer, err := result_sets.NewResultSetWriter(
@@ -210,9 +210,9 @@ func (self *TestSuite) TestHuntsSource() {
 			Set("_ts", 0).
 			Set("Timestamp", 0))
 
-		path_manager, err := artifacts.NewArtifactPathManager(self.Ctx,
-			self.ConfigObj, client_id, flow_id, "Test.Artifact")
-		assert.NoError(self.T(), err)
+		path_manager := artifacts.NewArtifactPathManagerWithMode(
+			self.ConfigObj, client_id, flow_id, "Test.Artifact",
+			artifact_modes.MODE_CLIENT)
 
 		// Append logs to messages from previous packets.
 		rs_writer, err := result_sets.NewResultSetWriter(

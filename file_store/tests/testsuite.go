@@ -21,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
@@ -82,7 +83,7 @@ func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
 	infos, err := self.Filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
-	var golden []*ordereddict.Dict
+	var golden vtesting.RowCollector
 	for _, info := range infos {
 		ps := info.PathSpec()
 		res := ordereddict.NewDict().
@@ -91,12 +92,12 @@ func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
 			Set("IsDir", info.IsDir()).
 			Set("Type", ps.Type().String()).
 			Set("AsJSON", ps)
-		golden = append(golden, res)
+		golden.Push(res)
 	}
 
 	// Component should preserve the / - it is not considered path separator.
 	goldie.Assert(self.T(), "TestListChildrenComplicatedNames",
-		json.MustMarshalIndent(golden))
+		json.MustMarshalIndent(golden.Get()))
 }
 
 func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
@@ -124,7 +125,7 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	infos, err := self.Filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
-	var golden []*ordereddict.Dict
+	var golden vtesting.RowCollector
 	for _, info := range infos {
 		ps := info.PathSpec()
 		res := ordereddict.NewDict().
@@ -133,14 +134,10 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 			Set("IsDir", info.IsDir()).
 			Set("Type", ps.Type().String()).
 			Set("AsJSON", ps)
-		golden = append(golden, res)
+		golden.Push(res)
 	}
 
-	sort.Slice(golden, func(i, j int) bool {
-		ps1, _ := golden[i].MarshalJSON()
-		ps2, _ := golden[j].MarshalJSON()
-		return string(ps1) < string(ps2)
-	})
+	golden.Sort()
 
 	// We should have:
 	// 1. A Directory [subdir, Foo]
@@ -148,7 +145,7 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	// 3. A File [subdir, Foo] of type PATH_TYPE_FILESTORE_JSON
 
 	goldie.Assert(self.T(), "TestListChildrenSameNameDifferentTypes",
-		json.MustMarshalIndent(golden))
+		json.MustMarshalIndent(golden.Get()))
 }
 
 // List children recovers child's type based on extensions.  NOTE:
@@ -701,16 +698,15 @@ func (self *QueueManagerTestSuite) TestPush() {
 
 	queue_name := path_manager.GetQueueName()
 
-	payload := []*ordereddict.Dict{
-		ordereddict.NewDict().Set("foo", 1),
-		ordereddict.NewDict().Set("foo", 2)}
+	var payload vtesting.RowCollector
+	payload.Push(ordereddict.NewDict().Set("foo", 1))
+	payload.Push(ordereddict.NewDict().Set("foo", 2))
 
 	ctx := context.Background()
 	output, cancel := self.manager.Watch(ctx, queue_name, nil)
 	defer cancel()
 
-	err := self.manager.PushEventRows(
-		path_manager, payload)
+	err := self.manager.PushEventRows(path_manager, payload.Get())
 
 	assert.NoError(self.T(), err)
 

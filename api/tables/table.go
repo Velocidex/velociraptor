@@ -61,8 +61,13 @@ func GetTable(
 	case "TIMELINE":
 		result, err = getTimeline(ctx, config_obj, in)
 
-	case "CLIENT_EVENT_LOGS", "SERVER_EVENT_LOGS":
-		result, err = getEventTableLogs(ctx, config_obj, in)
+	case "CLIENT_EVENT_LOGS":
+		result, err = getEventTableLogs(ctx, config_obj,
+			in, artifact_modes.MODE_CLIENT_EVENT)
+
+	case "SERVER_EVENT_LOGS":
+		result, err = getEventTableLogs(ctx, config_obj,
+			in, artifact_modes.MODE_SERVER_EVENT)
 
 	case "CLIENT_EVENT", "SERVER_EVENT":
 		result, err = getEventTable(ctx, config_obj, in)
@@ -402,11 +407,9 @@ func getEventTable(
 	config_obj *config_proto.Config,
 	in *api_proto.GetTableRequest) (
 	*api_proto.GetTableResponse, error) {
-	path_manager, err := artifacts.NewArtifactPathManager(ctx,
-		config_obj, in.ClientId, in.FlowId, in.Artifact)
-	if err != nil {
-		return nil, err
-	}
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		config_obj, in.ClientId, in.FlowId, in.Artifact,
+		artifact_modes.ModeNameToMode(in.Type))
 
 	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
 }
@@ -414,13 +417,12 @@ func getEventTable(
 func getEventTableLogs(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	in *api_proto.GetTableRequest) (
+	in *api_proto.GetTableRequest,
+	mode artifact_modes.ArtifactMode) (
 	*api_proto.GetTableResponse, error) {
-	path_manager, err := artifacts.NewArtifactLogPathManager(ctx,
-		config_obj, in.ClientId, "", in.Artifact)
-	if err != nil {
-		return nil, err
-	}
+	path_manager := artifacts.NewArtifactLogPathManager(ctx,
+		config_obj, in.ClientId, "", in.Artifact, mode)
+
 	return getEventTableWithPathManager(ctx, config_obj, in, path_manager)
 }
 
