@@ -383,7 +383,7 @@ func (self *HuntDispatcherTestSuite) TestExpiringHunts() {
 			State:     api_proto.Hunt_RUNNING,
 			Version:   now,
 			StartTime: uint64(now),
-			Expires:   uint64(now+1) * 1000000,
+			Expires:   uint64(now+10) * 1000000,
 			StartRequest: &flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{"Generic.Client.Info"},
 			},
