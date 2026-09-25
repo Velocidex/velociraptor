@@ -261,7 +261,7 @@ func (self SourcePlugin) Call(
 			result_set_reader, err = getNotebookResultSetReader(ctx, config_obj, scope, arg)
 
 		} else if arg.mode == MODE_FLOW_ARTIFACT {
-			result_set_reader, err = getFlowResultSetReader(ctx, config_obj, scope, arg)
+			result_set_reader, err = getFlowResultSetReader(config_obj, arg)
 
 		} else {
 			scope.Log("source: unknown arg mode")
@@ -379,18 +379,18 @@ func getNotebookResultSetReader(
 }
 
 func getFlowResultSetReader(
-	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope vfilter.Scope,
 	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-		config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
-	if err != nil {
-		return nil, err
+	mode := artifact_modes.MODE_CLIENT
+	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		mode = artifact_modes.MODE_SERVER
 	}
+
+	path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+		config_obj, arg.ClientId, arg.FlowId, arg.Artifact, mode)
 
 	return result_sets.NewResultSetReader(
 		file_store_factory, path_manager.Path())
@@ -556,12 +556,13 @@ func (self FlowResultsPlugin) Call(
 			arg.Source = ""
 		}
 
-		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
-		if err != nil {
-			scope.Log("source: %v", err)
-			return
+		mode := artifact_modes.MODE_CLIENT
+		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+			mode = artifact_modes.MODE_SERVER
 		}
+
+		path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+			config_obj, arg.ClientId, arg.FlowId, arg.Artifact, mode)
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		rs_reader, err := result_sets.NewResultSetReader(

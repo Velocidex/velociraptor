@@ -107,7 +107,8 @@ func (self DummyClientInfoManager) ModifyMetadata(
 	return utils.NotImplementedError
 }
 
-func (self DummyClientInfoManager) ValidateClientId(client_id string) error {
+func (self DummyClientInfoManager) ValidateClientId(
+	client_id string, server_ok bool) error {
 	return utils.NotImplementedError
 }
 

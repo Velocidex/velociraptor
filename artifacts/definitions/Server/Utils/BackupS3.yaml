@@ -17,23 +17,23 @@ parameters:
      default: "."
      description: A regular expression to select which artifacts to upload
      type: regex
-     
+
    - name: Bucket
      description: The bucket to upload to (blank to use server metadata)
 
    - name: Endpoint
-     
+
    - name: Region
-   
+
    - name: CredentialsKey
-   
+
    - name: CredentialsSecret
-   
+
    - name: CredentialsToken
-   
+
    - name: Secret
      description: A Secret name to use for uploading.
-     
+
    - name: RemoveDownloads
      type: bool
      description: If set, remove the flow export files after upload
@@ -42,7 +42,7 @@ sources:
   - query: |
       -- Allow these settings to be set by the artifact parameter or
       -- the server metadata.
-      LET completions = SELECT *,
+      LET completions = SELECT ClientId, FlowId,
          client_info(client_id=ClientId).os_info.fqdn AS Fqdn,
          create_flow_download(client_id=ClientId,
              flow_id=FlowId, wait=TRUE) AS FlowDownload

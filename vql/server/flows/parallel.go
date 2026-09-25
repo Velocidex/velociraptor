@@ -200,7 +200,7 @@ func breakIntoScopes(
 
 	} else if arg.source_arg.mode == MODE_FLOW_ARTIFACT {
 		result_set_reader, err = getFlowResultSetReader(
-			ctx, config_obj, scope, arg.source_arg)
+			config_obj, arg.source_arg)
 
 	} else {
 		err = errors.New("Unknown mode")

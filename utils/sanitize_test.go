@@ -67,3 +67,26 @@ func TestSanitizeForZip(t *testing.T) {
 	}
 	goldie.Assert(t, "TestSanitizeForZip", json.MustMarshalIndent(golden))
 }
+
+func TestValidateArtifactName(t *testing.T) {
+	golden := ordereddict.NewDict()
+	for _, name := range []string{
+		"Foo.Bar.Baz",
+		"Foo Bar Bar",
+		"Foo/Bar/Baz",
+		"4E23",
+		"E23.23",
+		"Foo3/Boo4",
+		"Foo3.Boo4",
+	} {
+		err_str := "OK"
+		err := ValidateArtifactNameAndSource(name)
+		if err != nil {
+			err_str = err.Error()
+		}
+
+		golden.Set(name, err_str)
+	}
+	goldie.Assert(t, "TestValidateArtifactName",
+		json.MustMarshalIndent(golden))
+}

@@ -220,8 +220,7 @@ func decryptSymmetric(
 func (self *CryptoManager) getAuthState(
 	config_obj *config_proto.Config,
 	cipher_metadata *crypto_proto.CipherMetadata,
-	serialized_cipher []byte,
-	cipher_properties *crypto_proto.CipherProperties) (bool, error) {
+	serialized_cipher []byte) (bool, error) {
 
 	// Verify the cipher signature using the certificate known for
 	// the sender.
@@ -366,7 +365,7 @@ func (self *CryptoManager) Decrypt(
 		cipher_metadata.Source, msg_info.OrgId)
 
 	msg_info.Authenticated, err = self.getAuthState(
-		org_config_obj, cipher_metadata, serialized_cipher, cipher_properties)
+		org_config_obj, cipher_metadata, serialized_cipher)
 
 	// Make sure the message source is set from the cipher_metadata
 	// overriding the internal Source. The source is cryptographically

@@ -18,6 +18,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
 
@@ -101,23 +102,23 @@ func (self *RaceTestSuite) TearDownTest() {
 
 	ctx := context.Background()
 	handler := debug.GetProfileWriterByeName("open_close")
-	var opened []*ordereddict.Dict
+	var opened vtesting.RowCollector
 	for _, item_any := range debug.GetProfile(ctx, handler.ProfileWriter) {
 		item := item_any.(*ordereddict.Dict)
 		destroyed_any, _ := item.Get("Destroyed")
 
 		destroyed := destroyed_any.(time.Time)
 		if destroyed.IsZero() {
-			opened = append(opened, item)
+			opened.Push(item)
 		}
 	}
 
-	if len(opened) > 0 {
-		json.Dump(opened)
+	if len(opened.Get()) > 0 {
+		json.Dump(opened.Get())
 	}
 
 	// Make sure all the files are properly closed.
-	assert.Equal(self.T(), 0, len(opened))
+	assert.Equal(self.T(), 0, len(opened.Get()))
 }
 
 // readWholeFile reads file_idx end to end through a pooled reader and

@@ -9,6 +9,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -42,12 +43,12 @@ func RunQuery(
 		return nil, err
 	}
 
-	rows := []*ordereddict.Dict{}
+	var rows vtesting.RowCollector
 	for _, vql := range multi_vql {
 		for row := range vql.Eval(ctx, scope) {
-			rows = append(rows, vfilter.RowToDict(ctx, scope, row))
+			rows.Push(vfilter.RowToDict(ctx, scope, row))
 		}
 	}
 
-	return rows, nil
+	return rows.Get(), nil
 }

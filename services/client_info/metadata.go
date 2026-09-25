@@ -184,6 +184,7 @@ func (self *Store) ModifyMetadata(
 	stored_obj := &api_proto.ClientMetadata{ClientId: client_id}
 
 	err = client_record.Modify(
+		client_id,
 		func(client_info *services.ClientInfo) (
 			*services.ClientInfo, error) {
 			// The client_info.Metadata only contains indexed fields

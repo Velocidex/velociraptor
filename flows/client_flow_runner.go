@@ -155,11 +155,9 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 		return nil
 	}
 
-	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(ctx,
-		self.config_obj, client_id, flow_id, artifact_name)
-	if err != nil {
-		return err
-	}
+	log_path_manager := artifact_paths.NewArtifactLogPathManagerWithMode(
+		self.config_obj, client_id, flow_id, artifact_name,
+		artifact_modes.MODE_CLIENT_EVENT)
 
 	// Write the logs asynchronously
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
@@ -240,7 +238,7 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 	}
 
 	// Validate the query_name as a valid artifact name
-	err := utils.ValidateArtifactName(query_name)
+	err := utils.ValidateArtifactNameAndSource(query_name)
 	if err != nil {
 		return err
 	}
@@ -747,21 +745,28 @@ func (self *ClientFlowRunner) VQLResponse(
 		return err
 	}
 
-	if response.Query.Name == "" ||
-		strings.HasPrefix(response.Query.Name, "$") {
+	query_name := response.Query.Name
+
+	// Ignore empty responses or ones that do not deobfuscate.
+	if query_name == "" ||
+		strings.HasPrefix(query_name, "$") {
 		return nil
 	}
 
-	path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-		self.config_obj, client_id, flow_id, response.Query.Name)
+	// Validate the query_name as a valid artifact name
+	err = utils.ValidateArtifactNameAndSource(query_name)
 	if err != nil {
 		return err
 	}
 
-	if path_manager.Mode() != artifact_modes.MODE_CLIENT {
-		return fmt.Errorf("Invalid VQLResponse: Artifact %v must be CLIENT type",
-			response.Query.Name)
-	}
+	// Allow results to be written from artifacts that are not
+	// necessarily registered in the repository. This can happen when
+	// an artifact is deleted - the original request names the
+	// artifact while the flow is still in flight but it may not exist
+	// currently.
+	path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+		self.config_obj, client_id, flow_id, response.Query.Name,
+		artifact_modes.MODE_CLIENT)
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(

@@ -9,7 +9,10 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
+	"www.velocidex.com/golang/vfilter/arg_parser"
 )
+
+type OrgsPluginArgs struct{}
 
 type OrgsPlugin struct{}
 
@@ -22,6 +25,13 @@ func (self OrgsPlugin) Call(
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "orgs", args)()
+
+		arg := &OrgsPluginArgs{}
+		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("orgs: %v", err)
+			return
+		}
 
 		user_manager := services.GetUserManager()
 		org_manager, err := services.GetOrgManager()

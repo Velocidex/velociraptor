@@ -2,6 +2,8 @@
  "Simple": "{\"foo\":1,\"bar\":2}\n",
  "Nested": "{\"foo\":1,\"bar\":{\"F\":1,\"B\":2}}\n",
  "Empty String": "",
- "Malformed": ",\"bar\":2}\n",
- "Malformed2": ",\"bar\":2}\n"
+ "Malformed": "",
+ "Malformed2": "",
+ "Array": "",
+ "MalformedButLooksOk": "{{{{{\"foo\":1,\"bar\":2}\n"
 }

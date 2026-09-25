@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -21,12 +22,9 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetMigration() {
 	defer closer()
 
 	// Start off by writing some events on a queue.
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id,
-		self.flow_id,
-		"Windows.Events.ProcessCreation")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, self.flow_id,
+		"Windows.Events.ProcessCreation", artifact_modes.MODE_CLIENT_EVENT)
 
 	// Recreate events from older version. Previously we used the
 	// regular ResultSetWriter to write unindexed files.

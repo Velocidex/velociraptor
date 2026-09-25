@@ -614,11 +614,9 @@ func (self *ServerTestSuite) TestMonitoring() {
 
 	runner.Close(self.Ctx)
 
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
-		"Generic.Client.Stats")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
+		"Generic.Client.Stats", artifact_modes.MODE_CLIENT_EVENT)
 
 	file_store_factory := file_store.GetFileStore(self.ConfigObj)
 	rs_reader, err := result_sets.NewResultSetReader(
@@ -642,7 +640,7 @@ func (self *ServerTestSuite) TestMonitoringWellKnownFlow() {
 	flow_id, err := self.createArtifactCollection()
 	require.NoError(self.T(), err)
 
-	var rows []*ordereddict.Dict
+	rows := vtesting.RowCollector{}
 	sub_ctx, cancel := context.WithCancel(self.Ctx)
 	defer cancel()
 
@@ -654,7 +652,7 @@ func (self *ServerTestSuite) TestMonitoringWellKnownFlow() {
 		}, "TestWatcher",
 		func(ctx context.Context, config_obj *config_proto.Config,
 			row *ordereddict.Dict) error {
-			rows = append(rows, row)
+			rows.Push(row)
 			return nil
 		})
 	require.NoError(self.T(), err)
@@ -703,10 +701,10 @@ func (self *ServerTestSuite) TestMonitoringWellKnownFlow() {
 	runner.Close(self.Ctx)
 
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
-		return len(rows) == 1
+		return len(rows.Get()) == 1
 	})
 
-	assert.Equal(self.T(), 1, len(rows))
+	assert.Equal(self.T(), 1, len(rows.Get()))
 }
 
 // Receiving a response from the server to the monitoring flow will
@@ -1016,19 +1014,47 @@ func (self *ServerTestSuite) TestVQLResponse() {
 				JSONLResponse: fmt.Sprintf(
 					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
 				Query: &actions_proto.VQLRequest{
-					Name: "Generic.Client.Info",
+					Name: "Generic.Client.Info/BasicInformation",
 				},
 			},
 		})
 	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
-	flow_path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id, flow_id, "Generic.Client.Info")
-	assert.NoError(self.T(), err)
+	flow_path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, flow_id,
+		"Generic.Client.Info/BasicInformation",
+		artifact_modes.MODE_CLIENT)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
+}
+
+// Test Invalid VQLResponse.
+func (self *ServerTestSuite) TestVQLResponseInvalid() {
+	t := self.T()
+
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	err = runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{"ClientId", "Column1"},
+				JSONLResponse: fmt.Sprintf(
+					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
+				Query: &actions_proto.VQLRequest{
+					Name: "some invalid artiface name",
+				},
+			},
+		})
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "Invalid artifact name")
 }
 
 // Test VQLResponse are written correctly.
@@ -1065,10 +1091,9 @@ func (self *ServerTestSuite) TestCompressedVQLResponse() {
 	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
-	flow_path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id, flow_id, "Generic.Client.Info")
-	assert.NoError(self.T(), err)
+	flow_path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, flow_id, "Generic.Client.Info",
+		artifact_modes.MODE_CLIENT)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
 }
@@ -1114,7 +1139,7 @@ func (self *ServerTestSuite) TestInvalidVQLResponse() {
 }
 
 // Test that VQLResponse can only be written to client artifacts
-func (self *ServerTestSuite) TestVQLResponseInvalid() {
+func (self *ServerTestSuite) TestVQLResponseInvalidArtifactType() {
 	t := self.T()
 
 	// Schedule a flow in the database.
@@ -1137,8 +1162,17 @@ func (self *ServerTestSuite) TestVQLResponseInvalid() {
 				},
 			},
 		})
-	assert.ErrorContains(self.T(), err, "Artifact Generic.Client.Stats must be CLIENT type")
+	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
+
+	// Event though Generic.Client.Stats is normally a CLIENT_EVENT
+	// artifact, because responses were sent through the VQLResponse
+	// mechanism, the server will write it as a client artifact.
+	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
+	value, _ := file_store_factory.Get(
+		"/clients/" + self.client_id + "/artifacts/Generic.Client.Stats/" + flow_id + ".json")
+
+	assert.Contains(self.T(), string(value), "Column1")
 }
 
 // When VQLResponse messages are retransmitted we need to detect and

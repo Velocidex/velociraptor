@@ -189,7 +189,7 @@ func (self *Labeler) SetClientLabel(
 		return err
 	}
 
-	err = client_info_manager.ValidateClientId(client_id)
+	err = client_info_manager.ValidateClientId(client_id, !services.SERVER_OK)
 	if err != nil {
 		return err
 	}
