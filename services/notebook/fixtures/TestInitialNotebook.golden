@@ -58,7 +58,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "Generic.Client.Info"
+       }
+      ]
      }
     ]
    },
@@ -178,7 +184,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Events from Generic.Events\n\nFrom {{ Scope \"StartTime\" }} to {{ Scope \"EndTime\" }}\n*/\n\nSELECT timestamp(epoch=_ts) AS ServerTime, *\n FROM source(start_time=StartTime, end_time=EndTime, artifact=\"Generic.Events\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "Generic.Events"
+       }
+      ]
      }
     ]
    }
@@ -241,7 +253,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Events from Generic.Events\n\nFrom {{ Scope \"StartTime\" }} to {{ Scope \"EndTime\" }}\n*/\n\nSELECT timestamp(epoch=_ts) AS ServerTime, *\n FROM source(start_time=StartTime, end_time=EndTime, artifact=\"Generic.Events\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "Generic.Events"
+       }
+      ]
      }
     ]
    }
@@ -357,7 +375,13 @@
     "notebook": [
      {
       "template": "\n/*\n# Generic.Client.Info\n*/\nSELECT * FROM source(artifact=\"Generic.Client.Info\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "Generic.Client.Info"
+       }
+      ]
      }
     ]
    },
@@ -432,7 +456,13 @@
      },
      {
       "template": "\n/*\n# NotebookWithSugegstions\n*/\nSELECT * FROM source(artifact=\"NotebookWithSugegstions\")\nLIMIT 50\n",
-      "type": "vql"
+      "type": "vql",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "NotebookWithSugegstions"
+       }
+      ]
      }
     ]
    }

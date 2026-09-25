@@ -345,6 +345,10 @@ func CalculateNotebookArtifact(
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
 							Output: output,
+							Env: []*artifacts_proto.ArtifactEnv{{
+								Key:   "ArtifactName",
+								Value: source_name,
+							}},
 							Template: fmt.Sprintf(`
 /*
 # Events from %v
@@ -363,6 +367,10 @@ LIMIT %v
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
 							Output: output,
+							Env: []*artifacts_proto.ArtifactEnv{{
+								Key:   "ArtifactName",
+								Value: source_name,
+							}},
 							Template: fmt.Sprintf(`
 /*
 # %v

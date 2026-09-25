@@ -10,7 +10,18 @@ description: |
 
   You can replace those with suitable MSI builds.
 
+  ## Configuring the package
+
+  You can customize the package by specifying a list of labels and
+  proxy settings.
+
+  NOTE: For the client to be assigned the label you will need to also
+  specify the label with `Security.client_self_labels_regex`
+
 type: SERVER
+
+imports:
+  - Server.Utils.Policy
 
 parameters:
   - name: CustomConfig
@@ -19,29 +30,47 @@ parameters:
   - name: AlsoBuildArm64
     description: Also build Arm64 bit MSI for deployment.
     type: bool
+  - name: Labels
+    description: A list of labels to append to the config.
+    type: csv
+    default: |
+      Labels
+
+  - name: ProxyString
+    description: |
+      If a proxy is needed this should be for example: https://192.168.1.1:3128
 
 sources:
 - query: |
-    LET ValidateConfig(Config) = Config.Client.server_urls
-          AND Config.Client.ca_certificate =~ "(?ms)-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----"
-          AND Config.Client.nonce
+    LET client_config <= if(
+       condition=ValidateClientConfig(Config=CustomConfig),
+       then=CustomConfig,
+       else=ToDict(item=org()._client_config))
 
-    LET client_config <= if(condition=ValidateConfig(Config=CustomConfig),
-                         then=CustomConfig,
-                         else=org()._client_config)
+    LET client_config <= if(condition=Labels.Labels || Proxy,
+      then=AddLabelsToConfig(Config=client_config, Labels=Labels.Labels, Proxy=ProxyString),
+      else=client_config)
+
+    // Convert to YAML for repacking.
+    LET client_config_yaml <= serialize(format="yaml", item=client_config)
 
     LET Build(Target) = repack(
         upload_name=format(
           format='Org_%v_%v',
           args=[org().name, inventory_get(tool=Target).Definition.filename]),
         target=Target,
-        config=serialize(format='yaml', item=client_config))
+        config=client_config_yaml)
 
     SELECT * FROM chain(a={
-       SELECT Build(Target="VelociraptorWindowsMSI") AS VelociraptorWindowsMSI
+       SELECT Build(Target="VelociraptorWindowsMSI") AS VelociraptorWindowsMSI,
+              upload(accessor='data', file=client_config_yaml, name="Config") AS ClientConfig
        FROM scope()
     }, b={
        SELECT Build(Target="VelociraptorWindowsArm64MSI") AS VelociraptorWindowsArm64MSI
        FROM scope()
        WHERE AlsoBuildArm64
     })
+
+column_types:
+  - name: ClientConfig
+    type: upload_preview

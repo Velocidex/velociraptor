@@ -143,10 +143,11 @@ Client:
 
   ## A URL to a proxy that will be used to connect to the server. Some
   ## environments have egress filtering requiring Velociraptor to use
-  ## a proxy to be able to reach the server. NOTE: We do not support
-  ## PAC based proxy configurations or Windows domain authentication -
-  ## you might need to add an allow rule to the proxy config to allow
-  ## the Velociraptor server URL without authentication.
+  ## a proxy to be able to reach the server. NOTE: We do support PAC
+  ## based proxy configurations (see below), but we do not support
+  ## Windows domain authentication - you might need to add an allow
+  ## rule to the proxy config to allow the Velociraptor server URL
+  ## without authentication.
   proxy: https://proxy:3128/
 
   ## Some proxy configurations are more complex. You can specify a
@@ -163,7 +164,8 @@ Client:
        "^https://localhost/": ""
 
     # Location of a PAC file (overrides the above settings). This can
-    # be a file:// URL or even a data: url.
+    # be a file:// URL or even a data: url (safest option - this
+    # embeds the pac file in the config file).
     pac: "<not set>"
 
     # If this is set we ignore the HTTP_PROXY and HTTPS_PROXY
@@ -394,6 +396,12 @@ Client:
   # takes effect both on the client and on the server.
   dns_cache_refresh_min: 0
 
+  # Client specific logging configuration - this can be different from
+  # the server configuration. Usually the client does not log anything
+  # but you can enable this for debugging.
+  Logging:
+
+
 ## This section configures the API service. The API server accepts
 ## connections from the GUI gRPC gateway, as well as connections from
 ## the gRPC API clients (e.g. with pyvelociraptor).
@@ -623,6 +631,21 @@ GUI:
     # configuring the server initially if you want to debug your OIDC
     # setup. You probably do not want this enabled in production.
     oidc_debug: false
+
+
+    # In many IdP the email address can be changed and is not
+    # verified. By default Velociraptor OIDC authenticator pins the
+    # email address to the immutable sub GUID reported by the OIDC
+    # server. This stops email addresss hijacking in some situation
+    # but prevents the same email from being used by different IdP
+    # servers. Set this parameter to disable this pinning and allow
+    # the same email address on different OIDC sub IDs. Be careful
+    # that users are not able to set any email address for their
+    # account in the IdP as this allows them to take over other user's
+    # accounts. This setting is required for the MultiAuthenticator to
+    # work properly.
+    disable_email_to_sub_pin: false
+
 
     # Additional OIDC claims configuration. This is an experimental
     # setting and should not be used except for specific situations.
@@ -936,6 +959,15 @@ Frontend:
     # master.
     client_info_sync_time: 0
     client_info_write_time: 0
+
+    # Old versions of Velociraptor would write client records
+    # separately. This is no longer used as the records are combined
+    # into larger index files. However, it may still be worth writing
+    # the legacy records because it allows Velociraptor to rebuild the
+    # index if needed. This may prove to add too much to the load so
+    # we can turn it off by default in future.
+    client_info_skip_writing_legacy_records: false
+
 
     # The journal files are used to queue messages between event
     # generators and event consumers when the consumer is unable to
@@ -1638,3 +1670,14 @@ security:
   # confidential information.
   shadowed_env_vars:
     - VELOCIRAPTOR_CONFIG
+
+
+  # Clients can include labels baked into their configuration file
+  # (See `Client.labels` ).  The below regex controls which labels are
+  # accepted. By default a regex is not specified, meaning that
+  # clients may not label themselves.
+  #
+  # Be aware that rogue clients can specify any label accepted by the
+  # below regex and so can participate in labeled hunts.
+  # If you want the clients to auto label set this to `.+`
+  client_self_labels_regex: ""
