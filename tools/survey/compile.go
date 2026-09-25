@@ -7,6 +7,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/config"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	"www.velocidex.com/golang/velociraptor/services/users"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -99,6 +100,20 @@ func (self *ConfigSurvey) Compile() (*config_proto.Config, error) {
 
 		config_obj.AutocertCertCache = config_obj.Datastore.Location
 
+	}
+
+	// If doesn't hurt to have the mTLS certs in the there just in
+	// case. They won't be used until the server requests them, but it
+	// makes it easy to turn it on later if they are already deployed
+	// with clients.
+	bundle, err := crypto.GenerateServerCert(config_obj, "Client")
+	if err != nil {
+		return nil, fmt.Errorf("Unable to generate certificate: %w", err)
+	}
+
+	config_obj.Client.Crypto = &config_proto.CryptoConfig{
+		ClientCertificate:           bundle.Cert,
+		ClientCertificatePrivateKey: string(bundle.PrivateKey),
 	}
 
 	switch self.DynDNSType {

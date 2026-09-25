@@ -64,15 +64,28 @@ parameters:
 
 
 export: |
-  LET PluginsWithFileWrite <= SELECT name, metadata.permissions as perms
+  LET PluginsWithFileWrite = SELECT name, metadata.permissions as perms
       FROM help()
       WHERE type =~ "Plugin" AND perms =~ "FILESYSTEM_WRITE|MACHINE_STATE"
       ORDER BY name
 
-  LET FunctionsWithFileWrite <= SELECT name, metadata.permissions as perms
+  LET FunctionsWithFileWrite = SELECT name, metadata.permissions as perms
       FROM help()
       WHERE type =~ "Function" AND perms =~ "FILESYSTEM_WRITE|MACHINE_STATE"
       ORDER BY name
+
+  // Utility functions to manipulate config files
+
+  // Checks if the client config looks right.
+  LET ValidateClientConfig(Config) = Config.Client.server_urls
+    AND Config.Client.ca_certificate =~ "(?ms)-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----"
+    AND Config.Client.nonce
+
+  // Add labels and proxy settings to the config.
+  LET AddLabelsToConfig(Config, Labels, Proxy="") =
+     Config + dict(Client=Config.Client + dict(labels=Labels, proxy=Proxy))
+
+  LET ToDict(item) = parse_json(data=serialize(item=item))
 
 sources:
 - query: |
