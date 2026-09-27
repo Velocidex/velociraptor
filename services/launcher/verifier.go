@@ -36,7 +36,11 @@ type QueryDesc struct {
 
 // Contains the result of the static analysis.
 type AnalysisState struct {
-	Artifact        string
+	// The entire artifact text
+	Artifact string
+
+	// Jus the name if it is known
+	ArtifactName    string
 	TopLevelQueries []*QueryDesc
 	Callsites       []vfilter.CallSite
 	FailedToParse   bool
@@ -106,8 +110,7 @@ func (self *AnalysisState) Debug() string {
 }
 func (self *AnalysisState) AnalyseCall(
 	callsite vfilter.CallSite, desc CallDescriptor) {
-	self.Permissions = utils.Sort(utils.DeduplicateStringSlice(
-		append(self.Permissions, desc.Permissions...)))
+	self.Permissions = append(self.Permissions, desc.Permissions...)
 }
 
 func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
@@ -115,7 +118,8 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	artifact_mode := artifact_modes.ModeNameToMode(artifact.Type)
 
 	// Only client artifacts enforce required permissions
-	if artifact_mode != artifact_modes.MODE_CLIENT {
+	if artifact_mode != artifact_modes.MODE_CLIENT &&
+		artifact_mode != artifact_modes.MODE_CLIENT_EVENT {
 		return
 	}
 
@@ -142,12 +146,21 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	// about all permissions that are not required
 	for _, perm := range self.Permissions {
 		if !utils.InString(implied_permissions, perm) {
-			emitWarning(REQUIRED_PERMISSIONS,
+			emitWarning(
+				self.ArtifactName,
+				REQUIRED_PERMISSIONS,
 				vfilter.RangePosition{},
 				self,
 				REQUIRED_PERMISSIONS_MSG, perm)
 		}
 	}
+}
+
+// Finalize the state.
+func (self *AnalysisState) Done() error {
+	self.Permissions = utils.Sort(utils.DeduplicateStringSlice(
+		self.Permissions))
+	return nil
 }
 
 func NewAnalysisState(artifact string) *AnalysisState {
@@ -236,6 +249,7 @@ func (self *ApiDescription) verifyArtifact(
 	artifact, pres := repository.Get(ctx, config_obj, artifact_name)
 	if !pres {
 		return emitError(
+			state.ArtifactName,
 			UNKNOWN_ARTIFACT_IN_QUERY,
 			callsite.Pos,
 			state, res,
@@ -261,6 +275,7 @@ func (self *ApiDescription) verifyArtifact(
 		_, pres := parameters[arg.Name]
 		if !pres {
 			res = emitError(
+				state.ArtifactName,
 				UNKNOWN_PARAMETER_IN_CALL,
 				arg.Pos,
 				state, res,
@@ -268,6 +283,11 @@ func (self *ApiDescription) verifyArtifact(
 				callsite.Name, arg.Name)
 		}
 	}
+
+	// Pass any required permissions to is state, as we need to
+	// specifically handle them.
+	state.Permissions = append(state.Permissions,
+		artifact.RequiredPermissions...)
 
 	return res
 }
@@ -285,6 +305,7 @@ func (self *ApiDescription) checkKWArgs(
 		}
 
 		errors = emitError(
+			state.ArtifactName,
 			KWARGS_MIXED_CALL,
 			callsite.Pos,
 			state, errors,
@@ -325,7 +346,9 @@ func (self *ApiDescription) verifySymbol(
 	}
 
 	if pres {
-		emitWarning(SYMBOL_MASK_WARN,
+		emitWarning(
+			state.ArtifactName,
+			SYMBOL_MASK_WARN,
 			callsite.Pos,
 			state, SYMBOL_MASK_WARN_MSG, callsite.Name, symbol_type)
 	}
@@ -339,6 +362,7 @@ func (self *ApiDescription) verifyLETCall(
 	desc, pres := state.Definitions[callsite.Name]
 	if !pres {
 		return emitError(
+			state.ArtifactName,
 			UNKNOWN_PLUGIN,
 			callsite.Pos,
 			state, res,
@@ -348,6 +372,7 @@ func (self *ApiDescription) verifyLETCall(
 
 	if desc.Args == nil && callsite.Args != nil {
 		res = emitError(
+			state.Artifact,
 			CALL_AS_FUNCTION,
 			callsite.Pos,
 			state, res,
@@ -363,7 +388,9 @@ func (self *ApiDescription) verifyLETCall(
 		// The callsite is calling some unknown
 		// parameter.
 		if !hasArg(desc.Args, arg.Name) {
-			res = emitError(INVALID_ARG,
+			res = emitError(
+				state.ArtifactName,
+				INVALID_ARG,
 				arg.Pos,
 				state, res,
 				INVALID_ARG_FOR_DEFINITION_MSG,
@@ -384,7 +411,9 @@ func (self *ApiDescription) verifyLETCall(
 		// caller's args - this is required so we need to
 		// error.
 		if !hasArg(callsite.Args, arg.Name) {
-			res = emitError(REQUIRED_ARG_MISSING,
+			res = emitError(
+				state.ArtifactName,
+				REQUIRED_ARG_MISSING,
 				arg.Pos,
 				state, res,
 				REQUIRED_ARG_MISSING_MSG,
@@ -419,7 +448,9 @@ func (self *ApiDescription) verifyPluginCall(
 		if !desc.FreeFormArgs {
 			_, pres := desc.ArgsRequired[arg.Name]
 			if !pres {
-				res = emitError(INVALID_ARG,
+				res = emitError(
+					state.ArtifactName,
+					INVALID_ARG,
 					arg.Pos,
 					state, res,
 					INVALID_ARG_FOR_PLUGIN_MSG,
@@ -431,7 +462,9 @@ func (self *ApiDescription) verifyPluginCall(
 	// Now check if any of the required args are missing
 	for arg, required := range desc.ArgsRequired {
 		if bool(required) && !hasArg(callsite.Args, arg) {
-			res = emitError(REQUIRED_ARG_MISSING,
+			res = emitError(
+				state.ArtifactName,
+				REQUIRED_ARG_MISSING,
 				callsite.Pos,
 				state, res,
 				REQUIRED_ARG_MISSING_FOR_PLUGIN_MSG,
@@ -631,6 +664,8 @@ func VerifyArtifact(
 	}
 
 	state.AnalyseArtifactRequiredPermissions(artifact)
+
+	state.Done()
 }
 
 // Gather the different suppressions in different areas of the
@@ -668,7 +703,12 @@ func gatherSuppressionFromQuery(
 	}
 }
 
-func emitError(name string,
+func emitError(
+	// The name of the artifact
+	target string,
+
+	// The name of the error.
+	name string,
 	pos vfilter.RangePosition,
 	state *AnalysisState,
 	res []error,
@@ -687,7 +727,9 @@ func emitError(name string,
 	})
 }
 
-func emitWarning(name string,
+func emitWarning(
+	target string,
+	name string,
 	pos vfilter.RangePosition,
 	state *AnalysisState,
 	message string,
@@ -698,6 +740,7 @@ func emitWarning(name string,
 
 	state.Warnings = append(state.Warnings,
 		&VerifierError{
+			Target:  target,
 			Name:    name,
 			Message: message,
 			Args:    args,
@@ -706,6 +749,7 @@ func emitWarning(name string,
 }
 
 type VerifierError struct {
+	Target  string
 	Name    string
 	Message string
 	Args    []interface{}
@@ -726,7 +770,9 @@ func (self *VerifierError) AsProto() *api_proto.VerifierError {
 }
 
 func (self *VerifierError) Error() string {
-	prefix := fmt.Sprintf("(%d,%d) %s: ", self.Pos.Pos.Line,
+	prefix := fmt.Sprintf("%s: (%d,%d) %s: ",
+		self.Target,
+		self.Pos.Pos.Line,
 		self.Pos.Pos.Column, self.Name)
 	suffix := fmt.Sprintf(self.Message, self.Args...)
 

@@ -32,6 +32,7 @@ imports:
 
 sources:
   - query: |
+      // linter: symbol_mask_warn:"timelines"
       SELECT * FROM foreach(row={
          SELECT NotebookId, SuperTimelineName, Timeline
          FROM watch_monitoring(artifact="Server.Internal.TimelineAdd")

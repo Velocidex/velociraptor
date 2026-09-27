@@ -142,6 +142,19 @@ func (self *ApiServer) WatchEvent(
 		return err
 	}
 
+	// The call can access the datastore from any org because it is a
+	// server->server call.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return err
+	}
+
+	// Use the org config
+	config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+	if err != nil {
+		return err
+	}
+
 	// This name is taken from the certificate usually
 	// VelociraptorServer.
 	peer_name := user_record.Name
@@ -171,24 +184,11 @@ func (self *ApiServer) WatchEvent(
 	self.wg.Add(1)
 	defer self.wg.Done()
 
-	// The call can access the datastore from any org because it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return err
-	}
-
-	org_config_obj, err := org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return err
-	}
-
 	// Cert is good enough for us, run the query.
 	stats, closer := gReplicationTracker.Add(in.Queue, peer_name, in.OrgId)
 	defer closer()
 
-	return streamEvents(
-		ctx, org_config_obj, in, stream, peer_name, stats)
+	return streamEvents(ctx, config_obj, in, stream, peer_name, stats)
 }
 
 type replicatedStats struct {

@@ -88,6 +88,8 @@ func (self VerifyFunction) Call(ctx context.Context,
 		}
 	}
 
+	state.ArtifactName = artifact.Name
+
 	// Verify the artifact
 	launcher.VerifyArtifact(
 		ctx, config_obj, repository, artifact, state)
