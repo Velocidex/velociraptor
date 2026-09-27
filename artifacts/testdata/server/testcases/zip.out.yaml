@@ -22,7 +22,7 @@ Output: [
 ]
 
 # We use the new pathspec() objects.
-Query: LET hits = SELECT * from foreach(row=zip_files, query= { SELECT OSPath, Mtime, Size from glob( globs=pathspec(DelegateAccessor='file', DelegatePath=OSPath, Path='/**/*.txt'), accessor='zip') } )
+Query: LET hits = SELECT * from foreach(row=zip_files, query= { SELECT OSPath, Mtime, Size from glob( globs='/**/*.txt', root=pathspec(DelegateAccessor='file', DelegatePath=OSPath, Path=""), accessor='zip') } )
 Output: []
 
 Query: SELECT OSPath.Path as Name, Size, Mtime from hits
