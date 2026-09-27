@@ -40,6 +40,7 @@ Output: [
    "Errors": null,
    "Warnings": [
     {
+     "Target": "WarnningExecve",
      "Name": "required_permissions",
      "Message": "Add %[1]v to artifact's required_permissions or implied_permissions fields",
      "Args": [
@@ -78,6 +79,7 @@ Output: [
    ],
    "Warnings": [
     {
+     "Target": "KWArgs",
      "Name": "symbol_mask_warn",
      "Message": "Use of symbol `%[1]v` which might mask a %[2]v of the same name",
      "Args": [
@@ -124,6 +126,7 @@ Output: [
    "Errors": null,
    "Warnings": [
     {
+     "Target": "NotCalled",
      "Name": "symbol_mask_warn",
      "Message": "Use of symbol `%[1]v` which might mask a %[2]v of the same name",
      "Args": [
@@ -176,6 +179,7 @@ Output: [
    "Errors": null,
    "Warnings": [
     {
+     "Target": "Suppressions",
      "Name": "symbol_mask_warn",
      "Message": "Use of symbol `%[1]v` which might mask a %[2]v of the same name",
      "Args": [
@@ -278,7 +282,7 @@ Output: [
     "passed": true,
     "errors": [],
     "warnings": [
-     "(0,0) required_permissions: Add EXECVE to artifact's required_permissions or implied_permissions fields"
+     "WarnningExecve: (0,0) required_permissions: Add EXECVE to artifact's required_permissions or implied_permissions fields"
     ],
     "path": "invalid3.yaml"
    }
