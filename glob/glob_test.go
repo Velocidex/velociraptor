@@ -106,25 +106,32 @@ func TestFnMatchTranslate(t *testing.T) {
 }
 
 var _GlobFixture = []struct {
-	name     string
-	patterns []string
+	name      string
+	pattern   string
+	err_regex string
 }{
-	{"Case insensitive", []string{"/bin/Bash"}},
-	{"Character class", []string{"/bin/[a-b]ash"}},
-	{"Inverted range", []string{"/bin/[!a-b]ash"}},
-	{"Brace expansion.", []string{"/bin/{b,d}ash"}},
-	{"Depth of 2", []string{"/usr/**2/diff"}},
-	{"Depth of 30", []string{"/usr/**/diff"}},
-	{"Depth of 4", []string{"/usr/**4/diff"}},
-	{"Breadth first traversal", []string{"/tmp/1/*", "/tmp/1/*/*"}},
-	{"Breadth first traversal", []string{"/tmp/1/**5"}},
-	{"Recursive matches zero or more", []string{"/usr/bin/X11/**/diff"}},
-	{"Recursive matches none at end", []string{"/bin/bash/**"}},
-	{"Match masked by two matches", []string{"/usr/bin", "/usr/*/diff"}},
-	{"Multiple globs matching same file", []string{"/bin/bash", "/bin/ba*"}},
+	{"Case insensitive", "/bin/Bash", ""},
+	{"Character class", "/bin/[a-b]ash", ""},
+	{"Inverted range", "/bin/[!a-b]ash", ""},
+	{"Brace expansion.", "/bin/{b,d}ash", ""},
+	{"Depth of 2", "/usr/**2/diff", ""},
+	{"Depth of 30", "/usr/**/diff", ""},
+	{"Depth of 4", "/usr/**4/diff", ""},
+	{"Breadth first traversal", "/tmp/1/*", ""},
+	{"Breadth first traversal 2", "/tmp/1/*/*", ""},
+	{"Breadth first traversal", "/tmp/1/**5", ""},
+	{"Recursive matches zero or more", "/usr/bin/X11/**/diff", ""},
+	{"Recursive matches none at end", "/bin/bash/**", ""},
+	{"Match masked by two matches", "/usr/*/diff", ""},
+	{"Match masked by two matches 2", "/usr/*/diff", ""},
+	{"Multiple globs matching same file", "/bin/bash", ""},
+	{"Multiple globs matching same file 2", "/bin/ba*", ""},
 
-	// One valid glob and one invalid glob - we should just ignore the invalid glob.
-	{"Invalid globs", []string{"/bin/bash", "/bin/\xa0*"}},
+	// One valid glob and one invalid glob - we should just ignore the
+	// invalid glob.
+	{"Invalid globs", "/bin/\xa0*", "invalid escape sequence"},
+	{"Invalid brace expansion", "foo{bar{a,b}.jpg",
+		"Invalid brace expression"},
 }
 
 func GetMockFileSystemAccessor() accessors.FileSystemAccessor {
@@ -177,13 +184,24 @@ func TestGlobWithContext(t *testing.T) {
 		globber := NewGlobber()
 		defer globber.Close()
 
-		patterns := ExpandBraces(fixture.patterns)
+		var total_err error
+		patterns, err := ExpandBraces(fixture.pattern)
+		if err != nil {
+			total_err = err
+		}
 
+		// The error may occur on one of the patterns in the brace
+		// expansion but not on all.
 		for _, pattern := range patterns {
 			err := globber.Add(accessors.MustNewLinuxOSPath(pattern))
 			if err != nil {
-				fmt.Printf("While adding %v: %v\n", pattern, err)
+				total_err = err
 			}
+		}
+
+		if fixture.err_regex != "" {
+			assert.Error(t, total_err, "Expected %v", fixture.err_regex)
+			assert.ErrorContains(t, total_err, fixture.err_regex)
 		}
 
 		output_chan := globber.ExpandWithContext(
@@ -198,8 +216,8 @@ func TestGlobWithContext(t *testing.T) {
 				fmt.Sprintf("%v Data: %v\n", hit.OSPath(), globs))
 		}
 
-		result.Set(fmt.Sprintf("%03d %s %s", idx, fixture.name,
-			strings.Join(fixture.patterns, " , ")), returned)
+		result.Set(fmt.Sprintf(
+			"%03d %s %s", idx, fixture.name, fixture.pattern), returned)
 	}
 
 	result_json, _ := json.MarshalIndent(result)
@@ -207,7 +225,9 @@ func TestGlobWithContext(t *testing.T) {
 }
 
 func TestBraceExpansion(t *testing.T) {
-	result := ExpandBraces([]string{"/{bin/ls*,usr*/top}"})
+	result, err := ExpandBraces("/{bin/ls*,usr*/top}")
+	assert.NoError(t, err)
+
 	expected := []string{
 		"/bin/ls*",
 		"/usr*/top",

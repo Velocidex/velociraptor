@@ -21,7 +21,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/go-errors/errors"
@@ -77,7 +76,15 @@ func (self GlobPlugin) Call(
 
 		// Expand glob braces over the entire expression - this allows
 		// the alternatives to cover entire paths.
-		globs := glob.ExpandBraces(arg.Globs)
+		var globs []string
+		for _, g := range arg.Globs {
+			new_args, err := glob.ExpandBraces(g)
+			if err != nil {
+				scope.Log("glob: %v", err)
+				return
+			}
+			globs = append(globs, new_args...)
+		}
 
 		// Get the root of the glob. If not provided we use the
 		// default root for the accessor.
@@ -122,30 +129,6 @@ func (self GlobPlugin) Call(
 		// If root is not specified we try to find a common
 		// root from the globs.
 		for _, item := range globs {
-
-			if strings.HasPrefix(item, "{") {
-				scope.Log("glob: Glob item appears to be a pathspec. This is deprecated, please use the root arg instead.")
-
-				// This code attempts to emulate the old behavior for
-				// backwards compatibility: The root is taken to be
-				// the base pathspec and the glob is the Path
-				// component.
-				root, err = root.Parse(item)
-				if err != nil {
-					scope.Log("glob: %v", err)
-					return
-				}
-
-				pathspec := root.PathSpec()
-				item = pathspec.Path
-				pathspec.Path = ""
-				err = root.SetPathSpec(pathspec)
-				if err != nil {
-					scope.Log("glob: %v", err)
-					return
-				}
-			}
-
 			item_path, err := root.Parse(item)
 			if err != nil {
 				scope.Log("glob: %v", err)
