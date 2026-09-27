@@ -450,7 +450,8 @@ func NewInterrogationService(
 
 	limit_rate := int64(100)
 	if config_obj.Frontend != nil &&
-		config_obj.Frontend.Resources.EnrollmentsPerSecond > 0 {
+		config_obj.Frontend.Resources != nil &&
+		config_obj.Frontend.Resources.EnrollmentsPerSecond != 0 {
 		limit_rate = config_obj.Frontend.Resources.EnrollmentsPerSecond
 	}
 
