@@ -770,8 +770,13 @@ func (self *VerifierError) AsProto() *api_proto.VerifierError {
 }
 
 func (self *VerifierError) Error() string {
-	prefix := fmt.Sprintf("%s: (%d,%d) %s: ",
-		self.Target,
+	target_prefix := ""
+	if self.Target != "" {
+		target_prefix = self.Target + ": "
+	}
+
+	prefix := fmt.Sprintf("%s(%d,%d) %s: ",
+		target_prefix,
 		self.Pos.Pos.Line,
 		self.Pos.Pos.Column, self.Name)
 	suffix := fmt.Sprintf(self.Message, self.Args...)
