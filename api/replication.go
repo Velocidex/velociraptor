@@ -17,7 +17,7 @@ import (
 	"google.golang.org/grpc/status"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	utils "www.velocidex.com/golang/velociraptor/api/utils"
+	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/vfilter"
 )
 
@@ -111,7 +112,7 @@ func streamEvents(
 			// If we are not able to send within the specified 5
 			// seconds we must abort the connection.
 
-			err = utils.DoWithTimeout(func() error {
+			err = api_utils.DoWithTimeout(func() error {
 				return stream.Send(response)
 			}, 5*time.Second)
 			if err != nil {
@@ -142,42 +143,46 @@ func (self *ApiServer) WatchEvent(
 		return err
 	}
 
-	// The call can access the datastore from any org because it is a
-	// server->server call.
-	org_manager, err := services.GetOrgManager()
-	if err != nil {
-		return err
-	}
+	if in.OrgId != "" {
+		// The call can access the datastore from any org because it is a
+		// server->server call.
+		org_manager, err := services.GetOrgManager()
+		if err != nil {
+			return err
+		}
 
-	// Use the org config
-	config_obj, err = org_manager.GetOrgConfig(in.OrgId)
-	if err != nil {
-		return err
+		// Use the org config
+		config_obj, err = org_manager.GetOrgConfig(in.OrgId)
+		if err != nil {
+			return err
+		}
 	}
 
 	// This name is taken from the certificate usually
 	// VelociraptorServer.
-	peer_name := user_record.Name
+	user_name := user_record.Name
+	if user_name != utils.GetSuperuserName(config_obj) {
+		// Check that the principal is allowed to issue queries.
+		permissions := acls.ANY_QUERY
+		ok, err := services.CheckAccess(
+			config_obj, user_name, permissions, acls.READ_RESULTS)
+		if err != nil {
+			return status.Error(codes.PermissionDenied,
+				fmt.Sprintf("User %v is not allowed to run queries.",
+					user_name))
+		}
 
-	// Check that the principal is allowed to issue queries.
-	permissions := acls.ANY_QUERY
-	ok, err := services.CheckAccess(config_obj, peer_name, permissions)
-	if err != nil {
-		return status.Error(codes.PermissionDenied,
-			fmt.Sprintf("User %v is not allowed to run queries.",
-				peer_name))
-	}
-
-	if !ok {
-		return status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"Permission denied: User %v requires permission %v to run queries",
-			peer_name, permissions))
+		if !ok {
+			return status.Error(codes.PermissionDenied, fmt.Sprintf(
+				"Permission denied: User %v requires permission %v to run queries",
+				user_name, permissions))
+		}
 	}
 
 	// Update the peer name to make it unique
 	peer_addr, ok := peer.FromContext(ctx)
 	if ok {
-		peer_name = strings.Split(peer_addr.Addr.String(), ":")[0]
+		user_name = strings.Split(peer_addr.Addr.String(), ":")[0]
 	}
 
 	// Wait here for orderly shutdown of event streams.
@@ -185,10 +190,10 @@ func (self *ApiServer) WatchEvent(
 	defer self.wg.Done()
 
 	// Cert is good enough for us, run the query.
-	stats, closer := gReplicationTracker.Add(in.Queue, peer_name, in.OrgId)
+	stats, closer := gReplicationTracker.Add(in.Queue, user_name, in.OrgId)
 	defer closer()
 
-	return streamEvents(ctx, config_obj, in, stream, peer_name, stats)
+	return streamEvents(ctx, config_obj, in, stream, user_name, stats)
 }
 
 type replicatedStats struct {

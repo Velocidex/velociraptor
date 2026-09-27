@@ -99,6 +99,9 @@ func (self *ApiServer) SetClientMetadata(
 
 	user_name := user_record.Name
 	permissions := acls.LABEL_CLIENT
+	if in.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		permissions = acls.SERVER_ADMIN
+	}
 	perm, err := services.CheckAccess(org_config_obj, user_name, permissions)
 	if !perm || err != nil {
 		return nil, PermissionDenied(err,
