@@ -8,9 +8,9 @@ Queries:
   # We use the new pathspec() objects.
   - LET hits = SELECT * from foreach(row=zip_files, query= {
        SELECT OSPath, Mtime, Size from glob(
-         globs=pathspec(DelegateAccessor='file',
-              DelegatePath=OSPath,
-              Path='/**/*.txt'),
+         globs='/**/*.txt',
+         root=pathspec(DelegateAccessor='file',
+              DelegatePath=OSPath, Path=""),
          accessor='zip')
     } )
 

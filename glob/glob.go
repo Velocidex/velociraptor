@@ -453,18 +453,13 @@ func (self Globber) _expand_path_components(
 var (
 	// Support Brace Expansion {a,b}. NOTE: This happens before wild card
 	// expansions so you can do /foo/bar/{*.exe,*.dll}.
-
-	// Note: Since alternate syntax is similar to Pathspecs (which are
-	// plain JSON dicts) we need to tell them apart. Therefore we do
-	// not accept an alternate group at the first character. A path
-	// separator can always be added to disambiguate. For example:
-	// This is ok: /{/bin/ls,/bin/rm}
-	// This is not ok: {/bin/ls,/bin/rm}
-	_GROUPING_PATTERN = regexp.MustCompile("^(.+)[{]([^{}]+)[}](.*)$")
+	_GROUPING_PATTERN = regexp.MustCompile("^(.*)[{]([^{}]+)[}](.*)$")
 	_RECURSION_REGEX  = regexp.MustCompile(`^\*\*(\d*)`)
 
 	// A regex indicating if there are shell globs in this path.
 	_GLOB_MAGIC_CHECK = regexp.MustCompile("[*?[]")
+
+	_BRACE_CHARS = regexp.MustCompile("[{}]")
 )
 
 // Converts a glob pattern into a list of pathspec components.
@@ -634,14 +629,19 @@ func DevOf(file_info accessors.FileInfo) (uint64, bool) {
 
 // Duplicate brace expansions into multiple globs:
 // /usr/bin/*.{exe,dll} -> /usr/bin/*.exe, /usr/bin/*.dll
-func ExpandBraces(patterns []string) []string {
-	result := make([]string, 0, len(patterns))
+func ExpandBraces(pattern string) ([]string, error) {
+	var result []string
 
-	for _, pattern := range patterns {
-		_brace_expansion(pattern, &result)
+	_brace_expansion(pattern, &result)
+
+	for _, r := range result {
+		if _BRACE_CHARS.MatchString(r) {
+			return nil, fmt.Errorf(
+				"Invalid brace expression `%v`", pattern)
+		}
 	}
 
-	return result
+	return result, nil
 }
 
 func _brace_expansion(pattern string, result *[]string) {
