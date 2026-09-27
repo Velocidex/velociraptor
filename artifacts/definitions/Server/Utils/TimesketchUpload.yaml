@@ -43,6 +43,7 @@ parameters:
 type: SERVER
 
 export: |
+  // linter: symbol_mask_warn:"timelines"
   LET timesketch_import_command = TimesketchCLICommand + "_importer"
 
   -- The uploader tool can create a new "Sketch" but if we want to
