@@ -28,7 +28,7 @@ description: |
   in the future.
 
 reference:
-  - https://attack.mitre.org/techniques/T1166/
+  - https://attack.mitre.org/techniques/T1548.001/
 
 parameters:
   - name: GlobExpression
