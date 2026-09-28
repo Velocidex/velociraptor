@@ -549,6 +549,7 @@ func NewClientDebSpec() *PackageSpec {
 			ConfigPath:             "/etc/velociraptor/client.config.yaml",
 			VelociraptorBinaryPath: "/usr/local/bin/velociraptor_client",
 			ServiceUser:            "velociraptor",
+			ServiceGroup:           "velociraptor",
 			SystemdServiceFile:     "velociraptor_client.service",
 			SysvService:            "velociraptor_client",
 			ServiceDescription:     "Velociraptor client package.",
