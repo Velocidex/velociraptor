@@ -429,6 +429,64 @@ func (self *TestSuite) TestCollectionWithTypes() {
 		json.MustMarshalIndent(transformZipContent(self.T(), zip_contents)))
 }
 
+func (self *TestSuite) TestCollectionHonorsSourcePreconditions() {
+	defer utils.SetFlowIdForTests("F.1234")()
+
+	outputFile, err := tempfile.TempFile("zip")
+	assert.NoError(self.T(), err)
+	outputFile.Close()
+	defer os.Remove(outputFile.Name())
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	scope = self.mockInfo(scope)
+
+	artifactDefinition := `
+name: Custom.TestArtifactPrecondition
+sources:
+- name: Upload
+  precondition: SELECT * FROM scope() WHERE FALSE
+  query: |
+    SELECT upload(
+      file="should-not-upload",
+      accessor="data",
+      name="precondition.db") AS Upload
+    FROM scope()
+`
+
+	args := ordereddict.NewDict().
+		Set("artifacts", []string{"Custom.TestArtifactPrecondition"}).
+		Set("artifact_definitions", artifactDefinition).
+		Set("output", outputFile.Name())
+
+	for range (collector.CollectPlugin{}).Call(
+		context.Background(), scope, args) {
+	}
+
+	zipContents, err := openZipFile(outputFile.Name())
+	assert.NoError(self.T(), err)
+
+	for _, key := range zipContents.Keys() {
+		if strings.Contains(key, "precondition.db") ||
+			strings.Contains(key, "Custom.TestArtifactPrecondition") {
+			self.T().Fatalf(
+				"source precondition was ignored; unexpected archive entry %q",
+				key)
+		}
+	}
+}
+
 func (self *TestSuite) TestCollectionWithUpload() {
 	defer utils.SetFlowIdForTests("F.1234")()
 

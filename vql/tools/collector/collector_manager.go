@@ -446,6 +446,21 @@ func (self *collectionManager) Collect(request *flows_proto.ArtifactCollectorArg
 				self.collection_context.TotalCollectedRows += uint64(status.ResultRows)
 			}()
 
+			ok, err := actions.CheckPreconditions(
+				self.ctx, subscope, vql_request)
+			if err != nil {
+				status.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+				status.ErrorMessage = fmt.Sprintf(
+					"While evaluating preconditions: %v", err)
+				subscope.Log("%s", status.ErrorMessage)
+				return
+			}
+
+			if !ok {
+				subscope.Log("Skipping query due to preconditions")
+				return
+			}
+
 			// Run each query and store the results in the container
 			for _, query := range vql_request.Query {
 				err := self.collectQuery(subscope, query, status)
