@@ -26,7 +26,7 @@ description: |
   Be aware, this is an expensive operation.
 
 reference:
-  - https://attack.mitre.org/techniques/T1145/
+  - https://attack.mitre.org/techniques/T1552.004/
   - https://coolaj86.com/articles/the-openssh-private-key-format/
   - https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html
 
