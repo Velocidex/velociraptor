@@ -32,7 +32,7 @@ description: |
   source IPs and manage risk of insecure ticket generation.
 
 reference:
-  - https://attack.mitre.org/techniques/T1208/
+  - https://attack.mitre.org/techniques/T1558.003/
   - https://www.trustedsec.com/blog/art_of_kerberoast/
 
 parameters:
