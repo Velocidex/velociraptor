@@ -652,8 +652,14 @@ export default class NotebookCellRenderer extends React.Component {
 
         return <>
                  <Dropdown.Menu>
-                     { _.map(suggestions, (x, i)=>{
-                         return <Dropdown.Item
+                   { _.map(suggestions, (x, i)=>{
+                       // Merge the suggestion environment with the
+                       // cell environment.
+                       let env = [...x.env || []];
+                       if(!_.isEmpty(this.state.cell.env)) {
+                           env = [...env, ...this.state.cell.env];
+                       }
+                       return <Dropdown.Item
                                   key={i}
 
                                   onClick={()=>{
@@ -661,7 +667,7 @@ export default class NotebookCellRenderer extends React.Component {
                                           this.state.cell.cell_id,
                                           x.type,
                                           x.input,
-                                          x.env);
+                                          env);
                                   }}
                                   title={x.name}>
                                   {x.name}

@@ -377,10 +377,6 @@ func (self *Store) SaveSnapshot(
 	}
 
 	for client_id, client_record := range self.data {
-		// An empty placeholder record - do not flush to the index.
-		if client_record.GetSerialized() == nil {
-			continue
-		}
 		snapshot = append(snapshot, snapshot_record{
 			record:    client_record,
 			client_id: client_id,
@@ -403,6 +399,11 @@ func (self *Store) SaveSnapshot(
 	}
 
 	for _, snapshot_record := range snapshot {
+		// An empty placeholder record - do not flush to the index.
+		if snapshot_record.record.GetSerialized() == nil {
+			continue
+		}
+
 		// Use fmt to encode very quickly
 		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
 			snapshot_record.client_id,
