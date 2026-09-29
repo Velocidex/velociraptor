@@ -325,6 +325,13 @@ func CalculateNotebookArtifact(
 						Value: source_name,
 					})
 					custom_cells = true
+
+				case "vql_suggestion":
+					n.Env = append(n.Env, &artifacts_proto.ArtifactEnv{
+						Key:   "ArtifactName",
+						Value: source_name,
+					})
+
 				}
 			}
 
@@ -724,7 +731,7 @@ func getInitialCellsFromArtifacts(
 
 	for _, s := range artifact.Sources {
 		for _, n := range s.Notebook {
-			var env []*api_proto.Env
+			env := []*api_proto.Env{}
 
 			// Allow the notebook to specify env variables per
 			// source.
