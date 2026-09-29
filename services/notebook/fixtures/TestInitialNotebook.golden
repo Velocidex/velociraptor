@@ -452,7 +452,13 @@
      {
       "template": "SELECT * FROM info()",
       "type": "vql_suggestion",
-      "name": "A good suggestion."
+      "name": "A good suggestion.",
+      "env": [
+       {
+        "key": "ArtifactName",
+        "value": "NotebookWithSugegstions"
+       }
+      ]
      },
      {
       "template": "\n/*\n# NotebookWithSugegstions\n*/\nSELECT * FROM source(artifact=\"NotebookWithSugegstions\")\nLIMIT 50\n",
