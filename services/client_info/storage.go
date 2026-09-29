@@ -400,7 +400,7 @@ func (self *Store) SaveSnapshot(
 
 	for _, snapshot_record := range snapshot {
 		// An empty placeholder record - do not flush to the index.
-		if client_record.record.GetSerialized() == nil {
+		if snapshot_record.record.GetSerialized() == nil {
 			continue
 		}
 
