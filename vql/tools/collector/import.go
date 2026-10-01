@@ -783,7 +783,7 @@ func (self ImportCollectionFunction) UploadMetadataTransform(
 var clientIdValidChars = regexp.MustCompile(`(?i)[^a-z0-9]+`)
 
 func hostIDtoClientId(host_id string) string {
-	return "C." + clientIdValidChars.ReplaceAllString(host_id, "_")
+	return "C." + clientIdValidChars.ReplaceAllString(strings.TrimPrefix(host_id, "C."), "_")
 }
 
 func init() {
