@@ -20,6 +20,13 @@
              SummaryCodepage='1252' />
     <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
 
+    <CustomAction Id="BackupConfig"
+                  Directory="INSTALLDIR"
+                  Execute="immediate" ExeCommand="conhost.exe --headless cmd.exe /v:on /c &quot; SET TS=!date:~10,4!!date:~4,2!!date:~7,2!_!time:~0,2!!time:~3,2!!time:~6,2!.bak &amp; copy client.config.yaml client.config.yaml.!TS! &quot;" Return="ignore" />
+    <InstallExecuteSequence>
+      <Custom Action="BackupConfig" After="InstallInitialize" />
+    </InstallExecuteSequence>
+
     <!-- Put the config file on an uncompressed cab file so we can repack it later -->
     <Media Id='2' CompressionLevel="none" Cabinet='part2.cab' EmbedCab='yes' DiskPrompt='CD-ROM #2' />
 
