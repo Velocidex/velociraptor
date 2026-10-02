@@ -158,7 +158,10 @@ func (self *clientRecord) Modify(
 
 	self.dirty = true
 	self.serialized = serialized
-	self.owner.SetDirty()
+
+	// Mark the store dirty - doesn't have to be right away but should
+	// happen soon.
+	go self.owner.SetDirty()
 
 	return nil
 }

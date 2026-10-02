@@ -972,7 +972,7 @@ func Container() error {
 
 	// Always update the latest master branch
 	if current_branch() == "master" {
-		tag = "latest"
+		tag = "dev"
 
 	} else {
 
@@ -1008,12 +1008,18 @@ func Container() error {
 
 	image := "ghcr.io/velocidex/velociraptor-server:" + tag
 
-	// Build the docker image
-	err = sh.Run("docker", "buildx", "build", "-t", image,
-		"--label", fmt.Sprintf("version=%v", constants.VERSION),
+	args := []string{"buildx", "build", "-t", image}
+	// Mark non dev builds as latest.
+	if tag != "dev" {
+		args = append(args, "-t", "latest")
+	}
+	args = append(args, "--label", fmt.Sprintf("version=%v", constants.VERSION),
 		"--label", "commit_hash="+hash(),
 		"--label", "build_time="+time.Now().Format(time.RFC3339),
 		"Docker")
+
+	// Build the docker image
+	err = sh.Run("docker", args...)
 	if err != nil {
 		return err
 	}
