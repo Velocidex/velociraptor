@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -516,7 +517,7 @@ func (self ImportCollectionFunction) getClientIdFromHostnameOrCollection(
 				// Make the client id based on the host id. This is used
 				// to ensure that the client id is consistent each time
 				// the offline collector is run on the same endpoint.
-				client_id = "C." + strings.TrimPrefix(host_id, "C.")
+				client_id = hostIDtoClientId(host_id)
 			}
 		}
 
@@ -777,6 +778,12 @@ func (self ImportCollectionFunction) UploadMetadataTransform(
 
 		return in
 	}
+}
+
+var clientIdValidChars = regexp.MustCompile(`(?i)[^a-z0-9]+`)
+
+func hostIDtoClientId(host_id string) string {
+	return "C." + clientIdValidChars.ReplaceAllString(strings.TrimPrefix(host_id, "C."), "_")
 }
 
 func init() {
