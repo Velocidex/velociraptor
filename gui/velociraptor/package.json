@@ -27,7 +27,7 @@
         "humanize-duration": "^3.33.2",
         "js-yaml": "5.2.2",
         "lodash": "^4.18.1",
-        "markdown-it": "14.2.0",
+        "markdown-it": "14.3.1",
         "moment": "^2.31.0",
         "moment-timezone": "0.6.0",
         "npm-watch": "^0.13.0",
