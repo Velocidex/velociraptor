@@ -295,17 +295,14 @@ func CalculateNotebookArtifact(
 			}
 			res.Sources = append(res.Sources, new_source)
 
-			source_name := artifact_name
-			if new_source.Name != "" {
-				source_name += "/" + new_source.Name
-			}
+			full_source_name := paths.FullArtifactName(artifact_name, new_source.Name)
 
 			// If there are too many cells we add a placeholder to
 			// allow the user to calculate them on demand. Otherwise
 			// we may overwhelm the notebook workers.
 			output := ""
 			if idx > 4 {
-				output = fmt.Sprintf("<h3>%s</h3><br>Recalculate to View", source_name)
+				output = fmt.Sprintf("<h3>%s</h3><br>Recalculate to View", full_source_name)
 			}
 
 			custom_cells := false
@@ -322,14 +319,14 @@ func CalculateNotebookArtifact(
 				case "vql", "md", "markdown", "none":
 					n.Env = append(n.Env, &artifacts_proto.ArtifactEnv{
 						Key:   "ArtifactName",
-						Value: source_name,
+						Value: full_source_name,
 					})
 					custom_cells = true
 
 				case "vql_suggestion":
 					n.Env = append(n.Env, &artifacts_proto.ArtifactEnv{
 						Key:   "ArtifactName",
-						Value: source_name,
+						Value: full_source_name,
 					})
 
 				}
@@ -354,7 +351,7 @@ func CalculateNotebookArtifact(
 							Output: output,
 							Env: []*artifacts_proto.ArtifactEnv{{
 								Key:   "ArtifactName",
-								Value: source_name,
+								Value: full_source_name,
 							}},
 							Template: fmt.Sprintf(`
 /*
@@ -366,7 +363,7 @@ From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime, artifact=%q)
 LIMIT %v
-`, source_name, source_name, default_limit),
+`, full_source_name, full_source_name, default_limit),
 						})
 
 				default:
@@ -376,7 +373,7 @@ LIMIT %v
 							Output: output,
 							Env: []*artifacts_proto.ArtifactEnv{{
 								Key:   "ArtifactName",
-								Value: source_name,
+								Value: full_source_name,
 							}},
 							Template: fmt.Sprintf(`
 /*
@@ -384,7 +381,7 @@ LIMIT %v
 */
 SELECT * FROM source(artifact=%q)
 LIMIT 50
-`, source_name, source_name),
+`, full_source_name, full_source_name),
 						})
 				}
 			}

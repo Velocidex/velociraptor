@@ -16,6 +16,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -118,8 +119,9 @@ func (self *ArtifactRepositoryPlugin) Call(
 				return
 			}
 
-			artifact_name_with_source := artifact_name + "/" + source
+			artifact_name_with_source := paths.FullArtifactName(artifact_name, source)
 
+			// Check for existence.
 			artifact, pres = self.repository.Get(ctx,
 				self.config_obj, artifact_name_with_source)
 			if !pres {

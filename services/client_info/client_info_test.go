@@ -325,13 +325,17 @@ func (self *ClientInfoTestSuite) TestMetadataIndex() {
 		self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	response, err = new_indexer.SearchClients(self.Ctx, self.ConfigObj,
-		&api_proto.SearchClientsRequest{
-			Limit:    100,
-			Query:    "dept:",
-			NameOnly: true,
-		}, "admin")
-	assert.NoError(self.T(), err)
+	vtesting.WaitUntil(2*time.Second, self.T(), func() bool {
+		response, err = new_indexer.SearchClients(self.Ctx, self.ConfigObj,
+			&api_proto.SearchClientsRequest{
+				Limit:    100,
+				Query:    "dept:",
+				NameOnly: true,
+			}, "admin")
+		assert.NoError(self.T(), err)
+
+		return len(response.Names) == 1
+	})
 
 	// We should be able to search for the metadata record.
 	assert.Equal(self.T(), 1, len(response.Names))
