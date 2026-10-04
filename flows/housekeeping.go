@@ -42,7 +42,9 @@ var (
 func CheckClientStatus(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	client_id string) error {
+	client_id string,
+	last_hunt_timestamp uint64,
+	last_event_table_version uint64) error {
 
 	client_manager, err := services.GetClientInfoManager(config_obj)
 	if err != nil {
@@ -56,6 +58,18 @@ func CheckClientStatus(
 		return nil
 	}
 
+	// If the client side versions are less advanced than what we
+	// think they should be, then check them anyway - it is just a bit
+	// slower but ensures we don't miss hunts if the stats record is
+	// not updated quickly enoughyy.
+	if last_event_table_version < stats.LastEventTableVersion {
+		last_event_table_version = stats.LastEventTableVersion
+	}
+
+	if last_hunt_timestamp < stats.LastHuntTimestamp {
+		last_hunt_timestamp = stats.LastHuntTimestamp
+	}
+
 	// Check the client's event table for validity.
 	client_event_manager, err := services.ClientEventManager(config_obj)
 	if err != nil {
@@ -64,7 +78,7 @@ func CheckClientStatus(
 
 	if client_event_manager != nil &&
 		client_event_manager.CheckClientEventsVersion(
-			ctx, config_obj, client_id, stats.LastEventTableVersion) {
+			ctx, config_obj, client_id, last_event_table_version) {
 
 		update_message := client_event_manager.GetClientUpdateEventTableMessage(
 			ctx, config_obj, client_id)

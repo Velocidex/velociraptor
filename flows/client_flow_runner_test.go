@@ -20,7 +20,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
@@ -481,8 +480,10 @@ func (self *ServerTestSuite) TestClientEventTable() {
 	time.Sleep(time.Second)
 
 	// Send a message from client to trigger check
-	err = runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
-		Source: self.client_id,
+	err = runner.ProcessSingleMessage(self.Ctx, &crypto_proto.VeloMessage{
+		Source:         self.client_id,
+		SessionId:      "F.1233",
+		ForemanCheckin: &actions_proto.ForemanCheckin{},
 	})
 	assert.NoError(self.T(), err)
 
@@ -545,8 +546,10 @@ func (self *ServerTestSuite) TestForeman() {
 	assert.Equal(t, hunt.StartRequest, expected)
 
 	// Send a message from client to trigger check
-	err = runner.ProcessMessages(self.Ctx, &crypto.MessageInfo{
-		Source: self.client_id,
+	err = runner.ProcessSingleMessage(self.Ctx, &crypto_proto.VeloMessage{
+		Source:         self.client_id,
+		SessionId:      "F.1233",
+		ForemanCheckin: &actions_proto.ForemanCheckin{},
 	})
 	assert.NoError(t, err)
 
