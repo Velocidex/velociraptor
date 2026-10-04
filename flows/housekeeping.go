@@ -61,7 +61,7 @@ func CheckClientStatus(
 	// If the client side versions are less advanced than what we
 	// think they should be, then check them anyway - it is just a bit
 	// slower but ensures we don't miss hunts if the stats record is
-	// not updated quickly enoughyy.
+	// not updated quickly enough.
 	if last_event_table_version < stats.LastEventTableVersion {
 		last_event_table_version = stats.LastEventTableVersion
 	}
