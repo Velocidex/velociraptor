@@ -406,6 +406,20 @@ func (self *HuntDispatcher) CreateHunt(
 		return nil, err
 	}
 
+	// Notify minions if the hunt is already active as they will need
+	// to participate clients in it immediately.
+	if hunt.State == api_proto.Hunt_RUNNING {
+		err = journal.PushRowsToArtifact(ctx, self.config_obj,
+			[]*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("HuntId", hunt.HuntId).
+					Set("Hunt", hunt).
+					Set("TriggerParticipation", true),
+			},
+			artifacts.HUNT_UPDATE.
+				WithSuperUser().WithFrom(hunt.Creator))
+	}
+
 	return hunt, nil
 }
 
