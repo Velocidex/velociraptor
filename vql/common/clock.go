@@ -98,7 +98,8 @@ func (self ClockPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		Name: "clock",
 		Doc: "Generate a timestamp periodically. This is mostly " +
 			"useful for event queries.",
-		ArgType: type_map.AddType(scope, &ClockPluginArgs{}),
+		ArgType:  type_map.AddType(scope, &ClockPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Event().Build(),
 	}
 }
 

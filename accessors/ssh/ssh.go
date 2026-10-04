@@ -58,6 +58,7 @@ func (self SSHFileSystemAccessor) Describe() *accessors.AccessorDescriptor {
 		Permissions: []acls.ACL_PERMISSION{acls.NETWORK},
 		ScopeVar:    constants.SSH_CONFIG,
 		ArgType:     &SSHAccessorArgs{},
+		Version:     1,
 	}
 }
 

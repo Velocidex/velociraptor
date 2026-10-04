@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"sort"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
@@ -18,7 +19,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
@@ -80,7 +83,7 @@ func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
 	infos, err := self.Filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
-	var golden []*ordereddict.Dict
+	var golden vtesting.RowCollector
 	for _, info := range infos {
 		ps := info.PathSpec()
 		res := ordereddict.NewDict().
@@ -89,12 +92,12 @@ func (self *FileStoreTestSuite) TestListChildrenComplicatedNames() {
 			Set("IsDir", info.IsDir()).
 			Set("Type", ps.Type().String()).
 			Set("AsJSON", ps)
-		golden = append(golden, res)
+		golden.Push(res)
 	}
 
 	// Component should preserve the / - it is not considered path separator.
 	goldie.Assert(self.T(), "TestListChildrenComplicatedNames",
-		json.MustMarshalIndent(golden))
+		json.MustMarshalIndent(golden.Get()))
 }
 
 func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
@@ -122,7 +125,7 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	infos, err := self.Filestore.ListDirectory(dir_path_spec)
 	assert.NoError(self.T(), err)
 
-	var golden []*ordereddict.Dict
+	var golden vtesting.RowCollector
 	for _, info := range infos {
 		ps := info.PathSpec()
 		res := ordereddict.NewDict().
@@ -131,14 +134,10 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 			Set("IsDir", info.IsDir()).
 			Set("Type", ps.Type().String()).
 			Set("AsJSON", ps)
-		golden = append(golden, res)
+		golden.Push(res)
 	}
 
-	sort.Slice(golden, func(i, j int) bool {
-		ps1, _ := golden[i].MarshalJSON()
-		ps2, _ := golden[j].MarshalJSON()
-		return string(ps1) < string(ps2)
-	})
+	golden.Sort()
 
 	// We should have:
 	// 1. A Directory [subdir, Foo]
@@ -146,7 +145,7 @@ func (self *FileStoreTestSuite) TestListChildrenSameNameDifferentTypes() {
 	// 3. A File [subdir, Foo] of type PATH_TYPE_FILESTORE_JSON
 
 	goldie.Assert(self.T(), "TestListChildrenSameNameDifferentTypes",
-		json.MustMarshalIndent(golden))
+		json.MustMarshalIndent(golden.Get()))
 }
 
 // List children recovers child's type based on extensions.  NOTE:
@@ -372,6 +371,27 @@ func (self *FileStoreTestSuite) TestFileUpdatePastEndOfFile() {
 	assert.Equal(self.T(),
 		"this is some a long string that should extend the file",
 		string(buff[:n]))
+}
+
+func (self *FileStoreTestSuite) TestCompressedStat() {
+	filename := path_specs.NewSafeFilestorePath("compressed", "file_stat")
+	// Write some data.
+	test_str := []byte(strings.Repeat("Some data", 100))
+	buffer, err := utils.Compress(test_str)
+	assert.NoError(self.T(), err)
+
+	fd, err := self.Filestore.WriteFile(filename)
+	assert.NoError(self.T(), err)
+
+	_, err = fd.WriteCompressed(buffer, 0, len(test_str))
+	assert.NoError(self.T(), err)
+	fd.Close()
+
+	stat, err := self.Filestore.StatFile(filename)
+	assert.NoError(self.T(), err)
+
+	// The size should report the uncompressed size of the data.
+	assert.Equal(self.T(), stat.Size(), int64(len(test_str)))
 }
 
 func (self *FileStoreTestSuite) TestCompressedFileReadWrite() {
@@ -669,19 +689,24 @@ func (self *QueueManagerTestSuite) FilestoreGet(path api.FSPathSpec) string {
 func (self *QueueManagerTestSuite) TestPush() {
 	artifact_name := "System.Hunt.Participation"
 
-	payload := []*ordereddict.Dict{
-		ordereddict.NewDict().Set("foo", 1),
-		ordereddict.NewDict().Set("foo", 2)}
+	log_path := path_specs.NewUnsafeFilestorePath("log_path")
+	path_manager := MockPathManager{
+		Path:         log_path,
+		ArtifactName: artifact_name,
+		Mode:         artifact_modes.MODE_INTERNAL,
+	}
+
+	queue_name := path_manager.GetQueueName()
+
+	var payload vtesting.RowCollector
+	payload.Push(ordereddict.NewDict().Set("foo", 1))
+	payload.Push(ordereddict.NewDict().Set("foo", 2))
 
 	ctx := context.Background()
-	output, cancel := self.manager.Watch(ctx, artifact_name, nil)
+	output, cancel := self.manager.Watch(ctx, queue_name, nil)
 	defer cancel()
 
-	log_path := path_specs.NewUnsafeFilestorePath("log_path")
-	err := self.manager.PushEventRows(
-		MockPathManager{log_path, artifact_name},
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		payload)
+	err := self.manager.PushEventRows(path_manager, payload.Get())
 
 	assert.NoError(self.T(), err)
 
@@ -714,14 +739,15 @@ func NewQueueManagerTestSuite(
 type MockPathManager struct {
 	Path         api.FSPathSpec
 	ArtifactName string
+	Mode         artifact_modes.ArtifactMode
 }
 
 func (self MockPathManager) GetPathForWriting() (api.FSPathSpec, error) {
 	return self.Path, nil
 }
 
-func (self MockPathManager) GetQueueName() string {
-	return self.ArtifactName
+func (self MockPathManager) GetQueueName() artifact_modes.QueueName {
+	return artifact_modes.NewQueueName(self.ArtifactName, self.Mode)
 }
 
 func (self MockPathManager) GetAvailableFiles(

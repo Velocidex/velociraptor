@@ -57,7 +57,7 @@ const (
 )
 
 var (
-	Factory APIClientFactory = &DummyGRPCAPIClient{}
+	Factory APIClientFactory = NewDirectConnectionClient()
 
 	grpcCallCounter = promauto.NewCounter(prometheus.CounterOpts{
 		Name: "grpc_client_calls",
@@ -237,16 +237,13 @@ func (self GRPCAPIClient) GetAPIClient(
 		return nil, nil, err
 	}
 
-	// Channels should be reused so we can return the channel to the
-	// pool immediately.
-	defer channel.Close()
-
 	grpcCallCounter.Inc()
 	grpcStubs.Inc()
 	return api_proto.NewAPIClient(channel.ClientConn),
 		// This is called when the stub is done with.
 		func() error {
 			grpcStubs.Dec()
+			channel.Close()
 			return nil
 		},
 		err
@@ -375,7 +372,7 @@ func (self *gRPCPool) EnsureInit(
 	}
 
 	self.pool, err = grpcpool.NewWithContext(ctx,
-		factory, 1, max_size,
+		factory, max_size, max_size,
 		time.Duration(max_wait)*time.Second,
 		time.Duration(max_wait)*time.Second)
 	if err != nil {

@@ -1,10 +1,10 @@
 {
  "/server_artifacts/Server.Clock/2020-10-07.json": [
-  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"Y\",\"Foo2\":\"DefaultFoo2\",\"BoolFoo\":true,\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
   ""
  ],
  "/server_artifact_logs/Server.Clock/2020-10-07.json": [
@@ -13,14 +13,14 @@
   "{\"Timestamp\":\"2020-10-07 20:43:08 +0000 UTC\",\"Level\":\"DEBUG\",\"Message\":\"
   ""
  ],
- "/server_artifacts/Server.Clock/2020-10-07.json.tidx": "00 98 30 07 8b d0 3b 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 60 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 20 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 80 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
+ "/server_artifacts/Server.Clock/2020-10-07.json.tidx": "00 98 30 07 8b d0 3b 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 7f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 fe 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 7d 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 fc 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
  "/server_artifact_logs/Server.Clock/2020-10-07.json.tidx": "00 98 30 07 8b d0 3b 16 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 97 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 98 30 07 8b d0 3b 16 19 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
  "/server_artifacts/Server.Clock2/2020-10-07.json": [
-  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
-  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_ts\":1602103388,\"_Source\":\"VelociraptorServer\"}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
+  "{\"Foo\":\"FooValue\",\"Foo2\":\"AnotherFoo2\",\"_Writer\":\"VelociraptorServer\",\"_Source\":\"VelociraptorServer\",\"_ts\":1602103388}",
   ""
  ],
  "/server_artifact_logs/Server.Clock2/2020-10-07.json": [

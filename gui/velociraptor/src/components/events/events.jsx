@@ -235,7 +235,9 @@ class EventMonitoring extends React.Component {
 
             let router_artifact = this.props.match &&
                 this.props.match.params &&
-                this.props.match.params.artifact;
+                // The artifact name is URL-encoded in the route (see
+                // setArtifact) and react-router v5 does not decode params.
+                decodeURIComponent(this.props.match.params.artifact);
             if (router_artifact) {
                 let logs = resp.data.logs || [];
                 let available = getLogArtifact(logs, router_artifact);
@@ -256,7 +258,10 @@ class EventMonitoring extends React.Component {
             setItem(schema.CurrentClientEventArtifactKey, artifact.artifact);
         }
 
-        this.props.history.push('/events/' + client_id + '/' + artifact.artifact);
+        // Encode the artifact name so slash-named artifacts
+        // (e.g. Server.Monitor.Health/Prometheus) survive the route.
+        this.props.history.push(
+            '/events/' + client_id + '/' + encodeURIComponent(artifact.artifact));
     }
 
     setEventTable = (request) => {

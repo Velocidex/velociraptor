@@ -82,6 +82,7 @@ func (self *ClientFlowRunner) Complete() {
 			journal.PushRowsToArtifactAsync(self.ctx,
 				self.config_obj, row,
 				artifact_paths.FLOW_COMPLETION.
+					WithSuperUser().WithFrom(client_id).
 					WithClientId(client_id))
 		}
 	}
@@ -97,6 +98,7 @@ func (self *ClientFlowRunner) Complete() {
 			journal.PushRowsToArtifactAsync(self.ctx,
 				self.config_obj, row,
 				artifact_paths.UPLOAD_COMPLETION.
+					WithSuperUser().WithFrom(client_id).
 					WithClientId(client_id))
 		}
 	}
@@ -153,11 +155,9 @@ func (self *ClientFlowRunner) MonitoringLogMessage(
 		return nil
 	}
 
-	log_path_manager, err := artifact_paths.NewArtifactLogPathManager(ctx,
-		self.config_obj, client_id, flow_id, artifact_name)
-	if err != nil {
-		return err
-	}
+	log_path_manager := artifact_paths.NewArtifactLogPathManagerWithMode(
+		self.config_obj, client_id, flow_id, artifact_name,
+		artifact_modes.MODE_CLIENT_EVENT)
 
 	// Write the logs asynchronously
 	rs_writer, err := result_sets.NewTimedResultSetWriter(
@@ -210,7 +210,10 @@ func (self *ClientFlowRunner) processMonitoringAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, artifact_paths.ALERT_QUEUE)
+		serialized, 1,
+		artifact_paths.ALERT_QUEUE.
+			WithFrom(client_id).
+			WithSuperUser())
 }
 
 func (self *ClientFlowRunner) MonitoringVQLResponse(
@@ -234,6 +237,12 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 		return nil
 	}
 
+	// Validate the query_name as a valid artifact name
+	err := utils.ValidateArtifactNameAndSource(query_name)
+	if err != nil {
+		return err
+	}
+
 	journal, err := services.GetJournal(self.config_obj)
 	if err != nil {
 		return err
@@ -244,14 +253,22 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 	data := json.AppendJsonlItem(
 		[]byte(response.JSONLResponse), "ClientId", client_id)
 
+	opts := services.JournalOptions{
+		ArtifactName: query_name,
+		ClientId:     client_id,
+		FlowId:       flow_id,
+		Username:     client_id,
+		From:         client_id,
+		ArtifactType: artifact_modes.MODE_CLIENT_EVENT,
+	}
+
+	queue, ok := artifact_paths.GetWellKnownQueue(query_name)
+	if ok && queue.EventFilter != nil {
+		opts.EventFilter = queue.EventFilter
+	}
+
 	return journal.PushJsonlToArtifact(ctx,
-		self.config_obj, data, int(response.TotalRows),
-		services.JournalOptions{
-			ArtifactName: query_name,
-			ClientId:     client_id,
-			FlowId:       flow_id,
-			Username:     client_id,
-		})
+		self.config_obj, data, int(response.TotalRows), opts)
 }
 
 func (self *ClientFlowRunner) removeInflightChecks(
@@ -265,7 +282,8 @@ func (self *ClientFlowRunner) removeInflightChecks(
 		ordereddict.NewDict().
 			Set("ClientId", client_id).
 			Set("ClearFlows", true),
-		artifact_paths.CLIENT_INFO_SCHEDULED)
+		artifact_paths.CLIENT_INFO_SCHEDULED.
+			WithSuperUser().WithFrom(client_id))
 
 	// Update the client's in flight flow tracker on the local system
 	// as well. This helps to update this record ASAP before waiting
@@ -612,10 +630,11 @@ func (self *ClientFlowRunner) FlowStats(
 		return nil
 	}
 
-	err = launcher_service.Storage().WriteFlowStats(ctx, self.config_obj,
-		stats, utils.BackgroundWriter)
-	if err != nil {
-		return err
+	// If doing completion write, register with completer so flow
+	// finished msg is not sent until record is fully written to disk
+	completion := utils.BackgroundWriter
+	if msg.FlowComplete {
+		completion = self.completer.GetCompletionFunc()
 	}
 
 	// Update the client's in flight flow tracker.
@@ -685,6 +704,12 @@ func (self *ClientFlowRunner) FlowStats(
 				Set("FlowId", flow_id).
 				Set("ClientId", client_id))
 
+		return launcher_service.Storage().WriteFlowStats(
+			ctx, self.config_obj, stats, completion)
+	}
+
+	err = launcher_service.Storage().WriteFlowStats(ctx, self.config_obj, stats, completion)
+	if err != nil {
 		return err
 	}
 
@@ -720,21 +745,28 @@ func (self *ClientFlowRunner) VQLResponse(
 		return err
 	}
 
-	if response.Query.Name == "" ||
-		strings.HasPrefix(response.Query.Name, "$") {
+	query_name := response.Query.Name
+
+	// Ignore empty responses or ones that do not deobfuscate.
+	if query_name == "" ||
+		strings.HasPrefix(query_name, "$") {
 		return nil
 	}
 
-	path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-		self.config_obj, client_id, flow_id, response.Query.Name)
+	// Validate the query_name as a valid artifact name
+	err = utils.ValidateArtifactNameAndSource(query_name)
 	if err != nil {
 		return err
 	}
 
-	if path_manager.Mode() != artifact_modes.MODE_CLIENT {
-		return fmt.Errorf("Invalid VQLResponse: Artifact %v must be CLIENT type",
-			response.Query.Name)
-	}
+	// Allow results to be written from artifacts that are not
+	// necessarily registered in the repository. This can happen when
+	// an artifact is deleted - the original request names the
+	// artifact while the flow is still in flight but it may not exist
+	// currently.
+	path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+		self.config_obj, client_id, flow_id, response.Query.Name,
+		artifact_modes.MODE_CLIENT)
 
 	file_store_factory := file_store.GetFileStore(self.config_obj)
 	rs_writer, err := result_sets.NewResultSetWriter(
@@ -799,6 +831,7 @@ type log_message struct {
 	Message string `json:"message"`
 }
 
+// Process and alert sent from regular flow collections.
 func (self *ClientFlowRunner) processAlert(
 	ctx context.Context, client_id, flow_id string,
 	msg *crypto_proto.LogMessage) error {
@@ -829,7 +862,10 @@ func (self *ClientFlowRunner) processAlert(
 		return err
 	}
 	return journal.PushJsonlToArtifact(ctx, self.config_obj,
-		serialized, 1, artifact_paths.ALERT_QUEUE)
+		serialized, 1,
+		artifact_paths.ALERT_QUEUE.
+			WithFrom(client_id).
+			WithSuperUser())
 }
 
 func (self *ClientFlowRunner) LogMessage(

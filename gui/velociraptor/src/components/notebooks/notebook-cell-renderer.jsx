@@ -27,7 +27,7 @@ import CopyCellToNotebookDialog from './notebook-copy-cell.jsx';
 import FormatTableDialog from './notebook-format-tables.jsx';
 import NotebookUploads from '../notebooks/notebook-uploads.jsx';
 import ToolTip from '../widgets/tooltip.jsx';
-
+import { quoteString } from '../utils/escapes.jsx';
 import {CancelToken} from 'axios';
 import api from '../core/api-service.jsx';
 import VeloTable, { getFormatter } from '../core/table.jsx';
@@ -47,11 +47,11 @@ class AddCellFromHunt extends React.PureComponent {
         var hunt_id = hunt["hunt_id"];
         var query = "SELECT * \nFROM hunt_results(\n";
         var sources = hunt["artifact_sources"] || hunt["start_request"]["artifacts"];
-        query += "    artifact='" + sources[0] + "',\n";
+        query += "    artifact=" + quoteString(sources[0]) + ",\n";
         for (var i=1; i<sources.length; i++) {
-            query += "    // artifact='" + sources[i] + "',\n";
+            query += "    // artifact='" + quoteString(sources[i]) + ",\n";
         }
-        query += "    hunt_id='" + hunt_id + "')\nLIMIT 50\n";
+        query += "    hunt_id=" + quoteString(hunt_id) + ")\nLIMIT 50\n";
 
         this.props.addCell(query, "VQL");
         this.props.closeDialog();
@@ -596,14 +596,12 @@ export default class NotebookCellRenderer extends React.Component {
                         let mime_type = response.data && response.data.mime_type;
                         if (/image/.test(mime_type || "")) {
                             this.state.ace.insert(
-                                "\n<img src=\"" +
-                                    url + "\" alt=\"" +
+                                "\n<img src=\"" + url + "\" alt=\"" +
                                     filename + "\"/>\n");
                         } else {
                             this.state.ace.insert(
                                 "\n<a href=\"" +
-                                    url + "\">" +
-                                    filename + "</a>\n");
+                                    url + "\">" + filename + "</a>\n");
                         }
 
                     }, function failure(response) {
@@ -628,8 +626,8 @@ export default class NotebookCellRenderer extends React.Component {
             match = myRegexp.exec(this.state.cell.output);
         }
 
-        let content = "SELECT *\nFROM source(\n  notebook_id=\"" +
-            this.props.notebook_id + "\",\n";
+        let content = "SELECT *\nFROM source(\n  notebook_id=" +
+            quoteString(this.props.notebook_id) + ",\n";
         for(let i=0; i<tables.length;i++) {
             if(i===0) {
                 content += "  notebook_cell_table=" + tables[i]+ ",\n";
@@ -638,8 +636,8 @@ export default class NotebookCellRenderer extends React.Component {
             }
         }
 
-        content += "  notebook_cell_id=\""+ this.state.cell.cell_id +
-            "\")\nLIMIT 50\n";
+        content += "  notebook_cell_id="+ quoteString(this.state.cell.cell_id) +
+            ")\nLIMIT 50\n";
 
         this.props.addCell(this.state.cell.cell_id, "VQL", content,
                            this.state.cell.env);
@@ -654,8 +652,14 @@ export default class NotebookCellRenderer extends React.Component {
 
         return <>
                  <Dropdown.Menu>
-                     { _.map(suggestions, (x, i)=>{
-                         return <Dropdown.Item
+                   { _.map(suggestions, (x, i)=>{
+                       // Merge the suggestion environment with the
+                       // cell environment.
+                       let env = [...x.env || []];
+                       if(!_.isEmpty(this.state.cell.env)) {
+                           env = [...env, ...this.state.cell.env];
+                       }
+                       return <Dropdown.Item
                                   key={i}
 
                                   onClick={()=>{
@@ -663,7 +667,7 @@ export default class NotebookCellRenderer extends React.Component {
                                           this.state.cell.cell_id,
                                           x.type,
                                           x.input,
-                                          x.env);
+                                          env);
                                   }}
                                   title={x.name}>
                                   {x.name}

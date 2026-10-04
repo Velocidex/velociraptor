@@ -9,7 +9,7 @@ import (
 	errors "github.com/go-errors/errors"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/launcher"
+	launcher_module "www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/vfilter"
@@ -21,6 +21,7 @@ var (
 	verify_allow_override = verify.Flag("builtin", "Allow overriding of built in artifacts").Bool()
 	verify_issues_only    = verify.Flag("issues_only", "If set, we only emit warning and error messages").Bool()
 	verify_max_length     = verify.Flag("max_length", "Maximum length of artifact to read").Default("100000").Int64()
+	verify_nowall         = verify.Flag("nowall", "If set, ignore warnings").Bool()
 )
 
 func doVerify() error {
@@ -34,7 +35,7 @@ func doVerify() error {
 
 	config_obj.Services = services.GenericToolServices()
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)
@@ -106,7 +107,7 @@ func doVerify() error {
 		return err
 	}
 
-	var ret error
+	var ret []error
 	for _, vql := range statements {
 		for row := range vql.Eval(sm.Ctx, scope) {
 			dict := vfilter.RowToDict(ctx, scope, row)
@@ -119,27 +120,54 @@ func doVerify() error {
 			if !pres {
 				continue
 			}
-
-			state, ok := result.(*launcher.AnalysisState)
+			state, ok := result.(*ordereddict.Dict)
 			if !ok {
 				continue
 			}
-			if len(state.Errors) == 0 {
-				if !*verify_issues_only {
-					logger.Info("Verified %v: <green>OK</>", artifact_path)
+
+			analysis_errors_any, pres := state.Get("Errors")
+			analysis_errors, ok := analysis_errors_any.([]*launcher_module.VerifierError)
+			if ok {
+				if len(analysis_errors) == 0 {
+					if !*verify_issues_only {
+						logger.Info("Verified %v: <green>OK</>", artifact_path)
+					}
+				}
+				for _, err := range analysis_errors {
+					logger.Error("%v: <red>%v</>", artifact_path, err)
+					ret = append(ret, err)
 				}
 			}
-			for _, err := range state.Errors {
-				logger.Error("%v: <red>%v</>", artifact_path, err)
-				ret = errors.New(err)
+
+			if *verify_nowall {
+				continue
 			}
-			for _, msg := range state.Warnings {
-				logger.Info("%v: %v", artifact_path, msg)
+
+			analysis_warnings_any, pres := state.Get("Warnings")
+			if pres {
+				analysis_warnings, ok := analysis_warnings_any.([]*launcher_module.VerifierError)
+				if ok {
+					for _, err := range analysis_warnings {
+						ret = append(ret, err)
+						logger.Warn("%v: %v", artifact_path, err)
+					}
+				}
 			}
 		}
 	}
 
-	return ret
+	if artifact_logger.Error != nil {
+		ret = append(ret, artifact_logger.Error)
+	}
+
+	if len(ret) > 0 {
+		for _, err := range ret {
+			fmt.Printf("ERROR: %v\n", err)
+		}
+		return errors.New("Failed!")
+	}
+
+	return nil
 }
 
 func init() {

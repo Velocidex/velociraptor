@@ -229,6 +229,10 @@ func GetDefaultHTTPClient(
 	extra_roots string,
 	cookie_jar *ordereddict.Dict) (HTTPClient, error) {
 
+	if HTTPClientMock != nil {
+		return HTTPClientMock, nil
+	}
+
 	transport, err := GetHttpTransport(config_obj, extra_roots)
 	if err != nil {
 		return nil, err

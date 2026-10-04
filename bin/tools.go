@@ -1,8 +1,6 @@
 package main
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"os"
@@ -12,9 +10,9 @@ import (
 	"github.com/Velocidex/yaml/v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 var (
@@ -51,6 +49,13 @@ var (
 	third_party_upload_binary_path = third_party_upload.
 					Arg("path", "Path to file or a URL").String()
 
+	third_party_cat      = third_party.Command("cat", "Dump tool from command line")
+	third_party_cat_name = third_party_cat.Arg("name", "Tool name to dump").
+				Required().String()
+
+	third_party_cat_version = third_party_cat.Flag("version", "Tool version to dump").
+				String()
+
 	url_regexp = regexp.MustCompile("^https?://")
 )
 
@@ -63,7 +68,7 @@ func doThirdPartyShow() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
@@ -111,7 +116,7 @@ func doThirdPartyRm() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
@@ -130,6 +135,40 @@ func doThirdPartyRm() error {
 		ctx, config_obj, *third_party_rm_name)
 }
 
+func doThirdPartyCat() error {
+	logging.DisableLogging()
+
+	config_obj, err := makeDefaultConfigLoader().WithRequiredFrontend().
+		LoadAndValidate()
+	if err != nil {
+		return fmt.Errorf("Unable to load config file: %w", err)
+	}
+
+	ctx, cancel := Install_sig_handler()
+	defer cancel()
+
+	config_obj.Services = services.GenericToolServices()
+	sm, err := startup.StartToolServices(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+	defer sm.Close()
+
+	inventory_manager, err := services.GetInventory(config_obj)
+	if err != nil {
+		return err
+	}
+
+	fd, err := inventory_manager.ReadTool(
+		ctx, config_obj, *third_party_cat_name, *third_party_cat_version)
+	if err != nil {
+		return err
+	}
+
+	_, err = utils.Copy(ctx, os.Stdout, fd)
+	return err
+}
+
 func doThirdPartyUpload() error {
 	logging.DisableLogging()
 
@@ -139,7 +178,7 @@ func doThirdPartyUpload() error {
 		return fmt.Errorf("Unable to load config file: %w", err)
 	}
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	config_obj.Services = services.GenericToolServices()
@@ -161,6 +200,12 @@ func doThirdPartyUpload() error {
 		ServeLocally: !*third_party_upload_serve_remote,
 	}
 
+	// Now add the tool to the inventory with the correct hash.
+	inventory_manager, err := services.GetInventory(config_obj)
+	if err != nil {
+		return err
+	}
+
 	// Does the user want to scrape releases from github?
 	if *third_party_upload_github_project != "" {
 		tool.GithubProject = *third_party_upload_github_project
@@ -171,45 +216,6 @@ func doThirdPartyUpload() error {
 	} else if url_regexp.FindString(*third_party_upload_binary_path) != "" {
 		tool.Url = *third_party_upload_binary_path
 
-	} else {
-		// Figure out where we need to store the tool.
-		path_manager := paths.NewInventoryPathManager(config_obj, tool)
-		pathspec, file_store_factory, err := path_manager.Path()
-		if err != nil {
-			return err
-		}
-
-		writer, err := file_store_factory.WriteFile(pathspec)
-		if err != nil {
-			return fmt.Errorf("Unable to write to filestore: %w ", err)
-		}
-		defer writer.Close()
-
-		err = writer.Truncate()
-		if err != nil {
-			return fmt.Errorf("Unable to write to filestore: %w ", err)
-		}
-
-		sha_sum := sha256.New()
-
-		reader, err := os.Open(*third_party_upload_binary_path)
-		if err != nil {
-			return fmt.Errorf("Unable to read file: %w ", err)
-		}
-		defer reader.Close()
-
-		_, err = io.Copy(writer, io.TeeReader(reader, sha_sum))
-		if err != nil {
-			return fmt.Errorf("Uploading file: %w", err)
-		}
-
-		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
-	}
-
-	// Now add the tool to the inventory with the correct hash.
-	inventory_manager, err := services.GetInventory(config_obj)
-	if err != nil {
-		return err
 	}
 
 	err = inventory_manager.AddTool(ctx,
@@ -220,11 +226,45 @@ func doThirdPartyUpload() error {
 		return fmt.Errorf("Adding tool %s: %w", tool.Name, err)
 	}
 
+	if *third_party_upload_binary_path != "" {
+		reader, err := os.Open(*third_party_upload_binary_path)
+		if err != nil {
+			return fmt.Errorf("Unable to read file: %w ", err)
+		}
+		defer reader.Close()
+
+		writer, err := inventory_manager.WriteTool(ctx, config_obj,
+			tool.Name, tool.Version)
+		if err != nil {
+			return fmt.Errorf("Unable to write to filestore: %w ", err)
+		}
+
+		_, err = io.Copy(writer, reader)
+		if err != nil {
+			writer.Close()
+			return fmt.Errorf("Uploading file: %w", err)
+		}
+
+		err = writer.Close()
+		if err != nil {
+			return err
+		}
+
+		// Refetch the tool with the latest info.
+		tool, err = inventory_manager.GetToolInfo(
+			ctx, config_obj, tool.Name, tool.Version)
+		if err != nil {
+			return err
+		}
+	}
+
 	// Materialize the tool if required
 	if *third_party_upload_download {
-		_, err = inventory_manager.GetToolInfo(
+		tool, err = inventory_manager.GetToolInfo(
 			ctx, config_obj, tool.Name, tool.Version)
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	serialized, err := yaml.Marshal(tool)
@@ -243,6 +283,9 @@ func init() {
 
 		case third_party_rm.FullCommand():
 			FatalIfError(third_party_rm, doThirdPartyRm)
+
+		case third_party_cat.FullCommand():
+			FatalIfError(third_party_cat, doThirdPartyCat)
 
 		default:
 			return false

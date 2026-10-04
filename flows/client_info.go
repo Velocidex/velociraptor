@@ -6,6 +6,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/sanity"
 )
 
 // Process ClientInfo messages. These are processed directly on the
@@ -32,7 +33,10 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 	err = client_info_manager.Modify(ctx, client_id,
 		func(old_client_info *services.ClientInfo) (*services.ClientInfo, error) {
 			if old_client_info == nil {
-				return client_info, nil
+				// No existing record, start with a fresh record.
+				old_client_info = &services.ClientInfo{
+					ClientInfo: &actions_proto.ClientInfo{},
+				}
 			}
 
 			dirty := false
@@ -43,7 +47,9 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 				}
 			}
 
-			// Now merge the new record with the old
+			// Now merge the new record with the old - ignore the
+			// client id in the record, and replace it with the
+			// cryptographic correct client id.
 			old_client_info.ClientId = client_id
 			update(&old_client_info.Hostname, &client_info.Hostname)
 			update(&old_client_info.System, &client_info.System)
@@ -79,10 +85,14 @@ func (self *ClientFlowRunner) maybeProcessClientInfo(
 	}
 
 	// Now update any labels baked into the client.
-	if len(client_info.Labels) > 0 {
+	if len(client_info.Labels) > 0 && sanity.ClientSelfLabelRegex != nil {
 		labeler := services.GetLabeler(self.config_obj)
 
 		for _, label := range client_info.Labels {
+			if !sanity.ClientSelfLabelRegex.MatchString(label) {
+				continue
+			}
+
 			err = labeler.SetClientLabel(ctx, self.config_obj, client_id, label)
 			if err != nil {
 				return err

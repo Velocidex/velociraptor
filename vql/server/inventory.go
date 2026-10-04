@@ -2,16 +2,12 @@ package server
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
-	"io"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -65,49 +61,11 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 		Version:      arg.Version,
 	}
 
-	if arg.File != nil {
-		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
-		if err != nil {
-			scope.Log("inventory_add: %s", err)
-			return vfilter.Null{}
-		}
-
-		reader, err := accessor.OpenWithOSPath(arg.File)
-		if err != nil {
-			scope.Log("inventory_add: %s", err)
-			return vfilter.Null{}
-		}
-
-		path_manager := paths.NewInventoryPathManager(config_obj, tool)
-		pathspec, file_store_factory, err := path_manager.Path()
-		if err != nil {
-			scope.Log("inventory_add: %s", err)
-			return vfilter.Null{}
-		}
-
-		writer, err := file_store_factory.WriteFile(pathspec)
-		if err != nil {
-			scope.Log("inventory_add: %s", err)
-			return vfilter.Null{}
-		}
-		defer writer.Close()
-
-		_ = writer.Truncate()
-
-		sha_sum := sha256.New()
-
-		_, err = utils.Copy(ctx, writer, io.TeeReader(reader, sha_sum))
-		if err != nil {
-			scope.Log("inventory_add: %s", err)
-			return vfilter.Null{}
-		}
-
-		tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
+	if tool.Filename == "" && arg.File != nil {
+		// If the file is uploaded from the local filesystem we must
+		// serve it because it is not public.
 		tool.ServeLocally = true
-
-		if tool.Filename == "" {
-			tool.Filename = arg.File.Basename()
-		}
+		tool.Filename = arg.File.Basename()
 	}
 
 	inventory, err := services.GetInventory(config_obj)
@@ -123,6 +81,46 @@ func (self *InventoryAddFunction) Call(ctx context.Context,
 	if err != nil {
 		scope.Log("inventory_add: %s", err.Error())
 		return vfilter.Null{}
+	}
+
+	if arg.File != nil {
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		reader, err := accessor.OpenWithOSPath(arg.File)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		writer, err := inventory.WriteTool(ctx, config_obj,
+			tool.Name, tool.Version)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		_, err = utils.Copy(ctx, writer, reader)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+		err = writer.Close()
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
+
+		// Get the latest tool info including the hash.
+		tool, err = inventory.ProbeToolInfo(ctx, config_obj,
+			tool.Name, tool.Version)
+		if err != nil {
+			scope.Log("inventory_add: %s", err)
+			return vfilter.Null{}
+		}
 	}
 
 	// Do not read the tool back - reading the tool back will

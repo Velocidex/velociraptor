@@ -457,6 +457,9 @@ type AccessorDescriptor struct {
 
 	// The type description for the ScopeVar if present.
 	ArgType vfilter.Any
+
+	// The version of the description.
+	Version int
 }
 
 func (self AccessorDescriptor) Metadata() *ordereddict.Dict {

@@ -17,7 +17,9 @@ import (
 	mock_proto "www.velocidex.com/golang/velociraptor/api/mock"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -123,18 +125,18 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 		defer mu.Unlock()
 
 		expected := []string{
-			"Server.Internal.ArtifactModification",
-			"Server.Internal.MasterRegistrations",
+			"Server.Internal.ArtifactModification:SERVER_EVENT",
+			"Server.Internal.MasterRegistrations:INTERNAL",
 
 			// The notifications service will watch for
 			// notifications through us.
-			"Server.Internal.Notifications",
+			"Server.Internal.Notifications:INTERNAL",
 
 			// Watch for ping requests from the
 			// master. This is used to let the master know
 			// if a client is connected to us.
-			"Server.Internal.Ping",
-			"Server.Internal.Pong",
+			"Server.Internal.Ping:INTERNAL",
+			"Server.Internal.Pong:INTERNAL",
 		}
 
 		for _, e := range expected {
@@ -181,9 +183,9 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 	assert.NoError(self.T(), err)
 
 	replicator := journal_service.(*journal.ReplicationService)
-	replicator.SetRetryDuration(100 * time.Millisecond)
+	replicator.SetRetryDuration(500 * time.Millisecond)
 	replicator.ProcessMasterRegistrations(ordereddict.NewDict().
-		Set("Events", []interface{}{"Test.Artifact"}))
+		Set("Events", []interface{}{"Test.Artifact:CLIENT_EVENT"}))
 
 	events = nil
 	err = journal_service.PushRowsToArtifact(self.Ctx, self.ConfigObj,
@@ -191,6 +193,9 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 			ArtifactName: "Test.Artifact",
 			ClientId:     "C.1234",
 			FlowId:       "F.123",
+			ArtifactType: artifact_modes.MODE_CLIENT_EVENT,
+			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			From:         constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		})
 	assert.NoError(self.T(), err)
 
@@ -221,6 +226,9 @@ func (self *ReplicationTestSuite) TestSendingEvents() {
 				ArtifactName: "Test.Artifact",
 				ClientId:     "C.1234",
 				FlowId:       "F.123",
+				ArtifactType: artifact_modes.MODE_CLIENT_EVENT,
+				Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+				From:         constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 			})
 		assert.NoError(self.T(), err)
 	}

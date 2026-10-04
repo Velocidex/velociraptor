@@ -24,7 +24,7 @@ var (
 
 	artifact_command_fetch_client_id = artifact_command_fetch.Flag(
 		"client_id", "The client ID to fetch from. "+
-		    "The default is `server` which fetches server artifacts").
+			"The default is `server` which fetches server artifacts").
 		Default("server").String()
 
 	artifact_command_fetch_flow_id = artifact_command_fetch.Flag(
@@ -38,7 +38,7 @@ var (
 
 	artifact_command_fetch_output = artifact_command_fetch.Flag(
 		"output", "The output zip file path in which to store the "+
-		"collection data.").
+			"collection data.").
 		Required().String()
 )
 
@@ -55,7 +55,7 @@ func doArtifactFetch() error {
 		return err
 	}
 
-	ctx, top_cancel := install_sig_handler()
+	ctx, top_cancel := Install_sig_handler()
 	defer top_cancel()
 
 	if config_obj.ApiConfig == nil || config_obj.ApiConfig.Name == "" {

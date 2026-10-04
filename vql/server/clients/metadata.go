@@ -14,6 +14,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+	"www.velocidex.com/golang/vfilter/types"
 )
 
 type ClientMetadataFunctionArgs struct {
@@ -22,6 +23,10 @@ type ClientMetadataFunctionArgs struct {
 
 type ClientMetadataFunction struct {
 	name string
+}
+
+func (self *ClientMetadataFunction) Copy() types.FunctionInterface {
+	return self
 }
 
 func (self *ClientMetadataFunction) Call(ctx context.Context,
@@ -75,10 +80,13 @@ func (self *ClientMetadataFunction) Call(ctx context.Context,
 func (self ClientMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "client_metadata",
-		Doc:      "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
-		ArgType:  type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS, acls.SERVER_ADMIN).Build(),
+		Name:    "client_metadata",
+		Doc:     "Returns client metadata from the datastore. Client metadata is a set of free form key/value data",
+		ArgType: type_map.AddType(scope, &ClientMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS, acls.SERVER_ADMIN).
+			Build(),
 	}
 }
 
@@ -90,6 +98,10 @@ type ClientSetMetadataFunctionArgs struct {
 
 type ClientSetMetadataFunction struct {
 	name string
+}
+
+func (self *ClientSetMetadataFunction) Copy() types.FunctionInterface {
+	return self
 }
 
 func (self *ClientSetMetadataFunction) Call(ctx context.Context,
@@ -166,10 +178,13 @@ func (self *ClientSetMetadataFunction) Call(ctx context.Context,
 func (self ClientSetMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:         "client_set_metadata",
-		Doc:          "Sets client metadata. Client metadata is a set of free form key/value data",
-		ArgType:      type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
-		Metadata:     vql.VQLMetadata().Permissions(acls.COLLECT_CLIENT, acls.SERVER_ADMIN).Build(),
+		Name:    "client_set_metadata",
+		Doc:     "Sets client metadata. Client metadata is a set of free form key/value data",
+		ArgType: type_map.AddType(scope, &ClientSetMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_CLIENT,
+				acls.SERVER_ADMIN).Build(),
 		Version:      3,
 		FreeFormArgs: true,
 	}
@@ -194,10 +209,12 @@ func (self *ServerMetadataFunction) Call(ctx context.Context,
 func (self ServerMetadataFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:         "server_metadata",
-		Doc:          "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
-		ArgType:      type_map.AddType(scope, &ServerMetadataFunctionArgs{}),
-		Metadata:     vql.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Name:    "server_metadata",
+		Doc:     "Returns server metadata from the datastore. Server metadata is a set of free form key/value data",
+		ArgType: type_map.AddType(scope, &ServerMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 		Version:      3,
 		FreeFormArgs: true,
 	}
@@ -224,6 +241,9 @@ func (self ServerSetMetadataFunction) Info(
 		Name:    "server_set_metadata",
 		Doc:     "Sets server metadata. Server metadata is a set of free form key/value data",
 		ArgType: type_map.AddType(scope, &ServerSetMetadataFunctionArgs{}),
+		Metadata: vql.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

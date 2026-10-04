@@ -217,7 +217,7 @@ func doCollector() error {
 	}
 
 	// Now start the frontend
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	sm, err := startup.StartToolServices(ctx, config_obj)

@@ -29,6 +29,8 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -199,7 +201,7 @@ func (self HuntResultsPlugin) Call(
 		if arg.Artifact == "" {
 			arg.Artifact = available_artifacts[0]
 		} else if arg.Source != "" {
-			arg.Artifact += "/" + arg.Source
+			arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
 		}
 
 		if !utils.InString(available_artifacts, arg.Artifact) {
@@ -265,20 +267,16 @@ func (self HuntResultsPlugin) Call(
 					}
 				}
 
-				artifact_name := arg.Artifact
-				if arg.Source != "" {
-					artifact_name += "/" + arg.Source
-				}
+				artifact_name := paths.FullArtifactName(arg.Artifact, arg.Source)
 
-				// Read individual flow's results.
-				path_manager, err := artifact_paths.NewArtifactPathManager(
-					ctx, org_config_obj,
+				// Read individual flow's results. Flows must be of
+				// type MODE_CLIENT because hunts never run on the
+				// server.
+				path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+					org_config_obj,
 					flow_details.Context.ClientId,
 					flow_details.Context.SessionId,
-					artifact_name)
-				if err != nil {
-					continue
-				}
+					artifact_name, artifact_modes.MODE_CLIENT)
 
 				file_store_factory := file_store.GetFileStore(org_config_obj)
 
@@ -344,13 +342,8 @@ func (self HuntResultsPlugin) GetAvailableArtifacts(
 		artifact_def, ok := repository.Get(ctx, config_obj, artifact)
 		if ok {
 			for _, source := range artifact_def.Sources {
-				name := artifact_def.Name
-
-				if source.Name != "" {
-					name += "/" + source.Name
-				}
-
-				artifacts = append(artifacts, name)
+				artifacts = append(artifacts,
+					paths.FullArtifactName(artifact_def.Name, source.Name))
 			}
 		}
 	}

@@ -43,7 +43,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -125,48 +124,54 @@ func (self *ClientInfoManager) UpdateStats(
 	client_id string,
 	stats *services.Stats) error {
 
-	record, err := self.storage.GetRecord(client_id)
-	if err != nil {
-		// If a record does not exist, just make one
-		record = &actions_proto.ClientInfo{
-			ClientId: client_id,
-		}
+	if self.mutation_manager == nil {
+		return nil
 	}
 
-	if stats.Ping > 0 && stats.Ping > record.Ping {
-		if self.mutation_manager != nil {
-			self.mutation_manager.AddPing(client_id, stats.Ping)
-		}
-		record.Ping = stats.Ping
-	}
+	return self.storage.Modify(ctx, self.config_obj, client_id,
+		func(record *services.ClientInfo) (*services.ClientInfo, error) {
+			var changed bool
 
-	if stats.IpAddress != "" &&
-		stats.IpAddress != record.IpAddress {
-		if self.mutation_manager != nil {
-			self.mutation_manager.AddIPAddress(client_id, stats.IpAddress)
-		}
-		record.IpAddress = stats.IpAddress
-	}
+			// If there is no record, then create one.
+			if record == nil {
+				return nil, fmt.Errorf("Client %v: %w", client_id, utils.NotFoundError)
+			}
 
-	if stats.LastHuntTimestamp > 0 &&
-		stats.LastHuntTimestamp > record.LastHuntTimestamp {
-		if self.mutation_manager != nil {
-			self.mutation_manager.AddLastHuntTimestamp(
-				client_id, stats.LastHuntTimestamp)
-		}
-		record.LastHuntTimestamp = stats.LastHuntTimestamp
-	}
+			if stats.Ping > 0 && stats.Ping > record.Ping {
+				self.mutation_manager.AddPing(client_id, stats.Ping)
+				record.Ping = stats.Ping
+				changed = true
+			}
 
-	if stats.LastEventTableVersion > 0 &&
-		stats.LastEventTableVersion > record.LastEventTableVersion {
-		if self.mutation_manager != nil {
-			self.mutation_manager.AddLastEventTableVersion(client_id,
-				stats.LastEventTableVersion)
-		}
-		record.LastEventTableVersion = stats.LastEventTableVersion
-	}
+			if stats.IpAddress != "" &&
+				stats.IpAddress != record.IpAddress {
+				self.mutation_manager.AddIPAddress(client_id, stats.IpAddress)
+				record.IpAddress = stats.IpAddress
+				changed = true
+			}
 
-	return self.storage.SetRecord(self.config_obj, record)
+			if stats.LastHuntTimestamp > 0 &&
+				stats.LastHuntTimestamp > record.LastHuntTimestamp {
+				self.mutation_manager.AddLastHuntTimestamp(
+					client_id, stats.LastHuntTimestamp)
+				record.LastHuntTimestamp = stats.LastHuntTimestamp
+				changed = true
+			}
+
+			if stats.LastEventTableVersion > 0 &&
+				stats.LastEventTableVersion > record.LastEventTableVersion {
+				self.mutation_manager.AddLastEventTableVersion(client_id,
+					stats.LastEventTableVersion)
+				record.LastEventTableVersion = stats.LastEventTableVersion
+				changed = true
+			}
+
+			if !changed {
+				return nil, nil
+			}
+
+			return record, nil
+		})
 }
 
 func (self *ClientInfoManager) Start(
@@ -440,7 +445,9 @@ func (self *ClientInfoManager) MutationSync(
 					ordereddict.NewDict().
 						Set("Mutation", self.mutation_manager.GetMutation()).
 						Set("From", self.uuid),
-					artifacts.CLIENT_INFO_SYNC)
+					artifacts.CLIENT_INFO_SYNC.
+						WithSuperUser().WithFrom(
+						utils.ToString(self.uuid)))
 			}
 		}
 	}
@@ -472,13 +479,16 @@ func (self *ClientInfoManager) ProcessPing(
 			if !pres {
 				continue
 			}
-			record, err := self.storage.GetRecord(client_id)
-			if err == nil {
-				record.Ping = uint64(value)
-				err := self.storage.SetRecord(self.config_obj, record)
-				if err != nil {
-					return err
-				}
+			err := self.storage.Modify(ctx, self.config_obj, client_id,
+				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, fmt.Errorf("Client %v: %w", client_id, utils.NotFoundError)
+					}
+					client_info.Ping = uint64(value)
+					return client_info, nil
+				})
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -490,13 +500,16 @@ func (self *ClientInfoManager) ProcessPing(
 			if !pres {
 				continue
 			}
-			record, err := self.storage.GetRecord(client_id)
-			if err == nil {
-				record.IpAddress = value
-				err := self.storage.SetRecord(self.config_obj, record)
-				if err != nil {
-					return err
-				}
+			err := self.storage.Modify(ctx, self.config_obj, client_id,
+				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, utils.NotFoundError
+					}
+					client_info.IpAddress = value
+					return client_info, nil
+				})
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -509,13 +522,17 @@ func (self *ClientInfoManager) ProcessPing(
 				continue
 			}
 
-			record, err := self.storage.GetRecord(client_id)
-			if err == nil {
-				record.LastHuntTimestamp = uint64(value)
-				err := self.storage.SetRecord(self.config_obj, record)
-				if err != nil {
-					return err
-				}
+			err := self.storage.Modify(ctx, self.config_obj, client_id,
+				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, utils.NotFoundError
+					}
+
+					client_info.LastHuntTimestamp = uint64(value)
+					return client_info, nil
+				})
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -528,13 +545,18 @@ func (self *ClientInfoManager) ProcessPing(
 				continue
 			}
 
-			record, err := self.storage.GetRecord(client_id)
-			if err == nil {
-				record.LastEventTableVersion = uint64(value)
-				err := self.storage.SetRecord(self.config_obj, record)
-				if err != nil {
-					return err
-				}
+			err := self.storage.Modify(ctx, self.config_obj, client_id,
+				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info == nil {
+						return nil, utils.NotFoundError
+					}
+
+					client_info.LastEventTableVersion = uint64(value)
+					return client_info, nil
+				})
+
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -585,7 +607,7 @@ func (self *ClientInfoManager) Set(
 		return invalidClientError
 	}
 
-	err := self.ValidateClientId(client_info.ClientId)
+	err := self.ValidateClientId(client_info.ClientId, services.SERVER_OK)
 	if err != nil {
 		return err
 	}
@@ -608,7 +630,7 @@ func NewClientInfoManager(
 		uuid:             utils.GetGUID(),
 		mutation_manager: NewMutationManager(),
 	}
-	service.storage = NewStorage(service.uuid)
+	service.storage = NewStorage(service.uuid, config_obj)
 
 	err := service.storage.LoadFromSnapshot(ctx, config_obj)
 	if err != nil {

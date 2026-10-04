@@ -72,3 +72,8 @@ Queries:
   - SELECT OSPath.Path AS Key, Data, Data.type AS Type, read_file(accessor='registry', filename=OSPath) AS Content
     FROM glob(globs='Test/*', root='HKEY_CURRENT_USER/Software', accessor='registry')
     ORDER BY Type
+
+  # Make sure MULTI_SZ are parsed correctly https://github.com/Velocidex/velociraptor/issues/4970
+  - SELECT Name, Data.value
+    FROM glob(globs='software/test*', root='HKEY_CURRENT_USER', accessor='registry')
+    WHERE Name =~ 'test' ORDER BY Name

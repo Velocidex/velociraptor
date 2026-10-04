@@ -10,6 +10,7 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -23,7 +24,7 @@ type listener struct {
 
 type watcher struct {
 	started   time.Time
-	name      string
+	name      artifact_modes.QueueName
 	listeners map[uint64]*listener
 }
 
@@ -36,11 +37,12 @@ type BroadcastService struct {
 	// When the topic broadcaster cancels, we close all watchers.
 	// When each watcher ends we remove it from the broadcast queue.
 	// The following is a map of topics, and unique IDs.
-	generators map[string]*watcher
+	generators map[artifact_modes.QueueName]*watcher
 }
 
 func (self *BroadcastService) RegisterGenerator(
-	input <-chan *ordereddict.Dict, name string) error {
+	input <-chan *ordereddict.Dict,
+	name artifact_modes.QueueName) error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -63,8 +65,7 @@ func (self *BroadcastService) RegisterGenerator(
 		// Read items from the input channel and broadcast them to all
 		// listeners.
 		for item := range input {
-			source, _ := item.GetString("_Source")
-			self.pool.Broadcast(name, source, item)
+			self.pool.Broadcast(name, item)
 		}
 	}()
 
@@ -72,7 +73,8 @@ func (self *BroadcastService) RegisterGenerator(
 }
 
 // Remove the generator and close off all listeners.
-func (self *BroadcastService) unregister(name string) {
+func (self *BroadcastService) unregister(
+	name artifact_modes.QueueName) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
@@ -88,7 +90,8 @@ func (self *BroadcastService) unregister(name string) {
 }
 
 func (self *BroadcastService) WaitForListeners(
-	ctx context.Context, name string, count int64) {
+	ctx context.Context,
+	name artifact_modes.QueueName, count int64) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -112,7 +115,8 @@ func (self *BroadcastService) WaitForListeners(
 }
 
 func (self *BroadcastService) Watch(
-	ctx context.Context, name string, options api.QueueOptions) (
+	ctx context.Context, name artifact_modes.QueueName,
+	options api.QueueOptions) (
 	output <-chan *ordereddict.Dict, cancel func(), err error) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
@@ -158,7 +162,7 @@ func NewBroadcastService(
 	config_obj *config_proto.Config) services.BroadcastService {
 	res := &BroadcastService{
 		pool:       directory.NewQueuePool(config_obj),
-		generators: make(map[string]*watcher),
+		generators: make(map[artifact_modes.QueueName]*watcher),
 	}
 
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{

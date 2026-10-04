@@ -76,6 +76,7 @@ func (self *NotebookManager) NewNotebook(
 	in.Creator = username
 	in.CreatedTime = utils.GetTime().Now().Unix()
 	in.ModifiedTime = in.CreatedTime
+	in.Version = self.Store.GetNextVersion()
 
 	// Allow hunt notebooks to be created with a specified hunt ID.
 	if !strings.HasPrefix(in.NotebookId, "N.H.") &&
@@ -111,6 +112,7 @@ func (self *NotebookManager) UpdateNotebook(
 	}
 
 	in.ModifiedTime = utils.GetTime().Now().Unix()
+	in.Version = self.Store.GetNextVersion()
 
 	psuedo_artifact, out, err := CalculateNotebookArtifact(
 		ctx, self.config_obj, in)

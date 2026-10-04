@@ -1,5 +1,7 @@
-//go:build windows && cgo
-// +build windows,cgo
+//go:build windows && cgo && (amd64 || arm64)
+// +build windows
+// +build cgo
+// +build amd64 arm64
 
 /*
    Velociraptor - Dig Deeper
@@ -186,10 +188,12 @@ func (self WmiEventPlugin) Call(
 
 func (self WmiEventPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "wmi_events",
-		Doc:      "Executes an evented WMI queries asynchronously.",
-		ArgType:  type_map.AddType(scope, &WmiEventPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		Name:    "wmi_events",
+		Doc:     "Executes an evented WMI queries asynchronously.",
+		ArgType: type_map.AddType(scope, &WmiEventPluginArgs{}),
+		Metadata: vql.VQLMetadata().
+			Event().
+			Permissions(acls.MACHINE_STATE).Build(),
 	}
 }
 

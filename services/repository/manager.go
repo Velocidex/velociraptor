@@ -34,8 +34,9 @@ type RepositoryManager struct {
 
 func (self *RepositoryManager) NewRepository() services.Repository {
 	result := &Repository{
-		Data:     make(map[string]*artifacts_proto.Artifact),
-		metadata: self.metadata,
+		Data:       make(map[string]*artifacts_proto.Artifact),
+		config_obj: self.config_obj,
+		metadata:   self.metadata,
 	}
 
 	return result
@@ -178,7 +179,8 @@ func (self *RepositoryManager) SetArtifactMetadata(
 				Set("op", "metadata").
 				Set("metadata", metadata).
 				Set("id", self.id),
-		}, artifacts.ARTIFACT_MODIFICATION)
+		}, artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 
 	return err
 }
@@ -281,7 +283,8 @@ func (self *RepositoryManager) SetArtifactFile(
 				Set("definition", definition).
 				Set("id", self.id),
 		},
-		artifacts.ARTIFACT_MODIFICATION)
+		artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 
 	return artifact, err
 }
@@ -327,7 +330,8 @@ func (self *RepositoryManager) DeleteArtifactFile(
 				Set("op", "delete").
 				Set("id", self.id),
 		},
-		artifacts.ARTIFACT_MODIFICATION)
+		artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 
 	if err != nil {
 		return err
@@ -371,8 +375,9 @@ func _newRepositoryManager(
 
 	global_repository := &Repository{
 		// Artifact name -> definition
-		Data:     make(map[string]*artifacts_proto.Artifact),
-		metadata: NewMetadataManager(ctx, config_obj),
+		Data:       make(map[string]*artifacts_proto.Artifact),
+		config_obj: config_obj,
+		metadata:   NewMetadataManager(ctx, config_obj),
 	}
 
 	// Start the metadata housekeeping loop.

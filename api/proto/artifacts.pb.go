@@ -401,19 +401,81 @@ func (x *SetArtifactRequest) GetOp() SetArtifactRequest_Operation {
 	return SetArtifactRequest_SET
 }
 
-type SetArtifactResponse struct {
+type VerifierError struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Error         bool                   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
-	ErrorMessage  string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
-	Errors        []string               `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
-	Warnings      []string               `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Message       string                 `protobuf:"bytes,2,opt,name=message,proto3" json:"message,omitempty"`
+	Args          []string               `protobuf:"bytes,3,rep,name=args,proto3" json:"args,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
+func (x *VerifierError) Reset() {
+	*x = VerifierError{}
+	mi := &file_artifacts_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VerifierError) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VerifierError) ProtoMessage() {}
+
+func (x *VerifierError) ProtoReflect() protoreflect.Message {
+	mi := &file_artifacts_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VerifierError.ProtoReflect.Descriptor instead.
+func (*VerifierError) Descriptor() ([]byte, []int) {
+	return file_artifacts_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *VerifierError) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *VerifierError) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *VerifierError) GetArgs() []string {
+	if x != nil {
+		return x.Args
+	}
+	return nil
+}
+
+type SetArtifactResponse struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Error            bool                   `protobuf:"varint,1,opt,name=error,proto3" json:"error,omitempty"`
+	ErrorMessage     string                 `protobuf:"bytes,2,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"`
+	Errors           []string               `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
+	VerifierErrors   []*VerifierError       `protobuf:"bytes,5,rep,name=verifier_errors,json=verifierErrors,proto3" json:"verifier_errors,omitempty"`
+	Warnings         []string               `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	VerifierWarnings []*VerifierError       `protobuf:"bytes,6,rep,name=verifier_warnings,json=verifierWarnings,proto3" json:"verifier_warnings,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
 func (x *SetArtifactResponse) Reset() {
 	*x = SetArtifactResponse{}
-	mi := &file_artifacts_proto_msgTypes[5]
+	mi := &file_artifacts_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -425,7 +487,7 @@ func (x *SetArtifactResponse) String() string {
 func (*SetArtifactResponse) ProtoMessage() {}
 
 func (x *SetArtifactResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[5]
+	mi := &file_artifacts_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -438,7 +500,7 @@ func (x *SetArtifactResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetArtifactResponse.ProtoReflect.Descriptor instead.
 func (*SetArtifactResponse) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{5}
+	return file_artifacts_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *SetArtifactResponse) GetError() bool {
@@ -462,9 +524,23 @@ func (x *SetArtifactResponse) GetErrors() []string {
 	return nil
 }
 
+func (x *SetArtifactResponse) GetVerifierErrors() []*VerifierError {
+	if x != nil {
+		return x.VerifierErrors
+	}
+	return nil
+}
+
 func (x *SetArtifactResponse) GetWarnings() []string {
 	if x != nil {
 		return x.Warnings
+	}
+	return nil
+}
+
+func (x *SetArtifactResponse) GetVerifierWarnings() []*VerifierError {
+	if x != nil {
+		return x.VerifierWarnings
 	}
 	return nil
 }
@@ -479,7 +555,7 @@ type LoadArtifactError struct {
 
 func (x *LoadArtifactError) Reset() {
 	*x = LoadArtifactError{}
-	mi := &file_artifacts_proto_msgTypes[6]
+	mi := &file_artifacts_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -491,7 +567,7 @@ func (x *LoadArtifactError) String() string {
 func (*LoadArtifactError) ProtoMessage() {}
 
 func (x *LoadArtifactError) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[6]
+	mi := &file_artifacts_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -504,7 +580,7 @@ func (x *LoadArtifactError) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoadArtifactError.ProtoReflect.Descriptor instead.
 func (*LoadArtifactError) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{6}
+	return file_artifacts_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *LoadArtifactError) GetFilename() string {
@@ -536,7 +612,7 @@ type LoadArtifactPackRequest struct {
 
 func (x *LoadArtifactPackRequest) Reset() {
 	*x = LoadArtifactPackRequest{}
-	mi := &file_artifacts_proto_msgTypes[7]
+	mi := &file_artifacts_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -548,7 +624,7 @@ func (x *LoadArtifactPackRequest) String() string {
 func (*LoadArtifactPackRequest) ProtoMessage() {}
 
 func (x *LoadArtifactPackRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[7]
+	mi := &file_artifacts_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -561,7 +637,7 @@ func (x *LoadArtifactPackRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoadArtifactPackRequest.ProtoReflect.Descriptor instead.
 func (*LoadArtifactPackRequest) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{7}
+	return file_artifacts_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *LoadArtifactPackRequest) GetPrefix() string {
@@ -617,7 +693,7 @@ type LoadArtifactPackResponse struct {
 
 func (x *LoadArtifactPackResponse) Reset() {
 	*x = LoadArtifactPackResponse{}
-	mi := &file_artifacts_proto_msgTypes[8]
+	mi := &file_artifacts_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -629,7 +705,7 @@ func (x *LoadArtifactPackResponse) String() string {
 func (*LoadArtifactPackResponse) ProtoMessage() {}
 
 func (x *LoadArtifactPackResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[8]
+	mi := &file_artifacts_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -642,7 +718,7 @@ func (x *LoadArtifactPackResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoadArtifactPackResponse.ProtoReflect.Descriptor instead.
 func (*LoadArtifactPackResponse) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{8}
+	return file_artifacts_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *LoadArtifactPackResponse) GetSuccessfulArtifacts() []string {
@@ -676,7 +752,7 @@ type APIResponse struct {
 
 func (x *APIResponse) Reset() {
 	*x = APIResponse{}
-	mi := &file_artifacts_proto_msgTypes[9]
+	mi := &file_artifacts_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -688,7 +764,7 @@ func (x *APIResponse) String() string {
 func (*APIResponse) ProtoMessage() {}
 
 func (x *APIResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[9]
+	mi := &file_artifacts_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -701,7 +777,7 @@ func (x *APIResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use APIResponse.ProtoReflect.Descriptor instead.
 func (*APIResponse) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{9}
+	return file_artifacts_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *APIResponse) GetError() bool {
@@ -740,7 +816,7 @@ type GetReportRequest struct {
 
 func (x *GetReportRequest) Reset() {
 	*x = GetReportRequest{}
-	mi := &file_artifacts_proto_msgTypes[10]
+	mi := &file_artifacts_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -752,7 +828,7 @@ func (x *GetReportRequest) String() string {
 func (*GetReportRequest) ProtoMessage() {}
 
 func (x *GetReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[10]
+	mi := &file_artifacts_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -765,7 +841,7 @@ func (x *GetReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetReportRequest.ProtoReflect.Descriptor instead.
 func (*GetReportRequest) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{10}
+	return file_artifacts_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *GetReportRequest) GetArtifact() string {
@@ -853,7 +929,7 @@ type GetReportResponse struct {
 
 func (x *GetReportResponse) Reset() {
 	*x = GetReportResponse{}
-	mi := &file_artifacts_proto_msgTypes[11]
+	mi := &file_artifacts_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -865,7 +941,7 @@ func (x *GetReportResponse) String() string {
 func (*GetReportResponse) ProtoMessage() {}
 
 func (x *GetReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[11]
+	mi := &file_artifacts_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -878,7 +954,7 @@ func (x *GetReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetReportResponse.ProtoReflect.Descriptor instead.
 func (*GetReportResponse) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{11}
+	return file_artifacts_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GetReportResponse) GetData() string {
@@ -911,7 +987,7 @@ type ArtifactCompressionDict struct {
 
 func (x *ArtifactCompressionDict) Reset() {
 	*x = ArtifactCompressionDict{}
-	mi := &file_artifacts_proto_msgTypes[12]
+	mi := &file_artifacts_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -923,7 +999,7 @@ func (x *ArtifactCompressionDict) String() string {
 func (*ArtifactCompressionDict) ProtoMessage() {}
 
 func (x *ArtifactCompressionDict) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[12]
+	mi := &file_artifacts_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -936,7 +1012,7 @@ func (x *ArtifactCompressionDict) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ArtifactCompressionDict.ProtoReflect.Descriptor instead.
 func (*ArtifactCompressionDict) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{12}
+	return file_artifacts_proto_rawDescGZIP(), []int{13}
 }
 
 type ListAvailableEventResultsRequest struct {
@@ -954,7 +1030,7 @@ type ListAvailableEventResultsRequest struct {
 
 func (x *ListAvailableEventResultsRequest) Reset() {
 	*x = ListAvailableEventResultsRequest{}
-	mi := &file_artifacts_proto_msgTypes[13]
+	mi := &file_artifacts_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -966,7 +1042,7 @@ func (x *ListAvailableEventResultsRequest) String() string {
 func (*ListAvailableEventResultsRequest) ProtoMessage() {}
 
 func (x *ListAvailableEventResultsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[13]
+	mi := &file_artifacts_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -979,7 +1055,7 @@ func (x *ListAvailableEventResultsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListAvailableEventResultsRequest.ProtoReflect.Descriptor instead.
 func (*ListAvailableEventResultsRequest) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{13}
+	return file_artifacts_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *ListAvailableEventResultsRequest) GetClientId() string {
@@ -1022,7 +1098,7 @@ type AvailableEvent struct {
 
 func (x *AvailableEvent) Reset() {
 	*x = AvailableEvent{}
-	mi := &file_artifacts_proto_msgTypes[14]
+	mi := &file_artifacts_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1034,7 +1110,7 @@ func (x *AvailableEvent) String() string {
 func (*AvailableEvent) ProtoMessage() {}
 
 func (x *AvailableEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[14]
+	mi := &file_artifacts_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1047,7 +1123,7 @@ func (x *AvailableEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AvailableEvent.ProtoReflect.Descriptor instead.
 func (*AvailableEvent) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{14}
+	return file_artifacts_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *AvailableEvent) GetArtifact() string {
@@ -1087,7 +1163,7 @@ type ListAvailableEventResultsResponse struct {
 
 func (x *ListAvailableEventResultsResponse) Reset() {
 	*x = ListAvailableEventResultsResponse{}
-	mi := &file_artifacts_proto_msgTypes[15]
+	mi := &file_artifacts_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1099,7 +1175,7 @@ func (x *ListAvailableEventResultsResponse) String() string {
 func (*ListAvailableEventResultsResponse) ProtoMessage() {}
 
 func (x *ListAvailableEventResultsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[15]
+	mi := &file_artifacts_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1112,7 +1188,7 @@ func (x *ListAvailableEventResultsResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ListAvailableEventResultsResponse.ProtoReflect.Descriptor instead.
 func (*ListAvailableEventResultsResponse) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{15}
+	return file_artifacts_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *ListAvailableEventResultsResponse) GetLogs() []*AvailableEvent {
@@ -1132,7 +1208,7 @@ type GetMonitoringStateRequest struct {
 
 func (x *GetMonitoringStateRequest) Reset() {
 	*x = GetMonitoringStateRequest{}
-	mi := &file_artifacts_proto_msgTypes[16]
+	mi := &file_artifacts_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1144,7 +1220,7 @@ func (x *GetMonitoringStateRequest) String() string {
 func (*GetMonitoringStateRequest) ProtoMessage() {}
 
 func (x *GetMonitoringStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[16]
+	mi := &file_artifacts_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1157,7 +1233,7 @@ func (x *GetMonitoringStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMonitoringStateRequest.ProtoReflect.Descriptor instead.
 func (*GetMonitoringStateRequest) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{16}
+	return file_artifacts_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetMonitoringStateRequest) GetLabel() string {
@@ -1177,7 +1253,7 @@ type GetMonitoringStateResponse struct {
 
 func (x *GetMonitoringStateResponse) Reset() {
 	*x = GetMonitoringStateResponse{}
-	mi := &file_artifacts_proto_msgTypes[17]
+	mi := &file_artifacts_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1189,7 +1265,7 @@ func (x *GetMonitoringStateResponse) String() string {
 func (*GetMonitoringStateResponse) ProtoMessage() {}
 
 func (x *GetMonitoringStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[17]
+	mi := &file_artifacts_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1202,7 +1278,7 @@ func (x *GetMonitoringStateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetMonitoringStateResponse.ProtoReflect.Descriptor instead.
 func (*GetMonitoringStateResponse) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{17}
+	return file_artifacts_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetMonitoringStateResponse) GetRequests() []*SetMonitoringStateRequest {
@@ -1224,7 +1300,7 @@ type SetMonitoringStateRequest struct {
 
 func (x *SetMonitoringStateRequest) Reset() {
 	*x = SetMonitoringStateRequest{}
-	mi := &file_artifacts_proto_msgTypes[18]
+	mi := &file_artifacts_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1236,7 +1312,7 @@ func (x *SetMonitoringStateRequest) String() string {
 func (*SetMonitoringStateRequest) ProtoMessage() {}
 
 func (x *SetMonitoringStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_artifacts_proto_msgTypes[18]
+	mi := &file_artifacts_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1249,7 +1325,7 @@ func (x *SetMonitoringStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetMonitoringStateRequest.ProtoReflect.Descriptor instead.
 func (*SetMonitoringStateRequest) Descriptor() ([]byte, []int) {
-	return file_artifacts_proto_rawDescGZIP(), []int{18}
+	return file_artifacts_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *SetMonitoringStateRequest) GetLabel() string {
@@ -1301,12 +1377,18 @@ const file_artifacts_proto_rawDesc = "" +
 	"\n" +
 	"\x06DELETE\x10\x01\x12\t\n" +
 	"\x05CHECK\x10\x02\x12\x11\n" +
-	"\rCHECK_AND_SET\x10\x03\"\x84\x01\n" +
+	"\rCHECK_AND_SET\x10\x03\"Q\n" +
+	"\rVerifierError\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x18\n" +
+	"\amessage\x18\x02 \x01(\tR\amessage\x12\x12\n" +
+	"\x04args\x18\x03 \x03(\tR\x04args\"\x86\x02\n" +
 	"\x13SetArtifactResponse\x12\x14\n" +
 	"\x05error\x18\x01 \x01(\bR\x05error\x12#\n" +
 	"\rerror_message\x18\x02 \x01(\tR\ferrorMessage\x12\x16\n" +
-	"\x06errors\x18\x03 \x03(\tR\x06errors\x12\x1a\n" +
-	"\bwarnings\x18\x04 \x03(\tR\bwarnings\"E\n" +
+	"\x06errors\x18\x03 \x03(\tR\x06errors\x12=\n" +
+	"\x0fverifier_errors\x18\x05 \x03(\v2\x14.proto.VerifierErrorR\x0everifierErrors\x12\x1a\n" +
+	"\bwarnings\x18\x04 \x03(\tR\bwarnings\x12A\n" +
+	"\x11verifier_warnings\x18\x06 \x03(\v2\x14.proto.VerifierErrorR\x10verifierWarnings\"E\n" +
 	"\x11LoadArtifactError\x12\x1a\n" +
 	"\bfilename\x18\x01 \x01(\tR\bfilename\x12\x14\n" +
 	"\x05error\x18\x02 \x01(\tR\x05error\"\xae\x01\n" +
@@ -1380,7 +1462,7 @@ func file_artifacts_proto_rawDescGZIP() []byte {
 }
 
 var file_artifacts_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
-var file_artifacts_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_artifacts_proto_msgTypes = make([]protoimpl.MessageInfo, 20)
 var file_artifacts_proto_goTypes = []any{
 	(SetArtifactRequest_Operation)(0),         // 0: proto.SetArtifactRequest.Operation
 	(*FieldSelector)(nil),                     // 1: proto.FieldSelector
@@ -1388,38 +1470,41 @@ var file_artifacts_proto_goTypes = []any{
 	(*GetArtifactRequest)(nil),                // 3: proto.GetArtifactRequest
 	(*GetArtifactResponse)(nil),               // 4: proto.GetArtifactResponse
 	(*SetArtifactRequest)(nil),                // 5: proto.SetArtifactRequest
-	(*SetArtifactResponse)(nil),               // 6: proto.SetArtifactResponse
-	(*LoadArtifactError)(nil),                 // 7: proto.LoadArtifactError
-	(*LoadArtifactPackRequest)(nil),           // 8: proto.LoadArtifactPackRequest
-	(*LoadArtifactPackResponse)(nil),          // 9: proto.LoadArtifactPackResponse
-	(*APIResponse)(nil),                       // 10: proto.APIResponse
-	(*GetReportRequest)(nil),                  // 11: proto.GetReportRequest
-	(*GetReportResponse)(nil),                 // 12: proto.GetReportResponse
-	(*ArtifactCompressionDict)(nil),           // 13: proto.ArtifactCompressionDict
-	(*ListAvailableEventResultsRequest)(nil),  // 14: proto.ListAvailableEventResultsRequest
-	(*AvailableEvent)(nil),                    // 15: proto.AvailableEvent
-	(*ListAvailableEventResultsResponse)(nil), // 16: proto.ListAvailableEventResultsResponse
-	(*GetMonitoringStateRequest)(nil),         // 17: proto.GetMonitoringStateRequest
-	(*GetMonitoringStateResponse)(nil),        // 18: proto.GetMonitoringStateResponse
-	(*SetMonitoringStateRequest)(nil),         // 19: proto.SetMonitoringStateRequest
-	(*proto.ArtifactParameter)(nil),           // 20: proto.ArtifactParameter
-	(*proto.Artifact)(nil),                    // 21: proto.Artifact
-	(*proto1.ArtifactCollectorArgs)(nil),      // 22: proto.ArtifactCollectorArgs
+	(*VerifierError)(nil),                     // 6: proto.VerifierError
+	(*SetArtifactResponse)(nil),               // 7: proto.SetArtifactResponse
+	(*LoadArtifactError)(nil),                 // 8: proto.LoadArtifactError
+	(*LoadArtifactPackRequest)(nil),           // 9: proto.LoadArtifactPackRequest
+	(*LoadArtifactPackResponse)(nil),          // 10: proto.LoadArtifactPackResponse
+	(*APIResponse)(nil),                       // 11: proto.APIResponse
+	(*GetReportRequest)(nil),                  // 12: proto.GetReportRequest
+	(*GetReportResponse)(nil),                 // 13: proto.GetReportResponse
+	(*ArtifactCompressionDict)(nil),           // 14: proto.ArtifactCompressionDict
+	(*ListAvailableEventResultsRequest)(nil),  // 15: proto.ListAvailableEventResultsRequest
+	(*AvailableEvent)(nil),                    // 16: proto.AvailableEvent
+	(*ListAvailableEventResultsResponse)(nil), // 17: proto.ListAvailableEventResultsResponse
+	(*GetMonitoringStateRequest)(nil),         // 18: proto.GetMonitoringStateRequest
+	(*GetMonitoringStateResponse)(nil),        // 19: proto.GetMonitoringStateResponse
+	(*SetMonitoringStateRequest)(nil),         // 20: proto.SetMonitoringStateRequest
+	(*proto.ArtifactParameter)(nil),           // 21: proto.ArtifactParameter
+	(*proto.Artifact)(nil),                    // 22: proto.Artifact
+	(*proto1.ArtifactCollectorArgs)(nil),      // 23: proto.ArtifactCollectorArgs
 }
 var file_artifacts_proto_depIdxs = []int32{
 	1,  // 0: proto.GetArtifactsRequest.fields:type_name -> proto.FieldSelector
 	0,  // 1: proto.SetArtifactRequest.op:type_name -> proto.SetArtifactRequest.Operation
-	7,  // 2: proto.LoadArtifactPackResponse.errors:type_name -> proto.LoadArtifactError
-	20, // 3: proto.GetReportRequest.parameters:type_name -> proto.ArtifactParameter
-	21, // 4: proto.AvailableEvent.definition:type_name -> proto.Artifact
-	15, // 5: proto.ListAvailableEventResultsResponse.logs:type_name -> proto.AvailableEvent
-	19, // 6: proto.GetMonitoringStateResponse.requests:type_name -> proto.SetMonitoringStateRequest
-	22, // 7: proto.SetMonitoringStateRequest.request:type_name -> proto.ArtifactCollectorArgs
-	8,  // [8:8] is the sub-list for method output_type
-	8,  // [8:8] is the sub-list for method input_type
-	8,  // [8:8] is the sub-list for extension type_name
-	8,  // [8:8] is the sub-list for extension extendee
-	0,  // [0:8] is the sub-list for field type_name
+	6,  // 2: proto.SetArtifactResponse.verifier_errors:type_name -> proto.VerifierError
+	6,  // 3: proto.SetArtifactResponse.verifier_warnings:type_name -> proto.VerifierError
+	8,  // 4: proto.LoadArtifactPackResponse.errors:type_name -> proto.LoadArtifactError
+	21, // 5: proto.GetReportRequest.parameters:type_name -> proto.ArtifactParameter
+	22, // 6: proto.AvailableEvent.definition:type_name -> proto.Artifact
+	16, // 7: proto.ListAvailableEventResultsResponse.logs:type_name -> proto.AvailableEvent
+	20, // 8: proto.GetMonitoringStateResponse.requests:type_name -> proto.SetMonitoringStateRequest
+	23, // 9: proto.SetMonitoringStateRequest.request:type_name -> proto.ArtifactCollectorArgs
+	10, // [10:10] is the sub-list for method output_type
+	10, // [10:10] is the sub-list for method input_type
+	10, // [10:10] is the sub-list for extension type_name
+	10, // [10:10] is the sub-list for extension extendee
+	0,  // [0:10] is the sub-list for field type_name
 }
 
 func init() { file_artifacts_proto_init() }
@@ -1433,7 +1518,7 @@ func file_artifacts_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_artifacts_proto_rawDesc), len(file_artifacts_proto_rawDesc)),
 			NumEnums:      1,
-			NumMessages:   19,
+			NumMessages:   20,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

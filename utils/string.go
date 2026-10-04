@@ -60,3 +60,10 @@ func ToLower(in string) string {
 
 	return string(result)
 }
+
+func StringOrDefault(in string, default_val string) string {
+	if in == "" {
+		return default_val
+	}
+	return in
+}

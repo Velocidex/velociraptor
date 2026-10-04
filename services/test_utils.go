@@ -6,6 +6,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 )
 
 // Helpers for testing the filestore.
@@ -14,7 +15,7 @@ import (
 // result array.
 func GetPublishedEvents(
 	config_obj *config_proto.Config,
-	artifact string,
+	queue_name artifact_modes.QueueName,
 	wg *sync.WaitGroup,
 	num_rows int,
 	result *[]*ordereddict.Dict) {
@@ -30,7 +31,7 @@ func GetPublishedEvents(
 			return
 		}
 		ctx := context.Background()
-		events, cancel := journal.WatchArtifact(ctx, artifact, "")
+		events, cancel := journal.WatchQueue(ctx, queue_name, "")
 		defer cancel()
 
 		// Wait here until we are set up.

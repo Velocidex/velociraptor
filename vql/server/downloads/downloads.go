@@ -374,11 +374,9 @@ func downloadFlowToZip(
 	// Copy artifact results
 	if flow_details != nil && flow_details.Context != nil {
 		for _, name := range flow_details.Context.ArtifactsWithResults {
-			artifact_path_manager, err := artifacts.NewArtifactPathManager(ctx,
-				config_obj, client_id, flow_id, name)
-			if err != nil {
-				continue
-			}
+			// Here we only export client artifacts
+			artifact_path_manager := artifacts.NewArtifactPathManagerWithMode(
+				config_obj, client_id, flow_id, name, artifact_modes.MODE_CLIENT)
 
 			err = copyResultSetIntoContainer(ctx, config_obj, zip_writer, format,
 				artifact_path_manager.Path(), prefix.AddChild("results", name))

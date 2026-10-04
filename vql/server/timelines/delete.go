@@ -81,7 +81,9 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 				Set("SuperTimelineName", arg.Timeline).
 				Set("Component", arg.Component).
 				Set("Action", "Delete"),
-			artifacts.TIMELINE_ADD.WithUser(principal))
+			artifacts.TIMELINE_ADD.
+				WithUser(principal).
+				WithFrom(principal))
 	}
 
 	return true
@@ -90,11 +92,13 @@ func (self *DeleteTimelineFunction) Call(ctx context.Context,
 func (self DeleteTimelineFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "timeline_delete",
-		Doc:      "Delete a super timeline.",
-		ArgType:  type_map.AddType(scope, &DeleteTimelineFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.NOTEBOOK_EDITOR).Build(),
-		Version:  2,
+		Name:    "timeline_delete",
+		Doc:     "Delete a super timeline.",
+		ArgType: type_map.AddType(scope, &DeleteTimelineFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.NOTEBOOK_EDITOR).Build(),
+		Version: 2,
 	}
 }
 

@@ -390,12 +390,16 @@ class UsersOverview extends Component {
         this.setACLsource.cancel();
         this.setACLsource = CancelToken.source();
 
+        // Set the ACL in the gui immediately and wait for the server
+        // to update it. This avoids flicker.
+        this.setState({acl: acl});
+
         api.post("v1/SetUserRoles", acl,
                  this.setACLsource.token).then(response=>{
                      if (response.cancel)
                          return;
-                     this.getACL(acl.name,
-                                 {id: acl.org, name: acl.org_name});
+
+                     this.getACL(acl.name, {id: acl.org, name: acl.org_name});
                      this.props.updateUsers();
                  });
     }
@@ -404,7 +408,6 @@ class UsersOverview extends Component {
         this.getACLsource.cancel();
         this.getACLsource = CancelToken.source();
 
-        this.setState({acl: {}});
         let org_id = org && org.id;
 
         if (!user_name || !org_id) {

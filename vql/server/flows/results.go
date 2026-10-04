@@ -131,11 +131,10 @@ func (self *SourcePluginArgs) DetermineMode(
 	self.ParseSourceArgsFromScope(scope)
 
 	if self.Artifact != "" {
+
 		// Normalize the artifact name to include the source
-		if self.Source != "" {
-			self.Artifact = self.Artifact + "/" + self.Source
-			self.Source = ""
-		}
+		self.Artifact = paths.FullArtifactName(self.Artifact, self.Source)
+		self.Source = ""
 
 		// Is this a hunt result set?
 		if self.HuntId != "" {
@@ -261,7 +260,7 @@ func (self SourcePlugin) Call(
 			result_set_reader, err = getNotebookResultSetReader(ctx, config_obj, scope, arg)
 
 		} else if arg.mode == MODE_FLOW_ARTIFACT {
-			result_set_reader, err = getFlowResultSetReader(ctx, config_obj, scope, arg)
+			result_set_reader, err = getFlowResultSetReader(config_obj, arg)
 
 		} else {
 			scope.Log("source: unknown arg mode")
@@ -379,18 +378,18 @@ func getNotebookResultSetReader(
 }
 
 func getFlowResultSetReader(
-	ctx context.Context,
 	config_obj *config_proto.Config,
-	scope vfilter.Scope,
 	arg *SourcePluginArgs) (result_sets.ResultSetReader, error) {
 
 	file_store_factory := file_store.GetFileStore(config_obj)
 
-	path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-		config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
-	if err != nil {
-		return nil, err
+	mode := artifact_modes.MODE_CLIENT
+	if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		mode = artifact_modes.MODE_SERVER
 	}
+
+	path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+		config_obj, arg.ClientId, arg.FlowId, arg.Artifact, mode)
 
 	return result_sets.NewResultSetReader(
 		file_store_factory, path_manager.Path())
@@ -551,17 +550,15 @@ func (self FlowResultsPlugin) Call(
 			}
 		}
 
-		if arg.Source != "" {
-			arg.Artifact = arg.Artifact + "/" + arg.Source
-			arg.Source = ""
+		arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
+
+		mode := artifact_modes.MODE_CLIENT
+		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+			mode = artifact_modes.MODE_SERVER
 		}
 
-		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-			config_obj, arg.ClientId, arg.FlowId, arg.Artifact)
-		if err != nil {
-			scope.Log("source: %v", err)
-			return
-		}
+		path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+			config_obj, arg.ClientId, arg.FlowId, arg.Artifact, mode)
 
 		file_store_factory := file_store.GetFileStore(config_obj)
 		rs_reader, err := result_sets.NewResultSetReader(
@@ -585,10 +582,11 @@ func (self FlowResultsPlugin) Call(
 
 func (self FlowResultsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "flow_results",
-		Doc:      "Retrieve the results of a flow.",
-		ArgType:  type_map.AddType(scope, &FlowResultsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "flow_results",
+		Doc:     "Retrieve the results of a flow.",
+		ArgType: type_map.AddType(scope, &FlowResultsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

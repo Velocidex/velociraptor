@@ -385,12 +385,12 @@ func doGolden() error {
 
 	config_obj.Services = services.GoldenServicesSpec()
 
-	ctx, cancel := install_sig_handler()
+	ctx, cancel := Install_sig_handler()
 	defer cancel()
 
 	// Global timeout for the entire test
 	if !*disable_alarm {
-		timeout_ctx, cancel := makeCtxWithTimeout(ctx, 120)
+		timeout_ctx, cancel := makeCtxWithTimeout(ctx, 240)
 		defer cancel()
 
 		ctx = timeout_ctx

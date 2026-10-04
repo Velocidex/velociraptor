@@ -22,6 +22,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -85,15 +87,20 @@ func (self MonitoringPlugin) Call(
 
 		// Allow the source to be specified separately but
 		// really the full artifact name is required here.
-		if arg.Source != "" {
-			arg.Artifact = arg.Artifact + "/" + arg.Source
-			arg.Source = ""
+
+		// Normalize the artifact name to include the full name with source.
+		arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
+
+		mode := artifact_modes.MODE_CLIENT_EVENT
+		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+			mode = artifact_modes.MODE_SERVER_EVENT
 		}
 
-		path_manager, err := artifact_paths.NewArtifactPathManager(ctx,
-			config_obj, arg.ClientId, "", arg.Artifact)
-		if err != nil {
-			scope.Log("monitoring: %v", err)
+		path_manager := artifact_paths.NewArtifactPathManagerWithMode(
+			config_obj, arg.ClientId, "", arg.Artifact, mode)
+
+		if !path_manager.Mode().IsEvent() {
+			scope.Log("monitoring: can only read monitoring results")
 			return
 		}
 
@@ -143,10 +150,11 @@ func (self MonitoringPlugin) Call(
 
 func (self MonitoringPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "monitoring",
-		Doc:      "Read event monitoring log from a client (i.e. that was collected using client event artifacts).",
-		ArgType:  type_map.AddType(scope, &MonitoringPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "monitoring",
+		Doc:     "Read event monitoring log from a client (i.e. that was collected using client event artifacts).",
+		ArgType: type_map.AddType(scope, &MonitoringPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -222,8 +230,9 @@ func (self WatchMonitoringPlugin) Call(
 		}
 
 		// Ask the journal service to watch the event queue for us.
-		qm_chan, cancel := journal.WatchArtifact(
-			ctx, arg.Artifact, "watch_monitoring plugin")
+		qm_chan, cancel := journal.WatchQueue(
+			ctx, artifact_modes.NewQueueName(arg.Artifact, mode),
+			"watch_monitoring plugin")
 
 		// Make sure to call this at shutdown (defer is not guaranteed
 		// to run).
@@ -234,8 +243,7 @@ func (self WatchMonitoringPlugin) Call(
 			case <-ctx.Done():
 				return
 
-			case output_chan <- row.
-				Update("_Source", arg.Artifact):
+			case output_chan <- row:
 			}
 		}
 	}()
@@ -250,8 +258,11 @@ func (self WatchMonitoringPlugin) Info(scope vfilter.Scope,
 		Doc: "Watch clients' monitoring log. This is an event plugin. If " +
 			"client_id is not provided we watch the global journal which contains " +
 			"events from all clients.",
-		ArgType:  type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		ArgType: type_map.AddType(scope, &WatchMonitoringPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Event().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

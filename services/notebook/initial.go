@@ -295,21 +295,20 @@ func CalculateNotebookArtifact(
 			}
 			res.Sources = append(res.Sources, new_source)
 
-			source_name := artifact_name
-			if new_source.Name != "" {
-				source_name += "/" + new_source.Name
-			}
+			full_source_name := paths.FullArtifactName(artifact_name, new_source.Name)
 
 			// If there are too many cells we add a placeholder to
 			// allow the user to calculate them on demand. Otherwise
 			// we may overwhelm the notebook workers.
 			output := ""
 			if idx > 4 {
-				output = fmt.Sprintf("<h3>%s</h3><br>Recalculate to View", source_name)
+				output = fmt.Sprintf("<h3>%s</h3><br>Recalculate to View", full_source_name)
 			}
 
 			custom_cells := false
-			for _, n := range s.Notebook {
+			// Tag custom cells with the artifact name and the source
+			for _, n_orig := range s.Notebook {
+				n := proto.Clone(n_orig).(*artifacts_proto.NotebookSourceCell)
 				new_source.Notebook = append(new_source.Notebook, n)
 				switch strings.ToLower(n.Type) {
 
@@ -318,7 +317,18 @@ func CalculateNotebookArtifact(
 				// be used. This allows suppressing notebook cells for
 				// this source.
 				case "vql", "md", "markdown", "none":
+					n.Env = append(n.Env, &artifacts_proto.ArtifactEnv{
+						Key:   "ArtifactName",
+						Value: full_source_name,
+					})
 					custom_cells = true
+
+				case "vql_suggestion":
+					n.Env = append(n.Env, &artifacts_proto.ArtifactEnv{
+						Key:   "ArtifactName",
+						Value: full_source_name,
+					})
+
 				}
 			}
 
@@ -339,6 +349,10 @@ func CalculateNotebookArtifact(
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
 							Output: output,
+							Env: []*artifacts_proto.ArtifactEnv{{
+								Key:   "ArtifactName",
+								Value: full_source_name,
+							}},
 							Template: fmt.Sprintf(`
 /*
 # Events from %v
@@ -349,7 +363,7 @@ From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime, artifact=%q)
 LIMIT %v
-`, source_name, source_name, default_limit),
+`, full_source_name, full_source_name, default_limit),
 						})
 
 				default:
@@ -357,26 +371,21 @@ LIMIT %v
 						&artifacts_proto.NotebookSourceCell{
 							Type:   "vql",
 							Output: output,
+							Env: []*artifacts_proto.ArtifactEnv{{
+								Key:   "ArtifactName",
+								Value: full_source_name,
+							}},
 							Template: fmt.Sprintf(`
 /*
 # %v
 */
 SELECT * FROM source(artifact=%q)
 LIMIT 50
-`, source_name, source_name),
+`, full_source_name, full_source_name),
 						})
 				}
 			}
 		}
-	}
-
-	if len(out.Artifacts) > 0 {
-		res.Parameters = append(res.Parameters,
-			&artifacts_proto.ArtifactParameter{
-				Name:        "ArtifactName",
-				Description: "Name of the artifact this notebook came from.",
-				Default:     out.Artifacts[0],
-			})
 	}
 
 	// Add any custom variables.
@@ -713,15 +722,13 @@ func updateNotebookRequests(
 // Get the initial cells from a notebook artifact. Each source should
 // contain a notebook clause.
 func getInitialCellsFromArtifacts(
-	ctx context.Context,
-	config_obj *config_proto.Config,
 	artifact *artifacts_proto.Artifact,
 	in *api_proto.NotebookMetadata) (
 	result []*api_proto.NotebookCellRequest, err error) {
 
 	for _, s := range artifact.Sources {
 		for _, n := range s.Notebook {
-			var env []*api_proto.Env
+			env := []*api_proto.Env{}
 
 			// Allow the notebook to specify env variables per
 			// source.
@@ -788,7 +795,7 @@ func getInitialCells(
 		return nil, nil, err
 	}
 
-	cells, err := getInitialCellsFromArtifacts(ctx, config_obj, psuedo_artifact, out)
+	cells, err := getInitialCellsFromArtifacts(psuedo_artifact, out)
 	if err != nil {
 		return nil, nil, err
 	}

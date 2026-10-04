@@ -70,7 +70,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 		Input:             in.Input,
 		CellId:            in.CellId,
 		Type:              in.Type,
-		Timestamp:         utils.GetTime().Now().UnixNano(),
+		Timestamp:         utils.GetTime().Now().Unix(),
 		CurrentlyEditing:  in.CurrentlyEditing,
 		Calculating:       true,
 		Output:            "Loading",

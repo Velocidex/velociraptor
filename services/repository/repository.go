@@ -44,9 +44,10 @@ import (
 
 // Holds multiple artifact definitions.
 type Repository struct {
-	mu       sync.Mutex
-	Data     map[string]*artifacts_proto.Artifact
-	metadata *metadataManager
+	mu         sync.Mutex
+	Data       map[string]*artifacts_proto.Artifact
+	metadata   *metadataManager
+	config_obj *config_proto.Config
 
 	// Each repository may have a parent - we search for the artifact
 	// in our parents as well.
@@ -71,6 +72,7 @@ func (self *Repository) Copy() services.Repository {
 
 	result := &Repository{
 		Data:              make(map[string]*artifacts_proto.Artifact),
+		config_obj:        self.config_obj,
 		parent:            self.parent,
 		parent_config_obj: self.parent_config_obj,
 	}
@@ -154,7 +156,7 @@ func (self *Repository) LoadProto(
 		}
 	}
 
-	err := validateArtifactName(artifact.Name)
+	err := utils.ValidateArtifactName(artifact.Name)
 	if err != nil {
 		return nil, err
 	}
@@ -333,7 +335,8 @@ func (self *Repository) LoadProto(
 	}
 	self.mu.Unlock()
 
-	return artifact, nil
+	return artifact, updateTools(
+		context.Background(), self.config_obj, artifact)
 }
 
 func (self *Repository) GetArtifactType(
@@ -608,26 +611,5 @@ func updateTools(
 			return err
 		}
 	}
-	return nil
-}
-
-var (
-	artifactNameRegex      = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
-	artifactComponentRegex = regexp.MustCompile("^[0-9]")
-)
-
-func validateArtifactName(name string) error {
-	if !artifactNameRegex.MatchString(name) {
-		return errors.New(
-			"Invalid artifact name. Can only contain characters in this set 'a-zA-Z0-9_.'")
-	}
-
-	for _, part := range strings.Split(name, ".") {
-		if artifactComponentRegex.MatchString(part) {
-			return errors.New(
-				"Invalid artifact name. Name parts can not start with a number'")
-		}
-	}
-
 	return nil
 }

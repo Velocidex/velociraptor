@@ -1,8 +1,11 @@
 package utils
 
 import (
+	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	errors "github.com/go-errors/errors"
 )
 
 // These functions are used to sanitize a path component for storage
@@ -231,4 +234,43 @@ func UnsanitizeComponentForZip(component string) string {
 			j++
 		}
 	}
+}
+
+var (
+	artifactNameRegex      = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+	artifactComponentRegex = regexp.MustCompile("^[0-9]")
+)
+
+func ValidateArtifactNameAndSource(name string) error {
+	parts := strings.Split(name, "/")
+	err := ValidateArtifactName(parts[0])
+	if err != nil {
+		return err
+	}
+
+	if len(parts) == 1 {
+		return nil
+	}
+
+	if len(parts) == 2 {
+		return ValidateArtifactName(parts[1])
+	}
+
+	return errors.New("Artifact name can only have one source")
+}
+
+func ValidateArtifactName(name string) error {
+	if !artifactNameRegex.MatchString(name) {
+		return errors.New(
+			"Invalid artifact name. Can only contain characters in this set 'a-zA-Z0-9_.'")
+	}
+
+	for _, part := range strings.Split(name, ".") {
+		if artifactComponentRegex.MatchString(part) {
+			return errors.New(
+				"Invalid artifact name. Name parts can not start with a number'")
+		}
+	}
+
+	return nil
 }

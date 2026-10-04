@@ -49,7 +49,7 @@ sources:
                 OutlookSecureTempFolder
               FROM read_reg_key(
                  globs=KeyGlob,
-                 root=pathspec(DelegatePath=OSPath),
+                 root=pathspec(DelegatePath=NTUser),
                  accessor="raw_reg")
               WHERE EnableUnsafeClientMailRules = 1
            })

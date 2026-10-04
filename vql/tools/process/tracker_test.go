@@ -15,6 +15,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 	"www.velocidex.com/golang/vfilter"
@@ -277,19 +278,19 @@ func (self *ProcessTrackerTestSuite) runTC(
 	assert.NoError(self.T(), err)
 
 	scope := manager.BuildScope(builder)
-	rows := make([]*ordereddict.Dict, 0)
+	var rows vtesting.RowCollector
 	mvql, err := vfilter.MultiParse(test_case.Query)
 	assert.NoError(self.T(), err)
 
 	for _, vql := range mvql {
 		for row := range vql.Eval(ctx, scope) {
-			rows = append(rows, vfilter.RowToDict(ctx, scope, row))
+			rows.Push(vfilter.RowToDict(ctx, scope, row))
 		}
 	}
 
 	scope.Close()
 
-	return rows
+	return rows.Get()
 
 }
 

@@ -29,9 +29,10 @@ type NotebookStoreImpl struct {
 	mu               sync.Mutex
 	global_notebooks map[string]*api_proto.NotebookMetadata
 
-	// Keep the last time for a notebook deletion to ensure we update
-	// the version when a notebook is deleted.
-	last_deleted int64
+	// The latest known version of all notebooks.
+	last_version int64
+
+	last_shared_results map[string]int64
 
 	SuperTimelineStorer timelines.ISuperTimelineStorer
 }
@@ -40,7 +41,10 @@ func MakeNotebookStore(
 	config_obj *config_proto.Config,
 	SuperTimelineStorer timelines.ISuperTimelineStorer) *NotebookStoreImpl {
 	return &NotebookStoreImpl{
-		config_obj:          config_obj,
+		config_obj: config_obj,
+		// Pick something relatively unique but not too large as a starting point.
+		last_version:        utils.GetTime().Now().Unix() * 1000,
+		last_shared_results: make(map[string]int64),
 		SuperTimelineStorer: SuperTimelineStorer,
 	}
 }
@@ -74,6 +78,7 @@ func NewNotebookStore(
 		}
 	}()
 
+	// Make the first sync now so we populate the store.
 	return result, result.syncAllNotebooks()
 }
 
@@ -81,14 +86,19 @@ func (self *NotebookStoreImpl) Version() (res int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	res = self.last_deleted
+	return self.last_version
+}
 
-	for _, v := range self.global_notebooks {
-		if v.ModifiedTime > res {
-			res = v.ModifiedTime
-		}
-	}
-	return res
+func (self *NotebookStoreImpl) GetNextVersion() int64 {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self._GetNextVersion()
+}
+
+func (self *NotebookStoreImpl) _GetNextVersion() int64 {
+	self.last_version++
+	return self.last_version
 }
 
 func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error {
@@ -99,6 +109,9 @@ func (self *NotebookStoreImpl) SetNotebook(in *api_proto.NotebookMetadata) error
 }
 
 func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) error {
+	// Ensure the notebook reflects the last time it was set.
+	in.ModifiedTime = utils.GetTime().Now().Unix()
+
 	if utils.IsGlobalNotebooks(in.NotebookId) {
 		self.global_notebooks[in.NotebookId] = in
 	}
@@ -110,8 +123,6 @@ func (self *NotebookStoreImpl) _SetNotebook(in *api_proto.NotebookMetadata) erro
 
 	notebook_path_manager := paths.NewNotebookPathManager(in.NotebookId)
 
-	// Ensure the notebook reflects the last time it was set.
-	in.ModifiedTime = utils.GetTime().Now().Unix()
 	return db.SetSubject(self.config_obj, notebook_path_manager.Path(), in)
 }
 
@@ -119,10 +130,27 @@ func (self *NotebookStoreImpl) GetNotebook(notebook_id string) (*api_proto.Noteb
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	return self._GetNotebook(notebook_id)
+	res, err := self._GetNotebook(notebook_id)
+	if err != nil {
+		return nil, err
+	}
+
+	// This could be a legacy notebook we need to update.
+	if res.Version == 0 {
+		res.Version = self._GetNextVersion()
+		_ = self._SetNotebook(res)
+	}
+	return res, nil
 }
 
 func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.NotebookMetadata, error) {
+	// Try to get it from cache if possible.
+	res, pres := self.global_notebooks[notebook_id]
+	if pres {
+		// Return a copy of the notebook so it can not be modified.
+		return proto.Clone(res).(*api_proto.NotebookMetadata), nil
+	}
+
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
 		return nil, err
@@ -150,6 +178,12 @@ func (self *NotebookStoreImpl) _GetNotebook(notebook_id string) (*api_proto.Note
 			v.(*api_proto.NotebookCell))
 	}
 
+	// This might be a legacy notebook without a version, make sure to
+	// touch it.
+	if notebook.Version == 0 {
+		//notebook.Version = self.GetNextVersion()
+	}
+
 	return notebook, err
 }
 
@@ -161,6 +195,9 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	defer self.mu.Unlock()
 
 	in.NotebookId = notebook_id
+
+	// Tag the cell with a version
+	in.Version = self._GetNextVersion()
 
 	db, err := datastore.GetDB(self.config_obj)
 	if err != nil {
@@ -180,7 +217,7 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 		return err
 	}
 
-	now := utils.GetTime().Now().UnixNano()
+	now := utils.GetTime().Now().Unix()
 
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
@@ -202,6 +239,8 @@ func (self *NotebookStoreImpl) SetNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
+	notebook.Version = self._GetNextVersion()
+
 	return self._SetNotebook(notebook)
 }
 
@@ -278,7 +317,7 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 		return err
 	}
 
-	now := utils.GetTime().Now().UnixNano()
+	now := utils.GetTime().Now().Unix()
 
 	// Update the cell's timestamp so the gui will refresh it.
 	new_cell_md := []*api_proto.NotebookCell{}
@@ -297,6 +336,8 @@ func (self *NotebookStoreImpl) RemoveNotebookCell(
 	}
 
 	notebook.CellMetadata = new_cell_md
+	notebook.Version = self._GetNextVersion()
+
 	return self._SetNotebook(notebook)
 }
 
@@ -417,6 +458,12 @@ func (self *NotebookStoreImpl) syncAllNotebooks() error {
 			continue
 		}
 		self.global_notebooks[notebook.NotebookId] = notebook
+
+		// Update the global version to at least the latest version of
+		// the notebooks..
+		if notebook.Version > self.last_version {
+			self.last_version = notebook.Version
+		}
 	}
 
 	return nil

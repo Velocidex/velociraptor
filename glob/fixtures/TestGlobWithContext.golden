@@ -28,17 +28,19 @@
   "/usr/bin/X11/X11/diff Data: [/usr/**4/diff]\n",
   "/usr/bin/X11/X11/X11/diff Data: [/usr/**4/diff]\n"
  ],
- "007 Breadth first traversal /tmp/1/* , /tmp/1/*/*": [
+ "007 Breadth first traversal /tmp/1/*": [
   "/tmp/1/1.txt Data: [/tmp/1/*]\n",
   "/tmp/1/2 Data: [/tmp/1/*]\n",
   "/tmp/1/3 Data: [/tmp/1/*]\n",
   "/tmp/1/4 Data: [/tmp/1/*]\n",
-  "/tmp/1/5 Data: [/tmp/1/*]\n",
+  "/tmp/1/5 Data: [/tmp/1/*]\n"
+ ],
+ "008 Breadth first traversal 2 /tmp/1/*/*": [
   "/tmp/1/2/20 Data: [/tmp/1/*/*]\n",
   "/tmp/1/2/21 Data: [/tmp/1/*/*]\n",
   "/tmp/1/2/23 Data: [/tmp/1/*/*]\n"
  ],
- "008 Breadth first traversal /tmp/1/**5": [
+ "009 Breadth first traversal /tmp/1/**5": [
   "/tmp/1/1.txt Data: [/tmp/1/**5]\n",
   "/tmp/1/2 Data: [/tmp/1/**5]\n",
   "/tmp/1/3 Data: [/tmp/1/**5]\n",
@@ -53,20 +55,24 @@
   "/tmp/1/2/21/213 Data: [/tmp/1/**5]\n",
   "/tmp/1/2/21/212/1.txt Data: [/tmp/1/**5]\n"
  ],
- "009 Recursive matches zero or more /usr/bin/X11/**/diff": [
+ "010 Recursive matches zero or more /usr/bin/X11/**/diff": [
   "/usr/bin/X11/diff Data: [/usr/bin/X11/**/diff]\n",
   "/usr/bin/X11/X11/diff Data: [/usr/bin/X11/**/diff]\n",
   "/usr/bin/X11/X11/X11/diff Data: [/usr/bin/X11/**/diff]\n"
  ],
- "010 Recursive matches none at end /bin/bash/**": null,
- "011 Match masked by two matches /usr/bin , /usr/*/diff": [
-  "/usr/bin Data: [/usr/bin]\n",
+ "011 Recursive matches none at end /bin/bash/**": null,
+ "012 Match masked by two matches /usr/*/diff": [
   "/usr/bin/diff Data: [/usr/*/diff]\n"
  ],
- "012 Multiple globs matching same file /bin/bash , /bin/ba*": [
-  "/bin/bash Data: [/bin/ba* /bin/bash]\n"
+ "013 Match masked by two matches 2 /usr/*/diff": [
+  "/usr/bin/diff Data: [/usr/*/diff]\n"
  ],
- "013 Invalid globs /bin/bash , /bin/\ufffd*": [
+ "014 Multiple globs matching same file /bin/bash": [
   "/bin/bash Data: [/bin/bash]\n"
- ]
+ ],
+ "015 Multiple globs matching same file 2 /bin/ba*": [
+  "/bin/bash Data: [/bin/ba*]\n"
+ ],
+ "016 Invalid globs /bin/\ufffd*": null,
+ "017 Invalid brace expansion foo{bar{a,b}.jpg": null
 }

@@ -351,11 +351,8 @@ func (self *ClientEventTable) setClientMonitoringState(
 				Set("artifact", "ClientEventTable").
 				Set("op", "set"),
 		},
-		services.JournalOptions{
-			ArtifactName: "Server.Internal.ArtifactModification",
-			ArtifactType: artifact_modes.MODE_INTERNAL,
-			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		})
+		artifacts.ARTIFACT_MODIFICATION.
+			WithSuperUser().WithFrom(principal))
 	if err != nil {
 		return nil, err
 	}

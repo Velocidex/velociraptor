@@ -180,6 +180,8 @@ func checkArtifact(
 	artifact string) (*launcher.AnalysisState, error) {
 
 	state := launcher.NewAnalysisState(artifact)
+	defer state.Done()
+
 	manager, err := services.GetRepositoryManager(config_obj)
 	if err != nil {
 		return nil, err
@@ -202,9 +204,13 @@ func checkArtifact(
 
 	if err != nil {
 		return &launcher.AnalysisState{
-			Errors: []string{err.Error()},
-		}, nil
+			Errors: []*launcher.VerifierError{{
+				Name:    launcher.YAML_ERROR,
+				Message: err.Error(),
+			}}}, nil
 	}
+
+	state.ArtifactName = artifact_obj.Name
 
 	// Verify the artifact
 	launcher.VerifyArtifact(

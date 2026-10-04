@@ -29,7 +29,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -129,10 +128,12 @@ func (self ClientsPlugin) Call(
 
 func (self ClientsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "clients",
-		Doc:      "Retrieve the list of clients.",
-		ArgType:  type_map.AddType(scope, &ClientsPluginArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "clients",
+		Doc:     "Retrieve the list of clients.",
+		ArgType: type_map.AddType(scope, &ClientsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 
@@ -189,11 +190,13 @@ func (self *ClientInfoFunction) Call(ctx context.Context,
 func (self ClientInfoFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "client_info",
-		Doc:      "Returns client info (like the fqdn) from the datastore.",
-		ArgType:  type_map.AddType(scope, &ClientInfoFunctionArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
-		Version:  2,
+		Name:    "client_info",
+		Doc:     "Returns client info (like the fqdn) from the datastore.",
+		ArgType: type_map.AddType(scope, &ClientInfoFunctionArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
+		Version: 2,
 	}
 }
 

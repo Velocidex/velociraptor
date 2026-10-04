@@ -85,7 +85,7 @@ func (self *ExportManager) SetContainerStats(
 	case services.FlowExport, services.HuntExport, services.NotebookExport:
 		stats_path = opts.StatsPath
 		if stats_path == nil {
-			return utils.InvalidArgError
+			return utils.Wrap(utils.InvalidArgError, "StatsPath missing")
 		}
 
 	default:

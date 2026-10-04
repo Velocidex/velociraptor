@@ -18,6 +18,8 @@ const (
 	Windows
 	Linux
 	MacOS
+
+	SERVER_OK = true
 )
 
 var (
@@ -139,7 +141,10 @@ type ClientInfoManager interface {
 		client_id, principal string, cb func(*ordereddict.Dict) (
 			new_metadata *ordereddict.Dict, err error)) error
 
-	ValidateClientId(client_id string) error
+	// Make sure the client_id is validly formed. If server_ok is
+	// specified, we also allow the special client id of "server"
+	// representing the server.
+	ValidateClientId(client_id string, server_ok bool) error
 
 	DeleteClient(ctx context.Context, client_id, principal string,
 		progress chan DeleteFlowResponse, really_do_it bool) error

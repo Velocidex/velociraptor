@@ -101,10 +101,12 @@ func (self *ListNotebookPlugin) Call(ctx context.Context,
 func (self ListNotebookPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "notebooks",
-		Doc:      "List all notebooks",
-		ArgType:  type_map.AddType(scope, &ListNotebookArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN, acls.READ_RESULTS).Build(),
+		Name:    "notebooks",
+		Doc:     "List all notebooks",
+		ArgType: type_map.AddType(scope, &ListNotebookArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN, acls.READ_RESULTS).Build(),
 	}
 }
 

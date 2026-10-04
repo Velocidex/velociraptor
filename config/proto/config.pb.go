@@ -2342,6 +2342,13 @@ type FrontendResourceControl struct {
 	// How often to sync client info records (ms)
 	ClientInfoSyncTime  uint64 `protobuf:"varint,29,opt,name=client_info_sync_time,json=clientInfoSyncTime,proto3" json:"client_info_sync_time,omitempty"`
 	ClientInfoWriteTime uint64 `protobuf:"varint,30,opt,name=client_info_write_time,json=clientInfoWriteTime,proto3" json:"client_info_write_time,omitempty"`
+	// Old versions on Velociraptor would write client records
+	// separately. This is not longer used as the records are combined
+	// into larger index files. However, it may still be worth writing
+	// the legacy records because it allows Velociraptor to rebuild
+	// the index if needed. This may prove to add too much to the load
+	// so we can turn it off.
+	ClientInfoSkipWritingLegacyRecords bool `protobuf:"varint,34,opt,name=client_info_skip_writing_legacy_records,json=clientInfoSkipWritingLegacyRecords,proto3" json:"client_info_skip_writing_legacy_records,omitempty"`
 	// The journal files are used to queue messages between event
 	// generators and event consumers when the consumer is unable to
 	// drain these quickly enough. The setting specifies the maximum
@@ -2502,6 +2509,13 @@ func (x *FrontendResourceControl) GetClientInfoWriteTime() uint64 {
 		return x.ClientInfoWriteTime
 	}
 	return 0
+}
+
+func (x *FrontendResourceControl) GetClientInfoSkipWritingLegacyRecords() bool {
+	if x != nil {
+		return x.ClientInfoSkipWritingLegacyRecords
+	}
+	return false
 }
 
 func (x *FrontendResourceControl) GetMaxJournalBufferSize() int64 {
@@ -4718,11 +4732,13 @@ type Security struct {
 	// variables. Environment Vars sometimes may contain secrets and
 	// confidential information.
 	ShadowedEnvVars []string `protobuf:"bytes,4,rep,name=shadowed_env_vars,json=shadowedEnvVars,proto3" json:"shadowed_env_vars,omitempty"`
-	// This allows communication with very old clients (pre
-	// 0.68). Definitely not recommended.
-	AllowAncientClients bool `protobuf:"varint,61,opt,name=allow_ancient_clients,json=allowAncientClients,proto3" json:"allow_ancient_clients,omitempty"`
-	unknownFields       protoimpl.UnknownFields
-	sizeCache           protoimpl.SizeCache
+	// Clients can include labels baked into their configuration file
+	// (See `Client.labels` ).  The below regex controls which labels
+	// are accepted. By default a regex is not specified, meaning that
+	// clients may not label themselves.
+	ClientSelfLabelsRegex string `protobuf:"bytes,62,opt,name=client_self_labels_regex,json=clientSelfLabelsRegex,proto3" json:"client_self_labels_regex,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *Security) Reset() {
@@ -4867,11 +4883,11 @@ func (x *Security) GetShadowedEnvVars() []string {
 	return nil
 }
 
-func (x *Security) GetAllowAncientClients() bool {
+func (x *Security) GetClientSelfLabelsRegex() string {
 	if x != nil {
-		return x.AllowAncientClients
+		return x.ClientSelfLabelsRegex
 	}
-	return false
+	return ""
 }
 
 type Config struct {
@@ -5391,7 +5407,7 @@ const file_config_proto_rawDesc = "" +
 	"dns_server\x18\a \x01(\tR\tdnsServer\x12\x1b\n" +
 	"\tapi_token\x18\t \x01(\tR\bapiToken\x12\x1b\n" +
 	"\tzone_name\x18\n" +
-	" \x01(\tR\bzoneName\"\x9d\t\n" +
+	" \x01(\tR\bzoneName\"\xf2\t\n" +
 	"\x17FrontendResourceControl\x124\n" +
 	"\x16connections_per_second\x18\x01 \x01(\x04R\x14connectionsPerSecond\x128\n" +
 	"\x18notifications_per_second\x18\x02 \x01(\x04R\x16notificationsPerSecond\x124\n" +
@@ -5409,7 +5425,8 @@ const file_config_proto_rawDesc = "" +
 	"\x18index_snapshot_frequency\x18\x1a \x01(\x04R\x16indexSnapshotFrequency\x12-\n" +
 	"\x13client_info_lru_ttl\x18\x1b \x01(\x04R\x10clientInfoLruTtl\x121\n" +
 	"\x15client_info_sync_time\x18\x1d \x01(\x04R\x12clientInfoSyncTime\x123\n" +
-	"\x16client_info_write_time\x18\x1e \x01(\x04R\x13clientInfoWriteTime\x125\n" +
+	"\x16client_info_write_time\x18\x1e \x01(\x04R\x13clientInfoWriteTime\x12S\n" +
+	"'client_info_skip_writing_legacy_records\x18\" \x01(\bR\"clientInfoSkipWritingLegacyRecords\x125\n" +
 	"\x17max_journal_buffer_size\x18\x1c \x01(\x03R\x14maxJournalBufferSize\x123\n" +
 	"\x16default_log_batch_time\x18\x1f \x01(\x04R\x13defaultLogBatchTime\x12H\n" +
 	"!default_monitoring_log_batch_time\x18  \x01(\x04R\x1ddefaultMonitoringLogBatchTime\x124\n" +
@@ -5623,7 +5640,7 @@ const file_config_proto_rawDesc = "" +
 	"\bhostname\x18\x06 \x01(\tR\bhostname\x12\x1f\n" +
 	"\x03env\x18\a \x03(\v2\r.proto.VQLEnvR\x03env\x12-\n" +
 	"\x12disabled_functions\x18\b \x03(\tR\x11disabledFunctions\x12)\n" +
-	"\x10disabled_plugins\x18\t \x03(\tR\x0fdisabledPlugins\"\x8a\a\n" +
+	"\x10disabled_plugins\x18\t \x03(\tR\x0fdisabledPlugins\"\x8f\a\n" +
 	"\bSecurity\x12?\n" +
 	"\x1callowed_file_accessor_prefix\x18\x01 \x03(\tR\x19allowedFileAccessorPrefix\x12=\n" +
 	"\x1bdenied_file_accessor_prefix\x18; \x03(\tR\x18deniedFileAccessorPrefix\x12;\n" +
@@ -5642,8 +5659,8 @@ const file_config_proto_rawDesc = "" +
 	"\vsecrets_dek\x18\x03 \x01(\tR\n" +
 	"secretsDek\x12/\n" +
 	"\x14vql_must_use_secrets\x18\x05 \x01(\bR\x11vqlMustUseSecrets\x12*\n" +
-	"\x11shadowed_env_vars\x18\x04 \x03(\tR\x0fshadowedEnvVars\x122\n" +
-	"\x15allow_ancient_clients\x18= \x01(\bR\x13allowAncientClients\"\x96\r\n" +
+	"\x11shadowed_env_vars\x18\x04 \x03(\tR\x0fshadowedEnvVars\x127\n" +
+	"\x18client_self_labels_regex\x18> \x01(\tR\x15clientSelfLabelsRegex\"\x96\r\n" +
 	"\x06Config\x12F\n" +
 	"\aversion\x18\b \x01(\v2\x0e.proto.VersionB\x1c\xe2\xfc\xe3\xc4\x01\x16\x12\x14Version information.R\aversion\x12J\n" +
 	"\x06Client\x18\x01 \x01(\v2\x13.proto.ClientConfigB\x1d\xe2\xfc\xe3\xc4\x01\x17\x12\x15Client configuration.R\x06Client\x12P\n" +

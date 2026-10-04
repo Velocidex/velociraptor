@@ -519,7 +519,7 @@ message Authenticator {
     // When this is set we emit detailed logging.
     bool oidc_debug = 26;
 
-    // In many IdP the email address change be changed and is not
+    // In many IdP the email address can be changed and is not
     // verified. By default Velociraptor OIDC authenticator pins the
     // email address to the immutable sub GUID reported by the OIDC
     // server. This stops email addresss hijacking in some situation
@@ -781,6 +781,15 @@ message FrontendResourceControl {
     // How often to sync client info records (ms)
     uint64 client_info_sync_time = 29;
     uint64 client_info_write_time = 30;
+
+    // Old versions of Velociraptor would write client records
+    // separately. This is no longer used as the records are combined
+    // into larger index files. However, it may still be worth writing
+    // the legacy records because it allows Velociraptor to rebuild
+    // the index if needed. This may prove to add too much to the load
+    // so we can turn it off.
+    bool client_info_skip_writing_legacy_records = 34;
+
 
     // The journal files are used to queue messages between event
     // generators and event consumers when the consumer is unable to
@@ -1528,9 +1537,12 @@ message Security {
     // confidential information.
     repeated string shadowed_env_vars = 4;
 
-    // This allows communication with very old clients (pre
-    // 0.68). Definitely not recommended.
-    bool allow_ancient_clients = 61;
+
+    // Clients can include labels baked into their configuration file
+    // (See `Client.labels` ).  The below regex controls which labels
+    // are accepted. By default a regex is not specified, meaning that
+    // clients may not label themselves.
+    string client_self_labels_regex = 62;
 }
 
 

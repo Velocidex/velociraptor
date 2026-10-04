@@ -13,6 +13,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/suite"
+	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -208,6 +209,16 @@ func (self *TestSuite) SetupTest() {
 
 	collector.Clock = utils.NewMockClock(time.Unix(1602103388, 0))
 	reporting.Clock = collector.Clock
+
+	users_manager := services.GetUserManager()
+	err := users_manager.AddUserToOrg(
+		self.Ctx, services.AddNewUser,
+		utils.GetSuperuserName(self.ConfigObj),
+		"admin", []string{"root"},
+		&acl_proto.ApiClientACL{
+			Roles: []string{"administrator"},
+		})
+	assert.NoError(self.T(), err)
 }
 
 func (self *TestSuite) mockInfo(scope vfilter.Scope) vfilter.Scope {
@@ -242,7 +253,7 @@ func (self *TestSuite) TestCollectionWithDirectories() {
 	output := filepath.Join(dir, "output.zip")
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict(),
@@ -343,7 +354,7 @@ func (self *TestSuite) TestCollectionWithArtifacts() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger: logging.NewPlainLogger(
 			self.ConfigObj, &logging.FrontendComponent),
 		Env: ordereddict.NewDict(),
@@ -385,7 +396,7 @@ func (self *TestSuite) TestCollectionWithTypes() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}
@@ -418,6 +429,64 @@ func (self *TestSuite) TestCollectionWithTypes() {
 		json.MustMarshalIndent(transformZipContent(self.T(), zip_contents)))
 }
 
+func (self *TestSuite) TestCollectionHonorsSourcePreconditions() {
+	defer utils.SetFlowIdForTests("F.1234")()
+
+	outputFile, err := tempfile.TempFile("zip")
+	assert.NoError(self.T(), err)
+	outputFile.Close()
+	defer os.Remove(outputFile.Name())
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
+		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
+		Env:        ordereddict.NewDict(),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	scope = self.mockInfo(scope)
+
+	artifactDefinition := `
+name: Custom.TestArtifactPrecondition
+sources:
+- name: Upload
+  precondition: SELECT * FROM scope() WHERE FALSE
+  query: |
+    SELECT upload(
+      file="should-not-upload",
+      accessor="data",
+      name="precondition.db") AS Upload
+    FROM scope()
+`
+
+	args := ordereddict.NewDict().
+		Set("artifacts", []string{"Custom.TestArtifactPrecondition"}).
+		Set("artifact_definitions", artifactDefinition).
+		Set("output", outputFile.Name())
+
+	for range (collector.CollectPlugin{}).Call(
+		context.Background(), scope, args) {
+	}
+
+	zipContents, err := openZipFile(outputFile.Name())
+	assert.NoError(self.T(), err)
+
+	for _, key := range zipContents.Keys() {
+		if strings.Contains(key, "precondition.db") ||
+			strings.Contains(key, "Custom.TestArtifactPrecondition") {
+			self.T().Fatalf(
+				"source precondition was ignored; unexpected archive entry %q",
+				key)
+		}
+	}
+}
+
 func (self *TestSuite) TestCollectionWithUpload() {
 	defer utils.SetFlowIdForTests("F.1234")()
 
@@ -428,7 +497,7 @@ func (self *TestSuite) TestCollectionWithUpload() {
 
 	builder := services.ScopeBuilder{
 		Config:     self.ConfigObj,
-		ACLManager: acl_managers.NullACLManager{},
+		ACLManager: acl_managers.NewServerACLManager(self.ConfigObj, "admin"),
 		Logger:     logging.NewPlainLogger(self.ConfigObj, &logging.FrontendComponent),
 		Env:        ordereddict.NewDict(),
 	}

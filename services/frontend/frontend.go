@@ -72,7 +72,9 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 
 				_ = journal.PushRowsToArtifact(
 					ctx, config_obj, rows,
-					artifacts.FRONTEND_METRICS)
+					artifacts.FRONTEND_METRICS.
+						WithSuperUser().
+						WithFrom("FrontendMetrics"))
 			}
 		}
 
@@ -299,7 +301,9 @@ func (self *MasterFrontendManager) UpdateStats(ctx context.Context) {
 
 			_ = journal.PushRowsToArtifact(ctx, org_config_obj,
 				[]*ordereddict.Dict{v},
-				artifacts.HEALTH_STATS)
+				artifacts.HEALTH_STATS.
+					WithSuperUser().
+					WithFrom("FrontendService"))
 		}
 	}
 }
@@ -459,6 +463,13 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			stats:      make(map[string]*FrontendMetrics),
 		}
 		return manager, manager.Start(ctx, wg, config_obj)
+	}
+
+	// Start the minion frontend.
+	// Initialize the global VQL mode to minion mode.
+	err := InitializeMinionVQL(config_obj)
+	if err != nil {
+		return nil, err
 	}
 
 	manager := &MinionFrontendManager{config_obj: config_obj}

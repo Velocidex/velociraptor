@@ -74,10 +74,12 @@ func (self *DeleteNotebookPlugin) Call(ctx context.Context,
 func (self DeleteNotebookPlugin) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "notebook_delete",
-		Doc:      "Delete a notebook with all its cells. ",
-		ArgType:  type_map.AddType(scope, &DeleteNotebookArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.SERVER_ADMIN).Build(),
+		Name:    "notebook_delete",
+		Doc:     "Delete a notebook with all its cells. ",
+		ArgType: type_map.AddType(scope, &DeleteNotebookArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

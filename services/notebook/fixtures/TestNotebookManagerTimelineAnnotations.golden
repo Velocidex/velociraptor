@@ -5,22 +5,11 @@
   "artifacts": [
    "Notebooks.Default"
   ],
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "Notebooks.Default",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "requests": [
    {
     "query_id": 1,
     "total_queries": 1,
     "env": [
-     {
-      "key": "ArtifactName",
-      "value": "Notebooks.Default"
-     },
      {
       "key": "ColumnTypes",
       "value": "{}"
@@ -38,7 +27,7 @@
   "cell_metadata": [
    {
     "summary": "Welcome to Velociraptor notebooks!",
-    "timestamp": 1715775587000000000,
+    "timestamp": 1715775587,
     "type": "markdown",
     "available_versions": [
     ]
@@ -51,22 +40,11 @@
   "artifacts": [
    "Notebooks.Default"
   ],
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "Notebooks.Default",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "requests": [
    {
     "query_id": 1,
     "total_queries": 1,
     "env": [
-     {
-      "key": "ArtifactName",
-      "value": "Notebooks.Default"
-     },
      {
       "key": "ColumnTypes",
       "value": "{}"
@@ -84,7 +62,7 @@
   "cell_metadata": [
    {
     "summary": "Welcome to Velociraptor notebooks!",
-    "timestamp": 1715775587000000000,
+    "timestamp": 1715775587,
     "type": "markdown",
     "available_versions": [
     ]

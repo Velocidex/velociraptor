@@ -330,6 +330,7 @@ func (self *EventTable) _RunQuery(
 		ArtifactName: artifact_name,
 		ArtifactType: artifact_modes.MODE_SERVER_EVENT,
 		Username:     principal,
+		From:         principal,
 	}
 
 	// We write the logs directly to files.
@@ -427,7 +428,8 @@ func (self *EventTable) _RunQuery(
 
 					// Write event to the journal asynchronously.
 					journal.PushRowsToArtifactAsync(
-						ctx, config_obj, event, journal_opts)
+						ctx, config_obj, event,
+						journal_opts)
 				}
 			}
 

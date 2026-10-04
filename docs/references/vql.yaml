@@ -39,6 +39,7 @@
     description: Add the artifact to this label group (default all)
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
@@ -59,6 +60,7 @@
     description: A dict of artifact parameters
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -274,6 +276,7 @@
     description: If true we remove extra metadata.
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -290,6 +293,7 @@
     description: The Artifact to delete
   category: server
   metadata:
+    execution: master
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
   - darwin_amd64_cgo
@@ -318,6 +322,7 @@
       to the global repository.
   category: server
   metadata:
+    execution: master
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
   - darwin_amd64_cgo
@@ -500,6 +505,90 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: azure_monitor_upload
+  description: Upload rows to Azure Monitor / Log Analytics via the Logs Ingestion
+    API (Data Collection Rule).
+  type: Plugin
+  version: 1
+  args:
+  - name: query
+    type: StoredQuery
+    description: Source for rows to upload.
+    required: true
+  - name: threads
+    type: int64
+    description: How many threads to use.
+  - name: logs_ingestion_endpoint
+    type: string
+    description: The Logs Ingestion endpoint URI of the Data Collection Rule (or a
+      Data Collection Endpoint).
+  - name: dcr_immutable_id
+    type: string
+    description: The immutable ID of the Data Collection Rule (e.g. dcr-xxxxxxxx).
+  - name: stream_name
+    type: string
+    description: The DCR input stream name (e.g. Custom-RawVelociraptorEvents_CL).
+      If empty it is derived from table as 'Custom-<table>'.
+  - name: table
+    type: string
+    description: Used to derive stream_name as 'Custom-<table>' when stream_name is
+      not set. Unused otherwise.
+  - name: tenant_id
+    type: string
+    description: Azure Service Principal Tenant ID.
+  - name: client_id
+    type: string
+    description: Azure Service Principal Client ID.
+  - name: client_secret
+    type: string
+    description: Azure Service Principal Client Secret.
+  - name: managed_identity
+    type: bool
+    description: Use an Azure managed identity instead of a service principal (requires
+      that the server runs in Azure).
+  - name: managed_identity_client_id
+    type: string
+    description: Optional client ID of a user-assigned managed identity.
+  - name: default_credential
+    type: bool
+    description: Use the Azure SDK DefaultAzureCredential chain (AZURE_* env vars,
+      workload identity, managed identity, Azure CLI).
+  - name: chunk_size
+    type: int64
+    description: The number of rows to send at a time.
+  - name: wait_time
+    type: int64
+    description: Batch upload at most this long in seconds (default 5).
+  - name: max_memory_buffer
+    type: uint64
+    description: Max uncompressed request body in bytes; keep under the ~1MB Azure
+      limit (default 900KB).
+  - name: skip_verify
+    type: bool
+    description: 'Skip TLS verification (default: False).'
+  - name: root_ca
+    type: string
+    description: As a better alternative to skip_verify, allows root ca certs to be
+      added here.
+  - name: max_retries
+    type: int64
+    description: 'Maximum number of retries for failed uploads (default: 3).'
+  - name: retry_wait
+    type: int64
+    description: 'Base wait time in seconds for exponential backoff between retries
+      (default: 2).'
+  - name: secret
+    type: string
+    description: Alternatively use a secret from the secrets service. Secret must
+      be of type 'Azure Monitor Creds'.
+  metadata:
+    permissions: NETWORK
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_arm64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: background
   description: |
     Run a query in the background.
@@ -526,6 +615,7 @@
     required: true
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -555,6 +645,7 @@
     description: If provided only restore providers matching this regex.
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -793,6 +884,7 @@
     type: string
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_SERVER,COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
@@ -982,6 +1074,7 @@
     repeated: true
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -1001,6 +1094,7 @@
     type: bool
   category: server
   metadata:
+    execution: master
     permissions: DELETE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -1046,6 +1140,7 @@
     required: true
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -1072,6 +1167,7 @@
     required: true
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS,SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -1140,6 +1236,7 @@
       on the client metadata..
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_CLIENT,SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -1176,6 +1273,7 @@
     type: string
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -1216,6 +1314,8 @@
     type: int64
     description: Wait this many ms between events.
   category: event
+  metadata:
+    event: "true"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1378,7 +1478,8 @@
   args:
   - name: client_id
     type: string
-    description: The client id to schedule a collection on
+    description: The client id to schedule a collection on. The use 'server' to schedule
+      a server artifact collection.
     required: true
   - name: flow_id
     type: string
@@ -1422,6 +1523,7 @@
     description: If set the collection will be started in the specified org.
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_CLIENT,COLLECT_SERVER,COLLECT_BASIC
   platforms:
   - darwin_amd64_cgo
@@ -1781,6 +1883,7 @@
       the notebook id and timestamp
   category: server
   metadata:
+    execution: master
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -1829,6 +1932,7 @@
 - name: deb_create
   description: Create a deployable Debian package for client or server.
   type: Plugin
+  version: 2
   args:
   - name: target
     type: string
@@ -1852,6 +1956,12 @@
     type: string
     description: The config to be repacked in the form of a json or yaml string. If
       not provided we use the current config./
+  - name: service_user
+    type: string
+    description: The user to run the service as
+  - name: service_group
+    type: string
+    description: The group to run the service as
   - name: show_spec
     type: bool
     description: If set we only show the spec that would have been used. You can use
@@ -1965,6 +2075,7 @@
     description: If specified we ensure data is available immediately
   category: server
   metadata:
+    execution: master
     permissions: DELETE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -2119,6 +2230,8 @@
     type: int64
     description: Number of seconds between evaluation of the query.
   category: event
+  metadata:
+    event: "true"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2351,6 +2464,7 @@
     type: string
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -2787,6 +2901,8 @@
     type: bool
     description: If specified we flush all rows from cache after the call.
   category: event
+  metadata:
+    event: "true"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -3034,6 +3150,7 @@
       a bit faster.
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -3456,6 +3573,7 @@
       a bit faster.
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_CLIENT,COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -3677,6 +3795,8 @@
     description: If set we enumerate permission for all orgs, otherwise just for this
       org.
   category: server
+  metadata:
+    execution: master
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4750,6 +4870,7 @@
   type: Plugin
   category: popular
   metadata:
+    execution: master
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -5448,6 +5569,7 @@
     type: bool
   category: server
   metadata:
+    event: "true"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -6224,6 +6346,7 @@
     description: An environment to initialize the notebook with
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -6242,6 +6365,7 @@
     type: bool
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -6266,6 +6390,7 @@
     description: Set the type of the export (html or zip).
   category: server
   metadata:
+    execution: master
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -6287,6 +6412,7 @@
     description: Include more information
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -6320,6 +6446,7 @@
     description: The name of the attachment
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -6354,6 +6481,7 @@
       rendered output.
   category: server
   metadata:
+    execution: master
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -6369,6 +6497,7 @@
     type: bool
     description: List all notebooks, not just the ones shared with the user
   metadata:
+    execution: master
     permissions: SERVER_ADMIN,READ_RESULTS
   platforms:
   - linux_amd64_cgo
@@ -6540,6 +6669,7 @@
     description: An ID for the new org (if not set use a random ID).
   category: server
   metadata:
+    execution: master
     permissions: ORG_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -6561,6 +6691,7 @@
     description: If not specified, just show what org will be removed
   category: server
   metadata:
+    execution: master
     permissions: ORG_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -6572,6 +6703,8 @@
   description: Retrieve the list of orgs on this server.
   type: Plugin
   category: server
+  metadata:
+    execution: master
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -6725,6 +6858,8 @@
     type: int
     description: Maximum size of line buffer.
   category: parsers
+  metadata:
+    permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
 - name: parse_binary
@@ -7768,6 +7903,8 @@
     description: The new password to set.
     required: true
   category: server
+  metadata:
+    execution: master
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -9396,6 +9533,7 @@
 - name: rpm_create
   description: Create a deployable RPM package for client or server.
   type: Plugin
+  version: 2
   args:
   - name: target
     type: string
@@ -9419,6 +9557,12 @@
     type: string
     description: The config to be repacked in the form of a json or yaml string. If
       not provided we use the current config./
+  - name: service_user
+    type: string
+    description: The user to run the service as
+  - name: service_group
+    type: string
+    description: The group to run the service as
   - name: show_spec
     type: bool
     description: If set we only show the spec that would have been used. You can use
@@ -9647,6 +9791,7 @@
     required: true
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
@@ -9725,6 +9870,7 @@
     repeated: true
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
@@ -9733,6 +9879,8 @@
   description: Retrieve the list of secrets on the server.
   type: Plugin
   category: server
+  metadata:
+    execution: master
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -9898,6 +10046,7 @@
     description: A dict containing metadata. If not specified we use kwargs.
   category: server
   metadata:
+    execution: master
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -9926,6 +10075,9 @@
     type: ordereddict.Dict
     description: A dict containing metadata. If not specified we use kwargs.
   category: server
+  metadata:
+    execution: master
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10590,11 +10742,18 @@
        password parameter to the `SSH_CONFIG`
     3. The private_key parameter must contain an unencrypted PEM encoded
        SSH private key pair.
+    4. The hostkey parameter is a base64 encoded SSH host key. When it is
+       specified, connections to a remote system that does not present
+       that exact host key are rejected. When it is not specified, the
+       host key presented by the remote system is written to the query
+       log instead. A hostkey provided by the secret takes precedence
+       over the hostkey parameter.
 
     It is more convenient to use the [secrets support]({{< ref
     "/blog/2024/2024-03-10-release-notes-0.72/#secret-management" >}}) in
     0.72 to manage these credentials.
   type: Accessor
+  version: 1
   args:
   - name: secret
     type: string
@@ -10611,6 +10770,10 @@
   - name: hostname
     type: string
     description: The hostname to log into.
+  - name: hostkey
+    type: string
+    description: A base64 encoded host key. If specified we reject connections that
+      do not present this host key.
   metadata:
     ScopeVar: SSH_CONFIG
     permissions: NETWORK
@@ -10940,6 +11103,7 @@
     description: The notebook ID the timeline is stored in.
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -10980,6 +11144,7 @@
     description: The notebook ID the timeline is stored in.
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -11005,6 +11170,7 @@
       entire timeline
   category: server
   metadata:
+    execution: master
     permissions: NOTEBOOK_EDITOR
   platforms:
   - darwin_amd64_cgo
@@ -11020,6 +11186,7 @@
     description: The notebook ID the timeline is stored in.
   category: server
   metadata:
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -11898,6 +12065,8 @@
     type: string
     description: The org under which we query the user's ACL.
   category: server
+  metadata:
+    execution: master
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11931,6 +12100,9 @@
       org.
     repeated: true
   category: server
+  metadata:
+    execution: master
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11955,6 +12127,9 @@
     type: bool
     description: If not specified, just show what user will be removed
   category: server
+  metadata:
+    execution: master
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -11984,6 +12159,9 @@
     description: A dict of permissions to set (e.g. as obtained from the gui_users()
       function).
   category: server
+  metadata:
+    execution: master
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -12003,6 +12181,8 @@
   - name: message
     type: ordereddict.Dict
     description: The message to deliver to the user.
+  metadata:
+    execution: master
   platforms:
   - linux_amd64_cgo
   free_form_args: true
@@ -12017,6 +12197,8 @@
   - name: user
     type: string
     description: If set we read another user's messages (must be admin).
+  metadata:
+    execution: master
   platforms:
   - linux_amd64_cgo
 - name: user_options
@@ -12067,6 +12249,8 @@
     type: string
     description: Set the user's default password for Zip Exports.
   category: server
+  metadata:
+    execution: master
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -12345,6 +12529,9 @@
     type: int
     description: Maximum size of line buffer.
   category: event
+  metadata:
+    event: "true"
+    permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
 - name: watch_csv
@@ -12379,6 +12566,7 @@
     repeated: true
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12468,6 +12656,7 @@
     description: A regex that must match the raw buffer before we process it.
   category: linux
   metadata:
+    event: "true"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -12685,6 +12874,7 @@
       (default 1).
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12709,6 +12899,7 @@
     description: Emit raw events (not parsed).
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12733,6 +12924,7 @@
     description: Maximum size of line buffer.
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12752,6 +12944,8 @@
     required: true
   category: event
   metadata:
+    event: "true"
+    execution: master
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -12818,6 +13012,7 @@
       Rows must have an OSPath column.
   category: event
   metadata:
+    event: "true"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12834,6 +13029,9 @@
     description: The device file to open (as an NTFS device).
     required: true
   category: event
+  metadata:
+    event: "true"
+    permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo

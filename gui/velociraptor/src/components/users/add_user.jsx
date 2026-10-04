@@ -51,7 +51,7 @@ export default class AddUserDialog extends Component {
             <Modal show={true}
                    onHide={this.props.onClose}>
               <Modal.Header closeButton>
-                <Modal.Title>{T("Add a new  User")}</Modal.Title>
+                <Modal.Title>{T("Add a new User")}</Modal.Title>
               </Modal.Header>
               <Modal.Body >
                 <Form.Group as={Row}>

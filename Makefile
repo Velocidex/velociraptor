@@ -42,9 +42,6 @@ linux_m1:
 linux_sumo:
 	go run make.go -v LinuxSumo
 
-windows_sumo:
-	go run make.go -v WindowsSumo
-
 linux_arm64:
 	go run make.go -v LinuxArm64
 
@@ -70,20 +67,43 @@ linux_bare:
 freebsd:
 	go run make.go -v freebsd
 
+# A target that builds a regular windows binary and places it in
+# output/velociraptor.exe
 windows:
 	go run make.go -v windowsDev
 
+# Windows client without a gui.
 windows_bare:
 	go run make.go -v windowsBare
 
+# A 32 bit windows binary.
 windowsx86:
 	go run make.go -v windowsx86
 
-windowsarm:
-	go run make.go -v windowsarm
+# An AMD64 Windows binary with all optional plugins enabled.
+windows_sumo:
+	go run make.go -v WindowsSumo
 
+# A Windows binary for Windows on Arm64 (e.g. Snapdragon)
+windows_arm64:
+	go run make.go -v WindowsArm64
+
+# A Windows binary for Windows on Arm64 (e.g. Snapdragon) includes all
+# optional plugins
+windows_arm64_sumo:
+	go run make.go -v WindowsArm64Sumo
+
+# A build with the race detector enabled.
+windows_test:
+	go run make.go -v WindowsTest
+
+# Clean all build artifacts (e.g. assets, GUI etc)
 clean:
 	go run make.go -v clean
+
+# Clean downloaded cross compiler toolchains.
+clean_toolchain:
+	go run make.go -v cleantoolchains
 
 generate:
 	go generate ./vql/windows/
@@ -99,7 +119,7 @@ debug:
 	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug
 
 debug_minion:
-	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug --minion --node ${NODE}
+	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug --minion --config.frontend-bind-port 8005 --debug_port 6061
 
 debug_client:
 	dlv debug --init ./scripts/dlv.init --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v --debug --debug_port 6061
@@ -122,7 +142,7 @@ translations:
 	python3 ./scripts/find_i8n_translations.py ./gui/velociraptor/src/components/i8n/
 
 config_check:
-	go run ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
+	go run -tags config_check ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
 
 deadcode:
 	go run make.go -v deadcode

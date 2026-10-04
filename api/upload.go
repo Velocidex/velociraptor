@@ -1,8 +1,6 @@
 package api
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"io"
 	"net/http"
@@ -92,36 +90,6 @@ func toolUploadHandler(config_obj *config_proto.Config) http.Handler {
 			tool.Filename = path.Base(handler.Filename)
 			tool.ServeLocally = true
 
-			path_manager := paths.NewInventoryPathManager(org_config_obj, tool)
-			pathspec, file_store_factory, err := path_manager.Path()
-			if err != nil {
-				returnError(config_obj, w, 404, err)
-				return
-			}
-
-			writer, err := file_store_factory.WriteFile(pathspec)
-			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
-				return
-			}
-			defer writer.Close()
-
-			err = writer.Truncate()
-			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
-				return
-			}
-
-			sha_sum := sha256.New()
-
-			_, err = io.Copy(writer, io.TeeReader(file, sha_sum))
-			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
-				return
-			}
-
-			tool.Hash = hex.EncodeToString(sha_sum.Sum(nil))
-
 			inventory, err := services.GetInventory(org_config_obj)
 			if err != nil {
 				returnError(config_obj, w, http.StatusInternalServerError, err)
@@ -137,6 +105,20 @@ func toolUploadHandler(config_obj *config_proto.Config) http.Handler {
 				returnError(config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
+
+			writer, err := inventory.WriteTool(ctx, org_config_obj,
+				tool.Name, tool.Version)
+			if err != nil {
+				returnError(config_obj, w, http.StatusInternalServerError, err)
+				return
+			}
+
+			_, err = utils.Copy(ctx, writer, file)
+			if err != nil {
+				returnError(config_obj, w, http.StatusInternalServerError, err)
+				return
+			}
+			writer.Close()
 
 			// Now materialize the tool
 			tool, err = inventory.GetToolInfo(

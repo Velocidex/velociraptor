@@ -5,22 +5,11 @@
   "artifacts": [
    "Notebooks.Default"
   ],
-  "parameters": [
-   {
-    "name": "ArtifactName",
-    "default": "Notebooks.Default",
-    "description": "Name of the artifact this notebook came from."
-   }
-  ],
   "requests": [
    {
     "query_id": 1,
     "total_queries": 1,
     "env": [
-     {
-      "key": "ArtifactName",
-      "value": "Notebooks.Default"
-     },
      {
       "key": "ColumnTypes",
       "value": "{}"
@@ -41,7 +30,7 @@
    {
     "summary": "Welcome to Velociraptor notebooks!",
     "cell_id": "NC.02",
-    "timestamp": 1715775587000000000,
+    "timestamp": 1715775587,
     "type": "markdown",
     "current_version": "03",
     "available_versions": [

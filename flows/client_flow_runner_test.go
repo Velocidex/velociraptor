@@ -14,6 +14,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
+	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -23,6 +24,7 @@ import (
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/datastore"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	file_store_api "www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/flows"
@@ -30,7 +32,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
+	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/services/journal"
@@ -78,6 +82,9 @@ type: SERVER_EVENT
 `, `
 name: Server.Internal.ClientScheduled
 type: INTERNAL
+`, `
+name: Custom.Server.Events
+type: SERVER_EVENT
 `}
 )
 
@@ -97,6 +104,47 @@ func (self MockAPIClientFactory) GetAPIClient(
 	ctx context.Context,
 	config_obj *config_proto.Config) (api_proto.APIClient, func() error, error) {
 	return self.mock, func() error { return nil }, nil
+}
+
+type blockingDataStore struct {
+	datastore.DataStore
+
+	blocked_path   string
+	write_started  chan struct{}
+	write_done     chan struct{}
+	continue_write chan struct{}
+	block_once     sync.Once
+}
+
+func (self *blockingDataStore) SetSubjectWithCompletion(
+	config_obj *config_proto.Config,
+	urn file_store_api.DSPathSpec,
+	message proto.Message,
+	completion func()) error {
+
+	if urn.AsClientPath() != self.blocked_path {
+		return self.DataStore.SetSubjectWithCompletion(
+			config_obj, urn, message, completion)
+	}
+
+	block_write := false
+	self.block_once.Do(func() {
+		block_write = true
+		close(self.write_started)
+	})
+	if !block_write {
+		return self.DataStore.SetSubjectWithCompletion(
+			config_obj, urn, message, completion)
+	}
+
+	go func() {
+		defer close(self.write_done)
+
+		<-self.continue_write
+		_ = self.DataStore.SetSubjectWithCompletion(
+			config_obj, urn, message, completion)
+	}()
+	return nil
 }
 
 func (self *ServerTestSuite) SetupTest() {
@@ -372,7 +420,9 @@ func (self *ServerTestSuite) TestEnrollment() {
 
 	wg.Add(1)
 	services.GetPublishedEvents(
-		self.ConfigObj, "Server.Internal.Enrollment", wg, 1, &messages)
+		self.ConfigObj,
+		artifacts.ENROLLMENT_QUEUE.Queue(),
+		wg, 1, &messages)
 
 	err = self.server.ProcessSingleUnauthenticatedMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
@@ -474,6 +524,7 @@ func (self *ServerTestSuite) TestForeman() {
 		self.Ctx, self.ConfigObj,
 		acl_managers.NullACLManager{},
 		&api_proto.Hunt{
+			Creator:      "Admin",
 			State:        api_proto.Hunt_RUNNING,
 			StartRequest: expected,
 		})
@@ -489,6 +540,7 @@ func (self *ServerTestSuite) TestForeman() {
 	hunt.StartRequest.FlowId = ""
 	hunt.StartRequest.CompiledCollectorArgs = nil
 	expected.CompiledCollectorArgs = nil
+	hunt.StartRequest.Creator = ""
 
 	assert.Equal(t, hunt.StartRequest, expected)
 
@@ -548,9 +600,11 @@ func (self *ServerTestSuite) TestMonitoring() {
 			VQLResponse: &actions_proto.VQLResponse{
 				Columns: []string{
 					"ClientId", "Timestamp", "Fqdn", "HuntId"},
-				JSONLResponse: fmt.Sprintf(
-					"{\"ClientId\": \"%s\", \"HuntId\": \"H.123\"}\n", self.client_id),
-				TotalRows: 1,
+
+				// Ignore the client id that the client sends to us -
+				// we always tag the row with the proper client id.
+				JSONLResponse: "{\"ClientId\": \"Fake\", \"HuntId\": \"H.123\"}\n",
+				TotalRows:     1,
 				Query: &actions_proto.VQLRequest{
 					Name: "Generic.Client.Stats",
 				},
@@ -560,12 +614,97 @@ func (self *ServerTestSuite) TestMonitoring() {
 
 	runner.Close(self.Ctx)
 
-	path_manager, err := artifacts.NewArtifactPathManager(self.Ctx, self.ConfigObj,
-		self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
-		"Generic.Client.Stats")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, constants.MONITORING_WELL_KNOWN_FLOW,
+		"Generic.Client.Stats", artifact_modes.MODE_CLIENT_EVENT)
 
-	self.RequiredFilestoreContains(path_manager.Path(), self.client_id)
+	file_store_factory := file_store.GetFileStore(self.ConfigObj)
+	rs_reader, err := result_sets.NewResultSetReader(
+		file_store_factory, path_manager.Path())
+	assert.NoError(self.T(), err)
+	defer rs_reader.Close()
+
+	rows := 0
+	for row := range rs_reader.Rows(self.Ctx) {
+		client_id, _ := row.GetString("ClientId")
+		assert.Equal(self.T(), self.client_id, client_id)
+		rows++
+	}
+	assert.Equal(self.T(), 1, rows)
+}
+
+// Sending the message to a well known flow is rejected depending on
+// the flow.
+func (self *ServerTestSuite) TestMonitoringWellKnownFlow() {
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(self.T(), err)
+
+	rows := vtesting.RowCollector{}
+	sub_ctx, cancel := context.WithCancel(self.Ctx)
+	defer cancel()
+
+	// Collect all completions
+	err = journal.WatchQueueWithCB(sub_ctx, self.ConfigObj, self.Wg,
+		services.JournalOptions{
+			ArtifactName: "System.Flow.Completion",
+			ArtifactType: artifact_modes.MODE_CLIENT_EVENT,
+		}, "TestWatcher",
+		func(ctx context.Context, config_obj *config_proto.Config,
+			row *ordereddict.Dict) error {
+			rows.Push(row)
+			return nil
+		})
+	require.NoError(self.T(), err)
+
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	msg := &crypto_proto.VeloMessage{
+		Source:    self.client_id,
+		SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
+		VQLResponse: &actions_proto.VQLResponse{
+			Columns: []string{
+				"ClientId", "Timestamp", "Fqdn", "HuntId"},
+
+			JSONLResponse: "{\"ClientId\": \"Fake\", \"HuntId\": \"H.123\"}\n",
+			TotalRows:     1,
+			Query: &actions_proto.VQLRequest{
+				Name: "System.Flow.Completion",
+			},
+		},
+	}
+
+	// Send a fake completion disguised as a monitoring message
+	err = runner.ProcessSingleMessage(self.Ctx, msg)
+
+	// Although System.Flow.Completion is a MODE_CLIENT_EVENT
+	// Artifact, only trusted users are allowed to write to it. The
+	// message will be rejected.
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err,
+		"ignored on queue System.Flow.Completion")
+
+	// Send a real completion
+	err = runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			FlowStats: &crypto_proto.FlowStats{
+				QueryStatus: []*crypto_proto.VeloStatus{
+					{Status: crypto_proto.VeloStatus_OK, QueryId: 1},
+					{Status: crypto_proto.VeloStatus_OK, QueryId: 2},
+				},
+				FlowComplete: true,
+			},
+		})
+
+	runner.Close(self.Ctx)
+
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		return len(rows.Get()) == 1
+	})
+
+	assert.Equal(self.T(), 1, len(rows.Get()))
 }
 
 // Receiving a response from the server to the monitoring flow will
@@ -632,8 +771,28 @@ func (self *ServerTestSuite) TestMonitoringWithUpload() {
 	self.RequiredFilestoreContains(path_manager.Path(), "Hello")
 }
 
-// Invalid monitoring messages
-func (self *ServerTestSuite) TestMonitoringInvalid() {
+// Make sure that client monitoring messages are not routed to server
+// monitoring queues
+func (self *ServerTestSuite) TestMonitoringSendingToServerArtifact() {
+
+	wg := &sync.WaitGroup{}
+	messages := []*ordereddict.Dict{}
+
+	// Simulate a server event artifact.
+	opts := services.JournalOptions{
+		ArtifactName: "Custom.Server.Events",
+		ArtifactType: artifact_modes.MODE_SERVER_EVENT,
+	}
+
+	// Get the first event from the queue
+	wg.Add(1)
+	services.GetPublishedEvents(
+		self.ConfigObj, opts.Queue(), wg, 1, &messages)
+
+	// Have the client send a client monitoring packet for this server
+	// event. Client monitoring **always** writes the data in the
+	// client's client monitoring area regardless of the actual
+	// artifact named.
 	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
 	err := runner.ProcessSingleMessage(self.Ctx,
 		&crypto_proto.VeloMessage{
@@ -641,18 +800,47 @@ func (self *ServerTestSuite) TestMonitoringInvalid() {
 			SessionId: constants.MONITORING_WELL_KNOWN_FLOW,
 			VQLResponse: &actions_proto.VQLResponse{
 				Columns: []string{
-					"ClientId", "Timestamp", "Fqdn", "HuntId"},
-				JSONLResponse: fmt.Sprintf(
-					"{\"ClientId\": \"%s\", \"HuntId\": \"H.123\"}\n", self.client_id),
-				TotalRows: 1,
+					"ClientId", "Data"},
+				JSONLResponse: "{\"ClientId\": \"Fake\", \"Data\": \"FakeData\"}\n",
+				TotalRows:     1,
 				Query: &actions_proto.VQLRequest{
-					Name: "Server.Internal.Alerts",
+					Name: "Custom.Server.Events",
 				},
 			},
 		})
-	assert.ErrorContains(self.T(), err, "Only servers can write")
+	assert.NoError(self.T(), err)
 
 	runner.Close(self.Ctx)
+
+	// Now send one message to the server event artifact
+	// directly. This should be collected by the GetPublishedEvents()
+	// call above.
+	journal, err := services.GetJournal(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	err = journal.PushRowsToArtifact(self.Ctx, self.ConfigObj,
+		[]*ordereddict.Dict{
+			ordereddict.NewDict().Set("Sentinel", 1)},
+		opts.WithSuperUser().WithFrom("User"))
+	assert.NoError(self.T(), err)
+
+	wg.Wait()
+
+	// We only received the Sentinel row - meaning the inject client
+	// monitoring result was not broadcast to the listener.
+	assert.Equal(self.T(), 1, len(messages))
+	assert.Contains(self.T(), json.MustMarshalString(messages), "Sentinel")
+
+	// The data should still be written on disk as if the artifact is
+	// a client event artifact. This is because client monitoring is
+	// always treated as CLIENT_EVENT type artifact.
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, "", "Custom.Server.Events",
+		artifact_modes.MODE_CLIENT_EVENT)
+
+	self.RequiredFilestoreContains(
+		path_manager.Path(), "FakeData")
+
 }
 
 // Test that log messages are written to the flow
@@ -826,19 +1014,47 @@ func (self *ServerTestSuite) TestVQLResponse() {
 				JSONLResponse: fmt.Sprintf(
 					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
 				Query: &actions_proto.VQLRequest{
-					Name: "Generic.Client.Info",
+					Name: "Generic.Client.Info/BasicInformation",
 				},
 			},
 		})
 	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
-	flow_path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id, flow_id, "Generic.Client.Info")
-	assert.NoError(self.T(), err)
+	flow_path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, flow_id,
+		"Generic.Client.Info/BasicInformation",
+		artifact_modes.MODE_CLIENT)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
+}
+
+// Test Invalid VQLResponse.
+func (self *ServerTestSuite) TestVQLResponseInvalid() {
+	t := self.T()
+
+	// Schedule a flow in the database.
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	// Emulate a response from this flow.
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	err = runner.ProcessSingleMessage(self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			VQLResponse: &actions_proto.VQLResponse{
+				Columns: []string{"ClientId", "Column1"},
+				JSONLResponse: fmt.Sprintf(
+					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
+				Query: &actions_proto.VQLRequest{
+					Name: "some invalid artiface name",
+				},
+			},
+		})
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "Invalid artifact name")
 }
 
 // Test VQLResponse are written correctly.
@@ -875,10 +1091,9 @@ func (self *ServerTestSuite) TestCompressedVQLResponse() {
 	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
 
-	flow_path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id, flow_id, "Generic.Client.Info")
-	assert.NoError(self.T(), err)
+	flow_path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, flow_id, "Generic.Client.Info",
+		artifact_modes.MODE_CLIENT)
 
 	self.RequiredFilestoreContains(flow_path_manager.Path(), self.client_id)
 }
@@ -924,7 +1139,7 @@ func (self *ServerTestSuite) TestInvalidVQLResponse() {
 }
 
 // Test that VQLResponse can only be written to client artifacts
-func (self *ServerTestSuite) TestVQLResponseInvalid() {
+func (self *ServerTestSuite) TestVQLResponseInvalidArtifactType() {
 	t := self.T()
 
 	// Schedule a flow in the database.
@@ -947,8 +1162,17 @@ func (self *ServerTestSuite) TestVQLResponseInvalid() {
 				},
 			},
 		})
-	assert.ErrorContains(self.T(), err, "Artifact Generic.Client.Stats must be CLIENT type")
+	assert.NoError(self.T(), err)
 	runner.Close(self.Ctx)
+
+	// Event though Generic.Client.Stats is normally a CLIENT_EVENT
+	// artifact, because responses were sent through the VQLResponse
+	// mechanism, the server will write it as a client artifact.
+	file_store_factory := test_utils.GetMemoryFileStore(self.T(), self.ConfigObj)
+	value, _ := file_store_factory.Get(
+		"/clients/" + self.client_id + "/artifacts/Generic.Client.Stats/" + flow_id + ".json")
+
+	assert.Contains(self.T(), string(value), "Column1")
 }
 
 // When VQLResponse messages are retransmitted we need to detect and
@@ -1259,6 +1483,136 @@ func (self *ServerTestSuite) TestUnknownFlow() {
 		"Unknown flow")
 
 	assert.Equal(self.T(), len(collection_context.Context.QueryStats), 1)
+}
+
+func (self *ServerTestSuite) TestFlowCompletionWaitsForFinalStatsWrite() {
+	t := self.T()
+
+	flow_id, err := self.createArtifactCollection()
+	require.NoError(t, err)
+
+	// Drain task so flow becomes in flight
+	client_info_manager, err := services.GetClientInfoManager(
+		self.ConfigObj)
+	require.NoError(t, err)
+
+	tasks, err := client_info_manager.GetClientTasks(
+		self.Ctx, self.client_id)
+	require.NoError(t, err)
+	require.NotEmpty(t, tasks)
+
+	vtesting.WaitUntil(time.Second, t, func() bool {
+		client_record, err := client_info_manager.Get(
+			self.Ctx, self.client_id)
+		assert.NoError(t, err)
+		if err != nil {
+			return false
+		}
+
+		_, pres := client_record.InFlightFlows[flow_id]
+		return pres
+	})
+
+	// Watch for completion event associated with the flow
+	completions := ordereddict.NewDict()
+	err = journal.WatchQueueWithCB(self.Ctx, self.ConfigObj, self.Wg,
+		artifacts.FLOW_COMPLETION, "",
+		func(ctx context.Context, config_obj *config_proto.Config,
+			row *ordereddict.Dict) error {
+			completed_flow_id, _ := row.GetString("FlowId")
+			if completed_flow_id == flow_id {
+				key := fmt.Sprintf("%d", completions.Len())
+				completions.Set(key, row)
+			}
+			return nil
+		})
+	require.NoError(t, err)
+
+	// Delay final stats write
+	old_db, err := datastore.GetDB(self.ConfigObj)
+	require.NoError(t, err)
+
+	blocked_db := &blockingDataStore{
+		DataStore: old_db,
+		blocked_path: paths.NewFlowPathManager(
+			self.client_id, flow_id).Stats().AsClientPath(),
+		write_started:  make(chan struct{}),
+		write_done:     make(chan struct{}),
+		continue_write: make(chan struct{}),
+	}
+
+	datastore.OverrideDatastoreImplementation(blocked_db)
+	defer datastore.OverrideDatastoreImplementation(old_db)
+
+	var release_once sync.Once
+	release := func() {
+		release_once.Do(func() {
+			close(blocked_db.continue_write)
+		})
+	}
+
+	// Release and drain blocked write before suite teardown
+	defer func() {
+		release()
+
+		select {
+		case <-blocked_db.write_started:
+			select {
+			case <-blocked_db.write_done:
+			case <-time.After(5 * time.Second):
+			}
+		default:
+		}
+	}()
+
+	runner := flows.NewFlowRunner(self.Ctx, self.ConfigObj)
+	require.NoError(t, runner.ProcessSingleMessage(
+		self.Ctx,
+		&crypto_proto.VeloMessage{
+			Source:    self.client_id,
+			SessionId: flow_id,
+			RequestId: constants.ProcessVQLResponses,
+			FlowStats: &crypto_proto.FlowStats{
+				QueryStatus: []*crypto_proto.VeloStatus{
+					{
+						Status: crypto_proto.VeloStatus_OK,
+						NamesWithResponse: []string{
+							"BasicInformation",
+						},
+					},
+				},
+				FlowComplete: true,
+			},
+		}))
+	runner.Close(self.Ctx)
+
+	select {
+	case <-blocked_db.write_started:
+	default:
+		t.Fatal("final stats write never reached the datastore")
+	}
+
+	// Completion should be blocked until stats write is complete
+	time.Sleep(time.Second / 2)
+	require.Equal(t, 0, completions.Len())
+
+	release()
+	vtesting.WaitUntil(5*time.Second, t, func() bool {
+		return completions.Len() == 1
+	})
+	require.Equal(t, 1, completions.Len())
+
+	// Downstream consumers should be able to read the final stats
+	stored_stats := &flows_proto.ArtifactCollectorContext{}
+	err = old_db.GetSubject(
+		self.ConfigObj,
+		paths.NewFlowPathManager(self.client_id, flow_id).Stats(),
+		stored_stats)
+	require.NoError(t, err)
+	require.Len(t, stored_stats.QueryStats, 1)
+	require.Equal(t,
+		[]string{"BasicInformation"},
+		stored_stats.QueryStats[0].NamesWithResponse)
 }
 
 // Test an unknown flow. What happens when the server receives a

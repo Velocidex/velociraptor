@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
@@ -28,12 +29,25 @@ type Suppression struct {
 	subjectRegex *regexp.Regexp
 }
 
+type QueryDesc struct {
+	Pos   vfilter.RangePosition
+	Query *vfilter.VQL
+}
+
 // Contains the result of the static analysis.
 type AnalysisState struct {
-	Artifact    string
+	// The entire artifact text
+	Artifact string
+
+	// Jus the name if it is known
+	ArtifactName    string
+	TopLevelQueries []*QueryDesc
+	Callsites       []vfilter.CallSite
+	FailedToParse   bool
+
 	Permissions []string
-	Errors      []string
-	Warnings    []string
+	Errors      []*VerifierError
+	Warnings    []*VerifierError
 
 	// Keep track of existing definitions in LET queries.
 	Definitions  map[string]vfilter.DefinitionSite
@@ -45,13 +59,58 @@ func (self *AnalysisState) SetError(
 	if self.matchSuppression(name, args...) {
 		return
 	}
-	self.Errors = append(self.Errors, fmt.Sprintf(name+":"+message, args...))
+	self.Errors = append(self.Errors, &VerifierError{
+		Name:    name,
+		Message: message,
+		Args:    args,
+	})
 }
 
+func (self *AnalysisState) Debug() string {
+	res := []string{fmt.Sprintf("Analysis State %v:\nTopLevelQueries:",
+		self.Artifact)}
+
+	scope := vql_subsystem.MakeScope()
+
+	for _, desc := range self.TopLevelQueries {
+		query := vfilter.FormatToString(scope, desc.Query)
+		if len(query) > 100 {
+			query = query[:100] + " ..."
+		}
+		res = append(res, fmt.Sprintf("(%d,%d)-(%d,%d) %s",
+			desc.Pos.Pos.Line, desc.Pos.Pos.Column,
+			desc.Pos.EndPos.Line, desc.Pos.EndPos.Column,
+			query))
+	}
+
+	res = append(res, "Definitions:")
+	for _, key := range utils.Sort(self.Definitions) {
+		desc := self.Definitions[key]
+		res = append(res, fmt.Sprintf("(%d,%d)-(%d,%d) %s (%s)",
+			desc.Pos.Pos.Line, desc.Pos.Pos.Column,
+			desc.Pos.EndPos.Line, desc.Pos.EndPos.Column,
+			desc.Name, desc.Type))
+	}
+
+	res = append(res, "Callsites:")
+	for _, desc := range self.Callsites {
+		res = append(res, fmt.Sprintf("(%d,%d)-(%d,%d) %s (%s)",
+			desc.Pos.Pos.Line, desc.Pos.Pos.Column,
+			desc.Pos.EndPos.Line, desc.Pos.EndPos.Column,
+			desc.Name, desc.Type))
+		for _, arg := range desc.Args {
+			res = append(res, fmt.Sprintf("   (%d,%d)-(%d,%d) %s",
+				arg.Pos.Pos.Line, arg.Pos.Pos.Column,
+				arg.Pos.EndPos.Line, arg.Pos.EndPos.Column,
+				arg.Name))
+		}
+	}
+
+	return strings.Join(res, "\n")
+}
 func (self *AnalysisState) AnalyseCall(
 	callsite vfilter.CallSite, desc CallDescriptor) {
-	self.Permissions = utils.Sort(utils.DeduplicateStringSlice(
-		append(self.Permissions, desc.Permissions...)))
+	self.Permissions = append(self.Permissions, desc.Permissions...)
 }
 
 func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
@@ -59,7 +118,8 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	artifact_mode := artifact_modes.ModeNameToMode(artifact.Type)
 
 	// Only client artifacts enforce required permissions
-	if artifact_mode != artifact_modes.MODE_CLIENT {
+	if artifact_mode != artifact_modes.MODE_CLIENT &&
+		artifact_mode != artifact_modes.MODE_CLIENT_EVENT {
 		return
 	}
 
@@ -86,10 +146,21 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	// about all permissions that are not required
 	for _, perm := range self.Permissions {
 		if !utils.InString(implied_permissions, perm) {
-			emitWarning(REQUIRED_PERMISSIONS, self,
+			emitWarning(
+				self.ArtifactName,
+				REQUIRED_PERMISSIONS,
+				vfilter.RangePosition{},
+				self,
 				REQUIRED_PERMISSIONS_MSG, perm)
 		}
 	}
+}
+
+// Finalize the state.
+func (self *AnalysisState) Done() error {
+	self.Permissions = utils.Sort(utils.DeduplicateStringSlice(
+		self.Permissions))
+	return nil
 }
 
 func NewAnalysisState(artifact string) *AnalysisState {
@@ -138,7 +209,7 @@ func (self *ApiDescription) init() error {
 		self.functions = make(map[string]CallDescriptor)
 		self.plugins = make(map[string]CallDescriptor)
 
-		apis, err := utils.LoadApiDescription()
+		apis, err := assets.LoadApiDescription()
 		if err != nil {
 			return err
 		}
@@ -177,7 +248,11 @@ func (self *ApiDescription) verifyArtifact(
 
 	artifact, pres := repository.Get(ctx, config_obj, artifact_name)
 	if !pres {
-		return emitError(UNKNOWN_ARTIFACT_IN_QUERY, state, res,
+		return emitError(
+			state.ArtifactName,
+			UNKNOWN_ARTIFACT_IN_QUERY,
+			callsite.Pos,
+			state, res,
 			UNKNOWN_ARTIFACT_IN_QUERY_MSG, artifact_name)
 	}
 
@@ -194,16 +269,25 @@ func (self *ApiDescription) verifyArtifact(
 	for _, arg := range callsite.Args {
 		// If the artifact is called with kwargs we really have no
 		// idea and we can not verify it at all - So just give up.
-		if arg == "**" {
+		if arg.Name == "**" {
 			return self.checkKWArgs(state, callsite, res)
 		}
-		_, pres := parameters[arg]
+		_, pres := parameters[arg.Name]
 		if !pres {
-			res = emitError(UNKNOWN_PARAMETER_IN_CALL, state, res,
+			res = emitError(
+				state.ArtifactName,
+				UNKNOWN_PARAMETER_IN_CALL,
+				arg.Pos,
+				state, res,
 				UNKNOWN_PARAMETER_IN_CALL_MSG,
-				callsite.Name, arg)
+				callsite.Name, arg.Name)
 		}
 	}
+
+	// Pass any required permissions to is state, as we need to
+	// specifically handle them.
+	state.Permissions = append(state.Permissions,
+		artifact.RequiredPermissions...)
 
 	return res
 }
@@ -216,11 +300,15 @@ func (self *ApiDescription) checkKWArgs(
 	state *AnalysisState, callsite vfilter.CallSite, errors []error) []error {
 
 	for _, a := range callsite.Args {
-		if a == "**" {
+		if a.Name == "**" {
 			continue
 		}
 
-		errors = emitError(KWARGS_MIXED_CALL, state, errors,
+		errors = emitError(
+			state.ArtifactName,
+			KWARGS_MIXED_CALL,
+			callsite.Pos,
+			state, errors,
 			KWARGS_MIXED_CALL_MSG, callsite.Name, a, callsite.Type)
 	}
 
@@ -258,8 +346,11 @@ func (self *ApiDescription) verifySymbol(
 	}
 
 	if pres {
-		emitWarning(SYMBOL_MASK_WARN, state,
-			SYMBOL_MASK_WARN_MSG, callsite.Name, symbol_type)
+		emitWarning(
+			state.ArtifactName,
+			SYMBOL_MASK_WARN,
+			callsite.Pos,
+			state, SYMBOL_MASK_WARN_MSG, callsite.Name, symbol_type)
 	}
 
 	return res
@@ -270,26 +361,41 @@ func (self *ApiDescription) verifyLETCall(
 	// Handle LET definitions
 	desc, pres := state.Definitions[callsite.Name]
 	if !pres {
-		return emitError(UNKNOWN_PLUGIN, state, res,
-			UNKNOWN_PLUGIN_MSG, callsite.Name, callsite.Type)
+		return emitError(
+			state.ArtifactName,
+			UNKNOWN_PLUGIN,
+			callsite.Pos,
+			state, res,
+			UNKNOWN_PLUGIN_MSG,
+			callsite.Name, callsite.Type)
 	}
 
 	if desc.Args == nil && callsite.Args != nil {
-		res = emitError(CALL_AS_FUNCTION, state, res,
+		res = emitError(
+			state.Artifact,
+			CALL_AS_FUNCTION,
+			callsite.Pos,
+			state, res,
 			CALL_AS_FUNCTION_MSG, callsite.Name)
 	}
 
 	for _, arg := range callsite.Args {
-		if arg == "**" {
+		if arg.Name == "**" {
 			res = self.checkKWArgs(state, callsite, res)
 			break
 		}
 
 		// The callsite is calling some unknown
 		// parameter.
-		if !utils.InString(desc.Args, arg) {
-			res = emitError(INVALID_ARG, state, res,
-				INVALID_ARG_FOR_DEFINITION_MSG, arg, callsite.Name)
+		if !hasArg(desc.Args, arg.Name) {
+			res = emitError(
+				state.ArtifactName,
+				INVALID_ARG,
+				arg.Pos,
+				state, res,
+				INVALID_ARG_FOR_DEFINITION_MSG,
+				arg.Name,
+				callsite.Name)
 		}
 	}
 
@@ -297,16 +403,21 @@ func (self *ApiDescription) verifyLETCall(
 	for _, arg := range desc.Args {
 		// The arg has a default so the caller does not have
 		// to specify it.
-		if utils.InString(desc.Defaults, arg) {
+		if utils.InString(desc.Defaults, arg.Name) {
 			continue
 		}
 
 		// The definition parameter is missing from the
 		// caller's args - this is required so we need to
 		// error.
-		if !utils.InString(callsite.Args, arg) {
-			res = emitError(REQUIRED_ARG_MISSING, state, res,
-				REQUIRED_ARG_MISSING_MSG, arg, callsite.Name)
+		if !hasArg(callsite.Args, arg.Name) {
+			res = emitError(
+				state.ArtifactName,
+				REQUIRED_ARG_MISSING,
+				arg.Pos,
+				state, res,
+				REQUIRED_ARG_MISSING_MSG,
+				arg.Name, callsite.Name)
 		}
 	}
 
@@ -327,7 +438,7 @@ func (self *ApiDescription) verifyPluginCall(
 	state.AnalyseCall(callsite, desc)
 
 	for _, arg := range callsite.Args {
-		if arg == "**" {
+		if arg.Name == "**" {
 			return self.checkKWArgs(state, callsite, res)
 		}
 
@@ -335,19 +446,27 @@ func (self *ApiDescription) verifyPluginCall(
 		// with any arg but otherwise we can only use a
 		// required arg.
 		if !desc.FreeFormArgs {
-			_, pres := desc.ArgsRequired[arg]
+			_, pres := desc.ArgsRequired[arg.Name]
 			if !pres {
-				res = emitError(INVALID_ARG, state, res,
+				res = emitError(
+					state.ArtifactName,
+					INVALID_ARG,
+					arg.Pos,
+					state, res,
 					INVALID_ARG_FOR_PLUGIN_MSG,
-					arg, callsite.Type, callsite.Name)
+					arg.Name, callsite.Type, callsite.Name)
 			}
 		}
 	}
 
 	// Now check if any of the required args are missing
 	for arg, required := range desc.ArgsRequired {
-		if bool(required) && !utils.InString(callsite.Args, arg) {
-			res = emitError(REQUIRED_ARG_MISSING, state, res,
+		if bool(required) && !hasArg(callsite.Args, arg) {
+			res = emitError(
+				state.ArtifactName,
+				REQUIRED_ARG_MISSING,
+				callsite.Pos,
+				state, res,
 				REQUIRED_ARG_MISSING_FOR_PLUGIN_MSG,
 				arg, callsite.Type, callsite.Name)
 		}
@@ -404,6 +523,8 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 
 	vqls, err := vfilter.MultiParse(query)
 	if err != nil {
+		// We failed to parse completely.
+		state.FailedToParse = true
 		return []error{err}
 	}
 
@@ -426,6 +547,15 @@ func VerifyVQL(ctx context.Context, config_obj *config_proto.Config,
 		// Visit the VQL looking for plugin callsites.
 		visitor := vfilter.NewVisitor(scope, vfilter.CollectCallSites)
 		visitor.Visit(vql)
+
+		// Keep a copy of all the callsites
+		state.Callsites = append(state.Callsites, visitor.CallSites...)
+		state.TopLevelQueries = append(state.TopLevelQueries, &QueryDesc{
+			Query: vql,
+			Pos: vfilter.RangePosition{
+				Pos:    vql.Pos,
+				EndPos: vql.EndPos,
+			}})
 
 		for _, cs := range visitor.CallSites {
 			res = append(res, api_description.VerifyCallSite(
@@ -534,6 +664,8 @@ func VerifyArtifact(
 	}
 
 	state.AnalyseArtifactRequiredPermissions(artifact)
+
+	state.Done()
 }
 
 // Gather the different suppressions in different areas of the
@@ -571,22 +703,92 @@ func gatherSuppressionFromQuery(
 	}
 }
 
-func emitError(name string, state *AnalysisState,
-	res []error, message string, args ...interface{}) []error {
+func emitError(
+	// The name of the artifact
+	target string,
+
+	// The name of the error.
+	name string,
+	pos vfilter.RangePosition,
+	state *AnalysisState,
+	res []error,
+	message string,
+	args ...interface{}) []error {
 
 	if state.matchSuppression(name, args...) {
 		return res
 	}
 
-	return append(res, fmt.Errorf(name+":"+message, args...))
+	return append(res, &VerifierError{
+		Name:    name,
+		Message: message,
+		Args:    args,
+		Pos:     pos,
+	})
 }
 
-func emitWarning(name string, state *AnalysisState,
-	message string, args ...interface{}) {
+func emitWarning(
+	target string,
+	name string,
+	pos vfilter.RangePosition,
+	state *AnalysisState,
+	message string,
+	args ...interface{}) {
 	if state.matchSuppression(name, args...) {
 		return
 	}
 
 	state.Warnings = append(state.Warnings,
-		fmt.Sprintf(name+":"+message, args...))
+		&VerifierError{
+			Target:  target,
+			Name:    name,
+			Message: message,
+			Args:    args,
+			Pos:     pos,
+		})
+}
+
+type VerifierError struct {
+	Target  string
+	Name    string
+	Message string
+	Args    []interface{}
+	Pos     vfilter.RangePosition
+}
+
+func (self *VerifierError) AsProto() *api_proto.VerifierError {
+	res := &api_proto.VerifierError{
+		Name:    self.Name,
+		Message: self.Message,
+	}
+
+	for _, arg := range self.Args {
+		res.Args = append(res.Args, utils.ToString(arg))
+	}
+
+	return res
+}
+
+func (self *VerifierError) Error() string {
+	target_prefix := ""
+	if self.Target != "" {
+		target_prefix = self.Target + ": "
+	}
+
+	prefix := fmt.Sprintf("%s(%d,%d) %s: ",
+		target_prefix,
+		self.Pos.Pos.Line,
+		self.Pos.Pos.Column, self.Name)
+	suffix := fmt.Sprintf(self.Message, self.Args...)
+
+	return prefix + suffix
+}
+
+func hasArg(args []vfilter.ArgDesc, name string) bool {
+	for _, a := range args {
+		if a.Name == name {
+			return true
+		}
+	}
+	return false
 }

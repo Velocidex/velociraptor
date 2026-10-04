@@ -25,17 +25,19 @@ import (
 )
 
 type CreatePackageArgs struct {
-	Target      string            `vfilter:"optional,field=target,doc=The name of the target OS to repack (default VelociraptorLinux)"`
-	Version     string            `vfilter:"optional,field=version,doc=Velociraptor Version to repack"`
-	Release     string            `vfilter:"optional,field=release,doc=Rpm package release version (A)"`
-	Server      bool              `vfilter:"optional,field=server,doc=Build a server rpm if true, otherwise we build a client rpm"`
-	Exe         *accessors.OSPath `vfilter:"optional,field=exe,doc=Alternative a path to the executable to repack"`
-	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
-	Config      string            `vfilter:"optional,field=config,doc=The config to be repacked in the form of a json or yaml string. If not provided we use the current config./"`
-	ShowSpec    bool              `vfilter:"optional,field=show_spec,doc=If set we only show the spec that would have been used. You can use this to customize the input for package_spec"`
-	DirName     string            `vfilter:"optional,field=directory_name,doc=Package files will be created inside this directory. If not specified we use a temporary directory"`
-	ExtraArgs   []string          `vfilter:"optional,field=extra_args,doc=Additional command line args to be provided to the service"`
-	PackageSpec *ordereddict.Dict `vfilter:"optional,field=package_spec,doc=A Package spec to use instead of the default, for ultimate customization"`
+	Target       string            `vfilter:"optional,field=target,doc=The name of the target OS to repack (default VelociraptorLinux)"`
+	Version      string            `vfilter:"optional,field=version,doc=Velociraptor Version to repack"`
+	Release      string            `vfilter:"optional,field=release,doc=Rpm package release version (A)"`
+	Server       bool              `vfilter:"optional,field=server,doc=Build a server rpm if true, otherwise we build a client rpm"`
+	Exe          *accessors.OSPath `vfilter:"optional,field=exe,doc=Alternative a path to the executable to repack"`
+	Accessor     string            `vfilter:"optional,field=accessor,doc=The accessor to use to read the file."`
+	Config       string            `vfilter:"optional,field=config,doc=The config to be repacked in the form of a json or yaml string. If not provided we use the current config./"`
+	ServiceUser  string            `vfilter:"optional,field=service_user,doc=The user to run the service as"`
+	ServiceGroup string            `vfilter:"optional,field=service_group,doc=The group to run the service as"`
+	ShowSpec     bool              `vfilter:"optional,field=show_spec,doc=If set we only show the spec that would have been used. You can use this to customize the input for package_spec"`
+	DirName      string            `vfilter:"optional,field=directory_name,doc=Package files will be created inside this directory. If not specified we use a temporary directory"`
+	ExtraArgs    []string          `vfilter:"optional,field=extra_args,doc=Additional command line args to be provided to the service"`
+	PackageSpec  *ordereddict.Dict `vfilter:"optional,field=package_spec,doc=A Package spec to use instead of the default, for ultimate customization"`
 }
 
 type CreatePackagePlugin struct {
@@ -148,14 +150,19 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 				return
 			}
 			if spec.Server {
+				spec.Expansion.ServiceUser = utils.StringOrDefault(
+					arg.ServiceUser, "velociraptor")
+				spec.Expansion.ServiceGroup = utils.StringOrDefault(
+					arg.ServiceGroup, "velociraptor")
+
 				target_config_obj, err = validateServerConfig(target_config_obj)
 				if err != nil {
 					scope.Log("ERROR:%v: %v", self.name, err)
 					return
 				}
 
-				// We force the binary to run as the velociraptor user
-				target_config_obj.Frontend.RunAsUser = spec.Expansion.ServerUser
+				// We force the binary to run as the velociraptor (or custom) user
+				target_config_obj.Frontend.RunAsUser = spec.Expansion.ServiceUser
 
 			} else {
 				target_config_obj, err = validateClientConfig(target_config_obj, arg.Config)
@@ -167,14 +174,19 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 
 		} else if arg.Server {
 			spec = self.serverSpecFactory()
+			spec.Expansion.ServiceUser = utils.StringOrDefault(
+				arg.ServiceUser, "velociraptor")
+			spec.Expansion.ServiceGroup = utils.StringOrDefault(
+				arg.ServiceGroup, "velociraptor")
+
 			target_config_obj, err = validateServerConfig(target_config_obj)
 			if err != nil {
 				scope.Log("ERROR:%v: %v", self.name, err)
 				return
 			}
 
-			// We force the binary to run as the velociraptor user
-			target_config_obj.Frontend.RunAsUser = spec.Expansion.ServerUser
+			// We force the binary to run as the velociraptor (or custom) user
+			target_config_obj.Frontend.RunAsUser = spec.Expansion.ServiceUser
 
 		} else {
 			spec = self.clientSpecFactory()
@@ -361,5 +373,6 @@ func (self CreatePackagePlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 		ArgType: type_map.AddType(scope, &CreatePackageArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.COLLECT_SERVER, acls.FILESYSTEM_WRITE, acls.SERVER_ADMIN).Build(),
+		Version: 2,
 	}
 }

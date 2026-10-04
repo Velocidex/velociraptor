@@ -18,7 +18,7 @@ description: |
   parse data in `Windows.old` or `Regback` folders, or VSS.
 
 reference:
-  - https://attack.mitre.org/techniques/T1183/
+  - https://attack.mitre.org/techniques/T1546.012/
 
 parameters:
   - name: imageFileExecutionOptions

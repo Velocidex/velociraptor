@@ -171,7 +171,8 @@ func (self *Labeler) notifyClient(
 			Set("client_id", client_id).
 			Set("Operation", operation).
 			Set("Label", new_label),
-		artifacts.LABEL_QUEUE)
+		artifacts.LABEL_QUEUE.
+			WithSuperUser().WithFrom("Labeler"))
 	return nil
 }
 
@@ -188,7 +189,7 @@ func (self *Labeler) SetClientLabel(
 		return err
 	}
 
-	err = client_info_manager.ValidateClientId(client_id)
+	err = client_info_manager.ValidateClientId(client_id, !services.SERVER_OK)
 	if err != nil {
 		return err
 	}

@@ -25,7 +25,6 @@ import (
 	"os"
 	"runtime"
 	"runtime/debug"
-	"strings"
 	"time"
 
 	"github.com/Velocidex/ordereddict"
@@ -133,7 +132,9 @@ func (self VQLClientAction) StartQuery(
 		return
 	}
 
-	name := strings.Split(utils.GetQueryName(arg.Query), "/")[0]
+	// The name represents an artifact which should store the
+	// results. We need the raw artifact name
+	name := utils.GetQueryName(arg.Query)
 
 	// Clients do not have a copy of artifacts so they need to be
 	// sent all artifacts from the server.

@@ -258,10 +258,8 @@ class FlowsList extends React.Component {
             this.props.selected_flow.session_id;
         let prev_selection = prevProps.selected_flow &&
             prevProps.selected_flow.session_id;
-        let router_flow = this.props.match && this.props.match.params &&
-            this.props.match.params.flow_id;
 
-        if(selected_flow != prev_selection || router_flow == "new") {
+        if(selected_flow != prev_selection) {
             this.setStateFromRouter();
         }
         return false;
@@ -283,7 +281,7 @@ class FlowsList extends React.Component {
 
         if (action === "new") {
             // Special handling for the offline collector builder.
-            if (name==="Server.Utils.CreateCollector") {
+            if(name==="Server.Utils.CreateCollector") {
                 this.setState({showOfflineWizard: true});
                 return;
             }
@@ -394,9 +392,36 @@ class FlowsList extends React.Component {
             this.setState({
                 offlineSpecs: specs[0].parameters,
                 showOfflineWizard: true});
-        } else {
-            this.setState({showCopyWizard: true});
+
+            return;
         }
+
+        // Get the full flow request so we can copy it into the
+        // GUI.
+        let flow_id = this.props.selected_flow &&
+            this.props.selected_flow.session_id;
+        let client_id = this.props.selected_flow &&
+            this.props.selected_flow.client_id;
+
+        if (!flow_id || !client_id) {
+            return;
+        }
+
+        api.get("v1/GetFlowDetails", {
+            flow_id: flow_id,
+            client_id: client_id,
+            include_full_request: true,
+        }, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            };
+
+            let flow = response.data.context;
+            this.setState({
+                full_request: flow,
+                showCopyWizard: true,
+            });
+        });
     };
 
     render() {
@@ -605,7 +630,7 @@ class FlowsList extends React.Component {
                               }}
                               variant="default">
                         <FontAwesomeIcon icon="user" />
-                        <span className="sr-only">{T("Show only my hunts")}</span>
+                        <span className="sr-only">{T("Show only my collections")}</span>
                       </Button>
                     </ToolTip>
                     :
@@ -616,7 +641,7 @@ class FlowsList extends React.Component {
                               }}
                               variant="default">
                         <FontAwesomeIcon icon="user-large-slash" />
-                        <span className="sr-only">{T("Show all hunts")}</span>
+                        <span className="sr-only">{T("Show all collections")}</span>
                       </Button>
                     </ToolTip>
                   }

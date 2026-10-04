@@ -224,10 +224,12 @@ func exportAccessors(old_data []*api_proto.Completion) []*api_proto.Completion {
 				Description: description.Description,
 				Type:        "Accessor",
 				Metadata:    metadata,
+				Version:     uint64(description.Version),
 			}
 		} else {
 			// Update the record with new information
 			new_item.Metadata = metadata
+			new_item.Version = uint64(description.Version)
 		}
 
 		if !utils.InString(new_item.Platforms, platform) {

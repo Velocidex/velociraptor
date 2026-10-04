@@ -11,6 +11,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	"www.velocidex.com/golang/velociraptor/api"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -86,6 +87,8 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 			ArtifactName: artifact,
 			ClientId:     self.client_id,
 			FlowId:       self.flow_id,
+			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			From:         constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		})
 	assert.NoError(self.T(), err)
 
@@ -100,7 +103,8 @@ func (self *VFSServiceTestSuite) EmulateCollection(
 				ArtifactsWithResults: []string{artifact},
 				TotalCollectedRows:   uint64(len(rows)),
 			})},
-		artifacts.FLOW_COMPLETION)
+		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(self.client_id))
 	assert.NoError(self.T(), err)
 
 	return self.flow_id
@@ -122,6 +126,8 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 			ArtifactName: artifact + "/Listing",
 			ClientId:     self.client_id,
 			FlowId:       self.flow_id,
+			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			From:         constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		})
 
 	assert.NoError(self.T(), err)
@@ -131,6 +137,8 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 			ArtifactName: artifact + "/Stats",
 			ClientId:     self.client_id,
 			FlowId:       self.flow_id,
+			Username:     constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			From:         constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
 		})
 	assert.NoError(self.T(), err)
 
@@ -148,7 +156,8 @@ func (self *VFSServiceTestSuite) EmulateCollectionWithVFSLs(
 				},
 				TotalCollectedRows: uint64(len(rows)),
 			})},
-		artifacts.FLOW_COMPLETION)
+		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(self.client_id))
 	assert.NoError(self.T(), err)
 
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
@@ -255,7 +264,8 @@ func (self *VFSServiceTestSuite) TestVFSListDirectoryEmpty() {
 					}},
 				}}),
 		},
-		artifacts.FLOW_COMPLETION)
+		artifacts.FLOW_COMPLETION.
+			WithSuperUser().WithFrom(self.client_id))
 	assert.NoError(self.T(), err)
 
 	db, err := datastore.GetDB(self.ConfigObj)

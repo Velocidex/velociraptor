@@ -108,8 +108,10 @@ func (self GetNotebookFunction) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Name:    "notebook_get",
 		Doc:     "Get a notebook.",
 		ArgType: type_map.AddType(scope, &GetNotebookFunctionArg{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.READ_RESULTS).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(
+				acls.READ_RESULTS).Build(),
 		Version: 2,
 	}
 }

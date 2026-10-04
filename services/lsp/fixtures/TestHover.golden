@@ -1,0 +1,131 @@
+
+Test case 0: Complete VQL function
+SELECT geoip(db='Foo', ip='127.0.0.1') AS Foo FROM scope()
+SELECT geoi<--
+Diagnostics:
+[]
+Hover:
+{
+ "contents": {
+  "kind": "markdown",
+  "value": "**Function geoip**: Lookup an IP Address using the MaxMind GeoIP database"
+ },
+ "range": {
+  "start": {
+   "line": 0,
+   "character": 7
+  },
+  "end": {
+   "line": 0,
+   "character": 12
+  }
+ }
+}
+
+Test case 1: Complete VQL plugin
+SELECT * FROM scope()
+SELECT * FROM sco<--
+Diagnostics:
+[]
+Hover:
+{
+ "contents": {
+  "kind": "markdown",
+  "value": "**Plugin scope**: The scope plugin returns the current scope as a single row"
+ },
+ "range": {
+  "start": {
+   "line": 0,
+   "character": 14
+  },
+  "end": {
+   "line": 0,
+   "character": 19
+  }
+ }
+}
+
+Test case 2: Complete VQL nested function
+SELECT * FROM glob(globs=lowcase(string='*'))
+SELECT * FROM glob(globs=lowc<--
+Diagnostics:
+[]
+Hover:
+{
+ "contents": {
+  "kind": "markdown",
+  "value": "**Function lowcase**: Returns the lowercase version of a string"
+ },
+ "range": {
+  "start": {
+   "line": 0,
+   "character": 25
+  },
+  "end": {
+   "line": 0,
+   "character": 32
+  }
+ }
+}
+
+Test case 3: Complete plugin all args
+SELECT * FROM glob()
+SELECT * FROM glob(<--
+Diagnostics:
+[
+ {
+  "range": {
+   "start": {
+    "line": 0,
+    "character": 14
+   },
+   "end": {
+    "line": 0,
+    "character": 20
+   }
+  },
+  "severity": 1,
+  "source": "vql",
+  "message": "(1,15) required_arg_missing: While calling plugin glob(), required arg globs is not provided"
+ }
+]
+Hover:
+{
+ "contents": {
+  "kind": "markdown",
+  "value": "**Plugin glob**: Retrieve files based on a list of glob expressions\n\nThe `glob()` plugin is one o ..."
+ },
+ "range": {
+  "start": {
+   "line": 0,
+   "character": 14
+  },
+  "end": {
+   "line": 0,
+   "character": 18
+  }
+ }
+}
+
+Test case 4: Complete a plugin args
+SELECT * FROM glob(globs='*')
+SELECT * FROM glob(gl<--
+Diagnostics:
+[]
+Hover:
+{
+ "contents": {
+  "kind": "markdown",
+  "value": "**Plugin glob** arg `globs` (`string`): One or more glob patterns to apply to the filesystem."
+ },
+ "range": {
+  "start": {
+   "line": 0,
+   "character": 19
+  },
+  "end": {
+   "line": 0,
+   "character": 24
+  }
+ }
+}

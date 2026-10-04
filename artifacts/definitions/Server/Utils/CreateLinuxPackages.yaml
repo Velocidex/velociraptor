@@ -1,11 +1,11 @@
 name: Server.Utils.CreateLinuxPackages
 description: |
-  Builds Debian (.deb) and RPM packages with embedded client config for the current organization.
+  Builds Debian (.deb) and RPM client packages with embedded client
+  config for the current organization.
 
   This artifact depends on the following tools:
 
   * Clients <velo-tool-viewer name="VelociraptorLinux" />
-  * Server <velo-tool-viewer name="VelociraptorLinuxSumo" />
 
   You can replace this with suitable Velociraptor Linux build, or else
   the current release binary will be used by default.
@@ -14,7 +14,6 @@ description: |
   - rpm -qi velociraptor.rpm
   - rpm -qp --scripts velociraptor.rpm
   - dpkg-deb -I velociraptor.deb
-
 
 type: SERVER
 
@@ -35,16 +34,32 @@ parameters:
   - name: Vendor
     description: The vendor
     default: The Velociraptor Team
+  - name: Labels
+    description: A list of labels to append to the config.
+    type: csv
+    default: |
+      Labels
+
+  - name: ProxyString
+    description: |
+      If a proxy is needed this should be for example: https://192.168.1.1:3128
+
+imports:
+  - Server.Utils.Policy
 
 sources:
 - query: |
-    LET ValidateConfig(Config) = Config.Client.server_urls
-          AND Config.Client.ca_certificate =~ "(?ms)-----BEGIN CERTIFICATE-----.+-----END CERTIFICATE-----"
-          AND Config.Client.nonce
+    LET client_config <=
+      if(condition=ValidateClientConfig(Config=CustomConfig),
+         then=CustomConfig,
+         else=ToDict(item=org()._client_config))
 
-    LET client_config <= if(condition=ValidateConfig(Config=CustomConfig),
-                         then=CustomConfig,
-                         else=org()._client_config)
+    LET client_config <= if(condition=Labels.Labels || Proxy,
+      then=AddLabelsToConfig(Config=client_config, Labels=Labels.Labels, Proxy=ProxyString),
+      else=client_config)
+
+    // Convert to YAML for repacking.
+    LET client_config_yaml <= serialize(format="yaml", item=client_config)
 
     LET TmpDir <= tempdir()
 
@@ -77,14 +92,18 @@ sources:
        Homepage=Homepage || Expansion.Homepage
     )
 
-    SELECT * FROM chain(a={
+    SELECT Upload,
+           upload(accessor='data',
+                  file=client_config_yaml,
+                  name="Config") AS ClientConfig
+    FROM chain(a={
       SELECT OSPath.Basename AS Name,
              upload(file=OSPath, name=OSPath.Basename) AS Upload
       FROM deb_create(
         directory_name=TmpDir,
         package_spec=DebSpec +
             dict(Expansion=UpdateExpansion(Expansion=DebSpec.Expansion)),
-        config=serialize(item=client_config, format="yaml"))
+        config= client_config_yaml)
     }, b={
       SELECT OSPath.Basename AS Name,
              upload(file=OSPath, name=OSPath.Basename) AS Upload
@@ -93,7 +112,7 @@ sources:
         package_spec=RPMSpec +
             dict(Expansion=UpdateExpansion(Expansion=RPMSpec.Expansion)),
         release=Release || RPMSpec.Expansion.Release,
-        config=serialize(item=client_config, format="yaml"))
+        config= client_config_yaml)
     })
 
 column_types:

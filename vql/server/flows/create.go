@@ -35,7 +35,7 @@ import (
 )
 
 type ScheduleCollectionFunctionArg struct {
-	ClientId     string            `vfilter:"required,field=client_id,doc=The client id to schedule a collection on"`
+	ClientId     string            `vfilter:"required,field=client_id,doc=The client id to schedule a collection on. The use 'server' to schedule a server artifact collection."`
 	FlowId       string            `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add the collection to this flow."`
 	Artifacts    []string          `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
 	Env          *ordereddict.Dict `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
@@ -126,7 +126,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = client_info_manager.ValidateClientId(arg.ClientId)
+	err = client_info_manager.ValidateClientId(arg.ClientId, services.SERVER_OK)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}
@@ -201,8 +201,10 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 		Name:    "collect_client",
 		Doc:     "Launch an artifact collection against a client.",
 		ArgType: type_map.AddType(scope, &ScheduleCollectionFunctionArg{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_CLIENT, acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.COLLECT_CLIENT,
+				acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
 		Version: 3,
 	}
 }

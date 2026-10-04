@@ -36,20 +36,20 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 	arg := &ArtifactSetFunctionArgs{}
 	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
-		scope.Log("artifact_set: %v", err)
+		scope.Error("artifact_set: %v", err)
 		return vfilter.Null{}
 	}
 
 	// Allow artifacts to be set on the client outside the frontend.
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
-		scope.Log("artifact_set: Command can only run on the server")
+		scope.Error("artifact_set: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
 	manager, _ := services.GetRepositoryManager(config_obj)
 	if manager == nil {
-		scope.Log("artifact_set: Command can only run on the server")
+		scope.Error("artifact_set: Command can only run on the server")
 		return vfilter.Null{}
 	}
 
@@ -64,7 +64,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		if len(arg.Definition) > 100 {
 			definition = arg.Definition[:99] + " ..."
 		}
-		scope.Log("artifact_set: %v: %v", err, definition)
+		scope.Error("artifact_set: %v: %v", err, definition)
 		return vfilter.Null{}
 	}
 
@@ -85,13 +85,13 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 
 	default:
-		scope.Log("artifact_set: artifact type %v invalid", definition.Type)
+		scope.Error("artifact_set: artifact type %v invalid", definition.Type)
 		return vfilter.Null{}
 	}
 
 	err = vql_subsystem.CheckAccess(scope, permission)
 	if err != nil {
-		scope.Log("artifact_set: %s", err)
+		scope.Error("artifact_set: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -99,7 +99,7 @@ func (self *ArtifactSetFunction) Call(ctx context.Context,
 
 	global_repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
-		scope.Log("artifact_set: %s", err)
+		scope.Error("artifact_set: %s", err)
 		return vfilter.Null{}
 	}
 
@@ -178,8 +178,10 @@ func (self ArtifactSetFunction) Info(
 		Name:    "artifact_set",
 		Doc:     "Sets an artifact into the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactSetFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.ARTIFACT_WRITER,
+				acls.SERVER_ARTIFACT_WRITER).Build(),
 		Version: 2,
 	}
 }
@@ -262,8 +264,10 @@ func (self ArtifactDeleteFunction) Info(
 		Name:    "artifact_delete",
 		Doc:     "Deletes an artifact from the global repository.",
 		ArgType: type_map.AddType(scope, &ArtifactDeleteFunctionArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.ARTIFACT_WRITER, acls.SERVER_ARTIFACT_WRITER).Build(),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.ARTIFACT_WRITER,
+				acls.SERVER_ARTIFACT_WRITER).Build(),
 	}
 }
 
@@ -390,10 +394,12 @@ func (self ArtifactsPlugin) Call(
 
 func (self ArtifactsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "artifact_definitions",
-		Doc:      "Dump artifact definitions.",
-		ArgType:  type_map.AddType(scope, &ArtifactsPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.READ_RESULTS).Build(),
+		Name:    "artifact_definitions",
+		Doc:     "Dump artifact definitions.",
+		ArgType: type_map.AddType(scope, &ArtifactsPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.READ_RESULTS).Build(),
 	}
 }
 

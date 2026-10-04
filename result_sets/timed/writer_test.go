@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/result_sets/timed"
@@ -81,12 +82,12 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWriting() {
 	defer closer()
 
 	// Start off by writing some events on a queue.
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj,
 		self.client_id,
 		self.flow_id,
-		"Windows.Events.ProcessCreation")
-	assert.NoError(self.T(), err)
+		"Windows.Events.ProcessCreation",
+		artifact_modes.MODE_CLIENT_EVENT)
 
 	writer, err := timed.NewTimedResultSetWriter(
 		self.ConfigObj, path_manager, nil, func() {
@@ -156,12 +157,12 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingJsonl() {
 	defer closer()
 
 	// Start off by writing some events on a queue.
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj,
 		self.client_id,
 		self.flow_id,
-		"Windows.Events.ProcessCreation")
-	assert.NoError(self.T(), err)
+		"Windows.Events.ProcessCreation",
+		artifact_modes.MODE_CLIENT_EVENT)
 
 	writer, err := timed.NewTimedResultSetWriter(
 		self.ConfigObj, path_manager, nil, func() {
@@ -233,12 +234,9 @@ func (self *TimedResultSetTestSuite) TestTimedResultSetWritingNoFlushing() {
 	defer closer()
 
 	// Start off by writing some events on a queue.
-	path_manager, err := artifacts.NewArtifactPathManager(
-		self.Ctx, self.ConfigObj,
-		self.client_id,
-		self.flow_id,
-		"Windows.Events.ProcessCreation")
-	assert.NoError(self.T(), err)
+	path_manager := artifacts.NewArtifactPathManagerWithMode(
+		self.ConfigObj, self.client_id, self.flow_id,
+		"Windows.Events.ProcessCreation", artifact_modes.MODE_CLIENT_EVENT)
 
 	writer, err := timed.NewTimedResultSetWriter(
 		self.ConfigObj, path_manager, nil, func() {
