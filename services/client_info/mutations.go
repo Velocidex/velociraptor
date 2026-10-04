@@ -76,6 +76,7 @@ func (self *MutationManager) GetMutation() *ordereddict.Dict {
 		Set("LastHuntTimestamp", self.last_hunt_timestamp).
 		Set("LastEventTableVersion", self.last_event_table_version)
 
+	// Clear the mutation manager
 	self.pings = ordereddict.NewDict()
 	self.ip_address = ordereddict.NewDict()
 	self.last_hunt_timestamp = ordereddict.NewDict()

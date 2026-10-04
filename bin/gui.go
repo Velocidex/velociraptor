@@ -59,7 +59,7 @@ func generateGUIConfig(datastore_directory, server_config_path, client_config_pa
 	config_obj.Client.ServerUrls = []string{"wss://localhost:8000/"}
 	config_obj.Client.UseSelfSignedSsl = true
 
-	write_back := utils.Join(datastore_directory, "Velociraptor.writeback.%NONCE%.yaml")
+	write_back := filepath.Join(datastore_directory, "Velociraptor.writeback.%NONCE%.yaml")
 	config_obj.Client.WritebackWindows = write_back
 	config_obj.Client.WritebackLinux = write_back
 	config_obj.Client.WritebackDarwin = write_back
