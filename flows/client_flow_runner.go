@@ -371,6 +371,19 @@ func (self *ClientFlowRunner) ProcessSingleMessage(
 		return nil
 	}
 
+	// Modern clients send this for every message.
+	if msg.ForemanCheckin != nil {
+		// Do some housekeeping with the client
+		err := CheckClientStatus(ctx, self.config_obj,
+			client_id,
+			msg.ForemanCheckin.LastHuntTimestamp,
+			msg.ForemanCheckin.LastEventTableVersion)
+		if err != nil {
+			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+			logger.Error("ForemanCheckin for client %v: %v", client_id, err)
+		}
+	}
+
 	return nil
 }
 
@@ -908,13 +921,6 @@ func (self *ClientFlowRunner) LogMessage(
 
 func (self *ClientFlowRunner) ProcessMessages(ctx context.Context,
 	message_info *crypto.MessageInfo) error {
-
-	// Do some housekeeping with the client
-	err := CheckClientStatus(ctx, self.config_obj, message_info.Source)
-	if err != nil {
-		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.Error("ForemanCheckin for client %v: %v", message_info.Source, err)
-	}
 
 	return message_info.IterateJobs(ctx, self.config_obj, self.ProcessSingleMessage)
 }

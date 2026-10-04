@@ -70,6 +70,8 @@ func (self *Indexer) _FastGetApiClient(
 		LastIp:                      client_info.IpAddress,
 		LastInterrogateFlowId:       client_info.LastInterrogateFlowId,
 		LastInterrogateArtifactName: client_info.LastInterrogateArtifactName,
+		LastHuntTimestamp:           client_info.LastHuntTimestamp,
+		LastEventTableVersion:       client_info.LastEventTableVersion,
 		InFlightFlows:               client_info.InFlightFlows,
 	}, nil
 }

@@ -36,7 +36,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -53,6 +52,7 @@ import (
 )
 
 const (
+	// Snapshots shall be synchronous - used by Store.SaveSnapshot()
 	SYNC_UPDATE = true
 )
 
@@ -64,107 +64,6 @@ var (
 		Help: "Is the current client info cache dirty.",
 	}, []string{"org"})
 )
-
-type clientRecord struct {
-	mu         sync.Mutex
-	serialized []byte
-	dirty      bool
-	owner      *Store
-}
-
-func (self *Store) newClientRecord(client_info *services.ClientInfo) (
-	*clientRecord, error) {
-
-	res := &clientRecord{
-		dirty: true,
-		owner: self,
-	}
-
-	if client_info != nil {
-		serialized, err := proto.Marshal(client_info)
-		if err != nil {
-			return nil, err
-		}
-		res.serialized = serialized
-	}
-	return res, nil
-}
-
-func (self *clientRecord) GetSerialized() []byte {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.serialized
-}
-
-func (self *clientRecord) IsDirty() bool {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.dirty
-}
-
-func (self *clientRecord) GetRecord() (*actions_proto.ClientInfo, error) {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	client_info := &actions_proto.ClientInfo{}
-	err := proto.Unmarshal(self.serialized, client_info)
-	if err != nil {
-		return nil, err
-	}
-
-	return client_info, nil
-}
-
-func (self *clientRecord) Modify(
-	client_id string,
-	modifier func(client_info *services.ClientInfo) (
-		*services.ClientInfo, error)) error {
-
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	var client_info *services.ClientInfo
-	if self.serialized != nil {
-		client_info = &services.ClientInfo{
-			ClientInfo: &actions_proto.ClientInfo{},
-		}
-		err := proto.Unmarshal(self.serialized, client_info.ClientInfo)
-		if err != nil {
-			return err
-		}
-	}
-
-	// If the record was not changed just ignore it.
-	new_record, err := modifier(client_info)
-	if err != nil {
-		return err
-	}
-
-	// Callback can indicate no change is needed by returning a nil
-	// for client_info.
-	if new_record == nil {
-		return nil
-	}
-
-	// Enforce this invariant.
-	new_record.ClientId = client_id
-
-	serialized, err := proto.Marshal(new_record)
-	if err != nil {
-		return err
-	}
-
-	self.dirty = true
-	self.serialized = serialized
-
-	// Mark the store dirty - doesn't have to be right away but should
-	// happen soon.
-	go self.owner.SetDirty()
-
-	return nil
-}
 
 type Store struct {
 	mu         sync.Mutex
@@ -224,7 +123,7 @@ func (self *Store) Modify(
 	self.mu.Lock()
 	record, pres := self.data[client_id]
 	if !pres {
-		record, _ = self.newClientRecord(nil)
+		record = self.newClientRecord(nil)
 		self.data[client_id] = record
 	}
 	self.mu.Unlock()
@@ -255,8 +154,8 @@ func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error
 		return nil, err
 	}
 
-	if res.ClientId == "" {
-		res.ClientId = client_id
+	if res == nil {
+		return nil, utils.NotFoundError
 	}
 
 	return res, nil
@@ -265,17 +164,8 @@ func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error
 func (self *Store) SetRecord(
 	config_obj *config_proto.Config,
 	record *actions_proto.ClientInfo) error {
-	serialized, err := proto.Marshal(record)
-	if err != nil {
-		return err
-	}
-
 	self.mu.Lock()
-	self.data[record.ClientId] = &clientRecord{
-		serialized: serialized,
-		dirty:      true,
-		owner:      self,
-	}
+	self.data[record.ClientId] = self.newClientRecord(record)
 	self._SetDirty()
 	self.mu.Unlock()
 
@@ -330,11 +220,7 @@ func (self *Store) LoadFromSnapshot(
 			continue
 		}
 
-		self.data[client_id] = &clientRecord{
-			serialized: record,
-			dirty:      true,
-			owner:      self,
-		}
+		self.data[client_id] = self.newClientSerializedRecord(record)
 	}
 
 	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
@@ -362,7 +248,8 @@ func (self *Store) SaveSnapshot(
 
 	now := time.Now()
 
-	// Take an in memory snapshot of all the client records
+	// Take an in memory snapshot of all the client records to
+	// minimize the time under lock.
 	type snapshot_record struct {
 		record    *clientRecord
 		client_id string
@@ -410,8 +297,7 @@ func (self *Store) SaveSnapshot(
 		// Use fmt to encode very quickly
 		line := fmt.Sprintf("{\"client_id\":%q,\"info\":%q}\n",
 			snapshot_record.client_id,
-			hex.EncodeToString(
-				snapshot_record.record.GetSerialized()))
+			hex.EncodeToString(snapshot_record.record.GetSerialized()))
 		buffer.Write([]byte(line))
 
 		// Also write the legacy records anyway. This helps to recover
@@ -526,12 +412,11 @@ func (self *Store) LoadSnapshotFromLegacyData(
 			continue
 		}
 
-		client_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
+		client_info := &actions_proto.ClientInfo{}
 		client_path_manager := paths.NewClientPathManager(client_id)
 
 		// Read the main client record
-		err = db.GetSubject(config_obj, client_path_manager.Path(),
-			client_info.ClientInfo)
+		err = db.GetSubject(config_obj, client_path_manager.Path(), client_info)
 		if err != nil {
 			continue
 		}
@@ -549,22 +434,30 @@ func (self *Store) LoadSnapshotFromLegacyData(
 			logger.Info("<green>ClientInfo Manager</> Rebuilt %v clients from Legacy data.", count)
 		}
 
-		// Now read the ping info in case it is there.
-		ping_info := &services.ClientInfo{ClientInfo: &actions_proto.ClientInfo{}}
-		err = db.GetSubject(config_obj, client_path_manager.Ping(), ping_info.ClientInfo)
+		// Now read the ping info in case it is there.  NOTE: We no
+		// longer write separate ping records so if these are present
+		// they must be legacy from an older version.
+		ping_info := &actions_proto.ClientInfo{}
+		err = db.GetSubject(config_obj, client_path_manager.Ping(), ping_info)
 		if err == nil {
-			client_info.Ping = ping_info.Ping
+			if ping_info.Ping > client_info.Ping {
+				client_info.Ping = ping_info.Ping
+			}
+
 			client_info.IpAddress = ping_info.IpAddress
-			client_info.LastHuntTimestamp = ping_info.LastHuntTimestamp
-			client_info.LastEventTableVersion = ping_info.LastEventTableVersion
+
+			if ping_info.LastHuntTimestamp > client_info.LastHuntTimestamp {
+				client_info.LastHuntTimestamp = ping_info.LastHuntTimestamp
+			}
+
+			if ping_info.LastEventTableVersion > client_info.LastEventTableVersion {
+				client_info.LastEventTableVersion = ping_info.LastEventTableVersion
+			}
 		}
 
 		self.mu.Lock()
-		record, err := self.newClientRecord(client_info)
-		if err == nil {
-			self.data[client_id] = record
-			self._SetDirty()
-		}
+		self.data[client_id] = self.newClientRecord(client_info)
+		self._SetDirty()
 		self.mu.Unlock()
 
 	}
