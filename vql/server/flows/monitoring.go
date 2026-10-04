@@ -23,6 +23,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifact_modes"
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
@@ -86,10 +87,9 @@ func (self MonitoringPlugin) Call(
 
 		// Allow the source to be specified separately but
 		// really the full artifact name is required here.
-		if arg.Source != "" {
-			arg.Artifact = arg.Artifact + "/" + arg.Source
-			arg.Source = ""
-		}
+
+		// Normalize the artifact name to include the full name with source.
+		arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
 
 		mode := artifact_modes.MODE_CLIENT_EVENT
 		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {

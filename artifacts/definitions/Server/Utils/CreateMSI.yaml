@@ -47,7 +47,7 @@ sources:
        then=CustomConfig,
        else=ToDict(item=org()._client_config))
 
-    LET client_config <= if(condition=Labels.Labels || Proxy,
+    LET client_config <= if(condition=Labels.Labels || ProxyString,
       then=AddLabelsToConfig(Config=client_config, Labels=Labels.Labels, Proxy=ProxyString),
       else=client_config)
 
