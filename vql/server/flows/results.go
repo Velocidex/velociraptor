@@ -131,11 +131,10 @@ func (self *SourcePluginArgs) DetermineMode(
 	self.ParseSourceArgsFromScope(scope)
 
 	if self.Artifact != "" {
+
 		// Normalize the artifact name to include the source
-		if self.Source != "" {
-			self.Artifact = self.Artifact + "/" + self.Source
-			self.Source = ""
-		}
+		self.Artifact = paths.FullArtifactName(self.Artifact, self.Source)
+		self.Source = ""
 
 		// Is this a hunt result set?
 		if self.HuntId != "" {
@@ -551,10 +550,7 @@ func (self FlowResultsPlugin) Call(
 			}
 		}
 
-		if arg.Source != "" {
-			arg.Artifact = arg.Artifact + "/" + arg.Source
-			arg.Source = ""
-		}
+		arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
 
 		mode := artifact_modes.MODE_CLIENT
 		if arg.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {

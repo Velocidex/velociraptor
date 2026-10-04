@@ -20,3 +20,5 @@ unindex
 unmarshalling
 upcase
 vss
+sl
+retrnsmt
