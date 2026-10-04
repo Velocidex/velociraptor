@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -221,12 +222,10 @@ func getArtifactReports(
 
 	// Generate a default report if none are defined.
 	for _, source := range artifact.Sources {
-		parameters := ""
-		name := artifact.Name
-
+		name := paths.FullArtifactName(artifact.Name, source.Name)
+		parameters := "artifact=" + utils.Quote(artifact.Name)
 		if source.Name != "" {
-			name += "/" + source.Name
-			parameters = "source='" + source.Name + "'"
+			parameters = ", source=" + utils.Quote(source.Name)
 		}
 
 		reports = append(reports, &artifacts_proto.Report{

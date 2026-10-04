@@ -17,3 +17,17 @@ func SplitFullSourceName(artifact_source string) (artifact string, source string
 
 	return artifact_source, ""
 }
+
+func FullArtifactName(artifact_name, source_name string) string {
+	raw_artifact_name, original_source_name := SplitFullSourceName(artifact_name)
+
+	if source_name == "" {
+		source_name = original_source_name
+	}
+
+	if source_name != "" {
+		return raw_artifact_name + "/" + source_name
+	}
+
+	return raw_artifact_name
+}
