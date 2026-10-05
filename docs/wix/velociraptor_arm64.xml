@@ -1,0 +1,151 @@
+<?xml version='1.0' encoding='windows-1252'?>
+<?define AppRegKey="Software\Velocidex\Velociraptor" ?>
+<?define PackageDescription="Velociraptor Service Installer" ?>
+<?define Manufacturer="Velocidex" ?>
+<?define Name="Velociraptor" ?>
+<?define Version="0.77.3" ?>
+<?define BinaryName="Velociraptor.exe" ?>
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+     >
+  <Product Name='$(var.Name)' Manufacturer='$(var.Manufacturer)'
+           Id='*'
+           UpgradeCode='82E586E1-1700-4041-9042-8946BE19B69F'
+           Language='1033' Codepage='1252' Version='$(var.Version)'>
+    <Package Id='*' Keywords='Installer' Description="$(var.PackageDescription)"
+             Comments='$(var.PackageDescription)'
+             Manufacturer='$(var.Manufacturer)'
+             InstallerVersion='200' Languages='1033' Compressed='yes'
+             SummaryCodepage='1252' />
+    <Media Id='1' Cabinet='Sample.cab' EmbedCab='yes' DiskPrompt='CD-ROM #1' />
+
+    <!-- Put the config file on an uncompressed cab file so we can repack it later -->
+    <Media Id='2' CompressionLevel="none" Cabinet='part2.cab' EmbedCab='yes' DiskPrompt='CD-ROM #2' />
+
+    <Property Id='DiskPrompt' Value="Installation [1]" />
+
+    <PropertyRef Id="WIX_ACCOUNT_LOCALSYSTEM" />
+    <PropertyRef Id="WIX_ACCOUNT_USERS" />
+    <PropertyRef Id="WIX_ACCOUNT_ADMINISTRATORS" />
+
+    <!-- Add icon to add/remove programs -->
+    <Icon Id="icon.ico" SourceFile="icon.ico"/>
+    <Property Id="ARPPRODUCTICON" Value="icon.ico" />
+
+    <Directory Id='TARGETDIR' Name='SourceDir'>
+      <Directory Id='ProgramFiles64Folder' Name='PFiles'>
+        <Directory Id='INSTALLDIR' Name='$(var.Name)'>
+          <Component Id='Install' Guid='9f3cfed0-b89d-43d4-8fcf-242824e84fd8'>
+            <CreateFolder>
+              <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
+                          ChangePermission="no"/>
+              <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
+                          ChangePermission="yes"/>
+              <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
+                          ChangePermission="yes"/>
+            </CreateFolder>
+          </Component>
+          <Directory Id="CACHEDIR" Name="Tools">
+            <Component Id="Tools" Guid="97dc953a-8a2f-494f-9585-56ae526d0b48">
+              <CreateFolder>
+                <Permission User="[WIX_ACCOUNT_USERS]" GenericRead="no" Read="no"
+                            ChangePermission="no"/>
+                <Permission User="[WIX_ACCOUNT_ADMINISTRATORS]" GenericAll="yes"
+                            ChangePermission="yes"/>
+                <Permission User="[WIX_ACCOUNT_LOCALSYSTEM]" GenericAll="yes"
+                            ChangePermission="yes"/>
+              </CreateFolder>
+            </Component>
+          </Directory>
+          <Component Id='MainExecutable' Guid='*'>
+
+            <File Id='ServiceEXE' Name='$(var.BinaryName)'
+                  DiskId='1'
+                  Source='Output/Velociraptor.exe' KeyPath='yes'>
+            </File>
+            <ServiceInstall
+                Id="ServiceInstaller"
+                Type="ownProcess"
+                Vital="yes"
+                Name="$(var.Name)"
+                DisplayName="$(var.Name) Service"
+                Description="$(var.Name) Service"
+                Start="auto"
+                Account="LocalSystem"
+                Arguments=' --config "[INSTALLDIR]/client.config.yaml" service run '
+                ErrorControl="normal"
+                Interactive="no">
+              <util:ServiceConfig
+                  xmlns:util="http://schemas.microsoft.com/wix/UtilExtension"
+                  FirstFailureActionType='restart'
+                  SecondFailureActionType='restart'
+                  ThirdFailureActionType='restart'
+                  RestartServiceDelayInSeconds='30'
+                  ResetPeriodInDays='0'/>
+              <!-- This emits warnings but it is necessary
+                   https://github.com/oleg-shilo/wixsharp/issues/299 -->
+              <ServiceConfig
+                  DelayedAutoStart="yes"
+                  OnInstall="yes"
+                  OnReinstall="yes" />
+            </ServiceInstall>
+            <ServiceControl
+                Id="StartService"
+                Name="$(var.Name)"
+                Stop="both"
+                Start="install"
+                Remove="uninstall" Wait="yes" />
+          </Component>
+          <Component Id='Config' Guid='*'>
+            <File Id='Config' Name='client.config.yaml'
+                  DiskId='2' Source='Output/client.config.yaml' KeyPath='yes'>
+            </File>
+          </Component>
+        </Directory>
+      </Directory>
+    </Directory>
+
+    <Feature Id='Complete' Level='1'>
+      <ComponentRef Id='Install' />
+      <ComponentRef Id='MainExecutable' />
+      <ComponentRef Id='Config' />
+      <ComponentRef Id='Tools' />
+      <ComponentRef Id='CleanupCache' />
+    </Feature>
+    <MajorUpgrade DowngradeErrorMessage="Downgrades are not allowed."
+                  AllowSameVersionUpgrades="yes"
+                  Schedule="afterInstallValidate" />
+    <Property Id="ALLUSERS" Value="1" />
+    <Property Id="ARPNOREPAIR" Value="1" />
+    <Property Id="ARPNOMODIFY" Value="1" />
+    <Property Id="CACHEDIR">
+        <RegistrySearch Key="$(var.AppRegKey)" Root="HKLM"
+                  Type="raw" Id="CACHEDIR_REGSEARCH" Name="CachePath" />
+    </Property>
+    <DirectoryRef Id="CACHEDIR">
+      <Component Id="CleanupCache" Guid="*">
+        <RegistryValue Root="HKLM" Key="$(var.AppRegKey)"
+                       Name="CachePath" Type="string"
+                       Value="[CACHEDIR]"
+                       KeyPath="yes" />
+        <!-- We need to use APPLICATIONFOLDER variable here or RemoveFolderEx
+             will not remove on "install". But only if WiX 3.6 is used. -->
+        <util:RemoveFolderEx On="uninstall" Property="CACHEDIR" />
+      </Component>
+    </DirectoryRef>
+    <!-- 1. Query the host's actual native architecture -->
+    <Property Id="NATIVE_PROCESSOR_ARCHITECTURE">
+      <RegistrySearch Id="SearchProcArch"
+                      Root="HKLM"
+                      Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+                      Name="PROCESSOR_ARCHITECTURE"
+                      Type="raw" />
+    </Property>
+
+    <!-- 2. Block the installer if it is running on anything other than ARM64 -->
+    <Condition Message="This native ARM64 installer can only be installed on Windows on ARM systems. It cannot be run on an Intel/AMD64 platform.">
+      <![CDATA[Installed OR (NATIVE_PROCESSOR_ARCHITECTURE = "ARM64")]]>
+    </Condition>
+  </Product>
+</Wix>
