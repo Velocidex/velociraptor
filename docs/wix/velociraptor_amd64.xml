@@ -3,7 +3,7 @@
 <?define PackageDescription="Velociraptor Service Installer" ?>
 <?define Manufacturer="Velocidex" ?>
 <?define Name="Velociraptor" ?>
-<?define Version="0.73.3" ?>
+<?define Version="0.77.3" ?>
 <?define BinaryName="Velociraptor.exe" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -120,19 +120,32 @@
     <Property Id="ARPNOREPAIR" Value="1" />
     <Property Id="ARPNOMODIFY" Value="1" />
     <Property Id="CACHEDIR">
-        <RegistrySearch Key="$(var.AppRegKey)" Root="HKLM"
-                  Type="raw" Id="CACHEDIR_REGSEARCH" Name="CachePath" />
+      <RegistrySearch Key="$(var.AppRegKey)" Root="HKLM"
+                      Type="raw" Id="CACHEDIR_REGSEARCH" Name="CachePath" />
     </Property>
-        <DirectoryRef Id="CACHEDIR">
-            <Component Id="CleanupCache" Guid="*">
-                <RegistryValue Root="HKLM" Key="$(var.AppRegKey)"
-                                    Name="CachePath" Type="string"
-                                        Value="[CACHEDIR]"
-                                        KeyPath="yes" />
-                <!-- We need to use APPLICATIONFOLDER variable here or RemoveFolderEx
-                     will not remove on "install". But only if WiX 3.6 is used. -->
-                <util:RemoveFolderEx On="uninstall" Property="CACHEDIR" />
-            </Component>
+    <DirectoryRef Id="CACHEDIR">
+      <Component Id="CleanupCache" Guid="*">
+        <RegistryValue Root="HKLM" Key="$(var.AppRegKey)"
+                       Name="CachePath" Type="string"
+                       Value="[CACHEDIR]"
+                       KeyPath="yes" />
+        <!-- We need to use APPLICATIONFOLDER variable here or RemoveFolderEx
+             will not remove on "install". But only if WiX 3.6 is used. -->
+        <util:RemoveFolderEx On="uninstall" Property="CACHEDIR" />
+      </Component>
     </DirectoryRef>
+    <!-- 1. Query the host's actual native architecture -->
+    <Property Id="NATIVE_PROCESSOR_ARCHITECTURE">
+      <RegistrySearch Id="SearchProcArch"
+                      Root="HKLM"
+                      Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+                      Name="PROCESSOR_ARCHITECTURE"
+                      Type="raw" />
+    </Property>
+
+    <!-- 2. Block the installer if it is running on anything other than AMD64 -->
+    <Condition Message="This native AMD64 installer can only be installed on Windows on AMD64 systems. It cannot be run on an ARM64 platform.">
+      <![CDATA[Installed OR (NATIVE_PROCESSOR_ARCHITECTURE = "AMD64")]]>
+    </Condition>
   </Product>
 </Wix>
