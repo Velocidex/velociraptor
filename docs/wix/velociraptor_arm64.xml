@@ -120,8 +120,8 @@
     <Property Id="ARPNOREPAIR" Value="1" />
     <Property Id="ARPNOMODIFY" Value="1" />
     <Property Id="CACHEDIR">
-      <RegistrySearch Key="$(var.AppRegKey)" Root="HKLM"
-                      Type="raw" Id="CACHEDIR_REGSEARCH" Name="CachePath" />
+        <RegistrySearch Key="$(var.AppRegKey)" Root="HKLM"
+                  Type="raw" Id="CACHEDIR_REGSEARCH" Name="CachePath" />
     </Property>
     <DirectoryRef Id="CACHEDIR">
       <Component Id="CleanupCache" Guid="*">
@@ -143,9 +143,9 @@
                       Type="raw" />
     </Property>
 
-    <!-- 2. Block the installer if it is running on anything other than AMD64 -->
-    <Condition Message="This native AMD64 installer can only be installed on Windows on AMD64 systems. It cannot be run on an ARM64 platform.">
-      <![CDATA[Installed OR (NATIVE_PROCESSOR_ARCHITECTURE = "AMD64")]]>
+    <!-- 2. Block the installer if it is running on anything other than ARM64 -->
+    <Condition Message="This native ARM64 installer can only be installed on Windows on ARM systems. It cannot be run on an Intel/AMD64 platform.">
+      <![CDATA[Installed OR (NATIVE_PROCESSOR_ARCHITECTURE = "ARM64")]]>
     </Condition>
   </Product>
 </Wix>
