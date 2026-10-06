@@ -93,7 +93,7 @@ func (self GlobPlugin) Call(
 
 			// It may be (although unlikely that the root path is
 			// actually a different type than the accessor
-			// sepecified. In this case, we need to coerce the root
+			// specified. In this case, we need to coerce the root
 			// type into the correct accessor.
 			root.Manipulator = accessor_root.Manipulator
 		}
