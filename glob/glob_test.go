@@ -193,7 +193,8 @@ func TestGlobWithContext(t *testing.T) {
 		// The error may occur on one of the patterns in the brace
 		// expansion but not on all.
 		for _, pattern := range patterns {
-			err := globber.Add(accessors.MustNewLinuxOSPath(pattern))
+			err := globber.AddGlob(pattern,
+				accessors.MustNewLinuxOSPath(""))
 			if err != nil {
 				total_err = err
 			}

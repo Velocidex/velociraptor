@@ -187,8 +187,27 @@ func (self Globber) _DebugString(indent string) string {
 	return strings.Join(result, "\n")
 }
 
-// Add a new pattern to the filter tree.
-func (self *Globber) Add(pattern *accessors.OSPath) error {
+func (self *Globber) AddGlob(glob string,
+	root *accessors.OSPath) error {
+
+	// Expand glob braces over the entire expression - this allows
+	// the alternatives to cover entire paths.
+	new_globs, err := ExpandBraces(glob)
+	if err != nil {
+		return err
+	}
+	for _, g := range new_globs {
+		err = self.add_pathspec(root.Append(g))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// add_pathspec a new pattern to the filter tree.
+func (self *Globber) add_pathspec(pattern *accessors.OSPath) error {
 	// Convert the pattern into path components.
 	filter, err := convert_glob_into_path_components(pattern)
 	if err == nil {
