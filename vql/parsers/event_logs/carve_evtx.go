@@ -22,18 +22,20 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/dustin/go-humanize"
 	"www.velocidex.com/golang/evtx"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/readers"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
 
 type _CarveEvtxPluginArgs struct {
-	Filename    *accessors.OSPath `vfilter:"required,field=filename,doc=The file or device to carve (e.g. \\\\.\\C: with the raw_file accessor, or C:/pagefile.sys with the ntfs accessor)."`
+	Filename    *accessors.OSPath `vfilter:"required,field=filename,doc=The file or device to carve (e.g. 'C:' with the 'ntfs' accessor, or C:/pagefile.sys with the ntfs accessor)."`
 	Accessor    string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	Database    string            `vfilter:"optional,field=messagedb,doc=A Message database from https://github.com/Velocidex/evtx-data."`
 	StartOffset int64             `vfilter:"optional,field=start_offset,doc=Start carving at this offset (default 0)."`
@@ -67,19 +69,6 @@ func (self _CarveEvtxPlugin) Call(
 			return
 		}
 
-		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
-		if err != nil {
-			scope.Log("carve_evtx: %v", err)
-			return
-		}
-
-		fd, err := accessor.OpenWithOSPath(arg.Filename)
-		if err != nil {
-			scope.Log("carve_evtx: Unable to open %v: %v", arg.Filename, err)
-			return
-		}
-		defer fd.Close()
-
 		var writer *evtxWriter
 		if arg.Output != "" {
 			out_fd, err := openOutputFile(scope, arg.Output)
@@ -111,12 +100,17 @@ func (self _CarveEvtxPlugin) Call(
 		stats := &carveStats{}
 		var records_emitted int64
 
-		sub_ctx, cancel := context.WithCancel(ctx)
-		defer cancel()
+		reader, err := readers.NewAccessorReader(
+			scope, arg.Accessor, arg.Filename, 100)
+		if err != nil {
+			scope.Log("carve_evtx: %v", err)
+			return
+		}
+		defer reader.Close()
 
-		reader := utils.MakeReaderAtter(fd)
 		for chunk := range carveChunks(
-			sub_ctx, reader, arg.StartOffset, arg.EndOffset, stats) {
+			ctx, scope,
+			reader, arg.StartOffset, arg.EndOffset, stats) {
 			scope.ChargeOp()
 
 			if writer != nil && includeInOutput(chunk) {
@@ -154,7 +148,8 @@ func (self _CarveEvtxPlugin) Call(
 		}
 
 		scope.Log("carve_evtx: Scanned %v bytes, found %v chunk signatures, %v plausible chunks, %v records",
-			stats.BytesScanned, stats.Candidates, stats.Chunks, records_emitted)
+			humanize.Bytes(uint64(stats.BytesScanned)),
+			stats.Candidates, stats.Chunks, records_emitted)
 	}()
 
 	return output_chan
@@ -200,12 +195,12 @@ func makeCarvedRow(chunk *carvedChunk, record *evtx.EventRecord,
 		event.Set("Message", evtx.ExpandMessage(event, resolver))
 	}
 
-	return event.
-		Set("ChunkOffset", chunk.Offset).
-		Set("ChunkHeaderValid", chunk.HeaderChecksumValid).
-		Set("ChunkDataValid", chunk.DataChecksumValid).
-		Set("ChunkTruncated", chunk.Truncated).
-		Set("ChunkCompressed", chunk.Compressed)
+	return event.Set("ChunkInfo", ordereddict.NewDict().
+		Set("Offset", chunk.Offset).
+		Set("HeaderValid", chunk.HeaderChecksumValid).
+		Set("DataValid", chunk.DataChecksumValid).
+		Set("Truncated", chunk.Truncated).
+		Set("Compressed", chunk.Compressed))
 }
 
 func (self _CarveEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
@@ -215,8 +210,9 @@ func (self _CarveEvtxPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 			"the pagefile or a memory image) and parse their event records.",
 		ArgType: type_map.AddType(scope, &_CarveEvtxPluginArgs{}),
 		// Writing the output file checks FILESYSTEM_WRITE when it is used.
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
-		Version:  1,
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.FILESYSTEM_READ, acls.FILESYSTEM_WRITE).Build(),
+		Version: 1,
 	}
 }
 

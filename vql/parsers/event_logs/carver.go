@@ -25,9 +25,13 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
+	"time"
 
+	"github.com/dustin/go-humanize"
 	"www.velocidex.com/golang/evtx"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
+	"www.velocidex.com/golang/velociraptor/utils"
+	vfilter "www.velocidex.com/golang/vfilter"
 )
 
 const (
@@ -44,12 +48,6 @@ const (
 	// The library refuses to parse more records than this from a
 	// single chunk so a header claiming more is not plausible.
 	maxRecordsPerChunk = 1024 * 10
-
-	// Raw devices on Windows (e.g. \\.\C:) fail reads which are not
-	// sector aligned. The raw_file accessor passes large page
-	// multiple reads straight to the device, so all reads issued
-	// by the carver are aligned to this.
-	carveAlignment = 0x1000
 
 	// LZNT1 block header: bit 15 is set for compressed blocks,
 	// bits 12-14 are always 3 and the low 12 bits are the size of
@@ -107,22 +105,21 @@ type carveStats struct {
 // header are emitted - their checksums are reported but not enforced
 // because partially overwritten chunks still contain useful records.
 func carveChunks(
-	ctx context.Context, reader io.ReaderAt,
+	ctx context.Context,
+	scope vfilter.Scope,
+	reader io.ReaderAt,
 	start, end int64, stats *carveStats) <-chan *carvedChunk {
 
 	output_chan := make(chan *carvedChunk)
 
 	go func() {
 		defer close(output_chan)
+		defer utils.RecoverVQL(scope)
 
-		// This goroutine is outside the plugin's VQL panic handler
-		// so a panic here would take down the process.
-		defer func() {
-			r := recover()
-			if r != nil {
-				stats.StopError = fmt.Errorf("carver panic: %v", r)
-			}
-		}()
+		logger, closer := utils.NewDeduplicatedLogger(30 * time.Second)
+		defer closer()
+
+		start_time := utils.GetTime().Now()
 
 		buf := make([]byte, carveBlockSize)
 
@@ -135,7 +132,7 @@ func carveChunks(
 
 		// Scan from an aligned offset and ignore signatures before
 		// the start.
-		offset := start - start%carveAlignment
+		offset := start
 		for end <= 0 || offset < end {
 			to_read := int64(len(buf))
 			if end > 0 && offset+to_read > end {
@@ -145,7 +142,7 @@ func carveChunks(
 			// Readers may return fewer bytes than requested, with or
 			// without an error. Only a read returning nothing ends
 			// the scan.
-			n, err := alignedReadAt(reader, buf[:to_read], offset)
+			n, err := reader.ReadAt(buf[:to_read], int64(offset))
 			if n <= 0 {
 				if err != nil && !errors.Is(err, io.EOF) {
 					stats.StopError = err
@@ -161,6 +158,7 @@ func carveChunks(
 				if hit < 0 {
 					break
 				}
+
 				chunk_offset := window_offset + int64(idx+hit)
 				idx += hit + 1
 				if chunk_offset < start {
@@ -190,9 +188,19 @@ func carveChunks(
 			tail = append(tail[:0], window[tail_start:]...)
 
 			offset += int64(n)
-			if offset > start {
-				stats.BytesScanned = offset - start
-			}
+
+			stats.BytesScanned = offset - start
+
+			// Report progress - this could take a while so it is nice
+			// to know how it's going.
+			logger.Log(
+				// This will be called a lot so log lazily.
+				func(msg string, args ...interface{}) {
+					scope.Log("carve_evtx: scanned %v bytes in %v",
+						humanize.Bytes(uint64(stats.BytesScanned)),
+						utils.GetTime().Now().Sub(
+							start_time).Round(time.Second))
+				}, "")
 
 			if errors.Is(err, io.EOF) {
 				return
@@ -212,7 +220,7 @@ func carveChunks(
 // Read the chunk at offset and check that its header is plausible.
 func readChunk(reader io.ReaderAt, offset int64) (*carvedChunk, bool) {
 	data := make([]byte, evtx.EVTX_CHUNK_SIZE)
-	n, _ := alignedReadAt(reader, data, offset)
+	n, _ := reader.ReadAt(data, offset)
 	result, ok := checkChunk(offset, data, n)
 	if ok {
 		return result, true
@@ -244,7 +252,7 @@ func readCompressedChunk(reader io.ReaderAt, offset int64) ([]byte, int) {
 	// Compressed data is never larger than the uncompressed data
 	// plus block headers and the slack at the end of a unit.
 	raw := make([]byte, evtx.EVTX_CHUNK_SIZE+2*lznt1BlockSize)
-	n, _ := alignedReadAt(reader, raw, start)
+	n, _ := reader.ReadAt(raw, start)
 	raw = raw[:n]
 
 	if n < lznt1PrefixSize || raw[2] != 0 ||
@@ -318,7 +326,8 @@ func checkChunk(offset int64, data []byte, n int) (*carvedChunk, bool) {
 		Truncated: n < evtx.EVTX_CHUNK_SIZE,
 	}
 
-	err := binary.Read(bytes.NewReader(data), binary.LittleEndian, &result.Header)
+	err := binary.Read(bytes.NewReader(data),
+		binary.LittleEndian, &result.Header)
 	if err != nil {
 		return nil, false
 	}
@@ -348,45 +357,6 @@ func checkChunk(offset int64, data []byte, n int) (*carvedChunk, bool) {
 	return result, true
 }
 
-// ReadAt with the offset and length expanded to carveAlignment. Data
-// outside the requested range is discarded.
-func alignedReadAt(reader io.ReaderAt, buf []byte, offset int64) (int, error) {
-	if offset < 0 {
-		return 0, errors.New("negative offset")
-	}
-
-	aligned_start := offset - offset%carveAlignment
-	aligned_end := offset + int64(len(buf))
-	if rem := aligned_end % carveAlignment; rem != 0 {
-		aligned_end += carveAlignment - rem
-	}
-
-	if aligned_start == offset && aligned_end == offset+int64(len(buf)) {
-		return reader.ReadAt(buf, offset)
-	}
-
-	tmp := make([]byte, aligned_end-aligned_start)
-	n, err := reader.ReadAt(tmp, aligned_start)
-
-	skip := int(offset - aligned_start)
-	if n <= skip {
-		if err == nil {
-			err = io.EOF
-		}
-		return 0, err
-	}
-
-	copied := copy(buf, tmp[skip:n])
-	if copied == len(buf) {
-		// Any EOF was in the padding past the requested range.
-		return copied, nil
-	}
-	if err == nil {
-		err = io.EOF
-	}
-	return copied, err
-}
-
 // LZNT1Decompress can panic on malformed blocks (e.g. a back
 // reference truncated by the end of the block). Carved data is often
 // malformed so contain any panic to this block.
@@ -395,6 +365,7 @@ func lznt1Decompress(block []byte) (result []byte, err error) {
 		r := recover()
 		if r != nil {
 			err = fmt.Errorf("LZNT1 decompression panic: %v", r)
+			utils.PrintStack()
 		}
 	}()
 
@@ -408,6 +379,7 @@ func parseCarvedChunk(chunk *carvedChunk) (records []*evtx.EventRecord, err erro
 		r := recover()
 		if r != nil {
 			err = errors.New("parser panic while parsing carved chunk")
+			utils.PrintStack()
 		}
 	}()
 

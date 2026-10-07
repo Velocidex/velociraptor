@@ -927,7 +927,7 @@
            System.TimeCreated.SystemTime AS Timestamp,
            System.EventID.Value AS EventID,
            System.Channel AS Channel, EventData
-    FROM carve_evtx(filename='''\\.\C:''', accessor="raw_file")
+    FROM carve_evtx(filename="C:", accessor="ntfs")
     WHERE EventID IN (1102, 104, 4624, 7045)
     ```
 
@@ -956,7 +956,7 @@
 
     ```vql
     SELECT count() AS Events
-    FROM carve_evtx(filename='''\\.\C:''', accessor="raw_file",
+    FROM carve_evtx(filename="C:", accessor="ntfs",
                     output="C:/cases/recovered.evtx")
     GROUP BY 1
     ```
@@ -965,8 +965,8 @@
   args:
   - name: filename
     type: accessors.OSPath
-    description: 'The file or device to carve (e.g. \\.\C: with the raw_file accessor,
-      or C:/pagefile.sys with the ntfs accessor).'
+    description: The file or device to carve (e.g. 'C:' with the 'ntfs' accessor,
+      or C:/pagefile.sys with the ntfs accessor).
     required: true
   - name: accessor
     type: string
@@ -986,7 +986,7 @@
       path so they can be opened with Event Viewer. Each chunk is written once.
   category: parsers
   metadata:
-    permissions: FILESYSTEM_READ
+    permissions: FILESYSTEM_READ,FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -13745,3 +13745,4 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+

@@ -212,6 +212,12 @@ func (self *deviceReader) ReadAt(buf []byte, offset int64) (int, error) {
 	return self.reader.ReadAt(buf, offset)
 }
 
+func NewDeviceReader(data []byte) (io.ReaderAt, error) {
+	return utils.NewPagedReader(
+		&deviceReader{bytes.NewReader(data)},
+		4096, 100)
+}
+
 // Unaligned chunks and offsets must still be carved from a device.
 func TestCarveFromAlignedDevice(t *testing.T) {
 	rng := rand.New(rand.NewSource(6))
@@ -240,8 +246,12 @@ func TestCarveFromAlignedDevice(t *testing.T) {
 		stats := &carveStats{}
 		var offsets []int64
 		var chunks []*carvedChunk
+		reader, err := NewDeviceReader(image)
+		assert.NoError(t, err)
+
 		for c := range carveChunks(context.Background(),
-			&deviceReader{bytes.NewReader(image)}, tc.start, tc.end, stats) {
+			reader,
+			tc.start, tc.end, stats) {
 			offsets = append(offsets, c.Offset)
 			chunks = append(chunks, c)
 		}
@@ -259,7 +269,8 @@ func TestCarveFromAlignedDevice(t *testing.T) {
 
 func TestAlignedReadAt(t *testing.T) {
 	data := noise(rand.New(rand.NewSource(7)), 10000)
-	reader := &deviceReader{bytes.NewReader(data)}
+	reader, err := NewDeviceReader(data)
+	assert.NoError(t, err)
 
 	for _, tc := range []struct {
 		offset int64
@@ -276,7 +287,7 @@ func TestAlignedReadAt(t *testing.T) {
 		{20000, 10, 0, true},
 	} {
 		buf := make([]byte, tc.length)
-		n, err := alignedReadAt(reader, buf, tc.offset)
+		n, err := reader.ReadAt(buf, tc.offset)
 		assert.Equal(t, tc.n, n, "offset %v", tc.offset)
 		assert.Equal(t, tc.eof, errors.Is(err, io.EOF), "offset %v err %v", tc.offset, err)
 		if n > 0 {
