@@ -207,6 +207,8 @@ func (self *AccessorReader) _Close() error {
 	self.cancel = nil
 
 	reader := self.reader
+	paged_reader := self.paged_reader
+
 	self.reader = nil
 	self.paged_reader = nil
 	self.last_opened = time.Time{}
@@ -220,6 +222,14 @@ func (self *AccessorReader) _Close() error {
 		// Track opens and closes
 		files.Remove(self.File.String())
 		reader.Close()
+	}
+
+	if paged_reader != nil {
+		// Report paged_reader efficiency
+		/*
+			stats := paged_reader.Stats()
+			fmt.Printf("%s: %#v\n", self.File.String(), stats)
+		*/
 	}
 
 	return nil
@@ -250,8 +260,21 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			lru_size = 100
 		}
 
+		// Pagesize is a sliding scale to maximize efficiency over
+		// memory use. If the lru is large, we use small pages, but if
+		// the lru is small, we use larger pages.
+		page_size := int64(1024 * 8)
+		if lru_size < 100 {
+			// Target < 100Mb
+			page_size = 1024 * 1024
+
+		} else if lru_size < 10 {
+			// Target < 100Mb
+			page_size = 10 * 1024 * 1024
+		}
+
 		paged_reader, err := ntfs.NewPagedReader(
-			utils.MakeReaderAtter(reader), 1024*8, lru_size)
+			utils.MakeReaderAtter(reader), page_size, lru_size)
 		if err != nil {
 			reader.Close()
 			self.mu.Unlock()

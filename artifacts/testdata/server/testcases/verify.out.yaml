@@ -6,7 +6,34 @@ Output: [
    "Artifact": "name: BrokenYaml\nsomeweirdfield: 1\n",
    "Permissions": null,
    "Errors": [
-    "(0,0) yaml_error: YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+    {
+     "Target": "",
+     "Name": "yaml_error",
+     "Message": "YAML Error: %[1]v",
+     "Args": [
+      {
+       "Err": {
+        "Errors": [
+         "line 2: field someweirdfield not found in type proto.Artifact"
+        ]
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": null,
    "Definitions": {},
@@ -16,7 +43,51 @@ Output: [
    "Artifact": "name: BrokenQuery\nsources:\n- query: SELECT * FROM nosuchplugin()\n",
    "Permissions": null,
    "Errors": [
-    "(0,0) artifact_vql_error: BrokenQuery: query: (1,15) unknown_plugin: Unknown plugin nosuchplugin()"
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "BrokenQuery",
+      {
+       "Target": "",
+       "Name": "unknown_plugin",
+       "Message": "Unknown %[2]v %[1]v()",
+       "Args": [
+        "nosuchplugin",
+        "plugin"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 14,
+         "Line": 1,
+         "Column": 15
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 28,
+         "Line": 1,
+         "Column": 29
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": null,
    "Definitions": {},
@@ -26,7 +97,31 @@ Output: [
    "Artifact": "name: BrokenSubArtifact\nsources:\n- query: SELECT * FROM Artifact.No.Such.Artifact()\n",
    "Permissions": null,
    "Errors": [
-    "(0,0) artifact_vql_error: BrokenSubArtifact: query: Unknown artifact reference No.Such.Artifact"
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "BrokenSubArtifact",
+      {
+       "Err": {}
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": null,
    "Definitions": {},
@@ -71,11 +166,300 @@ Output: [
     "FILESYSTEM_READ"
    ],
    "Errors": [
-    "(0,0) artifact_vql_error: KWArgs: query: (5,32) required_arg_missing: While calling function alert(), required arg name is not provided",
-    "(0,0) artifact_vql_error: KWArgs: query: (10,15) kwargs_mixed_call: Calling plugin `switch` with kwargs (**) as well as with arg `{a {10:22 14:2}}`",
-    "(0,0) artifact_vql_error: KWArgs: query: (11,10) kwargs_mixed_call: Calling function `Foo` with kwargs (**) as well as with arg `{X {11:30 11:33}}`",
-    "(0,0) artifact_vql_error: KWArgs: query: (12,10) kwargs_mixed_call: Calling function `dict` with kwargs (**) as well as with arg `{A {12:15 12:18}}`",
-    "(0,0) artifact_vql_error: KWArgs: query: (13,8) kwargs_mixed_call: Calling plugin `Artifact.Generic.Client.Info` with kwargs (**) as well as with arg `{X {13:53 13:56}}`"
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "KWArgs",
+      {
+       "Target": "",
+       "Name": "required_arg_missing",
+       "Message": "While calling %[2]v %[3]v(), required arg %[1]v is not provided",
+       "Args": [
+        "name",
+        "function",
+        "alert"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 147,
+         "Line": 5,
+         "Column": 32
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 171,
+         "Line": 6,
+         "Column": 1
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    },
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "KWArgs",
+      {
+       "Target": "",
+       "Name": "kwargs_mixed_call",
+       "Message": "Calling %[3]v `%[1]v` with kwargs (**) as well as with arg `%[2]v`",
+       "Args": [
+        "switch",
+        {
+         "Name": "a",
+         "Pos": {
+          "Pos": {
+           "Filename": "",
+           "Offset": 258,
+           "Line": 10,
+           "Column": 22
+          },
+          "EndPos": {
+           "Filename": "",
+           "Offset": 387,
+           "Line": 14,
+           "Column": 2
+          }
+         }
+        },
+        "plugin"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 251,
+         "Line": 10,
+         "Column": 15
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 402,
+         "Line": 15,
+         "Column": 1
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    },
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "KWArgs",
+      {
+       "Target": "",
+       "Name": "kwargs_mixed_call",
+       "Message": "Calling %[3]v `%[1]v` with kwargs (**) as well as with arg `%[2]v`",
+       "Args": [
+        "Foo",
+        {
+         "Name": "X",
+         "Pos": {
+          "Pos": {
+           "Filename": "",
+           "Offset": 291,
+           "Line": 11,
+           "Column": 30
+          },
+          "EndPos": {
+           "Filename": "",
+           "Offset": 294,
+           "Line": 11,
+           "Column": 33
+          }
+         }
+        },
+        "function"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 271,
+         "Line": 11,
+         "Column": 10
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 295,
+         "Line": 11,
+         "Column": 34
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    },
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "KWArgs",
+      {
+       "Target": "",
+       "Name": "kwargs_mixed_call",
+       "Message": "Calling %[3]v `%[1]v` with kwargs (**) as well as with arg `%[2]v`",
+       "Args": [
+        "dict",
+        {
+         "Name": "A",
+         "Pos": {
+          "Pos": {
+           "Filename": "",
+           "Offset": 311,
+           "Line": 12,
+           "Column": 15
+          },
+          "EndPos": {
+           "Filename": "",
+           "Offset": 314,
+           "Line": 12,
+           "Column": 18
+          }
+         }
+        },
+        "function"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 306,
+         "Line": 12,
+         "Column": 10
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 331,
+         "Line": 13,
+         "Column": 3
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    },
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "KWArgs",
+      {
+       "Target": "",
+       "Name": "kwargs_mixed_call",
+       "Message": "Calling %[3]v `%[1]v` with kwargs (**) as well as with arg `%[2]v`",
+       "Args": [
+        "Artifact.Generic.Client.Info",
+        {
+         "Name": "X",
+         "Pos": {
+          "Pos": {
+           "Filename": "",
+           "Offset": 381,
+           "Line": 13,
+           "Column": 53
+          },
+          "EndPos": {
+           "Filename": "",
+           "Offset": 384,
+           "Line": 13,
+           "Column": 56
+          }
+         }
+        },
+        "plugin"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 336,
+         "Line": 13,
+         "Column": 8
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 386,
+         "Line": 14,
+         "Column": 1
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": [
     {
@@ -299,7 +683,28 @@ Output: [
    "Artifact": "name: Generic.Client.Info\nsources:\n- query: SELECT * FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "(0,0) yaml_error: YAML Error: Unable to override built in artifact Generic.Client.Info"
+    {
+     "Target": "",
+     "Name": "yaml_error",
+     "Message": "YAML Error: %[1]v",
+     "Args": [
+      {}
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": null,
    "Definitions": {},

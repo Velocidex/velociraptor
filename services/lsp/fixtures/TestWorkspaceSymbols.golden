@@ -191,6 +191,11 @@ Workspace symbols for query:
   "location": null
  },
  {
+  "name": "carve_evtx",
+  "kind": 5,
+  "location": null
+ },
+ {
   "name": "carve_usn",
   "kind": 5,
   "location": null
