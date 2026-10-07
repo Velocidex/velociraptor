@@ -89,7 +89,7 @@ jobs:
 
       run: |
         # Only run short tests on CI because the CI machines are slow
-        go test -short -v ./... --tags server_vql -p 2
+        go test -short -v ./... --tags "velomain server_vql" -p 2
 
     - name: Test Golden Generic
       shell: cmd

@@ -68,7 +68,7 @@ var (
 	// google cloud suddenly increased its dependency size by about
 	// 20mb without warning. This little documented tag is used to
 	// remove useless bloat.
-	base_tags = " server_vql extras disable_grpc_modules goexperiment.nojsonv2 "
+	base_tags = " velomain server_vql extras disable_grpc_modules goexperiment.nojsonv2 "
 
 	// Where we store the toolchains and package caches
 	toolchain_dir     = "./build/toolchain"
