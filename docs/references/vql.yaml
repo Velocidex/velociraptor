@@ -4562,7 +4562,7 @@
     immediately before calling the if() plugin.
 
     For example:
-    ```sql
+    ```vql
     SELECT * FROM if(condition=FALSE, then=log(message="I ran!"))
     ```
 
@@ -4572,7 +4572,7 @@
     plugin.
 
     The correct way to call the if() plugin is with queries:
-    ```sql
+    ```vql
     SELECT * FROM if(condition=FALSE,
     then={
        SELECT log(message="I ran!") FROM scope()
@@ -4581,7 +4581,7 @@
 
     Or use stored queries
 
-    ```sql
+    ```vql
     LET LogQuery = SELECT log(message="I ran!") FROM scope()
 
     SELECT * FROM if(condition=FALSE, then=LogQuery)
@@ -13644,4 +13644,3 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
-

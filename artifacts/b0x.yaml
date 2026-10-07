@@ -8,6 +8,8 @@ fmt: false
 compression:
     compress: true
 
+tags: "velomain"
+
 output: "ab0x.go"
 custom:
   - files:
