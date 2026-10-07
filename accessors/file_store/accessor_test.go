@@ -2,6 +2,7 @@ package file_store_test
 
 import (
 	"errors"
+	"io"
 	"testing"
 
 	"github.com/stretchr/testify/suite"
@@ -144,7 +145,8 @@ func (self *FSAccessorTest) TestSparseFiles() {
 
 	buf := make([]byte, 100)
 	n, err := fd.Read(buf)
-	assert.NoError(self.T(), err)
+	assert.Error(self.T(), err)
+	assert.True(self.T(), errors.Is(err, io.EOF))
 
 	assert.Equal(self.T(), string(buf[:n]), "Hello\x00\x00\x00\x00\x00World")
 

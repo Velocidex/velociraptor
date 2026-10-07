@@ -98,11 +98,6 @@ func (self VerifyFunction) Call(ctx context.Context,
 }
 
 func stateToDict(state *launcher.AnalysisState) *ordereddict.Dict {
-	var errors []string
-	for _, e := range state.Errors {
-		errors = append(errors, e.Error())
-	}
-
 	definitions := make(map[string]*ordereddict.Dict)
 	for key, d := range state.Definitions {
 		var args []string
@@ -120,7 +115,7 @@ func stateToDict(state *launcher.AnalysisState) *ordereddict.Dict {
 	return ordereddict.NewDict().
 		Set("Artifact", state.Artifact).
 		Set("Permissions", state.Permissions).
-		Set("Errors", errors).
+		Set("Errors", state.Errors).
 		Set("Warnings", state.Warnings).
 		Set("Definitions", definitions).
 		Set("Suppressions", state.Suppressions)
