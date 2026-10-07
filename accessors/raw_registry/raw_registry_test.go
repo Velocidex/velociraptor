@@ -46,10 +46,10 @@ func TestAccessorRawReg(t *testing.T) {
 		globber := glob.NewGlobber()
 		defer globber.Close()
 
-		glob_path, err := accessors.NewLinuxOSPath("/SAM/Domains/*/*")
 		assert.NoError(t, err)
 
-		globber.Add(glob_path)
+		globber.AddGlob("/SAM/Domains/*/*",
+			accessors.MustNewWindowsRegistryPath(""))
 
 		hits := []string{}
 		for hit := range globber.ExpandWithContext(

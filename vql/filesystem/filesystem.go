@@ -74,18 +74,6 @@ func (self GlobPlugin) Call(
 			return
 		}
 
-		// Expand glob braces over the entire expression - this allows
-		// the alternatives to cover entire paths.
-		var globs []string
-		for _, g := range arg.Globs {
-			new_args, err := glob.ExpandBraces(g)
-			if err != nil {
-				scope.Log("glob: %v", err)
-				return
-			}
-			globs = append(globs, new_args...)
-		}
-
 		// Get the root of the glob. If not provided we use the
 		// default root for the accessor.
 		root := arg.Root
@@ -100,7 +88,13 @@ func (self GlobPlugin) Call(
 		if root == nil {
 			// Get the default top level path for this accessor.
 			root = accessor_root
+
 		} else {
+
+			// It may be (although unlikely that the root path is
+			// actually a different type than the accessor
+			// specified. In this case, we need to coerce the root
+			// type into the correct accessor.
 			root.Manipulator = accessor_root.Manipulator
 		}
 
@@ -128,19 +122,13 @@ func (self GlobPlugin) Call(
 
 		// If root is not specified we try to find a common
 		// root from the globs.
-		for _, item := range globs {
-			item_path, err := root.Parse(item)
-			if err != nil {
-				scope.Log("glob: %v", err)
-				return
-			}
-
-			err = globber.Add(item_path)
+		for _, item := range arg.Globs {
+			err = globber.AddGlob(item, root)
 			if err != nil {
 				// Reject this expression but keep going - there may
 				// be other globs.
 				scope.Log("glob: Rejected glob expression %v: %v",
-					item_path, err)
+					item, err)
 			}
 		}
 

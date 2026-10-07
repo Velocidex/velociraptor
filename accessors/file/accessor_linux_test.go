@@ -65,8 +65,8 @@ func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
-	glob_path, _ := accessors.NewLinuxOSPath("/**/ls")
-	tmp_path, _ := accessors.NewLinuxOSPath(tmpdir)
+	root_path := accessors.MustNewLinuxOSPath("")
+	tmp_path := accessors.MustNewLinuxOSPath(tmpdir)
 
 	options := glob.GlobOptions{
 		DoNotFollowSymlinks: false,
@@ -74,7 +74,7 @@ func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {
 	globber := glob.NewGlobber().WithOptions(options)
 	defer globber.Close()
 
-	globber.Add(glob_path)
+	globber.AddGlob("/**/ls", root_path)
 
 	accessor, err := accessors.GetAccessor("file", scope)
 	assert.NoError(self.T(), err)

@@ -8,16 +8,16 @@ auto:
 	go run make.go -v auto
 
 test: vale
-	go test -race -v --tags server_vql ./...
+	go test -race -v --tags "velomain server_vql" ./...
 
 test_less: vale
-	go test -race -v --tags server_vql ./... 2>&1 | less
+	go test -race -v --tags "velomain server_vql" ./... 2>&1 | less
 
 golden:
 	./output/velociraptor -v --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --filter=${GOLDEN}
 
 debug_golden:
-	dlv debug --init ./scripts/dlv.init --build-flags="-tags 'server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm -v --debug --filter=${GOLDEN}
+	dlv debug --init ./scripts/dlv.init --build-flags="-tags 'velomain server_vql extras'" ./bin/ -- --config artifacts/testdata/windows/test.config.yaml golden artifacts/testdata/server/testcases/ --env srcDir=`pwd` --disable_alarm -v --debug --filter=${GOLDEN}
 
 references:
 	./output/velociraptor vql export docs/references/vql.yaml > docs/references/vql.yaml.tmp
@@ -116,13 +116,13 @@ check_versions:
 	python3 -X utf8 ./scripts/check_versions.py 3
 
 debug:
-	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug
+	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'velomain server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug
 
 debug_minion:
-	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug --minion --config.frontend-bind-port 8005 --debug_port 6061
+	dlv debug --init ./scripts/dlv.init --wd=. --build-flags="-tags 'velomain server_vql extras'" ./bin/ -- frontend --disable-panic-guard -v --debug --minion --config.frontend-bind-port 8005 --debug_port 6061
 
 debug_client:
-	dlv debug --init ./scripts/dlv.init --build-flags="-tags 'server_vql extras'" ./bin/ -- client -v --debug --debug_port 6061
+	dlv debug --init ./scripts/dlv.init --build-flags="-tags 'velomain server_vql extras'" ./bin/ -- client -v --debug --debug_port 6061
 
 # Do this after fetching the build artifacts with `gh run download <RunID>`
 UpdateCIArtifacts:

@@ -184,24 +184,13 @@ func TestGlobWithContext(t *testing.T) {
 		globber := NewGlobber()
 		defer globber.Close()
 
-		var total_err error
-		patterns, err := ExpandBraces(fixture.pattern)
-		if err != nil {
-			total_err = err
-		}
-
 		// The error may occur on one of the patterns in the brace
 		// expansion but not on all.
-		for _, pattern := range patterns {
-			err := globber.Add(accessors.MustNewLinuxOSPath(pattern))
-			if err != nil {
-				total_err = err
-			}
-		}
-
+		err := globber.AddGlob(fixture.pattern,
+			accessors.MustNewLinuxOSPath(""))
 		if fixture.err_regex != "" {
-			assert.Error(t, total_err, "Expected %v", fixture.err_regex)
-			assert.ErrorContains(t, total_err, fixture.err_regex)
+			assert.Error(t, err, "Expected %v", fixture.err_regex)
+			assert.ErrorContains(t, err, fixture.err_regex)
 		}
 
 		output_chan := globber.ExpandWithContext(

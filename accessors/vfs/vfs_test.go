@@ -215,10 +215,10 @@ func (self *TestSuite) TestVFSAccessor() {
 	globber := glob.NewGlobber()
 	defer globber.Close()
 
-	glob_path, err := accessors.NewGenericOSPath("/**")
 	assert.NoError(self.T(), err)
 
-	globber.Add(glob_path)
+	globber.AddGlob("/**",
+		accessors.MustNewGenericOSPath(""))
 
 	hits := []string{}
 	file_content := ordereddict.NewDict()

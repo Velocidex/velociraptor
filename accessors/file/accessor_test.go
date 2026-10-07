@@ -172,8 +172,8 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 	globber := glob.NewGlobber()
 	defer globber.Close()
 
-	glob_path, _ := accessors.NewGenericOSPath("**/*.txt")
-	globber.Add(glob_path)
+	globber.AddGlob("**/*.txt",
+		accessors.MustNewGenericOSPath(""))
 
 	hits := []string{}
 	tmp_path, _ := accessors.NewGenericOSPath(self.tmpdir)
