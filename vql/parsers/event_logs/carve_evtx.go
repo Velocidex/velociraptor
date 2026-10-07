@@ -95,7 +95,8 @@ func (self _CarveEvtxPlugin) Call(
 			}()
 		}
 
-		scope.Log("carve_evtx: Carving %v for EVTX chunks", arg.Filename)
+		scope.Log("carve_evtx: Carving %v for EVTX chunks",
+			utils.Elide(arg.Filename.String(), 50))
 
 		stats := &carveStats{}
 		var records_emitted int64

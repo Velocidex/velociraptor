@@ -10,13 +10,13 @@ Queries:
   - LET Image <= Noise + Chunk + Noise
 
   # The chunk is found at offset 777 with valid checksums.
-  - SELECT ChunkOffset, ChunkHeaderValid, ChunkDataValid, ChunkTruncated,
+  - SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.kDataValid, ChunkInfo.Truncated,
            System.EventID.Value AS EventID, System.EventRecordID AS RecordID,
            System.Channel AS Channel
     FROM carve_evtx(filename=Image, accessor="data")
 
   # Carving the original log file finds the chunk after the file header.
-  - SELECT ChunkOffset, System.EventID.Value AS EventID
+  - SELECT ChunkInfo.Offset, System.EventID.Value AS EventID
     FROM carve_evtx(
       filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')
 
@@ -25,7 +25,7 @@ Queries:
 
   # A damaged chunk header is still parsed but flagged as invalid.
   - LET Damaged <= Noise + Chunk[:256] + "XXXX" + Chunk[260:]
-  - SELECT ChunkOffset, ChunkHeaderValid, ChunkDataValid,
+  - SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.DataValid,
            System.EventID.Value AS EventID
     FROM carve_evtx(filename=Damaged, accessor="data")
 

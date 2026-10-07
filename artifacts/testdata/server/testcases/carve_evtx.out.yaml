@@ -11,13 +11,13 @@ Query: LET Image <= Noise + Chunk + Noise
 Output: []
 
 # The chunk is found at offset 777 with valid checksums.
-Query: SELECT ChunkOffset, ChunkHeaderValid, ChunkDataValid, ChunkTruncated, System.EventID.Value AS EventID, System.EventRecordID AS RecordID, System.Channel AS Channel FROM carve_evtx(filename=Image, accessor="data")
+Query: SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.kDataValid, ChunkInfo.Truncated, System.EventID.Value AS EventID, System.EventRecordID AS RecordID, System.Channel AS Channel FROM carve_evtx(filename=Image, accessor="data")
 Output: [
  {
-  "ChunkOffset": 777,
-  "ChunkHeaderValid": true,
-  "ChunkDataValid": true,
-  "ChunkTruncated": false,
+  "ChunkInfo.Offset": 777,
+  "ChunkInfo.HeaderValid": true,
+  "ChunkInfo.kDataValid": null,
+  "ChunkInfo.Truncated": false,
   "EventID": 104,
   "RecordID": 27736,
   "Channel": "System"
@@ -25,10 +25,10 @@ Output: [
 ]
 
 # Carving the original log file finds the chunk after the file header.
-Query: SELECT ChunkOffset, System.EventID.Value AS EventID FROM carve_evtx( filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')
+Query: SELECT ChunkInfo.Offset, System.EventID.Value AS EventID FROM carve_evtx( filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')
 Output: [
  {
-  "ChunkOffset": 4096,
+  "ChunkInfo.Offset": 4096,
   "EventID": 104
  }
 ]
@@ -41,12 +41,12 @@ Output: []
 Query: LET Damaged <= Noise + Chunk[:256] + "XXXX" + Chunk[260:]
 Output: []
 
-Query: SELECT ChunkOffset, ChunkHeaderValid, ChunkDataValid, System.EventID.Value AS EventID FROM carve_evtx(filename=Damaged, accessor="data")
+Query: SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.DataValid, System.EventID.Value AS EventID FROM carve_evtx(filename=Damaged, accessor="data")
 Output: [
  {
-  "ChunkOffset": 777,
-  "ChunkHeaderValid": false,
-  "ChunkDataValid": true,
+  "ChunkInfo.Offset": 777,
+  "ChunkInfo.HeaderValid": false,
+  "ChunkInfo.DataValid": true,
   "EventID": 104
  }
 ]
