@@ -34,11 +34,9 @@ func TestPagedReader(t *testing.T) {
 	reads := 0
 	for {
 		n, err := fd.Read(buf)
-		if n == 0 || err == io.EOF {
+		if n == 0 || err != nil && err != io.EOF {
 			break
 		}
-		assert.NoError(t, err)
-
 		reads++
 		result += string(buf[:n])
 	}

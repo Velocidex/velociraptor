@@ -56,7 +56,51 @@ Output: [
    "Artifact": "name: NotCallingRequiredArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo() FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "(0,0) artifact_vql_error: NotCallingRequiredArg: query: (1,9) required_arg_missing: While calling VQL definition Foo(), required arg X is not provided"
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "NotCallingRequiredArg",
+      {
+       "Target": "",
+       "Name": "required_arg_missing",
+       "Message": "While calling VQL definition %[2]v(), required arg %[1]v is not provided",
+       "Args": [
+        "X",
+        "Foo"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 8,
+         "Line": 1,
+         "Column": 9
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 9,
+         "Line": 1,
+         "Column": 10
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": null,
    "Definitions": {
@@ -78,8 +122,96 @@ Output: [
    "Artifact": "name: CallingBadArg\nsources:\n- query: |\n    LET Foo(X, Y=1) = X+Y\n    SELECT Foo(Z=1) FROM scope()\n",
    "Permissions": null,
    "Errors": [
-    "(0,0) artifact_vql_error: CallingBadArg: query: (2,12) invalid_arg: Invalid arg Z for VQL definition Foo",
-    "(0,0) artifact_vql_error: CallingBadArg: query: (1,9) required_arg_missing: While calling VQL definition Foo(), required arg X is not provided"
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "CallingBadArg",
+      {
+       "Target": "",
+       "Name": "invalid_arg",
+       "Message": "Invalid arg %[1]v for VQL definition %[2]v",
+       "Args": [
+        "Z",
+        "Foo"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 33,
+         "Line": 2,
+         "Column": 12
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 36,
+         "Line": 2,
+         "Column": 15
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    },
+    {
+     "Target": "",
+     "Name": "artifact_vql_error",
+     "Message": "%[1]v: query: %[2]v",
+     "Args": [
+      "CallingBadArg",
+      {
+       "Target": "",
+       "Name": "required_arg_missing",
+       "Message": "While calling VQL definition %[2]v(), required arg %[1]v is not provided",
+       "Args": [
+        "X",
+        "Foo"
+       ],
+       "Pos": {
+        "Pos": {
+         "Filename": "",
+         "Offset": 8,
+         "Line": 1,
+         "Column": 9
+        },
+        "EndPos": {
+         "Filename": "",
+         "Offset": 9,
+         "Line": 1,
+         "Column": 10
+        }
+       }
+      }
+     ],
+     "Pos": {
+      "Pos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      },
+      "EndPos": {
+       "Filename": "",
+       "Offset": 0,
+       "Line": 0,
+       "Column": 0
+      }
+     }
+    }
    ],
    "Warnings": null,
    "Definitions": {

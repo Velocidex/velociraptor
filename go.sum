@@ -1119,12 +1119,12 @@ software.sslmate.com/src/go-pkcs12 v0.2.0 h1:nlFkj7bTysH6VkC4fGphtjXRbezREPgrHuJ
 software.sslmate.com/src/go-pkcs12 v0.2.0/go.mod h1:23rNcYsMabIc1otwLpTkCCPwUq6kQsTyowttG/as0kQ=
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e h1:uf1AsYiIzUMJMIdFsVdrIw/BjrGzZbrsnz9xmeZmlYU=
 www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e/go.mod h1:jk+uZGukrJZWgnNH6q9tJLUnbugHEDPCQdIOmBBMXY4=
-www.velocidex.com/golang/evtx v0.2.1-0.20260916104054-0ef2ce4e83a8 h1:Me1/9DB8ZMH6+ZNFWPlfn3JEFgZNH59Cfk83wcQ2PEk=
-www.velocidex.com/golang/evtx v0.2.1-0.20260916104054-0ef2ce4e83a8/go.mod h1:AEH50xeMcAUGiCXLAueUOq800jFgFyqngyPt88fDzow=
+www.velocidex.com/golang/evtx v0.2.1-0.20261007074225-6bf21c30f7fe h1:CaGlM+7W48tSmI1k7/aodJXwmOQwgKSB/UkQ+zY6V5I=
+www.velocidex.com/golang/evtx v0.2.1-0.20261007074225-6bf21c30f7fe/go.mod h1:AEH50xeMcAUGiCXLAueUOq800jFgFyqngyPt88fDzow=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57 h1:CRdOpwPmVFzjfSrJXLj+xHOMyKfK4+WlJTf9IDMdXtk=
 www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57/go.mod h1:H1Gw62XkspXEtZPT2ep+L57GgdKIDHwueazxKnn5EXc=
-www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5 h1:GDqKvZ2fdZVHQRSMczl41u2DPJEgbYdK6aaVkCBB8Jc=
-www.velocidex.com/golang/go-ntfs v0.2.1-0.20260722055306-c81244c6bcd5/go.mod h1:4MSO8W9iNMXyBpjSpxApWfMjJUb9IWFD2Yis5JPZaSY=
+www.velocidex.com/golang/go-ntfs v0.2.2-0.20261007101255-20cc4d33923d h1:RzEtNw2k3jX8w5HLneg73Oz3vqi3YoYSHenoKjAC8S4=
+www.velocidex.com/golang/go-ntfs v0.2.2-0.20261007101255-20cc4d33923d/go.mod h1:4MSO8W9iNMXyBpjSpxApWfMjJUb9IWFD2Yis5JPZaSY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9 h1:y5nOjOAyjH36mEGZsX2Wx3XpS78e9Jk2wK1M99rn4TY=
 www.velocidex.com/golang/go-pe v0.1.1-0.20251107001057-f93001158cd9/go.mod h1:rEueOnxvtbV/uFfCeD44KvC6TL9ts/1S3VNmRudSaAc=
 www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980 h1:YZhTjoaHG0/wuIOYHDg4q5nlKLx4BOkfORsiv8hWmxw=

@@ -1,0 +1,40 @@
+Queries:
+  # Build a fake disk image in memory: unrelated data, then an EVTX
+  # chunk at an unaligned offset, then more unrelated data. The chunk
+  # records the System log being cleared (Event ID 104).
+  - LET Chunk <= read_file(
+      filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx',
+      offset=4096, length=65536)
+  - LET Noise <= read_file(
+      filename=srcDir + '/artifacts/testdata/files/SAM', length=777)
+  - LET Image <= Noise + Chunk + Noise
+
+  # The chunk is found at offset 777 with valid checksums.
+  - SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.kDataValid, ChunkInfo.Truncated,
+           System.EventID.Value AS EventID, System.EventRecordID AS RecordID,
+           System.Channel AS Channel
+    FROM carve_evtx(filename=Image, accessor="data")
+
+  # Carving the original log file finds the chunk after the file header.
+  - SELECT ChunkInfo.Offset, System.EventID.Value AS EventID
+    FROM carve_evtx(
+      filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')
+
+  # Starting after the chunk finds nothing.
+  - SELECT * FROM carve_evtx(filename=Image, accessor="data", start_offset=778)
+
+  # A damaged chunk header is still parsed but flagged as invalid.
+  - LET Damaged <= Noise + Chunk[:256] + "XXXX" + Chunk[260:]
+  - SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.DataValid,
+           System.EventID.Value AS EventID
+    FROM carve_evtx(filename=Damaged, accessor="data")
+
+  # Recovered chunks can be written to a new EVTX file. The duplicate
+  # chunk is written once and the damaged chunk is repaired so the
+  # file can be read by parse_evtx() and Event Viewer.
+  - LET Out <= tempfile(extension='.evtx')
+  - SELECT count() AS Rows
+    FROM carve_evtx(filename=Image + Image + Damaged, accessor="data", output=Out)
+    GROUP BY 1
+  - SELECT System.EventID.Value AS EventID, System.EventRecordID AS RecordID
+    FROM parse_evtx(filename=Out)

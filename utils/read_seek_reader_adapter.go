@@ -84,6 +84,34 @@ func (self *ReadSeekReaderAdapter) Read(buf []byte) (int, error) {
 	return n, err
 }
 
+// ReadAt reads from the delegate without changing the current offset
+// or the EOF state used by Read(), so reading past the end does not
+// cause later reads to fail.
+func (self *ReadSeekReaderAdapter) ReadAt(buf []byte, offset int64) (int, error) {
+	self.mu.Lock()
+	size := self.size
+	self.mu.Unlock()
+
+	if offset < 0 {
+		return 0, IOError
+	}
+
+	if size > 0 {
+		if offset >= size {
+			return 0, io.EOF
+		}
+		if offset+int64(len(buf)) > size {
+			n, err := self.reader.ReadAt(buf[:size-offset], offset)
+			if err == nil {
+				err = io.EOF
+			}
+			return n, err
+		}
+	}
+
+	return self.reader.ReadAt(buf, offset)
+}
+
 func (self *ReadSeekReaderAdapter) SetSize(size int64) {
 	self.mu.Lock()
 	defer self.mu.Unlock()

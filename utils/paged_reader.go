@@ -132,7 +132,11 @@ func (self *PagedReader) ReadAt(buf []byte, offset int64) (
 			to_read = len(page_buf) - page_offset
 			copy(buf[buf_idx:buf_idx+to_read],
 				page_buf[page_offset:page_offset+to_read])
-			return buf_idx + to_read, err
+
+			// EOF because the end of the buffer is past the file's
+			// end. We assume if the page buffer is short is because
+			// it is at EOF.
+			return buf_idx + to_read, io.EOF
 		}
 
 		copy(buf[buf_idx:buf_idx+to_read],

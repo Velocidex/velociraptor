@@ -1,0 +1,78 @@
+# Build a fake disk image in memory: unrelated data, then an EVTX
+# chunk at an unaligned offset, then more unrelated data. The chunk
+# records the System log being cleared (Event ID 104).
+Query: LET Chunk <= read_file( filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx', offset=4096, length=65536)
+Output: []
+
+Query: LET Noise <= read_file( filename=srcDir + '/artifacts/testdata/files/SAM', length=777)
+Output: []
+
+Query: LET Image <= Noise + Chunk + Noise
+Output: []
+
+# The chunk is found at offset 777 with valid checksums.
+Query: SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.kDataValid, ChunkInfo.Truncated, System.EventID.Value AS EventID, System.EventRecordID AS RecordID, System.Channel AS Channel FROM carve_evtx(filename=Image, accessor="data")
+Output: [
+ {
+  "ChunkInfo.Offset": 777,
+  "ChunkInfo.HeaderValid": true,
+  "ChunkInfo.kDataValid": null,
+  "ChunkInfo.Truncated": false,
+  "EventID": 104,
+  "RecordID": 27736,
+  "Channel": "System"
+ }
+]
+
+# Carving the original log file finds the chunk after the file header.
+Query: SELECT ChunkInfo.Offset, System.EventID.Value AS EventID FROM carve_evtx( filename=srcDir + '/artifacts/testdata/files/DE_104_system_log_cleared.evtx')
+Output: [
+ {
+  "ChunkInfo.Offset": 4096,
+  "EventID": 104
+ }
+]
+
+# Starting after the chunk finds nothing.
+Query: SELECT * FROM carve_evtx(filename=Image, accessor="data", start_offset=778)
+Output: []
+
+# A damaged chunk header is still parsed but flagged as invalid.
+Query: LET Damaged <= Noise + Chunk[:256] + "XXXX" + Chunk[260:]
+Output: []
+
+Query: SELECT ChunkInfo.Offset, ChunkInfo.HeaderValid, ChunkInfo.DataValid, System.EventID.Value AS EventID FROM carve_evtx(filename=Damaged, accessor="data")
+Output: [
+ {
+  "ChunkInfo.Offset": 777,
+  "ChunkInfo.HeaderValid": false,
+  "ChunkInfo.DataValid": true,
+  "EventID": 104
+ }
+]
+
+# Recovered chunks can be written to a new EVTX file. The duplicate
+# chunk is written once and the damaged chunk is repaired so the
+# file can be read by parse_evtx() and Event Viewer.
+Query: LET Out <= tempfile(extension='.evtx')
+Output: []
+
+Query: SELECT count() AS Rows FROM carve_evtx(filename=Image + Image + Damaged, accessor="data", output=Out) GROUP BY 1
+Output: [
+ {
+  "Rows": 3
+ }
+]
+
+Query: SELECT System.EventID.Value AS EventID, System.EventRecordID AS RecordID FROM parse_evtx(filename=Out)
+Output: [
+ {
+  "EventID": 104,
+  "RecordID": 27736
+ },
+ {
+  "EventID": 104,
+  "RecordID": 27736
+ }
+]
+

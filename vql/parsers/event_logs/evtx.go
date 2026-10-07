@@ -38,6 +38,37 @@ type _ParseEvtxPluginArgs struct {
 	Workers   int64               `vfilter:"optional,field=workers,doc=If specified we use this many workers to parse the file in parallel (default 1)."`
 }
 
+// Get a resolver to expand event messages. The resolver is closed
+// when the root scope is destroyed.
+func getMessageResolver(
+	scope vfilter.Scope, database string) (evtx.MessageResolver, error) {
+	var resolver evtx.MessageResolver
+	var err error
+
+	if database != "" {
+		resolver, err = evtx.NewDBResolver(database)
+	} else {
+		// If the plugin did not specify a database, use the local
+		// resolver - On windows this will search DLLs for the messages.
+		resolver, err = evtx.GetNativeResolver(evtx.MessageResolverOpts{
+			LangPreferenceRegeExp: vql_subsystem.GetStringFromRow(
+				scope, scope, constants.EVTX_PREFERRED_LANG),
+		})
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	// Close the db when we are done.
+	err = vql_subsystem.GetRootScope(scope).AddDestructor(resolver.Close)
+	if err != nil {
+		resolver.Close()
+		return nil, err
+	}
+
+	return resolver, nil
+}
+
 type _ParseEvtxPlugin struct{}
 
 func (self _ParseEvtxPlugin) Call(
@@ -58,27 +89,8 @@ func (self _ParseEvtxPlugin) Call(
 			return
 		}
 
-		var resolver evtx.MessageResolver
-		if arg.Database != "" {
-			resolver, err = evtx.NewDBResolver(arg.Database)
-		} else {
-			// If the plugin did not specify a database, use the local
-			// resolver - On windows this will search DLLs for the messages.
-			resolver, err = evtx.GetNativeResolver(evtx.MessageResolverOpts{
-				LangPreferenceRegeExp: vql_subsystem.GetStringFromRow(
-					scope, scope, constants.EVTX_PREFERRED_LANG),
-			})
-		}
-
+		resolver, err := getMessageResolver(scope, arg.Database)
 		if err != nil {
-			scope.Log("parse_evtx: %s", err.Error())
-			return
-		}
-
-		// Close the db when we are done.
-		err = vql_subsystem.GetRootScope(scope).AddDestructor(resolver.Close)
-		if err != nil {
-			resolver.Close()
 			scope.Log("parse_evtx: %s", err.Error())
 			return
 		}
