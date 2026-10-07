@@ -197,7 +197,12 @@ func (self *Globber) AddGlob(glob string,
 		return err
 	}
 	for _, g := range new_globs {
-		err = self.add_pathspec(root.Append(g))
+		ps, err := root.Parse(g)
+		if err != nil {
+			return err
+		}
+
+		err = self.add_pathspec(ps)
 		if err != nil {
 			return err
 		}

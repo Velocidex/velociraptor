@@ -65,8 +65,8 @@ func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {
 		Set(vql_subsystem.ACL_MANAGER_VAR, acl_managers.NullACLManager{}))
 	scope.SetLogger(log.New(os.Stderr, " ", 0))
 
-	root_path, _ := accessors.NewLinuxOSPath("")
-	tmp_path, _ := accessors.NewLinuxOSPath(tmpdir)
+	root_path := accessors.MustNewLinuxOSPath("")
+	tmp_path := accessors.MustNewLinuxOSPath(tmpdir)
 
 	options := glob.GlobOptions{
 		DoNotFollowSymlinks: false,
