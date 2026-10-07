@@ -14,6 +14,7 @@ import (
 	"www.velocidex.com/golang/evtx"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -39,9 +40,11 @@ func noise(rng *rand.Rand, size int) []byte {
 
 func carveAll(t *testing.T, image []byte, start, end int64) (
 	[]*carvedChunk, *carveStats) {
+	scope := vql_subsystem.MakeScope()
+
 	stats := &carveStats{}
 	var result []*carvedChunk
-	for chunk := range carveChunks(context.Background(),
+	for chunk := range carveChunks(context.Background(), scope,
 		bytes.NewReader(image), start, end, stats) {
 		result = append(result, chunk)
 	}
@@ -117,7 +120,11 @@ func TestCarveChunks(t *testing.T) {
 		if event_id == 104 {
 			found = true
 		}
-		chunk_offset, _ := row.GetInt64("ChunkOffset")
+
+		chunk_info_any, pres := row.Get("ChunkInfo")
+		assert.True(t, pres)
+
+		chunk_offset, _ := chunk_info_any.(*ordereddict.Dict).GetInt64("Offset")
 		assert.Equal(t, intact_offset, chunk_offset)
 	}
 	assert.True(t, found)
@@ -179,6 +186,8 @@ func TestCarveThroughAccessorAdapter(t *testing.T) {
 	third := len(image)
 	image = append(image, chunk[:0x4000]...)
 
+	scope := vql_subsystem.MakeScope()
+
 	for _, with_size := range []bool{false, true} {
 		adapter := utils.NewReadSeekReaderAdapter(bytes.NewReader(image), nil)
 		if with_size {
@@ -187,7 +196,7 @@ func TestCarveThroughAccessorAdapter(t *testing.T) {
 
 		stats := &carveStats{}
 		var offsets []int64
-		for c := range carveChunks(context.Background(),
+		for c := range carveChunks(context.Background(), scope,
 			utils.MakeReaderAtter(adapter), 0, 0, stats) {
 			offsets = append(offsets, c.Offset)
 		}
@@ -233,6 +242,8 @@ func TestCarveFromAlignedDevice(t *testing.T) {
 	last := len(image)
 	image = append(image, chunk[:0x3000]...)
 
+	scope := vql_subsystem.MakeScope()
+
 	for _, tc := range []struct {
 		start, end int64
 		expected   []int64
@@ -249,7 +260,7 @@ func TestCarveFromAlignedDevice(t *testing.T) {
 		reader, err := NewDeviceReader(image)
 		assert.NoError(t, err)
 
-		for c := range carveChunks(context.Background(),
+		for c := range carveChunks(context.Background(), scope,
 			reader,
 			tc.start, tc.end, stats) {
 			offsets = append(offsets, c.Offset)
@@ -434,7 +445,9 @@ func TestCarveCompressedChunk(t *testing.T) {
 			event_id, _ := utils.ToInt64(value)
 			found = found || event_id == 104
 
-			compressed, _ := row.Get("ChunkCompressed")
+			chunk_info_any, pres := row.Get("ChunkInfo")
+			assert.True(t, pres)
+			compressed, _ := chunk_info_any.(*ordereddict.Dict).Get("Compressed")
 			assert.Equal(t, true, compressed)
 		}
 		assert.True(t, found)
@@ -487,6 +500,8 @@ func TestCarveTruncatedLZNT1Reference(t *testing.T) {
 // Carved data is attacker controlled - run with
 // go test -fuzz FuzzCarveChunk ./vql/parsers/event_logs/
 func FuzzCarveChunk(f *testing.F) {
+	scope := vql_subsystem.MakeScope()
+
 	data, err := os.ReadFile(testEvtx)
 	if err == nil && len(data) >= 0x1000+evtx.EVTX_CHUNK_SIZE {
 		f.Add(data[0x1000 : 0x1000+evtx.EVTX_CHUNK_SIZE])
@@ -499,7 +514,7 @@ func FuzzCarveChunk(f *testing.F) {
 
 	f.Fuzz(func(t *testing.T, image []byte) {
 		stats := &carveStats{}
-		for c := range carveChunks(context.Background(),
+		for c := range carveChunks(context.Background(), scope,
 			bytes.NewReader(image), 0, 0, stats) {
 			records, _ := parseCarvedChunk(c)
 			for _, r := range records {
