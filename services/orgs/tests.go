@@ -42,6 +42,16 @@ func (self *TestOrgManager) Start(
 	self.orgs[services.ROOT_ORG_ID] = org_context
 	self.mu.Unlock()
 
+	// Let callers wait on wg for the org services to fully exit,
+	// as the real org manager does.
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+
+		<-org_context.sm.Ctx.Done()
+		org_context.sm.Wg.Wait()
+	}()
+
 	return self.startOrgFromContext(org_context)
 }
 
