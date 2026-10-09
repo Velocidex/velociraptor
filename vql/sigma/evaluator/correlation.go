@@ -101,8 +101,13 @@ func NewEventCount(
 	ctx context.Context, scope types.Scope,
 	rule sigma.Rule) (*eventCount, error) {
 	condition := rule.Correlation.Condition
+	cmp, err := getCmp(scope, condition)
+	if err != nil {
+		return nil, fmt.Errorf("While parsing rule %v: %w", rule.Title, err)
+	}
+
 	return &eventCount{
-		cmp: getCmp(scope, condition),
+		cmp: cmp,
 	}, nil
 }
 
@@ -126,10 +131,15 @@ func NewValueCount(
 		return nil, fmt.Errorf("While parsing rule %v: value_count rule requires a field in condition clause", rule.Title)
 	}
 
+	cmp, err := getCmp(scope, condition)
+	if err != nil {
+		return nil, fmt.Errorf("While parsing rule %v: %w", rule.Title, err)
+	}
+
 	return &valueCount{
 		value_map:   make(map[string]int),
 		value_field: utils.ToString(value_field_any),
-		cmp:         getCmp(scope, condition),
+		cmp:         cmp,
 	}, nil
 }
 
@@ -399,41 +409,62 @@ func NewSigmaCorrelatorGroup(
 	}
 }
 
+// The comparison operators allowed in a correlation condition clause.
+var cmpOps = map[string]func(scope vfilter.Scope, count int, value interface{}) bool{
+	"gt": func(scope vfilter.Scope, count int, value interface{}) bool {
+		return scope.Gt(count, value)
+	},
+	"gte": func(scope vfilter.Scope, count int, value interface{}) bool {
+		return scope.Gt(count, value) || scope.Eq(count, value)
+	},
+	"lt": func(scope vfilter.Scope, count int, value interface{}) bool {
+		return scope.Lt(count, value)
+	},
+	"lte": func(scope vfilter.Scope, count int, value interface{}) bool {
+		return scope.Lt(count, value) || scope.Eq(count, value)
+	},
+	"eq": func(scope vfilter.Scope, count int, value interface{}) bool {
+		return scope.Eq(count, value)
+	},
+	"neq": func(scope vfilter.Scope, count int, value interface{}) bool {
+		return !scope.Eq(count, value)
+	},
+}
+
+// Build a comparator from the condition clause. All operators
+// present must pass, so several operators together form a range
+// (e.g. gte: 5, lte: 10). Unknown operators are rejected so a typo
+// does not silently match everything.
 func getCmp(scope vfilter.Scope,
-	condition map[string]interface{}) func(count int) bool {
-	cmp := func(count int) bool {
+	condition map[string]interface{}) (func(count int) bool, error) {
+
+	type check struct {
+		op    func(scope vfilter.Scope, count int, value interface{}) bool
+		value interface{}
+	}
+
+	var checks []check
+	for k, v := range condition {
+		// value_count names the field to count here.
+		if k == "field" {
+			continue
+		}
+
+		op, pres := cmpOps[k]
+		if !pres {
+			return nil, fmt.Errorf("unsupported correlation condition %q", k)
+		}
+		checks = append(checks, check{op: op, value: v})
+	}
+
+	return func(count int) bool {
+		for _, c := range checks {
+			if !c.op(scope, count, c.value) {
+				return false
+			}
+		}
 		return true
-	}
-
-	if condition == nil {
-		return cmp
-	}
-
-	gte_value, pres := condition["gte"]
-	if pres {
-		cmp = func(count int) bool {
-			return (scope.Gt(count, gte_value) || scope.Eq(count, gte_value))
-		}
-	}
-
-	lte_value, pres := condition["lte"]
-	if pres {
-		base := cmp
-		cmp = func(count int) bool {
-			return base(count) && (scope.Lt(count, lte_value) ||
-				scope.Eq(count, lte_value))
-		}
-	}
-
-	eq_value, pres := condition["eq"]
-	if pres {
-		base := cmp
-		cmp = func(count int) bool {
-			return base(count) && scope.Eq(count, eq_value)
-		}
-	}
-
-	return cmp
+	}, nil
 }
 
 // One correlator per correlation rule
