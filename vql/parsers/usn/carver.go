@@ -26,6 +26,9 @@ type CarveUSNPluginArgs struct {
 	USNFilename   *accessors.OSPath `vfilter:"optional,field=usn_filename,doc=A path to a raw USN file to carve. If not provided we carve the image file or the device."`
 
 	disable_full_path_resolution bool
+
+	// The opened usn_filename, closed when the plugin is done.
+	usn_fd io.Closer
 }
 
 func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
@@ -92,46 +95,30 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 
 		mft_source = self.MFTFilename
 
-		// The USN stream to carve may be given as a separate file.
-	} else if self.USNFilename != nil && len(self.USNFilename.Components) > 0 {
-		accessor, err := accessors.GetAccessor(self.Accessor, scope)
+		// The USN stream to carve is given as a separate file.
+		usn_stream, size, err = self.openUSNFile(scope)
 		if err != nil {
 			return nil, nil, 0, err
 		}
-
-		stat, err := accessor.LstatWithOSPath(self.USNFilename)
-		if err != nil {
-			return nil, nil, 0, err
-		}
-
-		size = stat.Size()
-
-		usn_stream_fd, err := accessor.OpenWithOSPath(self.USNFilename)
-		if err != nil {
-			return nil, nil, 0, err
-		}
-
-		usn_stream = utils.MakeReaderAtter(usn_stream_fd)
 		usn_source = self.USNFilename
 
-		// Otherwise we carve the disk from the ntfs context.
+		// Only a USN journal ($J dump) is given. We add an empty MFT
+		// - this helps to resolve some names.
+	} else if self.USNFilename != nil && len(self.USNFilename.Components) > 0 {
+		usn_stream, size, err = self.openUSNFile(scope)
+		if err != nil {
+			return nil, nil, 0, err
+		}
+		usn_source = self.USNFilename
 
-		// Failing this we add an empty MFT - this helps to resolve
-		// some names in the case of just a USN journal $J dump.
-	} else {
 		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
 			bytes.NewReader(nil), 0x200, 0x200)
-
-		if self.USNFilename == nil || len(self.USNFilename.Components) == 0 {
-			return nil, nil, 0,
-				errors.New("Must specify usn_filename when not mft source is specified.")
-		}
-
 		mft_source = accessors.MustNewGenericOSPath("")
 		self.disable_full_path_resolution = true
 
-		usn_stream = ntfs_ctx.DiskReader
-		usn_source = mft_source
+	} else {
+		return nil, nil, 0, errors.New(
+			"one of device, image_filename, mft_filename or usn_filename is required")
 	}
 
 	if size == 0 && ntfs_ctx.Boot != nil {
@@ -142,6 +129,28 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 		usn_source, size, mft_source)
 
 	return ntfs_ctx, usn_stream, size, nil
+}
+
+// openUSNFile opens usn_filename with the requested accessor.
+func (self *CarveUSNPluginArgs) openUSNFile(scope types.Scope) (
+	io.ReaderAt, int64, error) {
+	accessor, err := accessors.GetAccessor(self.Accessor, scope)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	stat, err := accessor.LstatWithOSPath(self.USNFilename)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	fd, err := accessor.OpenWithOSPath(self.USNFilename)
+	if err != nil {
+		return nil, 0, err
+	}
+	self.usn_fd = fd
+
+	return utils.MakeReaderAtter(fd), stat.Size(), nil
 }
 
 type CarveUSNPlugin struct{}
@@ -170,6 +179,10 @@ func (self CarveUSNPlugin) Call(
 			return
 		}
 		defer ntfs_ctx.Close()
+
+		if arg.usn_fd != nil {
+			defer arg.usn_fd.Close()
+		}
 
 		options := readers.GetScopeOptions(scope)
 		if arg.Device != nil {
