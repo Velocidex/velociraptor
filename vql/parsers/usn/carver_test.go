@@ -123,3 +123,33 @@ func TestCarveUSNFromFiles(t *testing.T) {
 	assert.NotContains(t, logs, "with size 0")
 	assert.Equal(t, offsets, disk_offsets(rows), logs)
 }
+
+func TestCarveUSNFromImage(t *testing.T) {
+	dir := t.TempDir()
+
+	// Copy the test image and plant a USN record in it.
+	image, err := os.ReadFile("../../../artifacts/testdata/files/test.ntfs.dd")
+	assert.NoError(t, err)
+
+	offset := int64(len(image)) - 0x10000
+	putUSNRecordV2(image, offset, 100, "planted.txt")
+
+	image_path := filepath.Join(dir, "image.dd")
+	assert.NoError(t, os.WriteFile(image_path, image, 0644))
+
+	// image_filename used to leave the stream to carve nil, which
+	// crashed the process from inside the carver.
+	rows, logs := carve(t, ordereddict.NewDict().
+		Set("accessor", "file").
+		Set("image_filename", image_path))
+	assert.NotContains(t, logs, "PANIC")
+
+	found := false
+	for _, row := range rows {
+		off, _ := row.(*ordereddict.Dict).Get("DiskOffset")
+		if off.(int64) == offset {
+			found = true
+		}
+	}
+	assert.True(t, found, logs)
+}

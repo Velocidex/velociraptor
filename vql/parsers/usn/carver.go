@@ -50,6 +50,8 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 			return nil, nil, 0, err
 		}
 
+		// Carve the whole device.
+		usn_stream = ntfs_ctx.DiskReader
 		mft_source = self.Device
 		usn_source = self.Device
 
@@ -75,6 +77,8 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 			return nil, nil, 0, err
 		}
 
+		// Carve the whole image.
+		usn_stream = ntfs_ctx.DiskReader
 		mft_source = self.ImageFilename
 		usn_source = self.ImageFilename
 
