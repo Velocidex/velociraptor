@@ -432,9 +432,9 @@ var cmpOps = map[string]func(scope vfilter.Scope, count int, value interface{}) 
 }
 
 // Build a comparator from the condition clause. All operators
-// present must pass, so several operators together form a range
-// (e.g. gte: 5, lte: 10). Unknown operators are rejected so a typo
-// does not silently match everything.
+// present must pass, so a lower and an upper bound together form a
+// range. Unknown operators are rejected so a typo does not silently
+// match everything.
 func getCmp(scope vfilter.Scope,
 	condition map[string]interface{}) (func(count int) bool, error) {
 
