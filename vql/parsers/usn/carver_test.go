@@ -12,6 +12,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -46,7 +47,7 @@ func putUSNRecordV2(buf []byte, offset int64, mft_id uint64, name string) int64 
 }
 
 // carve runs carve_usn with args and returns the rows and the log.
-func carve(t *testing.T, args *ordereddict.Dict) ([]vfilter.Row, string) {
+func carve(args *ordereddict.Dict) ([]vfilter.Row, string) {
 	log_buffer := &bytes.Buffer{}
 	scope := vql_subsystem.MakeScope()
 	scope.AppendVars(ordereddict.NewDict().
@@ -83,17 +84,17 @@ func TestCarveUSNFromFiles(t *testing.T) {
 
 	// A raw $MFT dump from the test image (it has no USN journal).
 	fd, err := os.Open("../../../artifacts/testdata/files/test.ntfs.dd")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer fd.Close()
 
 	ntfs_ctx, err := ntfs.GetNTFSContext(fd, 0)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	mft_entry, err := ntfs_ctx.GetMFT(0)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	mft_stream, err := ntfs.OpenStream(ntfs_ctx, mft_entry,
 		ntfs.ATTR_TYPE_DATA, ntfs.WILDCARD_STREAM_ID, ntfs.WILDCARD_STREAM_NAME)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	mft_path := filepath.Join(dir, "MFT")
 	writeRange(t, mft_path, mft_stream)
 
@@ -107,7 +108,7 @@ func TestCarveUSNFromFiles(t *testing.T) {
 	}
 
 	// usn_filename alone used to dereference a nil NTFS context.
-	rows, logs := carve(t, ordereddict.NewDict().
+	rows, logs := carve(ordereddict.NewDict().
 		Set("accessor", "file").
 		Set("usn_filename", usn_path))
 	assert.NotContains(t, logs, "PANIC")
@@ -115,7 +116,7 @@ func TestCarveUSNFromFiles(t *testing.T) {
 
 	// mft_filename + usn_filename used to carve nothing: the USN file
 	// was never opened and the size was 0.
-	rows, logs = carve(t, ordereddict.NewDict().
+	rows, logs = carve(ordereddict.NewDict().
 		Set("accessor", "file").
 		Set("mft_filename", mft_path).
 		Set("usn_filename", usn_path))
@@ -129,7 +130,7 @@ func TestCarveUSNFromImage(t *testing.T) {
 
 	// Copy the test image and plant a USN record in it.
 	image, err := os.ReadFile("../../../artifacts/testdata/files/test.ntfs.dd")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	offset := int64(len(image)) - 0x10000
 	putUSNRecordV2(image, offset, 100, "planted.txt")
@@ -139,7 +140,7 @@ func TestCarveUSNFromImage(t *testing.T) {
 
 	// image_filename used to leave the stream to carve nil, which
 	// crashed the process from inside the carver.
-	rows, logs := carve(t, ordereddict.NewDict().
+	rows, logs := carve(ordereddict.NewDict().
 		Set("accessor", "file").
 		Set("image_filename", image_path))
 	assert.NotContains(t, logs, "PANIC")
