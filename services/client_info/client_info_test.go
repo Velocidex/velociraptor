@@ -89,6 +89,26 @@ sources:
 	})
 }
 
+func (self *ClientInfoTestSuite) TearDownTest() {
+	self.TestSuite.TearDownTest()
+
+	// The client info manager saves a snapshot from a background
+	// goroutine when it shuts down. Wait for it here, otherwise it
+	// can land in the next test's fresh file store just before that
+	// test's manager loads, and the next test sees stale clients.
+	done := make(chan bool)
+	go func() {
+		self.Wg.Wait()
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(10 * time.Second):
+		self.T().Fatalf("Timed out waiting for services to exit")
+	}
+}
+
 func (self *ClientInfoTestSuite) TestClientInfoModify() {
 	// Fetch the client from the manager
 	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
