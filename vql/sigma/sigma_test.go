@@ -1118,6 +1118,86 @@ level: high
 			},
 			// One row per correlation rule.
 			expected_count: 2,
+		}, {
+			description: "Correlation Test gt only fires above threshold",
+			rule: base_rule_Failed_logon + `
+title: Failed logons gt
+correlation:
+    type: event_count
+    rules:
+        - failed_logon
+    group-by:
+        - TargetUserName
+    timespan: 5m
+    condition:
+        gt: 2
+`,
+			fieldmappings: loginEvents_field_mappings,
+
+			// User A has 3 events and B has 1: only A's third event
+			// is above the threshold.
+			rows: append(loginEvents, ordereddict.NewDict().
+				Set("Timestamp", "2024-10-10T12:25:00+10").
+				Set("EventID", 4625).
+				Set("TargetDomainName", "Domain").
+				Set("TargetUserName", "A")),
+			expected_count: 1,
+		}, {
+			description: "Correlation Test unknown condition operator is rejected",
+			rule: base_rule_Failed_logon + `
+title: Failed logons typo
+correlation:
+    type: event_count
+    rules:
+        - failed_logon
+    timespan: 5m
+    condition:
+        gtt: 1
+`,
+			fieldmappings: loginEvents_field_mappings,
+			rows:          loginEvents,
+			log_regex:     `unsupported correlation condition "gtt"`,
+		}, {
+			description: "Correlation Test VALUE_COUNT with gt",
+			rule: high_priv_enum + `
+title: Enumeration of more than 2 high-privilege groups
+correlation:
+  type: value_count
+  rules:
+    - privileged_group_enumeration
+  group-by:
+    - SubjectUserName
+  timespan: 15m
+  condition:
+    gt: 2
+    field: TargetUserName
+`,
+			fieldmappings: loginEvents_field_mappings,
+
+			// Fires on the third and fourth distinct groups.
+			rows: []*ordereddict.Dict{
+				ordereddict.NewDict().
+					Set("Timestamp", "2024-10-10T12:22:00+10").
+					Set("EventID", 4799).
+					Set("SubjectUserName", "admin").
+					Set("TargetUserName", "Administrators"),
+				ordereddict.NewDict().
+					Set("Timestamp", "2024-10-10T12:23:00+10").
+					Set("EventID", 4799).
+					Set("SubjectUserName", "admin").
+					Set("TargetUserName", "Remote Desktop Users"),
+				ordereddict.NewDict().
+					Set("Timestamp", "2024-10-10T12:24:00+10").
+					Set("EventID", 4799).
+					Set("SubjectUserName", "admin").
+					Set("TargetUserName", "Remote Management Users"),
+				ordereddict.NewDict().
+					Set("Timestamp", "2024-10-10T12:25:00+10").
+					Set("EventID", 4799).
+					Set("SubjectUserName", "admin").
+					Set("TargetUserName", "Distributed COM Users"),
+			},
+			expected_count: 2,
 		},
 	}
 )

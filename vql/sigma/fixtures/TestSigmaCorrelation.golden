@@ -292,5 +292,160 @@
    },
    "Details": null
   }
+ ],
+ "Correlation Test gt only fires above threshold": [
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "EventID": 4625,
+   "TargetDomainName": "Domain",
+   "TargetUserName": "A",
+   "_MatchingRule": "Failed logon",
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "EventID": 4625,
+     "TargetDomainName": "Domain",
+     "TargetUserName": "A",
+     "_MatchingRule": "Failed logon"
+    }
+   ],
+   "_Rule": {
+    "Title": "Failed logons gt",
+    "Correlation": {
+     "type": "event_count",
+     "rules": [
+      "failed_logon"
+     ],
+     "group-by": [
+      "TargetUserName"
+     ],
+     "timespan": "5m",
+     "condition": {
+      "gt": 2
+     }
+    }
+   },
+   "Details": null
+  }
+ ],
+ "Correlation Test unknown condition operator is rejected": [],
+ "Correlation Test VALUE_COUNT with gt": [
+  {
+   "Timestamp": "2024-10-10T12:24:00+10",
+   "EventID": 4799,
+   "SubjectUserName": "admin",
+   "TargetUserName": "Remote Management Users",
+   "_MatchingRule": "High-privilege group enumeration",
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Administrators",
+     "_MatchingRule": "High-privilege group enumeration"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Desktop Users",
+     "_MatchingRule": "High-privilege group enumeration"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Management Users",
+     "_MatchingRule": "High-privilege group enumeration"
+    }
+   ],
+   "_Rule": {
+    "Title": "Enumeration of more than 2 high-privilege groups",
+    "Correlation": {
+     "type": "value_count",
+     "rules": [
+      "privileged_group_enumeration"
+     ],
+     "group-by": [
+      "SubjectUserName"
+     ],
+     "timespan": "15m",
+     "condition": {
+      "field": "TargetUserName",
+      "gt": 2
+     }
+    }
+   },
+   "Details": null
+  },
+  {
+   "Timestamp": "2024-10-10T12:25:00+10",
+   "EventID": 4799,
+   "SubjectUserName": "admin",
+   "TargetUserName": "Distributed COM Users",
+   "_MatchingRule": "High-privilege group enumeration",
+   "_Correlations": [
+    {
+     "Timestamp": "2024-10-10T12:22:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Administrators",
+     "_MatchingRule": "High-privilege group enumeration"
+    },
+    {
+     "Timestamp": "2024-10-10T12:23:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Desktop Users",
+     "_MatchingRule": "High-privilege group enumeration"
+    },
+    {
+     "Timestamp": "2024-10-10T12:24:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Remote Management Users",
+     "_MatchingRule": "High-privilege group enumeration"
+    },
+    {
+     "Timestamp": "2024-10-10T12:25:00+10",
+     "EventID": 4799,
+     "SubjectUserName": "admin",
+     "TargetUserName": "Distributed COM Users",
+     "_MatchingRule": "High-privilege group enumeration"
+    }
+   ],
+   "_Rule": {
+    "Title": "Enumeration of more than 2 high-privilege groups",
+    "Correlation": {
+     "type": "value_count",
+     "rules": [
+      "privileged_group_enumeration"
+     ],
+     "group-by": [
+      "SubjectUserName"
+     ],
+     "timespan": "15m",
+     "condition": {
+      "field": "TargetUserName",
+      "gt": 2
+     }
+    }
+   },
+   "Details": null
+  }
  ]
 }
