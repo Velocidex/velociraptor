@@ -50,6 +50,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -230,15 +231,29 @@ type timespanManager struct {
 	correlator correlationComparator
 }
 
+// Parse a Sigma timespan. Sigma allows a day unit (e.g. "1d") which
+// time.ParseDuration does not support, so handle it here.
+func parseTimespan(timespan_str string) (time.Duration, error) {
+	if timespan_str == "" {
+		return 5 * time.Minute, nil
+	}
+
+	days_str, found := strings.CutSuffix(timespan_str, "d")
+	if found {
+		days, err := strconv.ParseUint(days_str, 10, 32)
+		if err != nil {
+			return 0, fmt.Errorf("invalid timespan %q", timespan_str)
+		}
+		return time.Duration(days) * 24 * time.Hour, nil
+	}
+
+	return time.ParseDuration(timespan_str)
+}
+
 func NewTimespanManager(
 	correlator correlationComparator,
 	rule sigma.Rule) (*timespanManager, error) {
-	timespan_str := "5m"
-	if rule.Correlation.Timespan != "" {
-		timespan_str = rule.Correlation.Timespan
-	}
-
-	timespan, err := time.ParseDuration(timespan_str)
+	timespan, err := parseTimespan(rule.Correlation.Timespan)
 	if err != nil {
 		return nil, fmt.Errorf("While parsing rule timespan for %v: %w",
 			rule.Title, err)
@@ -527,6 +542,14 @@ func NewSigmaCorrelator(
 	err := evaluator.CheckRule()
 	if err != nil {
 		return nil, err
+	}
+
+	// Groups are created lazily on the first event, so validate the
+	// timespan now to report errors when the rule is loaded.
+	_, err = parseTimespan(rule.Correlation.Timespan)
+	if err != nil {
+		return nil, fmt.Errorf("While parsing rule timespan for %v: %w",
+			rule.Title, err)
 	}
 
 	return &SigmaCorrelator{
