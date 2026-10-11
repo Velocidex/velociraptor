@@ -3,9 +3,9 @@ description: |
   Enumerates Chrome/Edge/Brave/Vivaldi browser cookies including host
   key, name, timestamps, and encrypted values.
 
-  Since Chrome 96 the cookie database is stored in the profile's
-  `Network` subdirectory. The default glob searches both the current
-  and the older location.
+  Since Chrome 96 the cookie database is stored in the `Network`
+  subdirectory of each profile. The default glob searches both the
+  current and the older location.
 
   The cookies are typically encrypted by the DPAPI using the user's
   credentials. Since Velociraptor is typically not running in the user
