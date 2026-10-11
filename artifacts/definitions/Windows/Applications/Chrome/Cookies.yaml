@@ -1,7 +1,11 @@
 name: Windows.Applications.Chrome.Cookies
 description: |
-  Enumerates Chrome browser cookies including host key, name,
-  timestamps, and encrypted values.
+  Enumerates Chrome/Edge/Brave/Vivaldi browser cookies including host
+  key, name, timestamps, and encrypted values.
+
+  Since Chrome 96 the cookie database is stored in the `Network`
+  subdirectory of each profile. The default glob searches both the
+  current and the older location.
 
   The cookies are typically encrypted by the DPAPI using the user's
   credentials. Since Velociraptor is typically not running in the user
@@ -19,7 +23,7 @@ description: |
 
 parameters:
   - name: cookieGlobs
-    default: \AppData\Local\Google\Chrome\User Data\*\Cookies
+    default: \AppData\Local\{Google\Chrome,Microsoft\Edge,BraveSoftware\Brave-Browser,Vivaldi}\User Data\*\{Network\Cookies,Cookies}
   - name: cookieSQLQuery
     default: |
       SELECT creation_utc, host_key, name, value, path, expires_utc,
@@ -47,11 +51,13 @@ sources:
 
         SELECT * FROM foreach(row=cookie_files,
           query={
-            SELECT timestamp(winfiletime=creation_utc * 10) as Created,
+            SELECT User,
+                   timestamp(winfiletime=creation_utc * 10) as Created,
                    timestamp(winfiletime=last_access_utc * 10) as LastAccess,
                    timestamp(winfiletime=expires_utc * 10) as Expires,
                    host_key, name, path, value,
-                   base64encode(string=encrypted_value) as EncryptedValue
+                   base64encode(string=encrypted_value) as EncryptedValue,
+                   OSPath
             FROM sqlite(
               file=OSPath,
               query=cookieSQLQuery)
