@@ -2,6 +2,7 @@ package evaluator
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -61,5 +62,30 @@ func TestGetCmpUnknownOperator(t *testing.T) {
 	} {
 		_, err := getCmp(scope, condition)
 		assert.ErrorContains(t, err, "unsupported correlation condition")
+	}
+}
+
+func TestParseTimespan(t *testing.T) {
+	test_cases := []struct {
+		timespan string
+		expected time.Duration
+	}{
+		{"", 5 * time.Minute},
+		{"30s", 30 * time.Second},
+		{"10m", 10 * time.Minute},
+		{"2h", 2 * time.Hour},
+		{"1d", 24 * time.Hour},
+		{"7d", 7 * 24 * time.Hour},
+	}
+
+	for _, test_case := range test_cases {
+		timespan, err := parseTimespan(test_case.timespan)
+		assert.NoError(t, err, test_case.timespan)
+		assert.Equal(t, test_case.expected, timespan, test_case.timespan)
+	}
+
+	for _, timespan := range []string{"d", "-1d", "1.5d", "1x", "foo"} {
+		_, err := parseTimespan(timespan)
+		assert.Error(t, err, timespan)
 	}
 }
