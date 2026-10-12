@@ -20,7 +20,7 @@ Output: [
    "scripting"
   ],
   "HostPermissions": [
-   "<all_urls>"
+   "\u003call_urls\u003e"
   ],
   "ContentScriptMatches": [
    "https://*.example.com/*",
