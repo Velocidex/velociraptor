@@ -71,8 +71,10 @@ func (self SQLPlugin) GetHandleOther(
 			return nil, err
 		}
 
-		vql_subsystem.CacheSet(scope, cacheKey, client)
-		return &DB{DB: client}, nil
+		// Cache the wrapped handle: lookups below expect a *DB.
+		handle := &DB{DB: client}
+		vql_subsystem.CacheSet(scope, cacheKey, handle)
+		return handle, nil
 
 	}
 
