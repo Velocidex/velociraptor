@@ -64,7 +64,7 @@ sources:
                            source=ManifestFilename,
                            replace="/_locales/" + Manifest.default_locale +
                                    "/messages.json",
-                           re="/manifest.json$"))
+                           re="[/\\\\]manifest.json$"))
               },
               else={
                   -- Just fill in empty Locale results.
@@ -125,11 +125,11 @@ sources:
                regex_replace(
                  source=ManifestFilename,
                  replace="$1",
-                 re="(?:.+Extensions/([^/]+)/([^/]+)/manifest.json)$") AS Identifier,
+                 re="(?:.+Extensions[/\\\\]([^/\\\\]+)[/\\\\]([^/\\\\]+)[/\\\\]manifest.json)$") AS Identifier,
                regex_replace(
                  source=ManifestFilename,
                  replace="$2",
-                 re="(?:.+Extensions/([^/]+)/([^/]+)/manifest.json)$") AS Version,
+                 re="(?:.+Extensions[/\\\\]([^/\\\\]+)[/\\\\]([^/\\\\]+)[/\\\\]manifest.json)$") AS Version,
 
                Manifest.author as Author,
                Manifest.manifest_version AS ManifestVersion,
@@ -139,7 +139,7 @@ sources:
                regex_replace(
                  source=ManifestFilename,
                  replace="$1",
-                 re="(.+Extensions/.+/)manifest.json$") AS Path,
+                 re="(.+Extensions[/\\\\].+[/\\\\])manifest.json$") AS Path,
 
                Manifest.oauth2.scopes as Scopes,
                Manifest.permissions as Permissions,
