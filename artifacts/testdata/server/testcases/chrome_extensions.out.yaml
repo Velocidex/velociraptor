@@ -1,0 +1,48 @@
+Query: LET _ <= SELECT mock(plugin='info', results=[dict(OS='linux')]), mock(artifact=Artifact.Linux.Sys.Users, results=[dict( Uid=1000, User='test', Homedir=srcDir + '/artifacts/testdata/files/chrome_extensions')]) FROM scope()
+Output: []
+
+# One Manifest V3 extension in Chrome and one Manifest V2 extension
+# in Chromium.
+Query: SELECT User, Identifier, Version, Name, Description, Author, ManifestVersion, Persistent, Permissions, HostPermissions, ContentScriptMatches FROM Artifact.Linux.Applications.Chrome.Extensions() ORDER BY Identifier
+Output: [
+ {
+  "User": "test",
+  "Identifier": "aaaabbbbccccddddeeeeffffgggghhhh",
+  "Version": "1.2.0_0",
+  "Name": "Example V3 Extension",
+  "Description": "A Manifest V3 test extension",
+  "Author": "Example Author",
+  "ManifestVersion": 3,
+  "Persistent": null,
+  "Permissions": [
+   "storage",
+   "tabs",
+   "scripting"
+  ],
+  "HostPermissions": [
+   "<all_urls>"
+  ],
+  "ContentScriptMatches": [
+   "https://*.example.com/*",
+   "https://mail.example.net/*",
+   "https://bank.example.org/*"
+  ]
+ },
+ {
+  "User": "test",
+  "Identifier": "iiiijjjjkkkkllllmmmmnnnnoooopppp",
+  "Version": "2.1_0",
+  "Name": "Example V2 Extension",
+  "Description": "A Manifest V2 test extension",
+  "Author": null,
+  "ManifestVersion": 2,
+  "Persistent": false,
+  "Permissions": [
+   "storage",
+   "https://www.example.com/*"
+  ],
+  "HostPermissions": null,
+  "ContentScriptMatches": []
+ }
+]
+

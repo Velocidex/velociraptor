@@ -1,0 +1,23 @@
+{
+  "manifest_version": 3,
+  "name": "__MSG_appName__",
+  "description": "__MSG_appDesc__",
+  "default_locale": "en",
+  "version": "1.2.0",
+  "author": "Example Author",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": ["<all_urls>"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.example.com/*", "https://mail.example.net/*"],
+      "js": ["content.js"]
+    },
+    {
+      "matches": ["https://*.example.com/*", "https://bank.example.org/*"],
+      "js": ["bank.js"]
+    }
+  ]
+}

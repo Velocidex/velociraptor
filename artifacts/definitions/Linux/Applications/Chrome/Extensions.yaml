@@ -13,9 +13,17 @@ description: |
   those locale files. It then resolves the extensions name and
   description from there.
 
+  The default glob covers Chrome, Chromium, Edge, Brave and Vivaldi,
+  which all use the same profile layout.
+
+  Manifest V3 extensions list the sites they can read or change in
+  `host_permissions` rather than `permissions`, so both are reported.
+  `ContentScriptMatches` lists the sites where the extension injects
+  its own scripts.
+
 parameters:
   - name: extensionGlobs
-    default: /.config/google-chrome/*/Extensions/*/*/manifest.json
+    default: /.config/{google-chrome,chromium,microsoft-edge,BraveSoftware/Brave-Browser,vivaldi}/*/Extensions/*/*/manifest.json
 sources:
   - precondition: |
       SELECT OS From info() where OS = 'linux'
@@ -63,7 +71,7 @@ sources:
                   SELECT Manifest,
                          Uid, User,
                          "" AS LocaleFilename,
-                         "" AS ManifestFilename,
+                         ManifestFilename,
                          "" AS LocaleManifest
                   FROM scope()
               })
@@ -76,6 +84,15 @@ sources:
              FROM read_file(filenames=OSPath)
            },
            query=maybe_read_locale_file)
+
+        /* Content scripts are an array of objects, each with its
+           own list of matching sites. Flatten them into one list of
+           unique sites.
+        */
+        LET ContentScriptMatches(Manifest) = SELECT * FROM foreach(
+           row=Manifest.content_scripts,
+           query={ SELECT _value FROM foreach(row=matches) })
+           GROUP BY _value
 
         LET parsed_manifest_files = SELECT * from foreach(
           row=extension_manifests,
@@ -115,6 +132,9 @@ sources:
                  re="(?:.+Extensions/([^/]+)/([^/]+)/manifest.json)$") AS Version,
 
                Manifest.author as Author,
+               Manifest.manifest_version AS ManifestVersion,
+
+               /* Only set by Manifest V2 extensions. */
                Manifest.background.persistent AS Persistent,
                regex_replace(
                  source=ManifestFilename,
@@ -123,6 +143,11 @@ sources:
 
                Manifest.oauth2.scopes as Scopes,
                Manifest.permissions as Permissions,
+
+               /* Manifest V3 lists the sites an extension can access
+                  separately from its API permissions. */
+               Manifest.host_permissions AS HostPermissions,
+               ContentScriptMatches(Manifest=Manifest)._value AS ContentScriptMatches,
                Manifest.key as Key
 
         FROM parsed_manifest_files
