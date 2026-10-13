@@ -1,0 +1,8 @@
+{
+  "appName": {
+    "message": "Example V3 Extension"
+  },
+  "appDesc": {
+    "message": "A Manifest V3 test extension"
+  }
+}
