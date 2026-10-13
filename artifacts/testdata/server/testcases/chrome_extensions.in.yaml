@@ -1,0 +1,14 @@
+Queries:
+  - LET _ <= SELECT mock(plugin='info', results=[dict(OS='linux')]),
+        mock(artifact=Artifact.Linux.Sys.Users, results=[dict(
+           Uid=1000, User='test',
+           Homedir=srcDir + '/artifacts/testdata/files/chrome_extensions')])
+    FROM scope()
+
+  # One Manifest V3 extension in Chrome and one Manifest V2 extension
+  # in Chromium.
+  - SELECT User, Identifier, Version, Name, Description, Author,
+           ManifestVersion, Persistent, Permissions,
+           HostPermissions, ContentScriptMatches
+    FROM Artifact.Linux.Applications.Chrome.Extensions()
+    ORDER BY Identifier
