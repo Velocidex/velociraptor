@@ -587,9 +587,12 @@ func NewMemcacheFileStore(
 		data_cache: make(map[string]*MemcacheFileWriter),
 		concurrency: utils.NewConcurrencyControl(
 			int(max_writers), time.Hour),
-		max_age:           time.Duration(max_age) * time.Millisecond,
-		min_age:           time.Duration(ttl) * time.Millisecond,
-		pool:              pond.NewPool(int(max_writers)),
+		max_age: time.Duration(max_age) * time.Millisecond,
+		min_age: time.Duration(ttl) * time.Millisecond,
+		pool: pond.NewPool(int(max_writers),
+			pond.WithContext(ctx),
+			pond.WithQueueSize(2),
+			pond.WithoutPanicRecovery()),
 		target_memory_use: target_memory_use,
 	}
 

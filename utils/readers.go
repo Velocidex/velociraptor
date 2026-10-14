@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"bufio"
 	"fmt"
 	"io"
 	"sync"
@@ -213,5 +214,37 @@ func (self *CountingReader) Read(b []byte) (n int, err error) {
 func NewCountingReader(r io.Reader) *CountingReader {
 	return &CountingReader{
 		Reader: r,
+	}
+}
+
+type BufferedReadSeekCloser struct {
+	*bufio.Reader
+
+	fd     io.ReadSeekCloser
+	closer func()
+}
+
+func (self *BufferedReadSeekCloser) Seek(offset int64, whence int) (int64, error) {
+	n, err := self.fd.Seek(offset, whence)
+	self.Reader.Reset(self.fd)
+	return n, err
+}
+
+func (self *BufferedReadSeekCloser) Close() error {
+	if self.closer != nil {
+		self.closer()
+	}
+	return self.fd.Close()
+}
+
+func (self *BufferedReadSeekCloser) SetCloser(fn func()) {
+	self.closer = fn
+}
+
+func NewBufferedReadSeekCloser(
+	fd io.ReadSeekCloser, size int) *BufferedReadSeekCloser {
+	return &BufferedReadSeekCloser{
+		Reader: bufio.NewReaderSize(fd, size),
+		fd:     fd,
 	}
 }

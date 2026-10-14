@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"unicode/utf8"
@@ -237,7 +238,9 @@ func UnsanitizeComponentForZip(component string) string {
 }
 
 var (
-	artifactNameRegex      = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
+	artifactNameRegex = regexp.MustCompile("^[a-zA-Z0-9_. -]+$")
+	// In v0.77.3 a very restrictive check broke a bunch of artifacts.
+	//artifactNameRegex      = regexp.MustCompile("^[a-zA-Z0-9_.]+$")
 	artifactComponentRegex = regexp.MustCompile("^[0-9]")
 )
 
@@ -261,14 +264,15 @@ func ValidateArtifactNameAndSource(name string) error {
 
 func ValidateArtifactName(name string) error {
 	if !artifactNameRegex.MatchString(name) {
-		return errors.New(
-			"Invalid artifact name. Can only contain characters in this set 'a-zA-Z0-9_.'")
+		return fmt.Errorf(
+			"Invalid artifact name `%v`. Can only contain characters in this set 'a-zA-Z0-9_.'", name)
 	}
 
 	for _, part := range strings.Split(name, ".") {
 		if artifactComponentRegex.MatchString(part) {
-			return errors.New(
-				"Invalid artifact name. Name parts can not start with a number'")
+			return fmt.Errorf(
+				"Invalid artifact name `%v`. Name parts can not start with a number'",
+				name)
 		}
 	}
 

@@ -2,7 +2,11 @@ name: Generic.Client.VQL
 description: |
   Runs an arbitrary VQL query on the endpoint.
 
+# This artifact can literally run anything!
 required_permissions:
+  - EXECVE
+
+implied_permissions:
   - IMPERSONATION
 
 parameters:
