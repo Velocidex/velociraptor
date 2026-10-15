@@ -265,7 +265,7 @@ func ValidateArtifactNameAndSource(name string) error {
 func ValidateArtifactName(name string) error {
 	if !artifactNameRegex.MatchString(name) {
 		return fmt.Errorf(
-			"Invalid artifact name `%v`. Can only contain characters in this set 'a-zA-Z0-9_.'", name)
+			"Invalid artifact name `%v`. Can only contain characters in this set [a-zA-Z0-9_. -]", name)
 	}
 
 	for _, part := range strings.Split(name, ".") {
