@@ -159,7 +159,10 @@ func (self IndexPlugin) Call(
 			workers = int(arg.Workers)
 		}
 
-		pool := pond.NewPool(workers)
+		pool := pond.NewPool(workers,
+			pond.WithContext(ctx),
+			pond.WithQueueSize(2),
+			pond.WithoutPanicRecovery())
 
 		// Wait here for all the workers on exit.
 		defer pool.StopAndWait()

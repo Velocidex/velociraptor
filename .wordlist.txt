@@ -22,3 +22,4 @@ upcase
 vss
 sl
 retrnsmt
+uuid

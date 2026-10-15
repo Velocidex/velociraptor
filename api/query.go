@@ -244,7 +244,8 @@ func (self *logWriter) Write(b []byte) (int, error) {
 	return len(b), nil
 }
 
-func MakeLogger(ctx context.Context, output chan *actions_proto.VQLResponse) *log.Logger {
+func MakeLogger(ctx context.Context,
+	output chan *actions_proto.VQLResponse) *log.Logger {
 	result := &logWriter{output: output, ctx: ctx}
 	return log.New(result, "", 0)
 }

@@ -556,11 +556,21 @@ func LoadWellKnownArtifacts(ctx context.Context,
 		_, pres := global_repository.Get(
 			ctx, config_obj, wk.ArtifactName)
 		if !pres {
-			_, err := global_repository.LoadProto(&artifacts_proto.Artifact{
-				Name:        wk.ArtifactName,
+			artifact_name, source_name := paths.SplitFullSourceName(wk.ArtifactName)
+			psuedo_artifact := &artifacts_proto.Artifact{
+				Name:        artifact_name,
 				Type:        wk.ArtifactType.String(),
 				Description: "Internal Artifact - Do not use",
-			}, services.ArtifactOptions{
+			}
+
+			if source_name != "" {
+				psuedo_artifact.Sources = append(psuedo_artifact.Sources,
+					&artifacts_proto.ArtifactSource{
+						Name: source_name,
+					})
+			}
+
+			_, err := global_repository.LoadProto(psuedo_artifact, services.ArtifactOptions{
 				ArtifactIsBuiltIn:    true,
 				ArtifactIsCompiledIn: true,
 			})
