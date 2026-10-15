@@ -1300,6 +1300,32 @@ Completions:
   }
  },
  {
+  "label": "parse_unified_logs",
+  "labelDetails": {
+   "detail": "Plugin",
+   "description": "Parses MACOS unified logs"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses MACOS unified logs"
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 21
+    }
+   },
+   "newText": "parse_unified_logs()"
+  }
+ },
+ {
   "label": "parse_usn",
   "labelDetails": {
    "detail": "Plugin",
@@ -1428,6 +1454,7 @@ parse_j -> parse_pst()
 parse_j -> parse_records_with_regex()
 parse_j -> parse_recyclebin()
 parse_j -> parse_string_with_regex()
+parse_j -> parse_unified_logs()
 parse_j -> parse_usn()
 parse_j -> parse_x509()
 parse_j -> parse_xml()
@@ -2039,6 +2066,32 @@ Completions:
   }
  },
  {
+  "label": "parse_unified_logs",
+  "labelDetails": {
+   "detail": "Plugin",
+   "description": "Parses MACOS unified logs"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses MACOS unified logs"
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 14
+    },
+    "end": {
+     "line": 0,
+     "character": 18
+    }
+   },
+   "newText": "parse_unified_logs()"
+  }
+ },
+ {
   "label": "parse_usn",
   "labelDetails": {
    "detail": "Plugin",
@@ -2167,6 +2220,7 @@ pars -> parse_pst()
 pars -> parse_records_with_regex()
 pars -> parse_recyclebin()
 pars -> parse_string_with_regex()
+pars -> parse_unified_logs()
 pars -> parse_usn()
 pars -> parse_x509()
 pars -> parse_xml()
@@ -2828,6 +2882,32 @@ Completions:
   }
  },
  {
+  "label": "parse_unified_logs",
+  "labelDetails": {
+   "detail": "Plugin",
+   "description": "Parses MACOS unified logs"
+  },
+  "kind": 1,
+  "detail": "Built in Plugin",
+  "documentation": {
+   "kind": "markdown",
+   "value": "Parses MACOS unified logs"
+  },
+  "textEdit": {
+   "range": {
+    "start": {
+     "line": 0,
+     "character": 7
+    },
+    "end": {
+     "line": 0,
+     "character": 13
+    }
+   },
+   "newText": "parse_unified_logs()"
+  }
+ },
+ {
   "label": "parse_usn",
   "labelDetails": {
    "detail": "Plugin",
@@ -2956,6 +3036,7 @@ parse_ -> parse_pst()
 parse_ -> parse_records_with_regex()
 parse_ -> parse_recyclebin()
 parse_ -> parse_string_with_regex()
+parse_ -> parse_unified_logs()
 parse_ -> parse_usn()
 parse_ -> parse_x509()
 parse_ -> parse_xml()

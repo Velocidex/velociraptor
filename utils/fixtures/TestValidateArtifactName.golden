@@ -5,5 +5,6 @@
  "4E23": "Invalid artifact name `4E23`. Name parts can not start with a number'",
  "E23.23": "Invalid artifact name `E23.23`. Name parts can not start with a number'",
  "Foo3/Boo4": "OK",
- "Foo3.Boo4": "OK"
+ "Foo3.Boo4": "OK",
+ "Server.Monitor.Health/Prometheus": "OK"
 }

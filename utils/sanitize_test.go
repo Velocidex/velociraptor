@@ -78,6 +78,7 @@ func TestValidateArtifactName(t *testing.T) {
 		"E23.23",
 		"Foo3/Boo4",
 		"Foo3.Boo4",
+		"Server.Monitor.Health/Prometheus",
 	} {
 		err_str := "OK"
 		err := ValidateArtifactNameAndSource(name)
