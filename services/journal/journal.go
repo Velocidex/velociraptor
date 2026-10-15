@@ -476,7 +476,9 @@ func NewJournalService(
 	service := &JournalService{
 		config_obj: config_obj,
 		locks:      make(map[string]*sync.Mutex),
-		pool:       pond.NewPool(100),
+		pool: pond.NewPool(100, pond.WithContext(ctx),
+			pond.WithQueueSize(2),
+			pond.WithoutPanicRecovery()),
 	}
 
 	qm, err := file_store.GetQueueManager(config_obj)

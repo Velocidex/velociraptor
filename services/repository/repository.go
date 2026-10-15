@@ -207,6 +207,14 @@ func (self *Repository) LoadProto(
 	// Normalize the artifact by converting the deprecated Queries
 	// field to the Query field.
 	for _, source := range artifact.Sources {
+		// Validate the source name as well.
+		if source.Name != "" {
+			err := utils.ValidateArtifactName(source.Name)
+			if err != nil {
+				return nil, err
+			}
+		}
+
 		if source.Query == "" {
 			for _, query := range source.Queries {
 				source.Query += "\n" + query

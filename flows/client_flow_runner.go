@@ -240,6 +240,8 @@ func (self *ClientFlowRunner) MonitoringVQLResponse(
 	// Validate the query_name as a valid artifact name
 	err := utils.ValidateArtifactNameAndSource(query_name)
 	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("Rejected MonitoringVQLResponse for invalid artifact: %v", query_name)
 		return err
 	}
 
@@ -769,6 +771,8 @@ func (self *ClientFlowRunner) VQLResponse(
 	// Validate the query_name as a valid artifact name
 	err = utils.ValidateArtifactNameAndSource(query_name)
 	if err != nil {
+		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+		logger.Error("Rejected MonitoringVQLResponse for invalid artifact: %v", query_name)
 		return err
 	}
 

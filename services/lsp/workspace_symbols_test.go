@@ -35,9 +35,15 @@ func (self *LSPTestSuite) TestWorkspaceSymbols() {
 			})
 		assert.NoError(self.T(), err)
 
+		dump_symbols_json := string(lsp.DumpProtool(symbols))
+		dump_symbols_json_elided := dump_symbols_json
+		if len(dump_symbols_json_elided) > 1000 {
+			dump_symbols_json_elided = dump_symbols_json_elided[:1000] + "\n ...  Elided .... \n"
+		}
+
 		golden = append(golden, fmt.Sprintf(
-			"\nWorkspace symbols for query: %v\n%v",
-			query, lsp.DumpProtool(symbols)))
+			"\nWorkspace symbols for query: (%v bytes) %v\n%v",
+			len(dump_symbols_json), query, dump_symbols_json_elided))
 	}
 
 	goldie.Assert(self.T(), "TestWorkspaceSymbols",

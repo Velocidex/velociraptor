@@ -7851,6 +7851,26 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: parse_unified_logs
+  description: Parses MACOS unified logs.
+  type: Plugin
+  version: 1
+  args:
+  - name: base
+    type: accessors.OSPath
+    description: A base directory containing all the required files (.tracev3, .timesync,
+      uuidtext, dsc).
+    required: true
+  - name: accessor
+    type: string
+    description: The accessor to use.
+  - name: threads
+    type: int64
+    description: The number of threads to use (defalut 5).
+  metadata:
+    permissions: FILESYSTEM_READ
+  platforms:
+  - linux_amd64_cgo
 - name: parse_usn
   description: |
     Parse the USN journal from a device, image file or USN file.
@@ -8932,7 +8952,7 @@
       query is aborted
   category: server
   metadata:
-    permissions: IMPERSONATION
+    permissions: IMPERSONATION,EXECVE,FILESYSTEM_WRITE,MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
