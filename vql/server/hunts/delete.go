@@ -116,7 +116,10 @@ func (self DeleteHuntPlugin) Call(ctx context.Context,
 			workers = int(arg.Workers)
 		}
 
-		pool := pond.NewPool(workers)
+		pool := pond.NewPool(workers,
+			pond.WithContext(ctx),
+			pond.WithQueueSize(2),
+			pond.WithoutPanicRecovery())
 
 		for flow_details := range flow_chan {
 			if flow_details == nil || flow_details.Context == nil {

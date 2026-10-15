@@ -190,7 +190,7 @@ sources:
 `, "Custom." /* required_prefix */)
 
 	assert.Error(self.T(), err)
-	assert.Contains(self.T(), err.Error(), "Invalid artifact name.")
+	assert.Contains(self.T(), err.Error(), "Invalid artifact name")
 }
 
 func (self *ManagerTestSuite) TestSetArtifactOverrideBuiltIn() {

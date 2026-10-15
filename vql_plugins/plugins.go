@@ -39,6 +39,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/journald"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/sql"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/syslog"
+	_ "www.velocidex.com/golang/velociraptor/vql/parsers/unified_logs"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/usn"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 	_ "www.velocidex.com/golang/velociraptor/vql/sigma"

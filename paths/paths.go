@@ -10,7 +10,7 @@ import (
 // Fully qualified source names are obtained by joining the artifact
 // name to the source name. This splits them back up.
 func SplitFullSourceName(artifact_source string) (artifact string, source string) {
-	parts := strings.Split(artifact_source, "/")
+	parts := strings.SplitN(artifact_source, "/", 2)
 	if len(parts) == 2 {
 		return parts[0], parts[1]
 	}

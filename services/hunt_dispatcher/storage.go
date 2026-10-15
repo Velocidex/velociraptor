@@ -644,7 +644,10 @@ func (self *HuntStorageManagerImpl) LoadHuntsFromDatastore(
 		return nil, err
 	}
 
-	pool := pond.NewPool(10)
+	pool := pond.NewPool(10,
+		pond.WithContext(ctx),
+		pond.WithQueueSize(2),
+		pond.WithoutPanicRecovery())
 	tasks := []pond.Task{}
 	for _, hunt_path := range hunts {
 		hunt_id := hunt_path.Base()

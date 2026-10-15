@@ -367,7 +367,7 @@ func (self *CommsTestSuite) TestServerError() {
 
 		// This one worked and should be successful.
 		"request: /reader",
-		"response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 }
 
@@ -437,7 +437,7 @@ func (self *CommsTestSuite) TestMultiFrontends() {
 
 		// This one worked and should be successful.
 		"9 request: /reader",
-		"10 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"10 response: \n\bx\x01\x03\x00\x00\x00\x00\x01",
 	})
 }
 
@@ -514,7 +514,7 @@ func (self *CommsTestSuite) TestMultiFrontendsAllIsBorked() {
 
 		// This one worked and should be successful.
 		"14 request: /reader",
-		"15 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"15 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 }
 
@@ -580,7 +580,7 @@ func (self *CommsTestSuite) TestMultiFrontendsIntermittantFailure() {
 
 		// This time we get through.
 		"7 request: /reader",
-		"8 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"8 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 }
 
@@ -647,7 +647,7 @@ func (self *CommsTestSuite) TestMultiFrontendsHeavyFailure() {
 		"11 request: /server.pem",
 		"12 response: -----BEGIN CERTIFICATE-",
 		"13 request: /reader",
-		"14 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"14 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 
 	checkResponses(self.T(), self.frontend2.events.Get(), []string{
@@ -727,12 +727,12 @@ func (self *CommsTestSuite) TestMultiFrontendRedirect() {
 
 		// This FE is up.
 		"6 request: /reader?r=1",
-		"7 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"7 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 
 		// Next request goes straight to this FE and includes
 		// the r=1 parameter to avoid another redirect.
 		"8 request: /reader?r=1",
-		"9 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"9 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 }
 
@@ -820,7 +820,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 
 		// This FE is up.
 		"6 request: /reader?r=1",
-		"7 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"7 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 
 		// Next request goes straight to this FE and includes
 		// the r=1 parameter to avoid another redirect. FE2 is
@@ -832,7 +832,7 @@ func (self *CommsTestSuite) TestMultiFrontendRedirectWithErrors() {
 		"17 request: /server.pem",
 		"18 response: -----BEGIN CERTIFIC",
 		"19 request: /reader",
-		"20 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"20 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 }
 
@@ -900,7 +900,7 @@ func (self *CommsTestSuite) TestMultiRedirects() {
 		"10 response: -----BEGIN CERTIFICATE-",
 
 		"11 request: /reader?r=1",
-		"12 response: \n\vx\x01\x01\x00\x00\xff\xff\x00\x00\x00\x01 200",
+		"12 response: \n\bx\x01\x03\x00\x00\x00\x00\x01 200",
 	})
 
 	checkResponses(self.T(), self.frontend2.events.Get(), []string{

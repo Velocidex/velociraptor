@@ -72,12 +72,13 @@ func TestValidateArtifactName(t *testing.T) {
 	golden := ordereddict.NewDict()
 	for _, name := range []string{
 		"Foo.Bar.Baz",
-		"Foo Bar Bar",
+		"Foo Bar[ Bar",
 		"Foo/Bar/Baz",
 		"4E23",
 		"E23.23",
 		"Foo3/Boo4",
 		"Foo3.Boo4",
+		"Server.Monitor.Health/Prometheus",
 	} {
 		err_str := "OK"
 		err := ValidateArtifactNameAndSource(name)

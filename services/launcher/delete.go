@@ -82,7 +82,10 @@ func (self *FlowStorageManager) DeleteFlow(
 		ctx:          ctx,
 		config_obj:   config_obj,
 		seen:         make(map[string]bool),
-		pool:         pond.NewPool(100),
+		pool: pond.NewPool(100,
+			pond.WithContext(ctx),
+			pond.WithQueueSize(2),
+			pond.WithoutPanicRecovery()),
 	}
 
 	file_store_factory := file_store.GetFileStore(config_obj)
@@ -185,7 +188,10 @@ func (self *reporter) reset() {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	self.pool = pond.NewPool(10)
+	self.pool = pond.NewPool(10,
+		pond.WithContext(self.ctx),
+		pond.WithQueueSize(2),
+		pond.WithoutPanicRecovery())
 }
 
 func (self *reporter) wait() {

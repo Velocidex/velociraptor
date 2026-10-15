@@ -277,11 +277,22 @@ func runStringQuery(
 
 func (self QueryPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.PluginInfo {
 	return &vfilter.PluginInfo{
-		Name:     "query",
-		Doc:      "Evaluate a VQL query.",
-		ArgType:  type_map.AddType(scope, &QueryPluginArgs{}),
-		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.IMPERSONATION).Build(),
-		Version:  2,
+		Name:    "query",
+		Doc:     "Evaluate a VQL query.",
+		ArgType: type_map.AddType(scope, &QueryPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.IMPERSONATION,
+
+			// Generally the verifier can not see inside the command
+			// to gather any required permissions, so we declare here
+			// the most dangerous permissions to make sure the
+			// verifier can warn about anything bad that can possibly
+			// be used from here.
+			acls.EXECVE,
+			acls.FILESYSTEM_WRITE,
+			acls.MACHINE_STATE,
+		).Build(),
+		Version: 2,
 	}
 }
 

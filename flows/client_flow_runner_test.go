@@ -1052,7 +1052,7 @@ func (self *ServerTestSuite) TestVQLResponseInvalid() {
 				JSONLResponse: fmt.Sprintf(
 					"{\"ClientId\": \"%s\", \"Column1\": \"Foo\"}\n", self.client_id),
 				Query: &actions_proto.VQLRequest{
-					Name: "some invalid artiface name",
+					Name: "some invalid [artifact] name",
 				},
 			},
 		})
