@@ -1,0 +1,64 @@
+name: Windows.Detection.LOLBins
+author: "Haroon Arshad"
+description: |
+  Hunts for suspicious command lines of legitimate Windows binaries
+  commonly abused by adversaries (LOLBins).
+
+  Living-off-the-land binaries are trusted, signed system tools, so
+  allow-listing by name or path is not enough: what matters is *how*
+  they are invoked. This artifact enumerates currently running processes
+  and matches their command lines against a table of suspicious
+  invocation patterns derived from the LOLBAS project
+  (https://lolbas-project.github.io), covering techniques such as
+  System Binary Proxy Execution (T1218), Ingress Tool Transfer (T1105),
+  WMI execution (T1047) and trusted developer utility abuse (T1127).
+
+  Each hit returns the process details plus the matched rule, so an
+  analyst can triage quickly. Results still need review: some patterns
+  (for example msiexec installing a package from a URL) also occur in
+  legitimate software deployment. Tune the LOLBinTable parameter to
+  your environment.
+
+reference:
+  - https://lolbas-project.github.io/
+  - https://attack.mitre.org/techniques/T1218/
+
+type: CLIENT
+
+parameters:
+  - name: LOLBinTable
+    type: csv
+    default: |
+        Bin,Pattern,Technique,Note
+        (?i)^mshta\.exe$,(?i)(https?://|javascript:|vbscript:|\.hta\b),T1218.005,MSHTA loading remote or script content
+        (?i)^rundll32\.exe$,(?i)(javascript:|vbscript:|\.sct\b|https?://\S*\.dll),T1218.011,RunDLL32 script or remote DLL execution
+        (?i)^regsvr32\.exe$,(?i)(/s\s+/u\s+/i:|/i\s*:\s*https?://),T1218.010,Regsvr32 silent COM scriptlet execution
+        (?i)^certutil\.exe$,(?i)-(decode|encode|urlcache|verifyctl)\b,T1105,CertUtil payload download or decode
+        (?i)^bitsadmin\.exe$,(?i)/(transfer|download|create)\b,T1197,BITSAdmin transfer job
+        (?i)^msiexec\.exe$,(?i)/[iq]\s+https?://,T1218.007,MSIExec installing package from URL
+        (?i)^wmic\.exe$,(?i)(process\s+call\s+create|/node\s*:),T1047,WMIC remote or spawned process creation
+        (?i)^powershell\.exe$,(?i)(-(e|ec|en|enc)\s|frombase64string|\biex\b\s*\(|downloadstring|bypass),T1059.001,PowerShell encoded or obfuscated invocation
+        (?i)^pwsh\.exe$,(?i)(-(e|ec|en|enc)\s|frombase64string|\biex\b\s*\(|downloadstring|bypass),T1059.001,PowerShell Core encoded or obfuscated invocation
+        (?i)^(cscript|wscript)\.exe$,(?i)(\\(temp|tmp|appdata|public)\S*\.(js|vbs|wsf|jse|vbe)\b|https?://\S*\.(js|vbs|wsf)\b),T1059.005,Script host running remote or temp script
+        (?i)^msbuild\.exe$,(?i)\.(xml|csproj|vbproj|proj|targets)\b,T1127,MSBuild compiling project file outside dev use
+        (?i)^installutil\.exe$,(?i)(/logfile\s*=|/LogToConsole\s*=\s*false),T1218.004,InstallUtil silent assembly execution
+        (?i)^(regasm|regsvcs)\.exe$,(?i)\s/u\b,T1218.009,Regasm unregistering managed assembly
+        (?i)^cmstp\.exe$,(?i)(/ni\b|/s\s+\S+\.inf\b),T1218.003,CMSTP INF install
+
+sources:
+  - precondition: |
+      SELECT OS From info() where OS = 'windows'
+    query: |
+      LET hits = SELECT * FROM foreach(
+        row={
+          SELECT Bin, Pattern, Technique, Note
+          FROM LOLBinTable
+        },
+        query={
+          SELECT Pid, Ppid, Name, Exe, CommandLine, Username,
+                 Bin AS MatchedRule, Technique, Note AS RuleNote
+          FROM pslist()
+          WHERE Name AND Name =~ Bin
+                AND CommandLine AND CommandLine =~ Pattern
+        })
+      SELECT * FROM hits
