@@ -12,13 +12,17 @@ import (
 	"net"
 	"os"
 	"path"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/uploads"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vql"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -28,12 +32,13 @@ import (
 type SFTPUploadArgs struct {
 	File       *accessors.OSPath `vfilter:"required,field=file,doc=The file to upload"`
 	Name       string            `vfilter:"optional,field=name,doc=The name of the file that should be stored on the server (may contain the path)"`
-	User       string            `vfilter:"required,field=user,doc=The username to connect to the endpoint with"`
+	User       string            `vfilter:"optional,field=user,doc=The username to connect to the endpoint with"`
 	Path       string            `vfilter:"optional,field=path,doc=Path on server to upload file to (will be prepended to name)"`
 	Accessor   string            `vfilter:"optional,field=accessor,doc=The accessor to use"`
-	PrivateKey string            `vfilter:"required,field=privatekey,doc=The private key to use"`
-	Endpoint   string            `vfilter:"required,field=endpoint,doc=The Endpoint to use including port number (e.g. 192.168.1.1:22 )"`
+	PrivateKey string            `vfilter:"optional,field=privatekey,doc=The private key to use"`
+	Endpoint   string            `vfilter:"optional,field=endpoint,doc=The Endpoint to use including port number (e.g. 192.168.1.1:22 )"`
 	HostKey    string            `vfilter:"optional,field=hostkey,doc=Host key to verify. Blank to disable"`
+	Secret     string            `vfilter:"optional,field=secret,doc=Alternatively, use a secret from the secrets service. Secret must be of type 'SSH PrivateKey'"`
 }
 
 type SFTPUploadFunction struct{}
@@ -51,6 +56,36 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	err = self.maybeForceSecrets(ctx, scope, arg)
+	if err != nil {
+		scope.Log("upload_sftp: %s", err.Error())
+		return vfilter.Null{}
+	}
+
+	if arg.Secret != "" {
+		err := mergeSftpSecret(ctx, scope, arg)
+		if err != nil {
+			scope.Log("upload_sftp: %s", err.Error())
+			return vfilter.Null{}
+		}
+	} else {
+		// Ensure required arguments are set if no secret is specified
+		required := []string{"user", "privatekey", "endpoint"}
+		missing := []string{}
+
+		for _, key := range required {
+			_, pres := args.Get(key)
+			if !pres {
+				missing = append(missing, key)
+			}
+		}
+
+		if len(missing) > 0 {
+			scope.Log("upload_sftp: missing required arguments: %s", strings.Join(missing, ", "))
+			return vfilter.Null{}
+		}
+	}
+
 	err = vql_subsystem.CheckAccess(scope, acls.NETWORK)
 	if err != nil {
 		scope.Log("upload_sftp: %s", err)
@@ -59,13 +94,13 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 
 	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
-		scope.Log("upload_SFTP: %v", err)
+		scope.Log("upload_sftp: %v", err)
 		return vfilter.Null{}
 	}
 
 	file, err := accessor.OpenWithOSPath(arg.File)
 	if err != nil {
-		scope.Log("upload_SFTP: Unable to open %s: %s",
+		scope.Log("upload_sftp: unable to open %s: %s",
 			arg.File, err.Error())
 		return &vfilter.Null{}
 	}
@@ -77,7 +112,7 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 
 	stat, err := accessor.LstatWithOSPath(arg.File)
 	if err != nil {
-		scope.Log("upload_SFTP: Unable to stat %s: %v",
+		scope.Log("upload_sftp: unable to stat %s: %v",
 			arg.File, err)
 	} else if !stat.IsDir() {
 		// Abort uploading when the scope is destroyed.
@@ -93,7 +128,7 @@ func (self *SFTPUploadFunction) Call(ctx context.Context,
 			arg.Endpoint,
 			arg.HostKey)
 		if err != nil {
-			scope.Log("upload_SFTP: %v", err)
+			scope.Log("upload_sftp: %v", err)
 			// Relay the error in the UploadResponse
 			return upload_response
 		}
@@ -186,9 +221,10 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	privateKey string, endpoint string, hostKey string) (
 	*uploads.UploadResponse, error) {
 
-	scope.Log("upload_SFTP: Uploading %v to %v", name, endpoint)
+	scope.Log("upload_sftp: uploading %v to %v", name, endpoint)
 	client, err := getSFTPClient(scope, user, privateKey, endpoint, hostKey)
 	if err != nil {
+		scope.Log("upload_sftp: while connecting: %v", err)
 		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
@@ -200,12 +236,13 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	fpath := path.Join(filepath, name)
 	file, err := client.OpenFile(fpath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
+		scope.Log("upload_sftp: while opening file: %v", err)
 		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
 	}
 	if _, err := file.ReadFrom(reader); err != nil {
-		scope.Log("upload_SFTP: while reading file: %v", err)
+		scope.Log("upload_sftp: while reading file: %v", err)
 		return &uploads.UploadResponse{
 			Error: err.Error(),
 		}, err
@@ -214,7 +251,7 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	file.Close()
 	check, err := client.Lstat(fpath)
 	if e, ok := err.(*sftp.StatusError); ok && e.FxCode() == sftp.ErrSSHFxPermissionDenied {
-		scope.Log("upload_SFTP: Unable to verify size of uploaded file due to insufficient read permissions.")
+		scope.Log("upload_sftp: unable to verify size of uploaded file due to insufficient read permissions.")
 		response := &uploads.UploadResponse{
 			Path: fpath,
 		}
@@ -232,6 +269,31 @@ func upload_SFTP(ctx context.Context, scope vfilter.Scope,
 	return response, nil
 }
 
+func (self SFTPUploadFunction) maybeForceSecrets(
+	ctx context.Context, scope vfilter.Scope, arg *SFTPUploadArgs) error {
+
+	// Not running on the server, secrets don't work.
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return nil
+	}
+
+	if config_obj.Security == nil {
+		return nil
+	}
+
+	if !config_obj.Security.VqlMustUseSecrets {
+		return nil
+	}
+
+	// If an explicit secret is defined let it filter the URLs.
+	if arg.Secret != "" {
+		return nil
+	}
+
+	return utils.SecretsEnforced
+}
+
 func (self SFTPUploadFunction) Info(
 	scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
@@ -241,6 +303,32 @@ func (self SFTPUploadFunction) Info(
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}
+}
+
+func mergeSftpSecret(ctx context.Context, scope vfilter.Scope, arg *SFTPUploadArgs) error {
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		return errors.New("secrets may only be used on the server")
+	}
+
+	secrets_service, err := services.GetSecretsService(config_obj)
+	if err != nil {
+		return err
+	}
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	s, err := secrets_service.GetSecret(ctx, principal, constants.SSH_PRIVATE_KEY, arg.Secret)
+	if err != nil {
+		return err
+	}
+
+	arg.User = s.GetString("username")
+	arg.PrivateKey = s.GetString("private_key")
+	arg.Endpoint = s.GetString("hostname")
+	arg.HostKey = s.GetString("hostkey")
+
+	return nil
 }
 
 func init() {
