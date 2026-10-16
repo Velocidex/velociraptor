@@ -11980,7 +11980,6 @@
   - name: user
     type: string
     description: The username to connect to the endpoint with
-    required: true
   - name: path
     type: string
     description: Path on server to upload file to (will be prepended to name)
@@ -11990,14 +11989,16 @@
   - name: privatekey
     type: string
     description: The private key to use
-    required: true
   - name: endpoint
     type: string
     description: The Endpoint to use including port number (e.g. 192.168.1.1:22 )
-    required: true
   - name: hostkey
     type: string
     description: Host key to verify. Blank to disable
+  - name: secret
+    type: string
+    description: Alternatively, use a secret from the secrets service. Secret must
+      be of type 'SSH PrivateKey'
   metadata:
     permissions: FILESYSTEM_READ,NETWORK
   platforms:
