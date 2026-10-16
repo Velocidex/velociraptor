@@ -149,24 +149,44 @@ export class SaveCollectionDialog extends React.PureComponent {
 
     startSaveFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
-        let specs = this.props.flow.request.specs;
         let type = "CLIENT";
         if (client_id==="server") {
             type = "SERVER";
         }
 
+        let flow_id = this.props.flow && this.props.flow.session_id;
+        let flow_client_id = this.props.flow && this.props.flow.client_id;
+        if (!flow_id || !flow_client_id) {
+            return;
+        }
+
         this.setState({loading: true});
-        runArtifact("server",   // This collection happens on the server.
-                    "Server.Utils.SaveFavoriteFlow",
-                    {
-                        Specs: JSON.stringify(specs),
-                        Name: this.state.name,
-                        Description: this.state.description,
-                        Type: type,
-                    }, ()=>{
-                        this.props.onClose();
-                        this.setState({loading: false});
-                    }, this.source.token);
+
+        // The flow passed in may have its parameters truncated for
+        // display, so fetch the full request before saving it.
+        api.get("v1/GetFlowDetails", {
+            flow_id: flow_id,
+            client_id: flow_client_id,
+            include_full_request: true,
+        }, this.source.token).then((response) => {
+            if (response.cancel) {
+                return;
+            };
+
+            let flow = response.data.context || {};
+            let specs = flow.request && flow.request.specs;
+            runArtifact("server",   // This collection happens on the server.
+                        "Server.Utils.SaveFavoriteFlow",
+                        {
+                            Specs: JSON.stringify(specs),
+                            Name: this.state.name,
+                            Description: this.state.description,
+                            Type: type,
+                        }, ()=>{
+                            this.props.onClose();
+                            this.setState({loading: false});
+                        }, this.source.token);
+        });
     }
 
     render() {
@@ -377,27 +397,9 @@ class FlowsList extends React.Component {
     };
 
     copyCollection = ()=> {
-        let selected_flows = this.props.selected_flow &&
-            this.props.selected_flow.artifacts_with_results;
-
-        // Special handling for offline collector
-        if (_.isEqual(selected_flows, ["Server.Utils.CreateCollector"])) {
-            let specs = this.props.selected_flow.request &&
-                this.props.selected_flow.request.specs;
-
-            if (!_.isArray(specs) || specs.length != 1) {
-                specs = [];
-            }
-
-            this.setState({
-                offlineSpecs: specs[0].parameters,
-                showOfflineWizard: true});
-
-            return;
-        }
-
         // Get the full flow request so we can copy it into the
-        // GUI.
+        // GUI. The selected flow's parameters are truncated for
+        // display.
         let flow_id = this.props.selected_flow &&
             this.props.selected_flow.session_id;
         let client_id = this.props.selected_flow &&
@@ -417,6 +419,23 @@ class FlowsList extends React.Component {
             };
 
             let flow = response.data.context;
+            let selected_flows = flow && flow.artifacts_with_results;
+
+            // Special handling for offline collector
+            if (_.isEqual(selected_flows, ["Server.Utils.CreateCollector"])) {
+                let specs = flow.request && flow.request.specs;
+
+                if (!_.isArray(specs) || specs.length != 1) {
+                    specs = [];
+                }
+
+                this.setState({
+                    offlineSpecs: specs[0].parameters,
+                    showOfflineWizard: true});
+
+                return;
+            }
+
             this.setState({
                 full_request: flow,
                 showCopyWizard: true,
@@ -509,7 +528,7 @@ class FlowsList extends React.Component {
               { this.state.showCopyWizard &&
                 <NewCollectionWizard
                   client={this.props.client}
-                  baseFlow={this.props.selected_flow}
+                  baseFlow={this.state.full_request}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest} />
               }
