@@ -1,0 +1,17 @@
+Queries:
+  - SELECT mock(plugin='info', results=[dict(OS='windows'), dict(OS='windows')] )
+    FROM scope()
+
+  # TaskCache.hve has a clean task, a task with its SD value deleted
+  # (Tarrask), a Tasks entry without a Tree key, a Tree key without a
+  # Tasks entry, a task in a folder, two Exec actions and a COM
+  # handler action.
+  - SELECT * FROM Artifact.Windows.Registry.TaskCache(
+       SoftwareHive=srcDir+"/artifacts/testdata/files/TaskCache.hve")
+    ORDER BY TaskName
+
+  - SELECT TaskName, SDMissing, TreeMissing, TaskMissing
+    FROM Artifact.Windows.Registry.TaskCache(
+       SoftwareHive=srcDir+"/artifacts/testdata/files/TaskCache.hve",
+       OnlyAnomalies=TRUE)
+    ORDER BY TaskName
