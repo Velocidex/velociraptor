@@ -861,18 +861,20 @@ class VeloVQLCell extends _VeloShellCell {
                                       eventKey={index} >
                                       <Accordion.Header>
                                         <Row lg="12">
-                                          <ToolTip tooltip={T("Repeat Command")}>
-                                            <a role="button"
-                                               className="btn btn-default repeat-button"
-                                               onClick={e=>this.copyCommand(
-                                                   e, command)}
-                                               variant="default">
-                                              <FontAwesomeIcon icon="repeat"/>
-                                            </a>
-                                          </ToolTip>
-                                          <VeloTimestamp
-                                            className="float-right"
-                                            usec={item.Timestamp} />
+                                          <div className="shell-timestamp-user">
+                                            <ToolTip tooltip={T("Repeat Command")}>
+                                              <a role="button"
+                                                 className="btn btn-default repeat-button"
+                                                 onClick={e=>this.copyCommand(
+                                                     e, item.Command)}
+                                                 variant="default">
+                                                <FontAwesomeIcon icon="repeat"/>
+                                              </a>
+                                            </ToolTip>
+                                            <VeloTimestamp
+                                              className="float-right"
+                                              usec={item.Timestamp} />
+                                          </div>
                                           <Col lg="9">
                                             <pre>{item.Command}</pre>
                                           </Col>
