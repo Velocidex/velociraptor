@@ -78,6 +78,10 @@ func ConvertJSONL(
 			} else {
 				_, _ = jsonl_out.Write(
 					writeJsonObject(arena, obj, extra_keys, extra_value))
+
+				// Release this row's arena values, otherwise they are
+				// retained until the whole result set is converted.
+				arena.Reset()
 			}
 		}
 
