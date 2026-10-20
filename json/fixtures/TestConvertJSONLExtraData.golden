@@ -1,0 +1,7 @@
+{
+ "Simple": "{\"foo\":1,\"FlowId\":\"F.123\",\"Count\":2}\n",
+ "Empty Object": "{\"FlowId\":\"F.123\",\"Count\":2}\n",
+ "Empty Object With Spaces": "{ \"FlowId\":\"F.123\",\"Count\":2}\n",
+ "Array": "",
+ "Malformed": ""
+}
