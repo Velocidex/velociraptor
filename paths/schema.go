@@ -1,7 +1,6 @@
 package paths
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -443,8 +442,6 @@ func matchComponents(path []string, schema PathDescriptor) bool {
 				return false
 			}
 		case ARTIFACT_NAME, SOURCE_NAME:
-			fmt.Printf("Validating %v\n", path_component)
-
 			if utils.ValidateArtifactName(path_component) != nil {
 				return false
 			}

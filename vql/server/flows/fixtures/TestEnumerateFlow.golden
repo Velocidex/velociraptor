@@ -2,49 +2,77 @@
  {
   "type": "Upload",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads/ntfs/\"\\\\.\\C:\"/Windows/notepad.exe"
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads/ntfs/\"\\\\.\\C:\"/Windows/notepad.exe",
+   "Type": "PATH_TYPE_FILESTORE_ANY",
+   "Size": 0,
+   "CompressedSize": 0,
+   "LastModified": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },
  {
   "type": "UploadMetadata",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads.json"
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/uploads.json",
+   "Type": "ResultSet",
+   "Rows": 1,
+   "ModTime": "0001-01-01T00:00:00Z",
+   "Size": 112,
+   "CompressedSize": 112
   },
   "error": ""
  },
  {
   "type": "UploadTransactions",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/upload_transactions.json"
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/upload_transactions.json",
+   "Type": "ResultSet",
+   "Rows": 0,
+   "ModTime": "0001-01-01T00:00:00Z",
+   "Size": 1,
+   "CompressedSize": 1
   },
   "error": ""
  },
  {
   "type": "Log",
   "data": {
-   "VFSPath": "fs:/clients/C.123/collections/F.1234/logs.json"
+   "VFSPath": "fs:/clients/C.123/collections/F.1234/logs.json",
+   "Type": "ResultSet",
+   "Rows": 0,
+   "ModTime": "0001-01-01T00:00:00Z",
+   "Size": 0,
+   "CompressedSize": 0
   },
   "error": ""
  },
  {
   "type": "CollectionContext",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234.json.db"
+   "VFSPath": "ds:/clients/C.123/collections/F.1234.json.db",
+   "Type": "PATH_TYPE_DATASTORE_JSON",
+   "Size": null,
+   "Mtime": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },
  {
   "type": "Task",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234/task.db"
+   "VFSPath": "ds:/clients/C.123/collections/F.1234/task.db",
+   "Type": "PATH_TYPE_DATASTORE_PROTO",
+   "Size": null,
+   "Mtime": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },
  {
   "type": "Stats",
   "data": {
-   "VFSPath": "ds:/clients/C.123/collections/F.1234/stats.json.db"
+   "VFSPath": "ds:/clients/C.123/collections/F.1234/stats.json.db",
+   "Type": "PATH_TYPE_DATASTORE_JSON",
+   "Size": null,
+   "Mtime": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },

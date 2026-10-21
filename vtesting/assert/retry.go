@@ -8,6 +8,8 @@ import (
 	"strconv"
 	"testing"
 	"time"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func Retry(t *testing.T, maxAttempts int, sleep time.Duration, f func(r *R)) bool {
@@ -17,6 +19,8 @@ func Retry(t *testing.T, maxAttempts int, sleep time.Duration, f func(r *R)) boo
 		defer func() {
 			recovery := recover()
 			if recovery != nil {
+				fmt.Printf("Panic: ")
+				utils.PrintStack()
 				r.Fail()
 			}
 		}()

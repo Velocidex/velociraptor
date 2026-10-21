@@ -35,7 +35,7 @@ import (
 func AddDefaultCerts(
 	config_obj *config_proto.ClientConfig, CA_Pool *x509.CertPool) error {
 
-	if config_obj != nil {
+	if config_obj != nil && config_obj.CaCertificate != "" {
 		// Always trust ourselves anyway.
 		if !CA_Pool.AppendCertsFromPEM([]byte(config_obj.CaCertificate)) {
 			return errors.New(

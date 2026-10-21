@@ -88,6 +88,7 @@ func (self *FlowStorageManager) DeleteFlow(
 			pond.WithoutPanicRecovery()),
 	}
 
+	// Delete the uploads if they are there.
 	file_store_factory := file_store.GetFileStore(config_obj)
 	reader, err := result_sets.NewResultSetReader(
 		file_store_factory, flow_path_manager.UploadMetadata())
@@ -158,7 +159,7 @@ func (self *FlowStorageManager) DeleteFlow(
 	}
 	r.wait()
 
-	return r.get_responses(), err
+	return r.get_responses(), nil
 }
 
 type reporter struct {

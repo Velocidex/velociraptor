@@ -2,7 +2,6 @@ package hunt_manager_test
 
 import (
 	"context"
-	"fmt"
 	"testing"
 	"time"
 
@@ -849,7 +848,6 @@ func (self *HuntTestSuite) TestHuntManagerErrors() {
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		h, pres := dispatcher.GetHunt(self.Ctx,
 			services.GetHuntOptions{}, hunt_obj.HuntId)
-		fmt.Printf("hunt %v\n", h)
 		if !pres {
 			return false
 		}

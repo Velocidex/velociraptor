@@ -212,10 +212,6 @@ func (self *FlowStorageManager) ListFlows(
 		}
 	}
 
-	if err != nil {
-		return nil, 0, err
-	}
-
 	result := []*services.FlowSummary{}
 	err = rs_reader.SeekToRow(offset)
 	if errors.Is(err, io.EOF) {
