@@ -103,6 +103,10 @@ type DataStore interface {
 		config_obj *config_proto.Config,
 		urn api.DSPathSpec) ([]api.DSPathSpec, error)
 
+	Stat(
+		config_obj *config_proto.Config,
+		urn api.DSPathSpec) (api.FileInfo, error)
+
 	Debug(config_obj *config_proto.Config)
 
 	// Called to close all db handles etc. Not thread safe.

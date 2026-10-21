@@ -204,22 +204,63 @@ func (self *reporter) wait() {
 
 func (self *reporter) emit_ds(
 	item_type string, target api.DSPathSpec) {
-	self.emit(item_type, target.String(), func() error {
-		db, err := datastore.GetDB(self.config_obj)
-		if err != nil {
-			return err
-		}
-		return db.DeleteSubject(self.config_obj, target)
-	})
+
+	self.emit(item_type, target.String(),
+		func(do_it bool) (*ordereddict.Dict, error) {
+			db, err := datastore.GetDB(self.config_obj)
+			if err != nil {
+				return nil, err
+			}
+
+			// Check if the file is actually there
+			stat, err := db.Stat(self.config_obj, target)
+			if err != nil {
+				return nil, utils.SkipError
+			}
+
+			data := ordereddict.NewDict().
+				Set("VFSPath", target).
+				Set("Type", target.Type().String()).
+				Set("Size", stat.Size).
+				Set("Mtime", stat.ModTime())
+
+			if !do_it {
+				return data, nil
+			}
+			return data, db.DeleteSubject(self.config_obj, target)
+		})
 }
 
 func (self *reporter) emit_result_set(
 	item_type string, target api.FSPathSpec) {
 
-	self.emit(item_type, target.String(), func() error {
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-		return result_sets.DeleteResultSet(file_store_factory, target)
-	})
+	self.emit(item_type, target.String(),
+		func(do_it bool) (*ordereddict.Dict, error) {
+			file_store_factory := file_store.GetFileStore(self.config_obj)
+			rs_reader, err := result_sets.NewResultSetReader(
+				file_store_factory, target)
+			if err != nil {
+				return nil, utils.SkipError
+			}
+
+			data := ordereddict.NewDict().
+				Set("VFSPath", target).
+				Set("Type", "ResultSet")
+
+			stats := rs_reader.Stats()
+			data = data.
+				Set("Rows", stats.Rows).
+				Set("ModTime", stats.ModTime).
+				Set("Size", stats.UncompressedSize).
+				Set("CompressedSize", stats.CompressedSize)
+
+			if !do_it {
+				return data, nil
+			}
+
+			return data, result_sets.DeleteResultSet(
+				file_store_factory, target)
+		})
 }
 
 func (self *reporter) emit_notebook(
@@ -297,10 +338,34 @@ func (self *reporter) emit_walk_fs(
 func (self *reporter) emit_bulk_file(
 	item_type string, target api.FSPathSpec) {
 
-	self.emit(item_type, target.String(), func() error {
-		file_store_factory := file_store.GetFileStore(self.config_obj)
-		return file_store.DeleteBulkFile(file_store_factory, target)
-	})
+	self.emit(item_type, target.String(),
+		func(do_it bool) (*ordereddict.Dict, error) {
+			file_store_factory := file_store.GetFileStore(self.config_obj)
+			stat, err := file_store_factory.StatFile(target)
+			if err != nil {
+				return nil, err
+			}
+
+			compressed_size := stat.Size()
+			compressed_fd, ok := stat.(api.CompressedFileInfo)
+			if ok {
+				compressed_size = compressed_fd.RawSize()
+			}
+
+			data := ordereddict.NewDict().
+				Set("VFSPath", target.String()).
+				Set("Type", target.Type().String()).
+				Set("Size", stat.Size()).
+				Set("CompressedSize", compressed_size).
+				Set("LastModified", stat.ModTime())
+
+			if !do_it {
+				return data, nil
+			}
+
+			return data, file_store.DeleteBulkFile(
+				file_store_factory, target)
+		})
 }
 
 func (self *reporter) should_do_it() bool {
@@ -335,7 +400,7 @@ func (self *reporter) add_response(response *services.DeleteFlowResponse) {
 
 func (self *reporter) emit(
 	item_type string, client_path string,
-	deleter func() error) {
+	deleter func(do_it bool) (*ordereddict.Dict, error)) {
 
 	if self.deduplicate(client_path) {
 		return
@@ -346,18 +411,20 @@ func (self *reporter) emit(
 	self.pool.Submit(func() {
 		var error_message string
 
-		if self.should_do_it() {
-			err := deleter()
-			if err != nil {
-				error_message = fmt.Sprintf(
-					"Error deleting %v: %v", client_path, err)
-			}
+		data, err := deleter(self.should_do_it())
+		if err == utils.SkipError {
+			return
+		}
+
+		if err != nil {
+			error_message = fmt.Sprintf(
+				"Error deleting %v: %v", client_path, err)
 		}
 
 		self.add_response(&services.DeleteFlowResponse{
 			Id:    id,
 			Type:  item_type,
-			Data:  ordereddict.NewDict().Set("VFSPath", client_path),
+			Data:  data,
 			Error: error_message,
 		})
 	})

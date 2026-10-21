@@ -12,7 +12,7 @@ require (
 	github.com/Masterminds/semver/v3 v3.5.0
 	github.com/Masterminds/sprig/v3 v3.2.2
 	github.com/Showmax/go-fqdn v1.0.0
-	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def
+	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20261021104259-7ffd418cf78d
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7
 	github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799
@@ -283,7 +283,7 @@ require (
 	github.com/kaptinlin/go-i18n v0.2.0 // indirect
 	github.com/kaptinlin/messageformat-go v0.4.6 // indirect
 	github.com/karrick/godirwalk v1.17.0 // indirect
-	github.com/klauspost/compress v1.18.6 // indirect
+	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect

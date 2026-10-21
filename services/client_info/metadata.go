@@ -39,8 +39,10 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
@@ -175,9 +177,16 @@ func (self *Store) ModifyMetadata(
 	client_record, pres := self.data[client_id]
 	self.mu.Unlock()
 
-	// Modify the client record
+	// Make a fresh record if it is not there.
 	if !pres {
-		return utils.NotFoundError
+		// The "server" client id is special and always exists.
+		if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+			client_record = self.newClientRecord(&actions_proto.ClientInfo{
+				ClientId: client_id,
+			})
+		} else {
+			return utils.NotFoundError
+		}
 	}
 
 	// This stored object contains all the metadata fields.

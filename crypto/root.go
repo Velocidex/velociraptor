@@ -37,7 +37,10 @@ func AddDefaultCerts(
 
 	if config_obj != nil {
 		// Always trust ourselves anyway.
-		CA_Pool.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
+		if !CA_Pool.AppendCertsFromPEM([]byte(config_obj.CaCertificate)) {
+			return errors.New(
+				"Unable to parse Client.ca_certificate in the config file.")
+		}
 	}
 
 	// Now add any additional certs from the config file.

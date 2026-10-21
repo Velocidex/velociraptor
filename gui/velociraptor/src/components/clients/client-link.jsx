@@ -20,6 +20,10 @@ class ClientLink extends React.Component {
     }
 
     render() {
+        if(!this.props.client_id) {
+            return <></>;
+        }
+
         return (
             <>
               <Button size="sm" className="client-link"

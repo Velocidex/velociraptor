@@ -204,23 +204,6 @@ func (self *DirectoryFileStore) StatFile(
 		return nil, err
 	}
 
-	// If there is a chunk file we report the size of the uncompressed
-	// file .
-	chunk_fd, err := os.Open(chunk_file_path)
-	if err == nil {
-		chunk_index := api.NewChunkIndex(&api.FileAdapter{File: chunk_fd})
-		file_stat, err := chunk_fd.Stat()
-		if err != nil {
-			return nil, err
-		}
-
-		res := file_store_file_info.NewFileStoreFileInfo(
-			self.config_obj, filename, file_stat)
-
-		res.SizeOverride_ = chunk_index.FileSize()
-		return res, nil
-	}
-
 	file_path := datastore.AsFilestoreFilename(
 		self.db, self.config_obj, filename)
 

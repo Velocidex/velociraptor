@@ -510,8 +510,8 @@ func convert_glob_into_path_components(pattern *accessors.OSPath) (
 
 		// A ** in the path component means recurse into directories that
 		// match the pattern.
-		if groups := _RECURSION_REGEX.FindStringSubmatch(
-			path_component); len(groups) > 0 {
+		groups := _RECURSION_REGEX.FindStringSubmatch(path_component)
+		if len(groups) > 0 {
 
 			// Default depth: Previously this was set low
 			// to prevent run away globs but now we cancel
@@ -532,8 +532,11 @@ func convert_glob_into_path_components(pattern *accessors.OSPath) (
 					path_component, groups[0], "*", 1)),
 				depth: depth,
 			})
+			continue
+		}
 
-		} else if m := _GLOB_MAGIC_CHECK.FindString(path_component); len(m) > 0 {
+		m := _GLOB_MAGIC_CHECK.FindString(path_component)
+		if len(m) > 0 {
 
 			matcher := &_RegexComponent{
 				regexp: FNmatchTranslate(path_component),
@@ -545,12 +548,12 @@ func convert_glob_into_path_components(pattern *accessors.OSPath) (
 			}
 			matcher.compiled = compiled
 			result = append(result, matcher)
-
-		} else {
-			result = append(result, _LiteralComponent{
-				path: path_component,
-			})
+			continue
 		}
+
+		result = append(result, _LiteralComponent{
+			path: path_component,
+		})
 	}
 	return result, nil
 }

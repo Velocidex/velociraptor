@@ -1580,7 +1580,7 @@ type Authenticator struct {
 	Claims            *OIDCClaims `protobuf:"bytes,25,opt,name=claims,proto3" json:"claims,omitempty"`
 	// When this is set we emit detailed logging.
 	OidcDebug bool `protobuf:"varint,26,opt,name=oidc_debug,json=oidcDebug,proto3" json:"oidc_debug,omitempty"`
-	// In many IdP the email address change be changed and is not
+	// In many IdP the email address can be changed and is not
 	// verified. By default Velociraptor OIDC authenticator pins the
 	// email address to the immutable sub GUID reported by the OIDC
 	// server. This stops email addresss hijacking in some situation
@@ -2342,8 +2342,8 @@ type FrontendResourceControl struct {
 	// How often to sync client info records (ms)
 	ClientInfoSyncTime  uint64 `protobuf:"varint,29,opt,name=client_info_sync_time,json=clientInfoSyncTime,proto3" json:"client_info_sync_time,omitempty"`
 	ClientInfoWriteTime uint64 `protobuf:"varint,30,opt,name=client_info_write_time,json=clientInfoWriteTime,proto3" json:"client_info_write_time,omitempty"`
-	// Old versions on Velociraptor would write client records
-	// separately. This is not longer used as the records are combined
+	// Old versions of Velociraptor would write client records
+	// separately. This is no longer used as the records are combined
 	// into larger index files. However, it may still be worth writing
 	// the legacy records because it allows Velociraptor to rebuild
 	// the index if needed. This may prove to add too much to the load

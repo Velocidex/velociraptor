@@ -73,10 +73,18 @@ func (self *TimelineReader) Stat() *timelines_proto.Timeline {
 		return &timelines_proto.Timeline{Id: self.id}
 	}
 
+	stat, err := self.fd.Stat()
+	if err != nil {
+		return &timelines_proto.Timeline{Id: self.id}
+	}
+
 	return &timelines_proto.Timeline{
-		Id:        self.id,
-		StartTime: first_record.Timestamp,
-		EndTime:   last_record.Timestamp,
+		Id:           self.id,
+		StartTime:    first_record.Timestamp,
+		EndTime:      last_record.Timestamp,
+		Size:         stat.Size(),
+		Rows:         int64(last_idx + 1),
+		LastModified: stat.ModTime().Unix(),
 	}
 }
 

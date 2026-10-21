@@ -132,8 +132,10 @@ func (self *CompressedDirectoryReader) Stat() (api.FileInfo, error) {
 	}
 
 	return &SizeWrapper{
-		FileInfo: res,
-		size:     self.chunkIndex.FileSize(),
+		FileInfo:        res,
+		compressed_size: res.Size(),
+		// This is the uncompressed size.
+		size: self.chunkIndex.FileSize(),
 	}, nil
 }
 
@@ -143,9 +145,14 @@ func (self *CompressedDirectoryReader) Close() error {
 
 type SizeWrapper struct {
 	api.FileInfo
-	size int64
+	size            int64
+	compressed_size int64
 }
 
 func (self *SizeWrapper) Size() int64 {
 	return self.size
+}
+
+func (self *SizeWrapper) RawSize() int64 {
+	return self.compressed_size
 }
