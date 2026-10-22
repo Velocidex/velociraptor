@@ -6,7 +6,6 @@ package json
 import (
 	"bytes"
 	"encoding/csv"
-	"encoding/json"
 	"io"
 
 	"github.com/Velocidex/ordereddict"
@@ -21,26 +20,16 @@ func ConvertJSONL(
 	// If either of these is nil we skip writing to it.
 	jsonl_out io.Writer,
 	csv_out io.Writer,
-	extra_data *ordereddict.Dict) {
+	extra_data *ordereddict.Dict) error {
 
-	//var columns []string
 	var p fastjson.Parser
 	csv_encoder := NewCSVEncoder(extra_data)
-	var extra_keys []string
-	var extra_value [][]byte
-
-	if extra_data != nil {
-		for _, i := range extra_data.Items() {
-			v, err := json.Marshal(i.Value)
-			if err != nil {
-				continue
-			}
-			extra_keys = append(extra_keys, i.Key)
-			extra_value = append(extra_value, v)
-		}
+	extra, err := encodeExtraFields(extra_data)
+	if err != nil {
+		return err
 	}
 
-	arena := &fastjson.Arena{}
+	var buf []byte
 
 	for serialized := range json_in {
 		if len(serialized) == 0 {
@@ -52,22 +41,17 @@ func ConvertJSONL(
 			serialized = append(serialized, '\n')
 		}
 
-		// In the special case where we do not need to modify the json
-		// or convert it to csv then we can skip parsing it
-		// altogether.
-		if extra_data == nil && jsonl_out != nil && csv_out == nil {
-			_, _ = jsonl_out.Write(serialized)
-			continue
-		}
+		var obj *fastjson.Object
+		if csv_out != nil {
+			v, err := p.Parse(string(serialized))
+			if err != nil {
+				continue
+			}
 
-		v, err := p.Parse(string(serialized))
-		if err != nil {
-			continue
-		}
-
-		obj, err := v.Object()
-		if err != nil {
-			continue
+			obj, err = v.Object()
+			if err != nil {
+				continue
+			}
 		}
 
 		if jsonl_out != nil {
@@ -76,8 +60,8 @@ func ConvertJSONL(
 			if extra_data == nil {
 				_, _ = jsonl_out.Write(serialized)
 			} else {
-				_, _ = jsonl_out.Write(
-					writeJsonObject(arena, obj, extra_keys, extra_value))
+				buf = appendJsonlExtra(buf[:0], serialized, extra)
+				_, _ = jsonl_out.Write(buf)
 			}
 		}
 
@@ -85,6 +69,54 @@ func ConvertJSONL(
 			_, _ = csv_out.Write(csv_encoder.Encode(obj))
 		}
 	}
+
+	return nil
+}
+
+// Builds `"FlowId":"F.1","ClientId":"C.1"` once, reused for every line.
+func encodeExtraFields(extra_data *ordereddict.Dict) ([]byte, error) {
+	serialized, err := Marshal(extra_data)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(serialized) < 2 {
+		return nil, nil
+	}
+
+	// Trim the opening and closing {}
+	return serialized[1 : len(serialized)-1], nil
+}
+
+const whiteSpace = " \t\r\n"
+
+// Turns `{"a":1}` into `{"a":1,<extra>}` without parsing; non-objects are dropped.
+func appendJsonlExtra(dst, line, extra []byte) []byte {
+	line = bytes.TrimRight(line, whiteSpace)
+
+	// Check the line for sanity
+	if len(line) < 2 || line[0] != '{' || line[len(line)-1] != '}' {
+		return nil
+	}
+
+	// Line should not contain any \r or \n as it should be a fixed
+	// jsonl line.
+	if bytes.ContainsAny(line, "\n\r") {
+		return nil
+	}
+
+	// Drop the last } from the line
+	line = line[:len(line)-1]
+
+	dst = append(dst, bytes.TrimRight(line, whiteSpace)...)
+
+	// No comma after `{` for an empty object.
+	if len(extra) > 0 &&
+		!bytes.HasSuffix(dst, []byte{'{'}) {
+		dst = append(dst, ',')
+	}
+	dst = append(dst, extra...)
+	return append(dst, '}', '\n')
 }
 
 type CSVEncoder struct {
@@ -191,47 +223,6 @@ func (self *CSVEncoder) Encode(obj *fastjson.Object) []byte {
 	self.buf.Reset()
 
 	return result
-}
-
-func writeJsonObject(
-	arena *fastjson.Arena,
-	obj *fastjson.Object,
-	extra_keys []string, extra_values [][]byte) []byte {
-	buf := make([]byte, 0)
-	buf = append(buf, '{')
-
-	obj.Visit(func(key []byte, v *fastjson.Value) {
-		// Add key
-		key_v := arena.NewStringBytes(key)
-		buf = append(buf, key_v.MarshalTo(nil)...)
-		buf = append(buf, ':')
-		buf = append(buf, v.MarshalTo(nil)...)
-		buf = append(buf, ',')
-	})
-
-	if len(extra_keys) == len(extra_values) {
-		for i := 0; i < len(extra_values); i++ {
-			buf = append(buf, '"')
-			buf = append(buf, extra_keys[i]...)
-			buf = append(buf, '"')
-			buf = append(buf, ':')
-			buf = append(buf, extra_values[i]...)
-			buf = append(buf, ',')
-		}
-	}
-
-	// Only the opening brace was written (no object keys and no extra
-	// keys), so close it as an empty object rather than clobbering the
-	// opening brace.
-	if len(buf) == 1 {
-		buf = append(buf, '}', '\n')
-		return buf
-	}
-
-	buf[len(buf)-1] = '}'
-	buf = append(buf, '\n')
-
-	return buf
 }
 
 // https://owasp.org/www-community/attacks/CSV_Injection
