@@ -8,6 +8,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -55,14 +56,44 @@ type FileStoreFileInfo struct {
 	fullpath   api.FSPathSpec
 	config_obj *config_proto.Config
 	Data_      *ordereddict.Dict
+	DataCB_    func(config_obj *config_proto.Config,
+		fullpath api.FSPathSpec) *ordereddict.Dict
 
 	SizeOverride_ int64
 }
 
+func (self FileStoreFileInfo) RawSize() int64 {
+	return self.FileInfo.Size()
+}
+
 func (self FileStoreFileInfo) Size() int64 {
 	if self.SizeOverride_ == 0 {
+		// Only the following types could be compressed
+		switch self.fullpath.Type() {
+		case api.PATH_TYPE_FILESTORE_JSON,
+			api.PATH_TYPE_FILESTORE_ANY:
+			db, err := datastore.GetDB(self.config_obj)
+			if err != nil {
+				return self.FileInfo.Size()
+			}
+			chunk_file_path := datastore.AsFilestoreFilename(
+				db, self.config_obj, self.fullpath.
+					SetType(api.PATH_TYPE_FILESTORE_CHUNK_INDEX))
+
+			// Try to open a chunk file to get the true size from.
+			chunk_fd, err := os.Open(chunk_file_path)
+			if err != nil {
+				return self.FileInfo.Size()
+			}
+
+			// Cache it for next time.
+			chunk_index := api.NewChunkIndex(&api.FileAdapter{File: chunk_fd})
+			self.SizeOverride_ = chunk_index.FileSize()
+			return self.SizeOverride_
+		}
 		return self.FileInfo.Size()
 	}
+
 	return self.SizeOverride_
 }
 
@@ -78,6 +109,10 @@ func (self FileStoreFileInfo) UniqueName() string {
 }
 
 func (self *FileStoreFileInfo) Data() *ordereddict.Dict {
+	if self.DataCB_ != nil {
+		return self.DataCB_(self.config_obj, self.fullpath)
+	}
+
 	if self.Data_ == nil {
 		return ordereddict.NewDict()
 	}

@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -251,6 +252,49 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 		}})
 
 	return err
+}
+
+func (self *RemoteDataStore) Stat(config_obj *config_proto.Config,
+	urn api.DSPathSpec) (api.FileInfo, error) {
+	defer Instrument("read", "RemoteDataStore", urn)()
+
+	ctx, cancel := utils.WithTimeoutCause(
+		self.ctx, RPCTimeout(config_obj), timeoutError)
+	defer cancel()
+
+	// Make the call as the superuser
+	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx,
+		grpc_client.SuperUser, config_obj)
+	if err != nil {
+		return nil, err
+	}
+	defer func() {
+		err1 := closer()
+		if err1 != nil && err == nil {
+			err = err1
+		}
+	}()
+
+	result, err := conn.GetSubject(ctx, &api_proto.DataRequest{
+		OrgId: config_obj.OrgId,
+		Pathspec: &api_proto.DSPathSpec{
+			Components: urn.Components(),
+			PathType:   int64(urn.Type()),
+			Tag:        urn.Tag(),
+		}})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &vtesting.MockFileInfo{
+		Name_:     urn.Base(),
+		PathSpec_: urn.AsFilestorePath(),
+		FullPath_: urn.String(),
+		Mode_:     0664,
+		Size_:     int64(len(result.Data)),
+	}, nil
+
 }
 
 func (self *RemoteDataStore) DeleteSubjectWithCompletion(

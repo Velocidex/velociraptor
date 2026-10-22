@@ -85,7 +85,7 @@ func doVerify() error {
 		LET Definitions <= SELECT
 			OSPath.String AS Filename,
 			read_file(filename=OSPath, length=MaxLength) AS Data,
-			artifact_set(definition=read_file(filename=OSPath, length=100000),
+			artifact_set(definition=read_file(filename=OSPath, length=MaxLength),
                          repository="local") AS Definition
 		FROM glob(globs=Globs.Glob)
         WHERE NOT IsDir

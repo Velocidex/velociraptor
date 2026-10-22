@@ -1,0 +1,181 @@
+name: Server.Utils.StorageAnalysis
+description: |
+  Facilitates analysis of the Velociraptor server's storage requirements.
+
+  This artifact lists every file in the data store and attaches a
+  description to the file. The notebook allows for analysis of the
+  stored data:
+
+  1. Storage use broken down per client - Determine which clients had
+     the largest collections.
+
+  2. Storage use broken by artifact result set - helps to identify
+     which artifact uses the most JSON result sets.
+
+  3. Storage broken by Flows - Since bulk uploads are shared across
+     the entire flow, regardless how many artifacts were collected in
+     that same flow, this view breaks the total use by flow.
+
+  NOTE: This artifact may take a long time to run on a busy server!
+
+type: SERVER
+
+parameters:
+   - name: DateBefore
+     description: Only select files created before this date. If not set we choose all flows.
+     type: timestamp
+   - name: DateAfter
+     type: timestamp
+     description: Only select files created after this date. If not set we choose all flows.
+
+sources:
+  - query: |
+      LET DateBefore <= DateBefore || timestamp(epoch=now())
+      LET DateAfterTime <= DateAfter || timestamp(epoch="1600-01-01")
+      SELECT OSPath,
+         Data.Artifact AS Artifact,
+         Data.ClientId AS ClientId,
+         Data.FlowId AS FlowId,
+         Data.Rows AS Rows,
+         ModTime,
+         Size,
+         Data.CompressedSize || Size AS StoredSize,
+         Data AS _Data
+      FROM glob(globs='**', root="/", accessor="fs")
+      WHERE NOT IsDir
+        AND ModTime < DateBefore
+        AND ModTime > DateAfter
+
+    notebook:
+      - type: md
+        template: |
+          # How to use this notebook?
+
+          This notebook helps you understand where storage is most
+          used in Velociraptor.
+
+          1. Which clients had the most data collected in the past week?
+
+              Set `DateAfter` to a week ago, then sort storage per
+              client. The clients with the most collections, can be
+              deleted if they are not needed.
+
+          2. Which artifacts tend to collect the most data?
+
+              View the largest Result Sets per artifact. (This only counts
+              the size of the JSON query result files and not the uploaded
+              bulk files).
+
+          This report shows both CLIENT artifacts as well as
+          CLIENT_EVENT artifacts. This view will give you a good idea
+          of how much data client monitoring artifacts are
+          sending. You can therefore tune how often to delete the data
+          using `Server.Utils.ScheduledDeletion`
+
+      - type: vql
+        name: Total Usage By ClientId
+        output: "Recalculate to view total usage by ClientId"
+        template: |
+          LET AllStats <= SELECT ClientId,
+            sum(item=Rows || 0) AS TotalRows,
+            sum(item=StoredSize || 0) AS TotalStoredSize,
+            sum(item=Size || 0) AS TotalSize
+          FROM source(artifact="Server.Utils.StorageAnalysis")
+          WHERE ClientId
+          GROUP BY ClientId
+          ORDER BY TotalStoredSize DESC
+
+          LET _TotalStored <= SELECT sum(item=TotalStoredSize) AS TotalStored
+          FROM AllStats
+          GROUP BY 1
+
+          LET TotalStored <= _TotalStored[0].TotalStored
+
+          LET PercentPlot = SELECT ClientId,
+            client_info(client_id=ClientId).os_info.hostname AS Hostname,
+            TotalRows,
+            TotalStoredSize,
+            TotalSize,
+            int(int=100  * TotalStoredSize / TotalStored)  AS PercentUsage
+          FROM AllStats
+          WHERE PercentUsage > 1
+
+          /*
+          # Total Usage by Client
+
+          {{ Query "SELECT * FROM PercentPlot" | Table }}
+          {{ Query "SELECT Hostname AS _name, PercentUsage FROM PercentPlot" | BarChart }}
+          */
+          LET _ = 1
+
+
+      - type: vql
+        name: Total Usage By Artifact
+        output: "Recalculate to view total usage by Artifact Results"
+        template: |
+          LET AllStats <= SELECT Artifact,
+            sum(item=Rows || 0) AS TotalRows,
+            sum(item=StoredSize || 0) AS TotalStoredSize,
+            sum(item=Size || 0) AS TotalSize
+          FROM source(artifact="Server.Utils.StorageAnalysis")
+          WHERE Artifact AND _Data.PathType =~ "ResultSet"
+          GROUP BY Artifact
+          ORDER BY TotalStoredSize DESC
+
+          LET _TotalStored <= SELECT sum(item=TotalStoredSize) AS TotalStored
+          FROM AllStats
+          GROUP BY 1
+
+          LET TotalStored <= _TotalStored[0].TotalStored
+
+          LET PercentPlot = SELECT Artifact AS _name,
+            TotalRows,
+            TotalStoredSize,
+            TotalSize,
+            int(int=100  * TotalStoredSize / TotalStored)  AS PercentUsage
+          FROM AllStats
+          WHERE PercentUsage > 1
+
+          /*
+          # Total Usage by Artifact Result Sets
+
+          {{ Query "SELECT _name AS Artifact, * FROM PercentPlot" | Table }}
+          {{ Query "SELECT _name, PercentUsage FROM PercentPlot" | BarChart }}
+          */
+          LET _ = 1
+
+      - type: vql
+        name: Total Usage By Artifact Uploads
+        output: "Recalculate to view total usage by Artifact Uploads"
+        template: |
+          /*
+          # Total Usage by Artifact Uploads
+          */
+          LET Results = SELECT ClientId, FlowId,
+             sum(item=Rows || 0) AS TotalRows,
+             sum(item=StoredSize || 0) AS TotalStoredSize,
+             sum(item=Size || 0) AS TotalSize
+          FROM source(artifact="Server.Utils.StorageAnalysis")
+          WHERE Artifact AND FlowId
+          GROUP BY FlowId, ClientId
+          ORDER BY TotalStoredSize DESC
+
+          SELECT ClientId, FlowId, {
+            SELECT artifacts_with_results
+            FROM flows(client_id=ClientId, flow_id=FlowId)
+          } AS ArtifactsCollected,
+                 TotalRows,
+                 TotalStoredSize,
+                 TotalSize,
+                 client_info(client_id=ClientId).os_info.hostname AS Hostname
+          FROM Results
+
+column_types:
+  - name: TotalStoredSize
+    type: mb
+  - name: TotalSize
+    type: mb
+  - name: FlowId
+    type: flow
+  - name: ClientId
+    type: client

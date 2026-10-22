@@ -168,6 +168,23 @@ func (self *FileBaseDataStore) SetSubjectWithCompletion(
 	return writeContentToFile(self, config_obj, urn, serialized_content)
 }
 
+func (self *FileBaseDataStore) Stat(config_obj *config_proto.Config,
+	urn api.DSPathSpec) (api.FileInfo, error) {
+
+	filename := AsDatastoreFilename(self, config_obj, urn)
+	err := checkPath(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	stat, err := os.Lstat(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	return api.NewFileInfoAdapter(stat, urn.AsFilestorePath(), nil), nil
+}
+
 func (self *FileBaseDataStore) DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, completion func()) error {

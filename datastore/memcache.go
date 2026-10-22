@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vtesting"
 )
 
 var (
@@ -523,6 +524,35 @@ func (self *MemcacheDatastore) SetData(
 		md.Set(urn)
 	}
 	return err
+}
+
+func (self *MemcacheDatastore) Stat(config_obj *config_proto.Config,
+	urn api.DSPathSpec) (api.FileInfo, error) {
+
+	filename := AsDatastoreFilename(self, config_obj, urn)
+	err := checkPath(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	bulk_data_any, err := self.data_cache.Get(filename)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO ensure caches are map[string][]byte)
+	bulk_data, ok := bulk_data_any.(*BulkData)
+	if !ok {
+		return nil, internalError
+	}
+
+	return &vtesting.MockFileInfo{
+		Name_:     urn.Base(),
+		PathSpec_: urn.AsFilestorePath(),
+		FullPath_: filename,
+		Mode_:     0664,
+		Size_:     int64(len(bulk_data.data)),
+	}, nil
 }
 
 func (self *MemcacheDatastore) DeleteSubjectWithCompletion(

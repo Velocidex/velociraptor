@@ -5,15 +5,21 @@ package file_store
 // store regardless of the specific filestore implementation.
 import (
 	"errors"
+	"time"
 
+	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file_store_file_info"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/result_sets"
+	"www.velocidex.com/golang/velociraptor/timelines"
 	"www.velocidex.com/golang/velociraptor/uploads"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/files"
@@ -193,10 +199,88 @@ func (self FileStoreFileSystemAccessor) ReadDirWithOSPath(
 
 		child := file_store_file_info.NewFileStoreFileInfo(
 			self.config_obj, f.PathSpec(), f)
+
+		if !f.IsDir() {
+			// Do this lazily
+			child.DataCB_ = fetchExtraData
+		}
+
 		result = append(result, child)
 	}
 
 	return result, nil
+}
+
+func fetchExtraData(config_obj *config_proto.Config,
+	fullpath api.FSPathSpec) *ordereddict.Dict {
+	desc := paths.DescribePath(fullpath)
+	res := ordereddict.NewDict().
+		Set("Type", desc.Type).
+		Set("PathType", string(desc.PathType))
+
+	file_store_factory := file_store.GetFileStore(config_obj)
+
+	// Decorate the data with additional information depending on what
+	// the file actually is.
+	switch desc.PathType {
+	case paths.RESULT_SET:
+		rs_reader, err := result_sets.NewResultSetReader(
+			file_store_factory, fullpath)
+		if err == nil {
+			stats := rs_reader.Stats()
+			res.Set("Rows", stats.Rows).
+				Set("ModTime", stats.ModTime).
+				Set("Size", stats.UncompressedSize).
+				Set("CompressedSize", stats.CompressedSize)
+		}
+
+	case paths.BULK_DATA:
+		stats, err := file_store_factory.StatFile(fullpath)
+		if err == nil {
+			compressed_size := stats.Size()
+			compressed_fd, ok := stats.(api.CompressedFileInfo)
+			if ok {
+				compressed_size = compressed_fd.RawSize()
+			}
+
+			res.Set("Size", stats.Size()).
+				Set("CompressedSize", compressed_size).
+				Set("LastModified", stats.ModTime()).
+				Set("PathType", fullpath.Type().String())
+		}
+
+	case paths.DATASTORE_OBJECT:
+		db, err := datastore.GetDB(config_obj)
+		if err == nil {
+			// Check if the file is actually there
+			stats, err := db.Stat(
+				config_obj, fullpath.AsDatastorePath())
+			if err == nil {
+				res.Set("Size", stats.Size).
+					Set("Mtime", stats.ModTime())
+			}
+		}
+
+	case paths.TIMED_RESULT_SET:
+		path_manager := paths.NewTimelinePathManager("", fullpath)
+		reader_factory := timelines.TimelineReader{}
+		reader, err := reader_factory.New(
+			config_obj, timelines.UnitTransformer, path_manager)
+		if err == nil {
+			stats := reader.Stat()
+			res.Set("StartTime", time.Unix(0, stats.StartTime)).
+				Set("EndTime", time.Unix(0, stats.EndTime)).
+				Set("Size", stats.Size).
+				Set("Rows", stats.Rows).
+				Set("LastModified", time.Unix(stats.LastModified, 0))
+		}
+	}
+
+	// Extract additional metadata
+	if desc.Decorator != nil {
+		res.MergeFrom(desc.Decorator(fullpath))
+	}
+	return res
 }
 
 func (self FileStoreFileSystemAccessor) Open(filename string) (

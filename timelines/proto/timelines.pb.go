@@ -22,9 +22,12 @@ const (
 // to storage as a ResultSet with some mandated columns and the rest
 // being free form.
 type Timeline struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	StartTime int64                  `protobuf:"varint,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
-	EndTime   int64                  `protobuf:"varint,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	state        protoimpl.MessageState `protogen:"open.v1"`
+	StartTime    int64                  `protobuf:"varint,1,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime      int64                  `protobuf:"varint,2,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
+	Size         int64                  `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
+	LastModified int64                  `protobuf:"varint,10,opt,name=last_modified,json=lastModified,proto3" json:"last_modified,omitempty"`
+	Rows         int64                  `protobuf:"varint,11,opt,name=rows,proto3" json:"rows,omitempty"`
 	// The name of the timeline.
 	Id string `protobuf:"bytes,4,opt,name=id,proto3" json:"id,omitempty"`
 	// The name of the timestamp column. If not specified it is _ts
@@ -84,6 +87,27 @@ func (x *Timeline) GetStartTime() int64 {
 func (x *Timeline) GetEndTime() int64 {
 	if x != nil {
 		return x.EndTime
+	}
+	return 0
+}
+
+func (x *Timeline) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *Timeline) GetLastModified() int64 {
+	if x != nil {
+		return x.LastModified
+	}
+	return 0
+}
+
+func (x *Timeline) GetRows() int64 {
+	if x != nil {
+		return x.Rows
 	}
 	return 0
 }
@@ -189,11 +213,15 @@ var File_timelines_proto protoreflect.FileDescriptor
 
 const file_timelines_proto_rawDesc = "" +
 	"\n" +
-	"\x0ftimelines.proto\x12\x05proto\"\x9a\x02\n" +
+	"\x0ftimelines.proto\x12\x05proto\"\xe7\x02\n" +
 	"\bTimeline\x12\x1d\n" +
 	"\n" +
 	"start_time\x18\x01 \x01(\x03R\tstartTime\x12\x19\n" +
-	"\bend_time\x18\x02 \x01(\x03R\aendTime\x12\x0e\n" +
+	"\bend_time\x18\x02 \x01(\x03R\aendTime\x12\x12\n" +
+	"\x04size\x18\x03 \x01(\x03R\x04size\x12#\n" +
+	"\rlast_modified\x18\n" +
+	" \x01(\x03R\flastModified\x12\x12\n" +
+	"\x04rows\x18\v \x01(\x03R\x04rows\x12\x0e\n" +
 	"\x02id\x18\x04 \x01(\tR\x02id\x12)\n" +
 	"\x10timestamp_column\x18\x05 \x01(\tR\x0ftimestampColumn\x12%\n" +
 	"\x0emessage_column\x18\x06 \x01(\tR\rmessageColumn\x12@\n" +

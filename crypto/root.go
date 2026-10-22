@@ -35,9 +35,12 @@ import (
 func AddDefaultCerts(
 	config_obj *config_proto.ClientConfig, CA_Pool *x509.CertPool) error {
 
-	if config_obj != nil {
+	if config_obj != nil && config_obj.CaCertificate != "" {
 		// Always trust ourselves anyway.
-		CA_Pool.AppendCertsFromPEM([]byte(config_obj.CaCertificate))
+		if !CA_Pool.AppendCertsFromPEM([]byte(config_obj.CaCertificate)) {
+			return errors.New(
+				"Unable to parse Client.ca_certificate in the config file.")
+		}
 	}
 
 	// Now add any additional certs from the config file.
@@ -52,11 +55,14 @@ func AddDefaultCerts(
 	return nil
 }
 
-func AddPublicRoots(CA_Pool *x509.CertPool) {
+func AddPublicRoots(CA_Pool *x509.CertPool) error {
 	data, err := utils.GzipUncompress(FileCryptoCaCertificatesCrt)
 	if err != nil {
 		// Cant really happen normally!
 		panic(err)
 	}
-	CA_Pool.AppendCertsFromPEM(data)
+	if !CA_Pool.AppendCertsFromPEM(data) {
+		return errors.New("Unable to add public certs")
+	}
+	return nil
 }

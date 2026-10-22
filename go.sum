@@ -86,8 +86,8 @@ github.com/RoaringBitmap/roaring/v2 v2.14.5 h1:ckd0o545JqDPeVJDgeFoaM21eBixUnlWf
 github.com/RoaringBitmap/roaring/v2 v2.14.5/go.mod h1:eq4wdNXxtJIS/oikeCzdX1rBzek7ANzbth041hrU8Q4=
 github.com/Showmax/go-fqdn v1.0.0 h1:0rG5IbmVliNT5O19Mfuvna9LL7zlHyRfsSvBPZmF9tM=
 github.com/Showmax/go-fqdn v1.0.0/go.mod h1:SfrFBzmDCtCGrnHhoDjuvFnKsWjEQX/Q9ARZvOrJAko=
-github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def h1:1FiSNT+Xh7UGohKsOoeDMkuw0gVyf6SUlnxeDbqiHPw=
-github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20251014141320-f59d776a3def/go.mod h1:HloPDQtxpV/iPxaKVE45+dz6DELiHZcBC1KFRlZtAtM=
+github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20261021104259-7ffd418cf78d h1:Ak/rria5n4hcl/+NlPtDixZq0CXb0cTM85FAyvOPWKM=
+github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20261021104259-7ffd418cf78d/go.mod h1:o/6APE0kdEeW1Ia2FQ4mEXIq2xpvaC/tjldCJb5Hlpg=
 github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2 h1:2cUc1SS+pldecJ6AH6vR/MSpGJRsdAn9a+7Dye9HDHk=
 github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2/go.mod h1:1fYhBBGtaKu46Kpmkd2kvTi32zvgI91AusAW8BTiTAI=
 github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b h1:ZIf5UI3RZj9bO5XJKp8yBiqkM212yt/yic0cha20ORY=
@@ -571,8 +571,8 @@ github.com/kisielk/errcheck v1.2.0/go.mod h1:/BMXB+zMLi60iA8Vv6Ksmxu/1UDYcXs4uQL
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/klauspost/compress v1.13.6/go.mod h1:/3/Vjq9QcHkK5uEr5lBEmyoZ1iFhe47etQ6QUkpK6sk=
-github.com/klauspost/compress v1.18.6 h1:2jupLlAwFm95+YDR+NwD2MEfFO9d4z4Prjl1XXDjuao=
-github.com/klauspost/compress v1.18.6/go.mod h1:cwPg85FWrGar70rWktvGQj8/hthj3wpl0PGDogxkrSQ=
+github.com/klauspost/compress v1.20.3 h1:zWNoFqq/lSuYQRim3dUXlXeA0IqwuZGicdG5ZTfY5j4=
+github.com/klauspost/compress v1.20.3/go.mod h1:LUdAzn7YLVvxLpc7y3V1m40wESHTgc1422pwwBSKYuI=
 github.com/klauspost/cpuid/v2 v2.0.1/go.mod h1:FInQzS24/EEf25PyTYn52gqo7WaD8xa0213Md/qVLRg=
 github.com/klauspost/cpuid/v2 v2.3.0 h1:S4CRMLnYUhGeDFDqkGriYKdfoFlDnMtqTiI/sFzhA9Y=
 github.com/klauspost/cpuid/v2 v2.3.0/go.mod h1:hqwkgyIinND0mEev00jJYCxPNVRVXFQeu1XKlok6oO0=

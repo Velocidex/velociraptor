@@ -331,8 +331,9 @@ func (self ResultSetFactory) NewResultSetWriter(
 
 // A ResultSetReader can produce rows from a result set.
 type ResultSetReaderImpl struct {
-	total_rows int64
-	mtime      time.Time
+	total_rows                         int64
+	compressed_size, uncompressed_size int64
+	mtime                              time.Time
 
 	fd       api.FileReader
 	idx_fd   api.FileReader
@@ -553,6 +554,15 @@ func (self *ResultSetReaderImpl) Close() {
 	}
 }
 
+func (self *ResultSetReaderImpl) Stats() result_sets.ResultSetStat {
+	return result_sets.ResultSetStat{
+		Rows:             self.total_rows,
+		ModTime:          self.mtime,
+		CompressedSize:   self.compressed_size,
+		UncompressedSize: self.uncompressed_size,
+	}
+}
+
 type NullReader struct {
 	*bytes.Reader
 	pathSpec_ api.FSPathSpec
@@ -643,12 +653,25 @@ func (self ResultSetFactory) NewResultSetReader(
 		}
 	}
 
+	fd_stat, err := fd.Stat()
+	if err != nil {
+		return nil, err
+	}
+
+	compressed_size := fd_stat.Size()
+	compressed_fd, ok := fd_stat.(api.CompressedFileInfo)
+	if ok {
+		compressed_size = compressed_fd.RawSize()
+	}
+
 	return &ResultSetReaderImpl{
-		total_rows: total_rows,
-		mtime:      mtime,
-		fd:         fd,
-		idx_fd:     idx_fd,
-		log_path:   log_path,
+		total_rows:        total_rows,
+		uncompressed_size: fd_stat.Size(),
+		compressed_size:   compressed_size,
+		mtime:             mtime,
+		fd:                fd,
+		idx_fd:            idx_fd,
+		log_path:          log_path,
 	}, nil
 }
 
