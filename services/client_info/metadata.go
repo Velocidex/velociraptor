@@ -65,13 +65,6 @@ func (self *Store) GetMetadata(ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) (*ordereddict.Dict, error) {
 
-	return self._GetMetadata(ctx, config_obj, client_id)
-}
-
-func (self *Store) _GetMetadata(ctx context.Context,
-	config_obj *config_proto.Config,
-	client_id string) (*ordereddict.Dict, error) {
-
 	client_path_manager := paths.NewClientPathManager(client_id)
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -157,27 +150,10 @@ func (self *Store) ModifyMetadata(
 		}
 	}
 
-	// Record contains all fields
-	record, err := self._GetMetadata(ctx, config_obj, client_id)
-	if err != nil {
-		return err
-	}
-
-	new_metadata, err := cb(record)
-	if err != nil {
-		return err
-	}
-
-	// Nothing to update
-	if new_metadata == nil {
-		return nil
-	}
-
 	self.mu.Lock()
 	client_record, pres := self.data[client_id]
 	self.mu.Unlock()
 
-	// Make a fresh record if it is not there.
 	if !pres {
 		// The "server" client id is special and always exists.
 		if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
@@ -189,10 +165,8 @@ func (self *Store) ModifyMetadata(
 		}
 	}
 
-	// This stored object contains all the metadata fields.
-	stored_obj := &api_proto.ClientMetadata{ClientId: client_id}
-
-	err = client_record.Modify(
+	// Modify the client record
+	return client_record.Modify(
 		client_id,
 		func(client_info *services.ClientInfo) (
 			*services.ClientInfo, error) {
@@ -204,8 +178,29 @@ func (self *Store) ModifyMetadata(
 				}
 			}
 
-			// Clear the indexed record and start again.
-			client_info.Metadata = make(map[string]string)
+			// Move the real logic under the client record's lock
+
+			// Record contains all fields
+			record, err := self.GetMetadata(ctx, config_obj, client_id)
+			if err != nil {
+				return nil, err
+			}
+
+			new_metadata, err := cb(record)
+			if err != nil {
+				return nil, err
+			}
+
+			// Nothing to update
+			if new_metadata == nil {
+				return nil, nil
+			}
+
+			// This stored object contains all the metadata fields.
+			stored_obj := &api_proto.ClientMetadata{ClientId: client_id}
+
+			// Only the indexed fields go into the client record.
+			indexed := make(map[string]string)
 
 			for _, item := range new_metadata.Items() {
 				key := item.Key
@@ -219,8 +214,7 @@ func (self *Store) ModifyMetadata(
 
 				value := utils.ToString(item.Value)
 				if indexed_fields[item.Key] {
-					client_info.Metadata[key] = value
-					_ = indexer.SetIndex(client_id, key+":"+value)
+					indexed[key] = value
 				}
 
 				stored_obj.Items = append(stored_obj.
@@ -228,23 +222,25 @@ func (self *Store) ModifyMetadata(
 					Key: key, Value: value})
 			}
 
-			return client_info, nil
+			// Clear the indexed record and start again.
+			client_info.Metadata = make(map[string]string)
+			for k, v := range indexed {
+				client_info.Metadata[k] = v
+				_ = indexer.SetIndex(client_id, k+":"+v)
+			}
+
+			// Now store the full metadata dict in the data store. FIXME: We
+			// are still holding the lock and the below may take a long
+			// time....
+			client_path_manager := paths.NewClientPathManager(client_id)
+			db, err := datastore.GetDB(config_obj)
+			if err != nil {
+				return nil, err
+			}
+
+			return client_info, db.SetSubject(config_obj,
+				client_path_manager.Metadata(), stored_obj)
 		})
-	if err != nil {
-		return err
-	}
-
-	// Now store the full metadata dict in the data store. FIXME: We
-	// are still holding the lock and the below may take a long
-	// time....
-	client_path_manager := paths.NewClientPathManager(client_id)
-	db, err := datastore.GetDB(config_obj)
-	if err != nil {
-		return err
-	}
-
-	return db.SetSubject(config_obj,
-		client_path_manager.Metadata(), stored_obj)
 }
 
 func (self *Store) SetMetadata(
