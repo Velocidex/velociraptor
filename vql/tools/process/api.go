@@ -93,7 +93,8 @@ func (self *ProcessEntry) Data() *ordereddict.Dict {
 	self.data.Update("Pid", self.Id).
 		Update("Ppid", self.ParentId).
 		Update("StartTime", self.StartTime).
-		Update("EndTime", self.EndTime)
+		Update("EndTime", self.EndTime).
+		AliasField("CreateTime", "StartTime")
 
 	return self.data
 }

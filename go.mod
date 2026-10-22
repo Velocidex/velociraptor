@@ -22,7 +22,7 @@ require (
 	github.com/Velocidex/go-ewf v0.0.0-20260301075014-ed09cb7887b6
 	github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359
 	github.com/Velocidex/go-fat v0.0.0-20260301005230-08fb790838a9
-	github.com/Velocidex/go-journalctl v0.0.0-20261011010040-fb00104e7087
+	github.com/Velocidex/go-journalctl v0.0.0-20261022145448-1fcacb74e0de
 	github.com/Velocidex/go-macos-unifiedlogs v0.0.0-20261014164346-8dc42d82b713
 	github.com/Velocidex/go-magic v0.0.0-20260915105357-ee314c304181
 	github.com/Velocidex/go-mscfb v0.0.0-20240618091452-31f4ccc54002
@@ -32,7 +32,7 @@ require (
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
-	github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238
+	github.com/Velocidex/ordereddict v0.0.0-20261022151107-9ee630faec77
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
 	github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250
