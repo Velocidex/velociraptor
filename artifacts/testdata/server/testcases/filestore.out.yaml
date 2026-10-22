@@ -61,7 +61,7 @@ Output: [
 # enumerate_flow emits some fs paths and some ds paths. Here we test
 # that we can read both these types. file_store operating on the
 # string version should be same as directly.
-Query: SELECT hash(path=Data.VFSPath, accessor="fs"), Data FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6") WHERE Type IN ("Log", "CollectionContext", "Task", "Result")
+Query: SELECT hash(path=Data.VFSPath, accessor="fs"), Data - dict(ModTime="XXX") AS Data FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6")
 Output: [
  {
   "hash(path=Data.VFSPath, accessor=\"fs\")": {
@@ -70,7 +70,11 @@ Output: [
    "SHA256": "9fb815a8514e364f668158a94bcc542c21a7c0ed690cff3040faa7be39102833"
   },
   "Data": {
-   "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json"
+   "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/artifacts/Windows.Applications.ChocolateyPackages/F.BN2HP3OSS3LK6.json",
+   "Type": "ResultSet",
+   "Rows": -1,
+   "Size": 353,
+   "CompressedSize": 353
   }
  },
  {
@@ -80,17 +84,23 @@ Output: [
    "SHA256": "43b04dd30474cafdc3cd06ae632402a116ae636d65a14fcfb4a838f6338f1dad"
   },
   "Data": {
-   "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/logs.json"
+   "VFSPath": "fs:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/logs.json",
+   "Type": "ResultSet",
+   "Rows": -1,
+   "Size": 159,
+   "CompressedSize": 159
   }
  },
  {
   "hash(path=Data.VFSPath, accessor=\"fs\")": {
-   "MD5": "1b79132257746e3ce295e45e50160521",
-   "SHA1": "6d83deb9d14457496bf9560dd6b87f2ed7b7ef92",
-   "SHA256": "c337a4c3885ed775b50994f8018bdc7b3fa885f2efb81a2b766f12e81ac85394"
+   "MD5": "53839975de4bb12c3b0059471ad1891c",
+   "SHA1": "3509d154edc69a9ff1ddbf5340b106ad8bccfd98",
+   "SHA256": "8c199e9d4bea0ed234e4748aeafafb37d1af91fd35a3ac0c2853d233386b4f20"
   },
   "Data": {
-   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6.json.db"
+   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6.json.db",
+   "Type": "PATH_TYPE_DATASTORE_JSON",
+   "Size": null
   }
  },
  {
@@ -100,7 +110,9 @@ Output: [
    "SHA256": "5888fe1c56fbc79e109f41441516d4b9ac061029f39e66f6f67b2e7f58285c90"
   },
   "Data": {
-   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/task.db"
+   "VFSPath": "ds:/clients/C.4f5e52adf0a337a9/collections/F.BN2HP3OSS3LK6/task.db",
+   "Type": "PATH_TYPE_DATASTORE_PROTO",
+   "Size": null
   }
  }
 ]

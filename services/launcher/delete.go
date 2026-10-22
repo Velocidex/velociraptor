@@ -122,9 +122,6 @@ func (self *FlowStorageManager) DeleteFlow(
 	for _, artifact_name := range collection_context.ArtifactsWithResults {
 		path_manager := artifact_paths.NewArtifactPathManagerWithMode(
 			config_obj, client_id, flow_id, artifact_name, mode)
-		if err != nil {
-			continue
-		}
 
 		result_path, err := path_manager.GetPathForWriting()
 		if err != nil {
@@ -190,9 +187,7 @@ func (self *reporter) reset() {
 	defer self.mu.Unlock()
 
 	self.pool = pond.NewPool(10,
-		pond.WithContext(self.ctx),
-		pond.WithQueueSize(2),
-		pond.WithoutPanicRecovery())
+		pond.WithContext(self.ctx))
 }
 
 func (self *reporter) wait() {
@@ -213,6 +208,8 @@ func (self *reporter) emit_ds(
 				return nil, err
 			}
 
+			utils.DlvBreak()
+
 			// Check if the file is actually there
 			stat, err := db.Stat(self.config_obj, target)
 			if err != nil {
@@ -223,7 +220,7 @@ func (self *reporter) emit_ds(
 				Set("VFSPath", target).
 				Set("Type", target.Type().String()).
 				Set("Size", stat.Size).
-				Set("Mtime", stat.ModTime())
+				Set("ModTime", stat.ModTime())
 
 			if !do_it {
 				return data, nil
