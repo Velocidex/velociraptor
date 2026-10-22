@@ -33,12 +33,14 @@ import (
 	"github.com/stretchr/testify/suite"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/crypto"
 	crypto_client "www.velocidex.com/golang/velociraptor/crypto/client"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	crypto_server "www.velocidex.com/golang/velociraptor/crypto/server"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/networking"
 )
 
 type TestSuite struct {
@@ -102,6 +104,14 @@ func (self *TestSuite) SetupTest() {
 	self.server_manager.Resolver = crypto_client.NewInMemoryPublicKeyResolver()
 	self.server_manager.Resolver.SetPublicKey(
 		self.ConfigObj, self.client_id, &private_key.PublicKey)
+}
+
+func (self *TestSuite) TestAddPublicCerts() {
+	transport, err := networking.GetNewHttpTransport(self.ConfigObj.Client, "")
+	assert.NoError(self.T(), err)
+
+	err = crypto.AddPublicRoots(transport.TLSClientConfig.RootCAs)
+	assert.NoError(self.T(), err)
 }
 
 func (self *TestSuite) TestEncDecServerToClient() {

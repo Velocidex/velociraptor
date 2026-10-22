@@ -57,6 +57,11 @@ type FileInfo interface {
 	PathSpec() FSPathSpec
 }
 
+// Compressed files can also report their (compressed size)
+type CompressedFileInfo interface {
+	RawSize() int64
+}
+
 type FileStore interface {
 	ReadFile(filename FSPathSpec) (FileReader, error)
 

@@ -25,6 +25,9 @@ var (
 	PermissionDenied    = errors.New("PermissionDenied")
 	EmbeddedConfigError = errors.New("EmbeddedConfigError")
 	MemoryError         = errors.New("MemoryError")
+
+	// Not a real error, used to skip operations.
+	SkipError = errors.New("Skip")
 )
 
 // This is a custom error type that wraps an inner error but does not

@@ -1432,7 +1432,7 @@ defaults:
   acl_lru_timeout_sec: 60
 
   # Ignore messages from unauthenticated clients for this long - gives
-  # them a chance to enrol first (default 10 sec).
+  # them a chance to enroll first (default 10 sec).
   unauthenticated_lru_timeout_sec: 10
 
   # Controls how exports work (creating hunt or collection exports to a

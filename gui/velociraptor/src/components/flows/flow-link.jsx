@@ -92,6 +92,10 @@ export default class FlowLink extends React.Component {
     }
 
     render() {
+        if(!this.props.client_id || !this.props.flow_id) {
+            return <></>;
+        }
+
         return (
             <>
             { this.state.showFlowInspector &&
