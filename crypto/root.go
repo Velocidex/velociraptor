@@ -55,11 +55,14 @@ func AddDefaultCerts(
 	return nil
 }
 
-func AddPublicRoots(CA_Pool *x509.CertPool) {
+func AddPublicRoots(CA_Pool *x509.CertPool) error {
 	data, err := utils.GzipUncompress(FileCryptoCaCertificatesCrt)
 	if err != nil {
 		// Cant really happen normally!
 		panic(err)
 	}
-	CA_Pool.AppendCertsFromPEM(data)
+	if !CA_Pool.AppendCertsFromPEM(data) {
+		return errors.New("Unable to add public certs")
+	}
+	return nil
 }

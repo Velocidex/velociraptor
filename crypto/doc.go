@@ -50,3 +50,26 @@
 
 */
 package crypto
+
+/*
+   Bundled CA certificates.
+
+   The bundled certificates are here to ensure we are able to
+   communicate when the system store is missing critical certs.
+
+   The bundle is take from a patched Ubuntu system.
+
+   You can view all certs in the bundle:
+
+   ```
+   openssl crl2pkcs7 -nocrl -certfile crypto/ca-certificates.crt | openssl pkcs7 -print_certs
+   ```
+
+   The bundle is only used by the client, for client/server comms **in
+   addition** to the system store and only in the case where the
+   deployments is not using self signed SSL
+   (Client.use_self_signed_ssl = false).
+
+   This is because in self signed mode, the CA is always pinned to the
+   global server CA so we do not use the CA store at all.
+*/
