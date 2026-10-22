@@ -112,8 +112,8 @@ github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359 h1:IPYiFWk8IlTOQ
 github.com/Velocidex/go-ext4 v0.0.0-20250510085914-b0b955af0359/go.mod h1:Sbqqh1t+nYXmNWw0dZC8LOIxP7z5Wg94SP+4Ej1QZqg=
 github.com/Velocidex/go-fat v0.0.0-20260301005230-08fb790838a9 h1:Lc/fU68mtM09XPH/ULOfZNZSKy/ol81c8rhEQ5OqbmM=
 github.com/Velocidex/go-fat v0.0.0-20260301005230-08fb790838a9/go.mod h1:eIgJ3KnRtnoO6lXOfZBina/KGAoyUBFUYjy+iZGVvkc=
-github.com/Velocidex/go-journalctl v0.0.0-20261011010040-fb00104e7087 h1:MWf8Mj3h+c0uHXD1XkiMpVGrYPyGfXTolQgG9bB+n+c=
-github.com/Velocidex/go-journalctl v0.0.0-20261011010040-fb00104e7087/go.mod h1:rlnsxeW5SJE/T9/6+TgxH5xFADkqizR02QIGFVJQsT4=
+github.com/Velocidex/go-journalctl v0.0.0-20261022145448-1fcacb74e0de h1:Itj7Q6cNb/D5WpxAWqHrWcEaG999PbjnnUB5eKCMix0=
+github.com/Velocidex/go-journalctl v0.0.0-20261022145448-1fcacb74e0de/go.mod h1:rlnsxeW5SJE/T9/6+TgxH5xFADkqizR02QIGFVJQsT4=
 github.com/Velocidex/go-macos-unifiedlogs v0.0.0-20261014164346-8dc42d82b713 h1:PHiA6mwixdSbCFU4YpuI9ED4KIemqOSUPVhYpo7Z5Ko=
 github.com/Velocidex/go-macos-unifiedlogs v0.0.0-20261014164346-8dc42d82b713/go.mod h1:ik3pHp3RKTHdCmfe8i8EsNs5XXmLX3wREqyGPYN01w8=
 github.com/Velocidex/go-magic v0.0.0-20260915105357-ee314c304181 h1:qwzdWT3jrG19NFsrOJprcwHeZ030PkRGVx5RznzuWog=
@@ -133,8 +133,8 @@ github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f/go.mod h1
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a h1:AeXPUzhU0yhID/v5JJEIkjaE85ASe+Vh4Kuv1RSLL+4=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
-github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238 h1:Q2DFf1f4fiz1/V4cu2wojDKF6/DfjIY7QmfVAr/UnJY=
-github.com/Velocidex/ordereddict v0.0.0-20250821063524-02dc06e46238/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
+github.com/Velocidex/ordereddict v0.0.0-20261022151107-9ee630faec77 h1:h8tfgHeWnUWjCuolHAKfrw0NRYMS02nRU4upmmQSH+0=
+github.com/Velocidex/ordereddict v0.0.0-20261022151107-9ee630faec77/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a h1:H7dVazNcaE80V8cy99TF7LPpwzvr1uJ4I2nDjb5ek7E=
 github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a/go.mod h1:/fy/Eg4TQz9KkJduvZfGCnbWTQ/LKaknS2wYB52cU6c=
 github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1 h1:fLJ2AjY0dtDZEBhekp3bxyxGpWh5D/+NfOVlGXB5ROA=

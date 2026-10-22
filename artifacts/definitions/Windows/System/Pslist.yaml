@@ -38,7 +38,7 @@ sources:
     query: |
         LET ProcList = SELECT * FROM if(condition=UseTracker,
         then={
-          SELECT CreateTime, Pid, Ppid, NULL AS TokenIsElevated,
+          SELECT StartTime AS CreateTime, Pid, Ppid, NULL AS TokenIsElevated,
                  Username, Name, CommandLine, Exe, NULL AS Memory
           FROM process_tracker_pslist()
         }, else={
