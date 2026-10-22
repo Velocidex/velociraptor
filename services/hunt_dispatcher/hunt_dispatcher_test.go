@@ -299,10 +299,16 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	db, err := datastore.GetDB(self.ConfigObj)
 	assert.NoError(self.T(), err)
 
-	// Check the hunt is running in the data store.
-	hunt_obj, pres := self.minion_dispatcher.GetHunt(self.Ctx,
-		services.GetHuntOptions{Request: false}, "H.2")
-	assert.True(self.T(), pres)
+	var hunt_obj *api_proto.Hunt
+	var pres bool
+
+	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+		// Check the hunt is running in the data store.
+		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx,
+			services.GetHuntOptions{Request: false}, "H.2")
+		return pres
+	})
+
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
 
 	hunt_obj, pres = self.master_dispatcher.GetHunt(self.Ctx,

@@ -52,7 +52,7 @@
    "VFSPath": "ds:/clients/C.123/collections/F.1234.json.db",
    "Type": "PATH_TYPE_DATASTORE_JSON",
    "Size": null,
-   "Mtime": "0001-01-01T00:00:00Z"
+   "ModTime": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },
@@ -62,7 +62,7 @@
    "VFSPath": "ds:/clients/C.123/collections/F.1234/task.db",
    "Type": "PATH_TYPE_DATASTORE_PROTO",
    "Size": null,
-   "Mtime": "0001-01-01T00:00:00Z"
+   "ModTime": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },
@@ -72,7 +72,7 @@
    "VFSPath": "ds:/clients/C.123/collections/F.1234/stats.json.db",
    "Type": "PATH_TYPE_DATASTORE_JSON",
    "Size": null,
-   "Mtime": "0001-01-01T00:00:00Z"
+   "ModTime": "0001-01-01T00:00:00Z"
   },
   "error": ""
  },
