@@ -1404,14 +1404,16 @@ func getReqName(in *actions_proto.VQLCollectorArgs) string {
 }
 
 func (self *LauncherTestSuite) TestDelete() {
-	assert.Retry(self.T(), 10, time.Second, self._TestDelete)
-}
+	t := self.T()
 
-func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	launcher, err := services.GetLauncher(self.ConfigObj)
 	assert.NoError(t, err)
 
 	flow_id := "F.FlowId123"
+
+	// Get a unique client so we start with a fresh client record.
+	client_id := fmt.Sprintf("C.%d", utils.GetId())
+	self.CreateClient(client_id)
 	user := "admin"
 
 	manager, _ := services.GetRepositoryManager(self.ConfigObj)
@@ -1421,7 +1423,7 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	defer utils.SetFlowIdForTests(flow_id)()
 
 	res, err := launcher.GetFlows(self.Ctx, self.ConfigObj,
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		client_id,
 		result_sets.ResultSetOptions{},
 		services.GetFlowOptions{},
 		0, 10)
@@ -1433,14 +1435,14 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 		self.Ctx, self.ConfigObj, acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Creator:   user,
-			ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			ClientId:  client_id,
 			Artifacts: []string{"Generic.Client.Info"},
 		}, utils.SyncCompleter)
 
 	assert.NoError(t, err)
 
 	res, err = launcher.GetFlows(self.Ctx, self.ConfigObj,
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		client_id,
 		result_sets.ResultSetOptions{},
 		services.GetFlowOptions{},
 		0, 10)
@@ -1451,7 +1453,7 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	// Now delete the flow asynchronously
 	_, err = launcher.Storage().DeleteFlow(
 		self.Ctx, self.ConfigObj,
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+		client_id,
 		flow_id, constants.PinnedServerName,
 		services.DeleteFlowOptions{
 			ReallyDoIt: true,
@@ -1460,7 +1462,7 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	assert.NoError(t, err)
 
 	// Index is not updated yet
-	idx := self.getIndex(constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
+	idx := self.getIndex(client_id)
 	assert.Equal(t, len(idx), 1)
 	idx_flow_id, _ := idx[0].GetString("FlowId")
 	assert.Equal(t, flow_id, idx_flow_id)
@@ -1480,7 +1482,7 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 		datastore.FlushDatastore(self.ConfigObj)
 
 		res, err = launcher.GetFlows(self.Ctx, self.ConfigObj,
-			constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			client_id,
 			result_sets.ResultSetOptions{},
 			services.GetFlowOptions{},
 			0, 10)
@@ -1495,7 +1497,7 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 		self.Ctx, self.ConfigObj, acl_manager,
 		repository, &flows_proto.ArtifactCollectorArgs{
 			Creator:   user,
-			ClientId:  constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			ClientId:  client_id,
 			Artifacts: []string{"Generic.Client.Info"},
 		}, utils.SyncCompleter)
 	assert.NoError(t, err)
@@ -1504,8 +1506,8 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	// Now delete the flow synchronously
 	_, err = launcher.Storage().DeleteFlow(
 		self.Ctx, self.ConfigObj,
-		constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
-		flow_id, constants.PinnedServerName,
+		client_id,
+		new_flow_id, constants.PinnedServerName,
 		services.DeleteFlowOptions{
 			ReallyDoIt: true,
 			Sync:       true,
@@ -1515,7 +1517,7 @@ func (self *LauncherTestSuite) _TestDelete(t *assert.R) {
 	datastore.FlushDatastore(self.ConfigObj)
 
 	// This time the index is reset immediately.
-	idx = self.getIndex(constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
+	idx = self.getIndex(client_id)
 	assert.Equal(t, len(idx), 0)
 }
 

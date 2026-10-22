@@ -469,6 +469,11 @@ func (self *MemcacheFileDataStore) DeleteSubject(
 	return nil
 }
 
+func (self *MemcacheFileDataStore) Stat(config_obj *config_proto.Config,
+	urn api.DSPathSpec) (api.FileInfo, error) {
+	return file_based_imp.Stat(config_obj, urn)
+}
+
 func (self *MemcacheFileDataStore) DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, completion func()) error {

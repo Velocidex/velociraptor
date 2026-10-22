@@ -196,7 +196,10 @@ func NewHTTPConnector(
 		transport.TLSClientConfig.ServerName = utils.GetSuperuserName(config_obj)
 	} else {
 		// Not self signed - add the public roots for verifications.
-		crypto.AddPublicRoots(transport.TLSClientConfig.RootCAs)
+		err := crypto.AddPublicRoots(transport.TLSClientConfig.RootCAs)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	self := &HTTPConnector{

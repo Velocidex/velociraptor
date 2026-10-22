@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"runtime/debug"
 	"strconv"
 	"testing"
 	"time"
@@ -17,7 +18,7 @@ func Retry(t *testing.T, maxAttempts int, sleep time.Duration, f func(r *R)) boo
 		defer func() {
 			recovery := recover()
 			if recovery != nil {
-				r.Fail()
+				r.Errorf("Panic: %v", string(debug.Stack()))
 			}
 		}()
 

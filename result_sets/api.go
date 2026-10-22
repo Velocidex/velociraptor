@@ -16,6 +16,13 @@ const (
 	TruncateMode = WriteMode(true)
 )
 
+type ResultSetStat struct {
+	ModTime          time.Time
+	Rows             int64
+	CompressedSize   int64
+	UncompressedSize int64
+}
+
 type ResultSetWriter interface {
 	// Write an already serialized batch of rows. This basically just
 	// appends the data to the output JSONL file so it is very cheap.
@@ -60,6 +67,8 @@ type ResultSetReader interface {
 	// to parse the data from storage.
 	JSON(ctx context.Context) (<-chan []byte, error)
 	Close()
+
+	Stats() ResultSetStat
 
 	TotalRows() int64
 	MTime() time.Time
