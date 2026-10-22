@@ -194,7 +194,8 @@ func (self *HuntDispatcher) ModifyHuntObject(
 				}
 				return services.HuntTriggerParticipation
 
-			case services.HuntPropagateChanges:
+				// If the hunt is modified inform the minions immediately.
+			case services.HuntPropagateChanges, services.HuntFlushToDatastore:
 				// Relay the new update to all other hunt dispatchers.
 				journal, err := services.GetJournal(self.config_obj)
 				if err == nil {
@@ -214,7 +215,7 @@ func (self *HuntDispatcher) ModifyHuntObject(
 						artifacts.HUNT_UPDATE.
 							WithSuperUser().WithFrom(hunt_id))
 				}
-				return services.HuntPropagateChanges
+				return modification
 
 			default:
 				return modification

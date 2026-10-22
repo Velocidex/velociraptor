@@ -246,7 +246,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 
 		return services.HuntUnmodified
 
-	default:
+	default: // Also handle services.HuntFlushToDatastore
 		// Update the hunt object in memory and also store it in the
 		// data store.
 		hunt_record.dirty = true
@@ -262,7 +262,7 @@ func (self *HuntStorageManagerImpl) ModifyHuntObject(
 		if err != nil {
 			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			logger.Error("Flushing %s to disk: %v", hunt_id, err)
-			return services.HuntUnmodified
+			return modification
 		}
 		return modification
 	}

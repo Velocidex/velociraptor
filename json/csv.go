@@ -101,7 +101,7 @@ func appendJsonlExtra(dst, line, extra []byte) []byte {
 
 	// Line should not contain any \r or \n as it should be a fixed
 	// jsonl line.
-	if bytes.Contains(line, []byte{'\n'}) {
+	if bytes.ContainsAny(line, "\n\r") {
 		return nil
 	}
 
