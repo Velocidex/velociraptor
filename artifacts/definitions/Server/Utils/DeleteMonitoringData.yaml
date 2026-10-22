@@ -62,8 +62,8 @@ sources:
                if(condition=ReallyDoIt, then=file_store_delete(path=OSPath)) AS ReallyDoIt
         FROM glob(
           globs=[
-            "/monitoring/**.json*",
-            "/monitoring_logs/**.json*"
+            "/monitoring/**/*.json*",
+            "/monitoring_logs/**/*.json*"
           ],
           accessor="fs",
           root="/clients/" + ClientId
