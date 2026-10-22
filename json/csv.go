@@ -6,7 +6,6 @@ package json
 import (
 	"bytes"
 	"encoding/csv"
-	"encoding/json"
 	"io"
 
 	"github.com/Velocidex/ordereddict"
@@ -21,11 +20,15 @@ func ConvertJSONL(
 	// If either of these is nil we skip writing to it.
 	jsonl_out io.Writer,
 	csv_out io.Writer,
-	extra_data *ordereddict.Dict) {
+	extra_data *ordereddict.Dict) error {
 
 	var p fastjson.Parser
 	csv_encoder := NewCSVEncoder(extra_data)
-	extra := encodeExtraFields(extra_data)
+	extra, err := encodeExtraFields(extra_data)
+	if err != nil {
+		return err
+	}
+
 	var buf []byte
 
 	for serialized := range json_in {
@@ -66,46 +69,50 @@ func ConvertJSONL(
 			_, _ = csv_out.Write(csv_encoder.Encode(obj))
 		}
 	}
+
+	return nil
 }
 
 // Builds `"FlowId":"F.1","ClientId":"C.1"` once, reused for every line.
-func encodeExtraFields(extra_data *ordereddict.Dict) []byte {
-	var result []byte
-	if extra_data == nil {
-		return result
+func encodeExtraFields(extra_data *ordereddict.Dict) ([]byte, error) {
+	serialized, err := Marshal(extra_data)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, i := range extra_data.Items() {
-		k, err := json.Marshal(i.Key)
-		if err != nil {
-			continue
-		}
-		v, err := json.Marshal(i.Value)
-		if err != nil {
-			continue
-		}
-
-		if len(result) > 0 {
-			result = append(result, ',')
-		}
-		result = append(result, k...)
-		result = append(result, ':')
-		result = append(result, v...)
+	if len(serialized) < 2 {
+		return nil, nil
 	}
-	return result
+
+	// Trim the opening and closing {}
+	return serialized[1 : len(serialized)-1], nil
 }
+
+const whiteSpace = " \t\r\n"
 
 // Turns `{"a":1}` into `{"a":1,<extra>}` without parsing; non-objects are dropped.
 func appendJsonlExtra(dst, line, extra []byte) []byte {
-	line = bytes.TrimRight(line, " \t\r\n")
+	line = bytes.TrimRight(line, whiteSpace)
+
+	// Check the line for sanity
 	if len(line) < 2 || line[0] != '{' || line[len(line)-1] != '}' {
-		return dst
+		return nil
 	}
 
-	dst = append(dst, line[:len(line)-1]...)
+	// Line should not contain any \r or \n as it should be a fixed
+	// jsonl line.
+	if bytes.Contains(line, []byte{'\n'}) {
+		return nil
+	}
+
+	// Drop the last } from the line
+	line = line[:len(line)-1]
+
+	dst = append(dst, bytes.TrimRight(line, whiteSpace)...)
 
 	// No comma after `{` for an empty object.
-	if len(extra) > 0 && len(bytes.TrimSpace(line[1:len(line)-1])) > 0 {
+	if len(extra) > 0 &&
+		!bytes.HasSuffix(dst, []byte{'{'}) {
 		dst = append(dst, ',')
 	}
 	dst = append(dst, extra...)
