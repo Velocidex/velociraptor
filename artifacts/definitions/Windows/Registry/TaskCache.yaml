@@ -1,0 +1,202 @@
+name: Windows.Registry.TaskCache
+description: |
+  Parses the Task Scheduler TaskCache registry keys and flags tasks
+  that were tampered with to hide them.
+
+  When a task is registered, the Schedule service writes it both to an
+  XML file under `System32\Tasks` and to the TaskCache keys in the
+  SOFTWARE hive. The service, `schtasks` and the GUI all work from the
+  registry copy. Windows.System.TaskScheduler only reads the XML
+  files, so it can not see these anomalies:
+
+  - `SDMissing`: the Tree key has no `SD` value. The task still runs
+    but is hidden from `schtasks /query` and the GUI (Tarrask,
+    HAFNIUM).
+  - `TreeMissing`: the Tasks entry has no Tree key pointing to it,
+    which also hides the task.
+  - `TaskMissing`: the Tree key points to a Tasks entry that does not
+    exist.
+  - `XmlMissing`: the task XML file was deleted but the registry
+    entry is still there.
+
+  The `DynamicInfo` value also gives the creation and last run times,
+  which is useful when the TaskScheduler Operational log is disabled.
+
+  Set `SoftwareHive` to parse an offline SOFTWARE hive with the raw
+  registry parser instead of the live registry. `XmlMissing` is then
+  only computed when `TasksDirectory` is also set.
+
+reference:
+  - https://www.microsoft.com/en-us/security/blog/2022/04/12/tarrask-malware-uses-scheduled-tasks-for-defense-evasion/
+  - https://attack.mitre.org/techniques/T1053/005/
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: TaskCacheKey
+    description: The TaskCache key in the live registry.
+    default: HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Schedule\TaskCache
+  - name: SoftwareHive
+    description: |
+      Path to an offline SOFTWARE hive. When set, it is parsed instead
+      of the live registry.
+  - name: TasksDirectory
+    description: |
+      Directory holding the task XML files. Defaults to
+      %SystemRoot%\System32\Tasks when reading the live registry.
+  - name: TaskNameRegex
+    type: regex
+    default: .
+  - name: OnlyAnomalies
+    type: bool
+    description: Only show tasks with at least one anomaly flag set.
+
+export: |
+  LET TaskCacheProfile <= '''[
+    ["Header", 0, [
+      ["Version", 0, "uint16"],
+      ["ContextSize", 2, "uint32"],
+      ["Context", 6, "String", {
+          length: "x=>x.ContextSize", encoding: "utf16"}],
+      ["Actions", "x=>6 + x.ContextSize", "Array", {
+          type: "Action", count: 32,
+          sentinel: "x=>NOT x.Magic IN (0x6666, 0x7777)"}]
+    ]],
+
+    # Exec (0x6666) is followed by a 2 byte trailer in version 3.
+    ["Action", "x=>if(condition=x.Magic = 0x6666, then=x.ExecEnd, else=x.ComEnd)", [
+      ["Magic", 0, "uint16"],
+      ["IdSize", 2, "uint32"],
+      ["Id", 6, "String", {length: "x=>x.IdSize", encoding: "utf16"}],
+
+      ["CommandSize", "x=>6 + x.IdSize", "uint32"],
+      ["Command", "x=>10 + x.IdSize", "String", {
+          length: "x=>x.CommandSize", encoding: "utf16"}],
+      ["ArgumentsSize", "x=>10 + x.IdSize + x.CommandSize", "uint32"],
+      ["Arguments", "x=>14 + x.IdSize + x.CommandSize", "String", {
+          length: "x=>x.ArgumentsSize", encoding: "utf16"}],
+      ["WorkingDirectorySize", "x=>14 + x.IdSize + x.CommandSize + x.ArgumentsSize", "uint32"],
+      ["WorkingDirectory", "x=>18 + x.IdSize + x.CommandSize + x.ArgumentsSize", "String", {
+          length: "x=>x.WorkingDirectorySize", encoding: "utf16"}],
+      ["ExecEnd", 0, "Value", {
+          value: "x=>20 + x.IdSize + x.CommandSize + x.ArgumentsSize + x.WorkingDirectorySize"}],
+
+      ["ClassId", "x=>6 + x.IdSize", "GUID"],
+      ["DataSize", "x=>22 + x.IdSize", "uint32"],
+      ["Data", "x=>26 + x.IdSize", "String", {
+          length: "x=>x.DataSize", encoding: "utf16"}],
+      ["ComEnd", 0, "Value", {value: "x=>26 + x.IdSize + x.DataSize"}]
+    ]],
+
+    ["GUID", 16, [
+      ["__D1", 0, "uint32"],
+      ["__D2", 4, "uint16"],
+      ["__D3", 6, "uint16"],
+      ["__D4", 8, "String", {term: "", length: 2}],
+      ["__D5", 10, "String", {term: "", length: 6}],
+      ["Value", 0, "Value", {
+        value: "x=>format(format='{%08X-%04X-%04X-%02X-%02X}', args=[x.__D1, x.__D2, x.__D3, x.__D4, x.__D5])"
+      }]
+    ]],
+
+    ["DynamicInfo", 0, [
+      ["Version", 0, "uint32"],
+      ["Created", 4, "WinFileTime"],
+      ["LastRun", 12, "WinFileTime"],
+      ["TaskState", 20, "uint32"],
+      ["LastResult", 24, "uint32"],
+      ["LastSuccessfulRun", 28, "WinFileTime"]
+    ]]
+  ]'''
+
+  LET ParseActions(Blob) = SELECT if(condition=Magic = 0x6666,
+         then=dict(Type="Exec", Command=Command, Arguments=Arguments,
+                   WorkingDirectory=WorkingDirectory),
+         else=dict(Type="ComHandler", ClassId=ClassId.Value, Data=Data)) AS Action
+    FROM foreach(row=parse_binary(accessor="data", filename=Blob,
+                                  profile=TaskCacheProfile,
+                                  struct="Header").Actions)
+
+  LET ParseDynamicInfo(Blob) = parse_binary(accessor="data", filename=Blob,
+         profile=TaskCacheProfile, struct="DynamicInfo")
+
+  -- FILETIME 0 means never.
+  LET ValidTime(T) = if(condition=T.Unix > 0, then=T)
+
+sources:
+  - query: |
+      LET Accessor <= if(condition=SoftwareHive, then="raw_reg", else="registry")
+      LET Root <= if(condition=SoftwareHive,
+         then=pathspec(DelegatePath=SoftwareHive,
+                       Path="/Microsoft/Windows NT/CurrentVersion/Schedule/TaskCache"),
+         else=pathspec(parse=TaskCacheKey, path_type="registry"))
+      LET TasksDir <= if(condition=TasksDirectory, then=TasksDirectory,
+         else=if(condition=NOT SoftwareHive,
+                 then=expand(path="%SystemRoot%\\System32\\Tasks")))
+
+      -- Tree keys: task name -> GUID. Folder keys have no Id.
+      LET TreeKeys <= to_dict(item={
+        SELECT upcase(string=Id) AS _key,
+               dict(TaskName=regex_replace(source=Key.OSPath.Path,
+                                           re='''^.*?\\Tree\\''', replace='''\'''),
+                    SD=SD, Index=Index, Mtime=Key.Mtime) AS _value
+        FROM read_reg_key(globs="Tree/**", root=Root, accessor=Accessor)
+        WHERE Id
+      })
+
+      -- Tasks keys: GUID -> task content.
+      LET TaskKeys <= to_dict(item={
+        SELECT upcase(string=Key.OSPath.Basename) AS _key,
+               dict(Path=Path, Author=Author, Date=Date, Actions=Actions,
+                    DynamicInfo=DynamicInfo, Mtime=Key.Mtime) AS _value
+        FROM read_reg_key(globs="Tasks/*", root=Root, accessor=Accessor)
+      })
+
+      -- Boot, Logon, Plain and Maintenance hold an empty key per GUID.
+      LET TriggerGroups <= to_dict(item={
+        SELECT upcase(string=OSPath.Basename) AS _key, OSPath[-2] AS _value
+        FROM glob(globs="{Boot,Logon,Plain,Maintenance}/*",
+                  root=Root, accessor=Accessor)
+      })
+
+      LET AllIds = SELECT _key AS Id
+        FROM chain(a={ SELECT _key FROM items(item=TreeKeys) },
+                   b={ SELECT _key FROM items(item=TaskKeys) })
+        GROUP BY _key
+
+      LET Joined = SELECT Id, get(item=TreeKeys, field=Id) AS Tree,
+                          get(item=TaskKeys, field=Id) AS Task
+        FROM AllIds
+
+      LET Parsed = SELECT *,
+             if(condition=Task.Actions,
+                then=ParseActions(Blob=Task.Actions).Action) AS Actions,
+             if(condition=Task.DynamicInfo,
+                then=ParseDynamicInfo(Blob=Task.DynamicInfo)) AS Dyn
+        FROM Joined
+
+      LET Results = SELECT Tree.TaskName || Task.Path AS TaskName, Id,
+             get(item=TriggerGroups, field=Id) AS TriggerGroup,
+             Task.Author AS Author,
+             Actions,
+             ValidTime(T=Dyn.Created) AS Created,
+             ValidTime(T=Dyn.LastRun) AS LastRun,
+             -- Only present in the 36 byte form.
+             if(condition=len(list=Task.DynamicInfo) >= 36,
+                then=ValidTime(T=Dyn.LastSuccessfulRun)) AS LastSuccessfulRun,
+             if(condition=Task.DynamicInfo,
+                then=format(format="0x%08x", args=Dyn.LastResult)) AS LastResult,
+             Tree AND NOT Tree.SD AS SDMissing,
+             NOT Tree AS TreeMissing,
+             NOT Task AS TaskMissing,
+             if(condition=TasksDir AND Task.Path,
+                then=NOT stat(filename=pathspec(parse=TasksDir) + Task.Path)) AS XmlMissing,
+             Tree.Index AS Index,
+             Tree.Mtime AS TreeMtime,
+             Task.Mtime AS TaskMtime
+        FROM Parsed
+
+      SELECT * FROM Results
+      WHERE TaskName =~ TaskNameRegex
+        AND (NOT OnlyAnomalies
+             OR SDMissing OR TreeMissing OR TaskMissing OR XmlMissing)
