@@ -37,6 +37,32 @@ func TestConvertJSONLEmptyObject(t *testing.T) {
 	assert.NoError(t, err)
 }
 
+func convertJSONL(in string, extra_data *ordereddict.Dict) string {
+	json_in := make(chan []byte, 1)
+	json_in <- []byte(in)
+	close(json_in)
+
+	out := &bytes.Buffer{}
+	json.ConvertJSONL(json_in, out, nil, extra_data)
+	return out.String()
+}
+
+func TestConvertJSONLExtraData(t *testing.T) {
+	extra := ordereddict.NewDict().
+		Set("FlowId", "F.123").
+		Set("Count", 2)
+
+	result := ordereddict.NewDict().
+		Set("Simple", convertJSONL("{\"foo\":1}\n", extra)).
+		Set("Empty Object", convertJSONL("{}\n", extra)).
+		Set("Empty Object With Spaces", convertJSONL("{ }\n", extra)).
+
+		// Lines that are not objects are dropped.
+		Set("Array", convertJSONL("[\"foo\",\"bar\"]\n", extra)).
+		Set("Malformed", convertJSONL("}\n", extra))
+	goldie.Assert(t, "TestConvertJSONLExtraData", json.MustMarshalIndent(result))
+}
+
 type CSVUtilsTestSuite struct {
 	test_utils.TestSuite
 	client_id, flow_id string

@@ -691,9 +691,7 @@ func copyResultSetIntoContainer(
 		return
 	}
 
-	json.ConvertJSONL(buf_chan, json_writer, csv_writer, nil)
-
-	return nil
+	return json.ConvertJSONL(buf_chan, json_writer, csv_writer, nil)
 }
 
 func getWriters(
@@ -965,13 +963,16 @@ func generateCombinedResults(
 				fqdn = api_client.OsInfo.Fqdn
 			}
 
-			json.ConvertJSONL(buf_chan, json_writer, csv_writer,
+			err = json.ConvertJSONL(buf_chan, json_writer, csv_writer,
 				ordereddict.NewDict().
 					Set("FlowId", flow_id).
 					Set("ClientId", client_id).
 					Set("Fqdn", fqdn))
 
 			reader.Close()
+			if err != nil {
+				return err
+			}
 		}
 	}
 
