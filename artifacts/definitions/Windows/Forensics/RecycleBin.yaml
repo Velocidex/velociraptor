@@ -23,30 +23,94 @@ description: |
   The second file begins with `$I` and ends in the same string as the
   `$R` file – this file contains the metadata for that specific file
 
-  Limitations: This artifact uses the OS API to read available $I
-  data. There may be additional unallocated-but-readable $I files
-  referenced in the MFT that may be recoverable.
+  The artifact has two modes:
+
+  * `API` (default) uses the OS API to read the `$I` files currently
+    in the bins matched by `RecycleBinGlobs`.
+  * `MFT` parses the `$MFT` of every NTFS volume and also returns `$I`
+    records that are no longer allocated, for example after the bin
+    was emptied or the item restored. `$I` files are small enough to
+    be stored inside their MFT record, so their metadata stays
+    readable until NTFS reuses the record. Such rows have `InUse` set
+    to false. This mode is slower and requires raw disk access.
 
 author: "Zach Stanford - @svch0st"
 
 reference:
   - https://forensicswiki.xyz/wiki/index.php?title=Windows#Recycle_Bin
   - https://www.magnetforensics.com/blog/artifact-profile-recycle-bin/
+  - https://github.com/Velocidex/velociraptor/issues/1521
 
 
 parameters:
+    - name: Mode
+      type: choices
+      default: API
+      choices:
+        - API
+        - MFT
+      description: |
+        API reads the $I files currently in the bin. MFT also recovers
+        $I records left behind after the bin was emptied.
+
     - name: RecycleBinGlobs
+      description: Glob for $I files (API mode only).
       default: C:\$Recycle.Bin\**\$I*
+
+    - name: IndexFileRegex
+      type: regex
+      description: File name regex for $I records (MFT mode only).
+      default: ^\$I[A-Z0-9]{6}
 
     - name: AlsoUpload
       type: bool
-      description: Also upload recovered files.
+      description: |
+        Also upload recovered files. In MFT mode only items still in
+        the bin are uploaded.
 
 precondition: SELECT OS From info() where OS = 'windows'
 
 sources:
   - query: |
-        SELECT * FROM foreach(
+        -- MFT mode: every $I record on every NTFS volume, allocated
+        -- or not. Shadow copies are skipped to avoid duplicates.
+        LET ntfs_drives = SELECT OSPath AS Drive
+          FROM glob(globs="/*", accessor="ntfs")
+          WHERE NOT OSPath =~ "ShadowCopy"
+            AND log(message="Processing " + OSPath + "$MFT")
+
+        LET mft_hits = SELECT * FROM foreach(
+              row=ntfs_drives,
+              query={
+                SELECT Drive, OSPath, InUse, EntryNumber
+                FROM parse_mft(filename=Drive + "$MFT",
+                               accessor="ntfs", prefix=Drive)
+                WHERE FileName =~ IndexFileRegex AND NOT IsDir
+              })
+
+        -- Freed records have no directory entry, so read their
+        -- resident $DATA by MFT entry number instead of by path.
+        LET mft_mode = SELECT * FROM foreach(
+              row=mft_hits,
+              query={
+                SELECT
+                    timestamp(winfiletime=DeletedTime) as DeletedTimestamp,
+                    FilePath as OriginalFilePath,
+                    FileSize,
+                    OSPath,
+                    regex_replace(source=OSPath, re="\\\\\\$I", replace="\\$$R") AS RecyclePath,
+                    InUse,
+                    EntryNumber AS MFTId,
+                    if(condition=AlsoUpload AND InUse, then=upload(
+                         file=regex_replace(source=OSPath, re="\\\\\\$I", replace="\\$$R"),
+                         accessor="ntfs",
+                         name=FilePath
+                    )) AS Upload
+                 FROM parse_recyclebin(filename=Drive + str(str=EntryNumber),
+                                       accessor="mft")
+              })
+
+        LET api_mode = SELECT * FROM foreach(
               row={
                  SELECT OSPath FROM glob(globs=RecycleBinGlobs)
               },
@@ -64,3 +128,7 @@ sources:
                     )) AS Upload
                  FROM parse_recyclebin(filename=OSPath)
               })
+
+        SELECT * FROM if(condition=Mode = "MFT",
+                         then=mft_mode,
+                         else=api_mode)
