@@ -14,6 +14,7 @@ import (
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -215,6 +216,44 @@ func (self *ClientInfoTestSuite) TestMasterMinion() {
 
 		return client_info.IpAddress == "127.0.0.1"
 	})
+}
+
+// The server is not a real client and has no client record, but it
+// can still carry metadata (server_metadata()/server_set_metadata()).
+func (self *ClientInfoTestSuite) TestServerMetadata() {
+	client_info_manager, err := services.GetClientInfoManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	server_id := constants.VELOCIRAPTOR_SERVER_CLIENT_ID
+
+	err = client_info_manager.SetMetadata(self.Ctx, server_id,
+		ordereddict.NewDict().
+			Set("dept", "lawyers").
+			Set("Field", "Value"),
+		"admin")
+	assert.NoError(self.T(), err)
+
+	metadata, err := client_info_manager.GetMetadata(self.Ctx, server_id)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), 2, metadata.Len())
+
+	field, _ := metadata.Get("Field")
+	assert.Equal(self.T(), "Value", field)
+
+	// Modifying the metadata atomically should work too.
+	err = client_info_manager.ModifyMetadata(self.Ctx, self.ConfigObj,
+		server_id, "admin",
+		func(md *ordereddict.Dict) (*ordereddict.Dict, error) {
+			md.Set("Field", "Other")
+			return md, nil
+		})
+	assert.NoError(self.T(), err)
+
+	metadata, err = client_info_manager.GetMetadata(self.Ctx, server_id)
+	assert.NoError(self.T(), err)
+
+	field, _ = metadata.Get("Field")
+	assert.Equal(self.T(), "Other", field)
 }
 
 func (self *ClientInfoTestSuite) TestMetadataIndex() {
