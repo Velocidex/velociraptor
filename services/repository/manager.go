@@ -2,7 +2,7 @@ package repository
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"regexp"
 	"strings"
 	"sync"
@@ -223,9 +223,18 @@ func (self *RepositoryManager) SetArtifactFile(
 
 	// This should only be triggered if something weird happened.
 	if !strings.HasPrefix(artifact_definition.Name, required_prefix) {
-		return nil, errors.New(
-			"Modified or custom artifacts must start with '" +
-				required_prefix + "'")
+		return nil, fmt.Errorf(
+			"Modified or custom artifacts must start with '%s'",
+			required_prefix)
+	}
+
+	// Check impersonation - an artifact can only impersonate the
+	// calling user.
+	if artifact_definition.Impersonate != "" &&
+		principal != utils.GetSuperuserName(config_obj) &&
+		!utils.UsernamesEqual(principal, artifact_definition.Impersonate) {
+		return nil, fmt.Errorf(
+			"Artifact can only impersonate calling user '%v'", principal)
 	}
 
 	// Load the new artifact into the global repo so it is

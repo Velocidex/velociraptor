@@ -430,7 +430,7 @@ func (self *contextManager) RunQuery(
 		self.config_obj, utils.GetQueryName(arg.Query))
 	scope.SetContext(constants.SCOPE_QUERY_NAME, artifact_name)
 
-	if effective_principal == principal {
+	if utils.UsernamesEqual(effective_principal, principal) {
 		scope.Log("Running query %v on behalf of user %v", artifact_name, principal)
 	} else {
 		scope.Log("Running query %v on behalf of user %v with effective permissions for %v",

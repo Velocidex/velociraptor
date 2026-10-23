@@ -69,7 +69,7 @@ func (self *UserManager) GetUserWithHashes(
 
 	// A user can always get their own user record regardless of
 	// permissions.
-	if principal == username {
+	if utils.UsernamesEqual(principal, username) {
 		return user, user_err
 	}
 

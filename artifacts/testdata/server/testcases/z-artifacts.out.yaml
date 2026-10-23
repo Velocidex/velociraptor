@@ -285,3 +285,41 @@ Output: [
  }
 ]
 
+# Try to add a user to a nonexistant org
+Query: LET _ <= user_create(user="Admin", roles="administrator") AND user_create(user="SecondAdmin", roles="administrator")
+Output: []
+
+# Set an impersonated artifact as the superuser
+Query: SELECT whoami(), artifact_set(definition=ImpersonationArtifact).name FROM scope()
+Output: [
+ {
+  "whoami()": "VelociraptorServer",
+  "artifact_set(definition=ImpersonationArtifact).name": "ImpersonateMe"
+ }
+]
+
+# Try to set the artifact for a different user
+Query: SELECT * FROM query(query={ SELECT whoami(), artifact_set(definition=ImpersonationArtifact).name FROM scope() }, runas="SecondAdmin", env=dict(ImpersonationArtifact=ImpersonationArtifact))
+Output: [
+ {
+  "whoami()": "SecondAdmin",
+  "artifact_set(definition=ImpersonationArtifact).name": null
+ }
+]
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "Artifact can only impersonate calling user" AND NOT Log =~ "SELECT"
+Output: [
+ {
+  "Log": "Velociraptor: artifact_set: Artifact can only impersonate calling user 'SecondAdmin'\n"
+ }
+]
+
+# But the Admin user can insert the impersonated artifact
+Query: SELECT * FROM query(query={ SELECT whoami(), artifact_set(definition=ImpersonationArtifact).name FROM scope() }, runas="Admin", env=dict(ImpersonationArtifact=ImpersonationArtifact))
+Output: [
+ {
+  "whoami()": "Admin",
+  "artifact_set(definition=ImpersonationArtifact).name": "ImpersonateMe"
+ }
+]
+

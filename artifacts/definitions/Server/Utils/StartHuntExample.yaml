@@ -2,7 +2,7 @@ name: Server.Utils.StartHuntExample
 description: |
   A template artifact, providing an example of how to grant controlled
   high-privilege operations to users with limited permissions.
-  
+
   It shows how to create a utility artifact that provides low
   privileged users with a controlled ability to perform high
   privileged operations.
@@ -40,7 +40,25 @@ description: |
   this artifact, but have no additional permissions to start arbitrary
   hunts or collections.
 
+  As an alternative mechanism, the artifact may also specify the
+  COLLECT_BASIC as a required permission. This means the user still
+  need the COLLECT_SERVER permissions to start the collection, but
+  will also require the COLLECT_BASIC permission.
+
+  So to summarize - there are two methods:
+
+  1. Set artifact metadata to "basic": User only needs the
+     COLLECT_BASIC permission.
+
+  2. Set required permission to COLLECT_BASIC - user will need both
+     COLLECT_BASIC and COLLECT_SERVER.
+
 type: SERVER
+
+# User will require the COLLECT_BASIC permission to collect this
+# artifact.
+required_permissions:
+  - COLLECT_BASIC
 
 # Collect this artifact under the admin user permissions.
 impersonate: admin
