@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"strings"
+
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 )
@@ -27,4 +29,8 @@ func GetGatewayName(
 	}
 
 	return config_obj.API.PinnedGwName
+}
+
+func UsernamesEqual(a, b string) bool {
+	return strings.ToLower(a) == strings.ToLower(b)
 }
