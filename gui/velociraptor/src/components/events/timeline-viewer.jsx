@@ -441,8 +441,15 @@ export default class EventTimelineViewer extends React.Component {
         this.setState({loading: true});
 
         let mode = "CLIENT_EVENT";
-        if (this.props.mode === "Logs") {
-            mode = "CLIENT_EVENT_LOGS";
+        if(this.props.client_id=="server") {
+            mode = "SERVER_EVENT";
+            if (this.props.mode === "Logs") {
+                mode = "SERVER_EVENT_LOGS";
+            }
+        } else {
+            if (this.props.mode === "Logs") {
+                mode = "CLIENT_EVENT_LOGS";
+            }
         }
 
         let params = {
@@ -587,8 +594,16 @@ export default class EventTimelineViewer extends React.Component {
 
     renderToolbar = () => {
         let mode = "CLIENT_EVENT";
-        if (this.props.mode === "Logs") {
-            mode = "CLIENT_EVENT_LOGS";
+
+        if(this.props.client_id=="server") {
+            mode = "SERVER_EVENT";
+            if (this.props.mode === "Logs") {
+                mode = "SERVER_EVENT_LOGS";
+            }
+        } else {
+            if (this.props.mode === "Logs") {
+                mode = "CLIENT_EVENT_LOGS";
+            }
         }
 
         let start_time = moment(this.state.visibleTimeStart).format();
