@@ -212,7 +212,7 @@ func (self *TestSuite) TestVFSAccessor() {
 	accessor, err := accessors.GetAccessor("vfs", scope)
 	assert.NoError(self.T(), err)
 
-	globber := glob.NewGlobber()
+	globber := glob.NewGlobber(scope)
 	defer globber.Close()
 
 	assert.NoError(self.T(), err)

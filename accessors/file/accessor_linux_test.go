@@ -71,7 +71,7 @@ func (self *AccessorLinuxTestSuite) TestLinuxSymlinks() {
 	options := glob.GlobOptions{
 		DoNotFollowSymlinks: false,
 	}
-	globber := glob.NewGlobber().WithOptions(options)
+	globber := glob.NewGlobber(scope).WithOptions(options)
 	defer globber.Close()
 
 	globber.AddGlob("/**/ls", root_path)

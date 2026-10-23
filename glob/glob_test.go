@@ -181,7 +181,7 @@ func TestGlobWithContext(t *testing.T) {
 	for idx, fixture := range _GlobFixture {
 		var returned []string
 
-		globber := NewGlobber()
+		globber := NewGlobber(scope)
 		defer globber.Close()
 
 		// The error may occur on one of the patterns in the brace
