@@ -1,0 +1,85 @@
+Parameters:
+  ClientId: C.12156
+  ServerArtifact: |
+    name: BasicServerArtifact
+    type: SERVER
+    required_permissions:
+      - COLLECT_BASIC
+
+  ClientArtifact: |
+    name: BasicClientArtifact
+    type: CLIENT
+    required_permissions:
+      - EXECVE
+
+Queries:
+  # Create a reader user with the collect_server permission - they are
+  # allowed to collect artifacts on the server.
+  - LET _ <= user_create(user="Reader", roles="reader") AND
+      user_create(user="Admin", roles="administrator") AND
+      artifact_set(definition=ServerArtifact) AND
+      artifact_set(definition=ClientArtifact) AND
+      user_grant(user="Reader", policy=dict(roles=['reader',],
+         collect_client=TRUE,
+         collect_server=TRUE)) AND
+      client_create(client_id=ClientId)
+
+  # The reader user can still not schedule this artifact on the server
+  # because they lack the COLLECT_BASIC permission which is required
+  # by the artifact.
+  - SELECT * FROM query(query={
+      SELECT whoami(), collect_client(
+         client_id="server", artifacts="BasicServerArtifact").flow_id
+      FROM scope()
+    }, runas="Reader")
+
+  - SELECT * FROM test_read_logs()
+    WHERE Log =~ "PermissionDenied. While collecting artifact .+ COLLECT_BASIC"
+      AND NOT Log =~ "SELECT"
+
+  # Give the reader the COLLECT_BASIC permission as well
+  - SELECT user_grant(user="Reader",
+        policy=dict(roles=['reader',],
+        collect_client=TRUE,
+        collect_server=TRUE,
+        collect_basic=TRUE))
+    FROM scope()
+
+  # Check the user now has collect_basic permission
+  - SELECT name, effective_policy =~ "COLLECT_BASIC", effective_policy
+    FROM gui_users() WHERE name = "Reader"
+
+  # Try to collect that basic artifact again - this should work.
+  - SELECT * FROM query(query={
+      SELECT whoami(), collect_client(
+         client_id="server", artifacts="BasicServerArtifact").flow_id
+      FROM scope()
+    }, runas="Reader")
+
+
+  # Try to collect the client artifacts
+  - SELECT * FROM query(query={
+      SELECT whoami(), collect_client(
+         client_id=ClientId, artifacts="BasicClientArtifact").flow_id
+      FROM scope()
+    }, runas="Reader", env=dict(ClientId=ClientId))
+
+  # Should be rejected because the user does not have EXECVE
+  - SELECT * FROM test_read_logs()
+    WHERE Log =~ "PermissionDenied. While collecting artifact .+ EXECVE"
+      AND NOT Log =~ "SELECT"
+
+  # Give the reader the EXECVE permission as well
+  - SELECT user_grant(user="Reader",
+        policy=dict(roles=['reader',],
+        collect_client=TRUE, execve=TRUE,
+        collect_server=TRUE,
+        collect_basic=TRUE))
+    FROM scope()
+
+  # Try again should work
+  - SELECT * FROM query(query={
+      SELECT whoami(), collect_client(
+         client_id=ClientId, artifacts="BasicClientArtifact").flow_id
+      FROM scope()
+    }, runas="Reader", env=dict(ClientId=ClientId))
