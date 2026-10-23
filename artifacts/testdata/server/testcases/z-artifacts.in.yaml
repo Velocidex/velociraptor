@@ -1,5 +1,9 @@
 Parameters:
   CLIENT_ID: "C.4f5e52adf0a337a9"
+  ImpersonationArtifact: |
+    name: ImpersonateMe
+    type: SERVER
+    impersonate: admin
 
 Queries:
   # Check the extension on file_store()
@@ -74,3 +78,29 @@ Queries:
   # Clear the tags
   - SELECT artifact_set_metadata(name="Custom.Generic.Client.Info", tags=[])
     FROM scope()
+
+  # Try to add a user to a nonexistant org
+  - LET _ <= user_create(user="Admin", roles="administrator") AND
+             user_create(user="SecondAdmin", roles="administrator")
+
+  # Set an impersonated artifact as the superuser
+  - SELECT whoami(), artifact_set(definition=ImpersonationArtifact).name
+    FROM scope()
+
+  # Try to set the artifact for a different user
+  - SELECT * FROM query(query={
+      SELECT whoami(), artifact_set(definition=ImpersonationArtifact).name
+      FROM scope()
+    }, runas="SecondAdmin",
+       env=dict(ImpersonationArtifact=ImpersonationArtifact))
+
+  - SELECT * FROM test_read_logs()
+    WHERE Log =~ "Artifact can only impersonate calling user"
+      AND NOT Log =~ "SELECT"
+
+  # But the Admin user can insert the impersonated artifact
+  - SELECT * FROM query(query={
+      SELECT whoami(), artifact_set(definition=ImpersonationArtifact).name
+      FROM scope()
+    }, runas="Admin",
+       env=dict(ImpersonationArtifact=ImpersonationArtifact))

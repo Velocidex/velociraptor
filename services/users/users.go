@@ -168,7 +168,7 @@ func (self UserManager) SetUserOptions(ctx context.Context,
 
 	// Any user can modify their own permissions but only the admin
 	// can modify someone else's permissions.
-	if principal != username {
+	if !utils.UsernamesEqual(principal, username) {
 		permissions := acls.SERVER_ADMIN
 		perm, err := services.CheckAccess(self.config_obj, principal, permissions)
 		if !perm || err != nil {

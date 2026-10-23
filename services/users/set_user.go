@@ -71,7 +71,7 @@ func (self *UserManager) SetUserPassword(
 
 	// A user can always get their own user record regardless of
 	// permissions.
-	if principal == username {
+	if utils.UsernamesEqual(principal, username) {
 		err := services.LogAudit(ctx,
 			config_obj, principal, "Update password",
 			ordereddict.NewDict().
