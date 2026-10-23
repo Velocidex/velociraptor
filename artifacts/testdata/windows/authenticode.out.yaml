@@ -9,7 +9,7 @@ Output: [
   "A.IssuerName": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows Production PCA 2011",
   "A.SubjectName": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows",
   "B.Filename": "c:\\Windows\\system32\\ntoskrnl.exe",
-  "B.IssuerName": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows Production PCA 2011",
+  "B.IssuerName": "C=US, O=Microsoft Corporation, CN=Microsoft Windows Production PCA 2026 RSA2048-SHA256",
   "B.SubjectName": "C=US, ST=Washington, L=Redmond, O=Microsoft Corporation, CN=Microsoft Windows"
  }
 ]

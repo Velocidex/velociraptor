@@ -19,3 +19,8 @@ Queries:
   # string version should be same as directly.
   - SELECT hash(path=Data.VFSPath, accessor="fs"), Data - dict(ModTime="XXX") AS Data
     FROM enumerate_flow(client_id="C.4f5e52adf0a337a9", flow_id="F.BN2HP3OSS3LK6")
+
+  # Test that glob warns on invalid glob expressions
+  - SELECT OSPath FROM glob(globs="/clients/foo/**.json*", accessor="fs")
+  - SELECT * FROM test_read_logs()
+    WHERE NOT Log =~ "SELECT" AND Log =~ "Invalid Glob component"

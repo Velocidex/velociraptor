@@ -117,3 +117,14 @@ Output: [
  }
 ]
 
+# Test that glob warns on invalid glob expressions
+Query: SELECT OSPath FROM glob(globs="/clients/foo/**.json*", accessor="fs")
+Output: []
+
+Query: SELECT * FROM test_read_logs() WHERE NOT Log =~ "SELECT" AND Log =~ "Invalid Glob component"
+Output: [
+ {
+  "Log": "Velociraptor: WARN:Invalid Glob component `**.json*`: recursive globs must appear on their own component - ignoring followed data\n"
+ }
+]
+
