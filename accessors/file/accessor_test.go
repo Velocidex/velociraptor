@@ -169,7 +169,7 @@ func (self *AccessorWindowsTestSuite) TestSymlinks() {
 
 	// Now glob through the files - this should not lock up since
 	// the cycle should be detected.
-	globber := glob.NewGlobber()
+	globber := glob.NewGlobber(scope)
 	defer globber.Close()
 
 	globber.AddGlob("**/*.txt",
