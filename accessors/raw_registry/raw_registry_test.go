@@ -43,7 +43,7 @@ func TestAccessorRawReg(t *testing.T) {
 		root_path, err := accessors.NewWindowsOSPath(root.String())
 		assert.NoError(t, err)
 
-		globber := glob.NewGlobber()
+		globber := glob.NewGlobber(scope)
 		defer globber.Close()
 
 		assert.NoError(t, err)

@@ -109,6 +109,8 @@ type Globber struct {
 	// A sentinel globber is a special globber that reports its
 	// matches.
 	sentinel *_Sentinel
+
+	scope vfilter.Scope
 }
 
 func (self *Globber) is_sentinel() bool {
@@ -148,20 +150,21 @@ func (self *RootGlobber) WithOptions(options GlobOptions) *RootGlobber {
 // A factory for a new Globber. To use the globber simply Add() any
 // patterns and call ExpandWithContext() using a suitable
 // FileSystemAccessor.
-func NewGlobber() *RootGlobber {
+func NewGlobber(scope vfilter.Scope) *RootGlobber {
 	res := &RootGlobber{
 		id: utils.GetId(),
 	}
-	res.Globber = newGlobberWithRoot(res)
+	res.Globber = newGlobberWithRoot(scope, res)
 
 	globTracker.Register(res)
 
 	return res
 }
 
-func newGlobberWithRoot(root *RootGlobber) *Globber {
+func newGlobberWithRoot(scope vfilter.Scope, root *RootGlobber) *Globber {
 	return &Globber{
 		root:    root,
+		scope:   scope,
 		filters: make(map[_PathFilterer]*Globber),
 	}
 }
@@ -214,7 +217,7 @@ func (self *Globber) AddGlob(glob string,
 // add_pathspec a new pattern to the filter tree.
 func (self *Globber) add_pathspec(pattern *accessors.OSPath) error {
 	// Convert the pattern into path components.
-	filter, err := convert_glob_into_path_components(pattern)
+	filter, err := convert_glob_into_path_components(self.scope, pattern)
 	if err == nil {
 		// Expand path components into alternatives
 		return self._expand_path_components(filter, 0, []string{
@@ -236,7 +239,8 @@ func (self *Globber) _add_filter(components []_PathFilterer, globs []string) err
 		if pres {
 			current = next
 		} else {
-			next := newGlobberWithRoot(self.root).WithOptions(self.options)
+			next := newGlobberWithRoot(self.scope, self.root).
+				WithOptions(self.options)
 			current.filters[element] = next
 			current = next
 		}
@@ -499,8 +503,8 @@ var (
 //
 //	                      {path: 'test.*\\Z(?ms)', type: "RECURSIVE",
 //				 {path: '.*exe\\Z(?ms)', type="REGEX"}]]
-func convert_glob_into_path_components(pattern *accessors.OSPath) (
-	[]_PathFilterer, error) {
+func convert_glob_into_path_components(
+	scope vfilter.Scope, pattern *accessors.OSPath) ([]_PathFilterer, error) {
 	var result []_PathFilterer
 
 	for _, path_component := range pattern.Components {
@@ -512,6 +516,13 @@ func convert_glob_into_path_components(pattern *accessors.OSPath) (
 		// match the pattern.
 		groups := _RECURSION_REGEX.FindStringSubmatch(path_component)
 		if len(groups) > 0 {
+
+			utils.DlvBreak()
+			if path_component != groups[0] {
+				scope.Warn("Invalid Glob component `%v`: recursive globs "+
+					"must appear on their own component - ignoring followed data",
+					path_component)
+			}
 
 			// Default depth: Previously this was set low
 			// to prevent run away globs but now we cancel

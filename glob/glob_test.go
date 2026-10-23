@@ -69,8 +69,10 @@ var pathComponentsTestFixture = []pathComponentsTestFixtureType{
 }
 
 func TestConvertToPathComponent(t *testing.T) {
+	scope := vql_subsystem.MakeScope()
+
 	for _, fixture := range pathComponentsTestFixture {
-		components, err := convert_glob_into_path_components(
+		components, err := convert_glob_into_path_components(scope,
 			accessors.MustNewLinuxOSPath(fixture.pattern))
 		if err == nil {
 			if reflect.DeepEqual(fixture.components, components) {
@@ -181,7 +183,7 @@ func TestGlobWithContext(t *testing.T) {
 	for idx, fixture := range _GlobFixture {
 		var returned []string
 
-		globber := NewGlobber()
+		globber := NewGlobber(scope)
 		defer globber.Close()
 
 		// The error may occur on one of the patterns in the brace

@@ -117,7 +117,7 @@ func (self GlobPlugin) Call(
 			}
 		}
 
-		globber := glob.NewGlobber().WithOptions(options)
+		globber := glob.NewGlobber(scope).WithOptions(options)
 		defer globber.Close()
 
 		// If root is not specified we try to find a common
