@@ -89,7 +89,7 @@ sources:
         SELECT upload(file=SRUMLocation, accessor=accessor) AS Upload
         FROM scope()
 
-  - name: Execution Stats
+  - name: Execution_Stats
     precondition:
         SELECT * FROM scope() WHERE "Execution Stats" IN Tables
     query: |
@@ -114,7 +114,7 @@ sources:
             AND TimeStamp < TimeBefore
       })
 
-  - name: Application Resource Usage
+  - name: Application_Resource_Usage
     precondition:
         SELECT * FROM scope() WHERE "Application Resource Usage" IN Tables
     query: |
@@ -150,7 +150,7 @@ sources:
             AND TimeStamp < TimeBefore
       })
 
-  - name: Network Connections
+  - name: Network_Connections
     precondition:
         SELECT * FROM scope() WHERE "Network Connections" IN Tables
     query: |
@@ -175,7 +175,7 @@ sources:
           AND TimeStamp < TimeBefore
       })
 
-  - name: Network Usage
+  - name: Network_Usage
     precondition:
         SELECT * FROM scope() WHERE "Network Usage" IN Tables
     query: |
@@ -203,7 +203,7 @@ sources:
       })
     notebook:
         - type: vql_suggestion
-          name: SRUM Network Usage summary
+          name: SRUM_Network_Usage_summary
           template: |
               /*
               # SRUM Network Usage summary
@@ -217,7 +217,7 @@ sources:
                   sum(item=BytesSent) as TotalSent,
                   sum(item=BytesRecvd) as TotalRecvd,
                   InterfaceLuid
-              FROM source(artifact="Windows.Forensics.SRUM/Network Usage")
+              FROM source(artifact="Windows.Forensics.SRUM/Network_Usage")
               GROUP BY App, User,InterfaceLuid
               ORDER BY TotalSent DESC
 
