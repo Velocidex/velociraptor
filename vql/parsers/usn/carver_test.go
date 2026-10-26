@@ -13,6 +13,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"www.velocidex.com/golang/go-ntfs/parser"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -87,7 +88,8 @@ func TestCarveUSNFromFiles(t *testing.T) {
 	require.NoError(t, err)
 	defer fd.Close()
 
-	ntfs_ctx, err := ntfs.GetNTFSContext(fd, 0)
+	ntfs_ctx, err := ntfs.GetNTFSContext(
+		fd, 0, parser.GetDefaultOptions())
 	require.NoError(t, err)
 
 	mft_entry, err := ntfs_ctx.GetMFT(0)

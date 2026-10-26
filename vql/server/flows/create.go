@@ -141,7 +141,6 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 	request := &flows_proto.ArtifactCollectorArgs{
 		ClientId:       arg.ClientId,
 		FlowId:         arg.FlowId,
-		Artifacts:      arg.Artifacts,
 		Creator:        vql_subsystem.GetPrincipal(scope),
 		OpsPerSecond:   float32(arg.OpsPerSecond),
 		CpuLimit:       float32(arg.CpuLimit),
@@ -162,8 +161,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		arg.Spec = spec
 	}
 
-	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
-		arg.Spec, request)
+	request.Specs, request.Artifacts, err = collector.AddSpecProtobuf(
+		ctx, config_obj, repository, scope, arg.Spec, arg.Artifacts)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

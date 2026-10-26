@@ -149,7 +149,11 @@ export class SaveCollectionDialog extends React.PureComponent {
 
     startSaveFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
-        let specs = this.props.flow.request.specs;
+        let flow_id = this.props.flow && this.props.flow.session_id;
+        if (!client_id || !flow_id) {
+            return;
+        }
+
         let type = "CLIENT";
         if (client_id==="server") {
             type = "SERVER";
@@ -159,7 +163,8 @@ export class SaveCollectionDialog extends React.PureComponent {
         runArtifact("server",   // This collection happens on the server.
                     "Server.Utils.SaveFavoriteFlow",
                     {
-                        Specs: JSON.stringify(specs),
+                        FlowId: flow_id,
+                        ClientId: client_id,
                         Name: this.state.name,
                         Description: this.state.description,
                         Type: type,
@@ -376,28 +381,13 @@ class FlowsList extends React.Component {
         this.props.collapseToggle(SLIDE_STATES[next_slide].level);
     };
 
+    // Copying the collection needs to put the request into the
+    // GUI. If the request is too large, the flow can not be copied
+    // with the GUI (you can still use a notebook or the API).
     copyCollection = ()=> {
-        let selected_flows = this.props.selected_flow &&
-            this.props.selected_flow.artifacts_with_results;
-
-        // Special handling for offline collector
-        if (_.isEqual(selected_flows, ["Server.Utils.CreateCollector"])) {
-            let specs = this.props.selected_flow.request &&
-                this.props.selected_flow.request.specs;
-
-            if (!_.isArray(specs) || specs.length != 1) {
-                specs = [];
-            }
-
-            this.setState({
-                offlineSpecs: specs[0].parameters,
-                showOfflineWizard: true});
-
-            return;
-        }
-
         // Get the full flow request so we can copy it into the
-        // GUI.
+        // GUI. The selected flow's parameters are truncated for
+        // display.
         let flow_id = this.props.selected_flow &&
             this.props.selected_flow.session_id;
         let client_id = this.props.selected_flow &&
@@ -417,6 +407,23 @@ class FlowsList extends React.Component {
             };
 
             let flow = response.data.context;
+            let selected_flows = flow && flow.artifacts_with_results;
+
+            // Special handling for offline collector
+            if (_.isEqual(selected_flows, ["Server.Utils.CreateCollector"])) {
+                let specs = flow.request && flow.request.specs;
+
+                if (!_.isArray(specs) || specs.length != 1) {
+                    specs = [];
+                }
+
+                this.setState({
+                    offlineSpecs: specs[0].parameters,
+                    showOfflineWizard: true});
+
+                return;
+            }
+
             this.setState({
                 full_request: flow,
                 showCopyWizard: true,
@@ -509,7 +516,7 @@ class FlowsList extends React.Component {
               { this.state.showCopyWizard &&
                 <NewCollectionWizard
                   client={this.props.client}
-                  baseFlow={this.props.selected_flow}
+                  baseFlow={this.state.full_request}
                   onCancel={(e) => this.setState({showCopyWizard: false})}
                   onResolve={this.setCollectionRequest} />
               }

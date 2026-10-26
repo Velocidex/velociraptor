@@ -1,0 +1,47 @@
+[
+ {
+  "name": "Dict spec",
+  "spec": {
+   "Artifact1": {
+    "P1": "V1"
+   }
+  },
+  "err": ""
+ },
+ {
+  "name": "Spec as a protobuf",
+  "spec": {
+   "Artifact1": {
+    "P1": "V1"
+   }
+  },
+  "err": ""
+ },
+ {
+  "name": "Spec as a protobuf converted to dicts",
+  "spec": {
+   "Artifact1": {
+    "P1": "V1"
+   }
+  },
+  "err": ""
+ },
+ {
+  "name": "Spec as a json string",
+  "spec": {
+   "Artifact1": {
+    "P1": "V1"
+   }
+  },
+  "err": ""
+ },
+ {
+  "name": "Spec as a json array of protobuf",
+  "spec": {
+   "Artifact1": {
+    "P1": "V1"
+   }
+  },
+  "err": ""
+ }
+]
