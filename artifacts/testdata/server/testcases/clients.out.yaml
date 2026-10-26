@@ -113,7 +113,19 @@ Output: [
     "artifacts": [
      "Windows.Network.Netstat"
     ],
-    "specs": [],
+    "specs": [
+     {
+      "artifact": "Windows.Network.Netstat",
+      "parameters": {
+       "env": []
+      },
+      "cpu_limit": 0,
+      "max_batch_wait": 0,
+      "max_batch_rows": 0,
+      "max_batch_rows_buffer": 0,
+      "timeout": 0
+     }
+    ],
     "cpu_limit": 0,
     "iops_limit": 0,
     "progress_timeout": 0,

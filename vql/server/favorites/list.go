@@ -34,7 +34,7 @@ func (self ListFavoritesPlugin) Call(
 		// to add their own favorites.
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
-			scope.Log("favorites_save: Command can only run on the server")
+			scope.Log("favorites_list: Command can only run on the server")
 			return
 		}
 

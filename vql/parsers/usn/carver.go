@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/dustin/go-humanize"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/ntfs/readers"
@@ -24,6 +25,8 @@ type CarveUSNPluginArgs struct {
 	Accessor      string            `vfilter:"optional,field=accessor,doc=The accessor to use."`
 	MFTFilename   *accessors.OSPath `vfilter:"optional,field=mft_filename,doc=A path to a raw $MFT file to use for path resolution."`
 	USNFilename   *accessors.OSPath `vfilter:"optional,field=usn_filename,doc=A path to a raw USN file to carve. If not provided we carve the image file or the device."`
+	Start         uint64            `vfilter:"optional,field=start,doc=Starting offset."`
+	Length        uint64            `vfilter:"optional,field=length,doc=How long to scan for."`
 
 	disable_full_path_resolution bool
 
@@ -115,8 +118,9 @@ func (self *CarveUSNPluginArgs) GetStreams(scope types.Scope) (
 		}
 		usn_source = self.USNFilename
 
+		options := readers.GetScopeOptions(scope)
 		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
-			bytes.NewReader(nil), 0x200, 0x200)
+			bytes.NewReader(nil), 0x200, 0x200, options)
 		mft_source = accessors.MustNewGenericOSPath("")
 		self.disable_full_path_resolution = true
 
@@ -188,6 +192,13 @@ func (self CarveUSNPlugin) Call(
 			defer arg.usn_fd.Close()
 		}
 
+		// Stop short if required
+		if arg.Length > 0 {
+			size = int64(arg.Length)
+			scope.Log("carve_usn: carving length %v",
+				humanize.Bytes(uint64(size)))
+		}
+
 		options := readers.GetScopeOptions(scope)
 		if arg.Device != nil {
 			options.PrefixComponents = arg.Device.Components
@@ -197,7 +208,8 @@ func (self CarveUSNPlugin) Call(
 		}
 		ntfs_ctx.SetOptions(options)
 
-		for item := range ntfs.CarveUSN(ctx, ntfs_ctx, usn_stream, size) {
+		for item := range ntfs.CarveUSN(
+			ctx, ntfs_ctx, usn_stream, int64(arg.Start), size) {
 			output_chan <- makeUSNRecord(item.USN_RECORD).Set("DiskOffset", item.DiskOffset)
 		}
 	}()
@@ -210,7 +222,7 @@ func (self CarveUSNPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 		Name:     "carve_usn",
 		Doc:      "Carve for the USN journal entries from a device.",
 		ArgType:  type_map.AddType(scope, &CarveUSNPluginArgs{}),
-		Version:  2,
+		Version:  3,
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_READ).Build(),
 	}
 }
