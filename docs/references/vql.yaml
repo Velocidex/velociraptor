@@ -11973,6 +11973,7 @@
 - name: upload_sftp
   description: Upload files to SFTP.
   type: Function
+  version: 2
   args:
   - name: file
     type: accessors.OSPath
