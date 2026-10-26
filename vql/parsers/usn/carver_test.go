@@ -87,7 +87,8 @@ func TestCarveUSNFromFiles(t *testing.T) {
 	require.NoError(t, err)
 	defer fd.Close()
 
-	ntfs_ctx, err := ntfs.GetNTFSContext(fd, 0)
+	logger := func(msg string, args ...interface{}) {}
+	ntfs_ctx, err := ntfs.GetNTFSContext(fd, 0, logger)
 	require.NoError(t, err)
 
 	mft_entry, err := ntfs_ctx.GetMFT(0)

@@ -203,16 +203,10 @@ func getArtifactCollectorArgs(
 
 	request := &flows_proto.ArtifactCollectorArgs{}
 
-	request.Specs, err = AddSpecProtobuf(ctx, config_obj,
-		repository, scope, arg.Args)
+	request.Specs, request.Artifacts, err = AddSpecProtobuf(
+		ctx, config_obj, repository, scope, arg.Args, arg.Artifacts)
 	if err != nil {
 		return nil, err
-	}
-
-	for _, item := range request.Specs {
-		if !utils.InString(request.Artifacts, item.Artifact) {
-			request.Artifacts = append(request.Artifacts, item.Artifact)
-		}
 	}
 
 	if len(request.Artifacts) == 0 {
@@ -228,24 +222,29 @@ func getArtifactCollectorArgs(
 func AddSpecProtobuf(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
-	scope vfilter.Scope, spec vfilter.Any) (res []*flows_proto.ArtifactSpec, err error) {
+	scope vfilter.Scope,
+	spec vfilter.Any,
+	artifacts []string) (res []*flows_proto.ArtifactSpec,
+	artifact_names []string, err error) {
 
 	spec_dict, err := utils.ConvertToArtifactSpecs(spec)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
+
+	seen := make(map[string]bool)
 
 	for _, item := range spec_dict.Items() {
 		artifact_definitions, pres := repository.Get(ctx, config_obj, item.Key)
 		if !pres {
 			// Artifact not known
-			return nil, fmt.Errorf(`Parameter refers to an unknown artifact (%v). The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, item.Key)
+			return nil, nil, fmt.Errorf(`Parameter refers to an unknown artifact (%v). The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, item.Key)
 		}
 
 		// Check that we are allowed to collect this artifact
 		err := CheckArtifactCollection(scope, artifact_definitions)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		spec_proto := &flows_proto.ArtifactSpec{
@@ -255,7 +254,7 @@ func AddSpecProtobuf(
 
 		spec_parameters, pres := item.Value.(*ordereddict.Dict)
 		if !pres {
-			return nil, fmt.Errorf(`Parameters of artifact (%v) have incorrect types. The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, item.Key)
+			return nil, nil, fmt.Errorf(`Parameters of artifact (%v) have incorrect types. The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, item.Key)
 		}
 
 		// The parameters dict provided in the spec is a
@@ -348,7 +347,7 @@ func AddSpecProtobuf(
 				if !is_str {
 					value, err := json.MarshalIndent(value_any)
 					if err != nil {
-						return nil, err
+						return nil, nil, err
 					}
 					value_str = string(value)
 				}
@@ -362,9 +361,22 @@ func AddSpecProtobuf(
 		}
 
 		res = append(res, spec_proto)
+		artifact_names = append(artifact_names, spec_proto.Artifact)
+		seen[spec_proto.Artifact] = true
+
 	}
 
-	return res, nil
+	for _, artifact := range artifacts {
+		_, pres := seen[artifact]
+		if !pres {
+			res = append(res, &flows_proto.ArtifactSpec{
+				Artifact: artifact,
+			})
+			artifact_names = append(artifact_names, artifact)
+		}
+	}
+
+	return res, artifact_names, nil
 }
 
 // Check if the artifact can be added or modified.

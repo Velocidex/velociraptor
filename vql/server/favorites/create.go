@@ -56,8 +56,8 @@ func (self *AddFavorite) Call(ctx context.Context,
 	}
 
 	// Validate the artifact collector spec
-	specs, err := collector.AddSpecProtobuf(
-		ctx, config_obj, repository, scope, arg.Specs)
+	specs, _, err := collector.AddSpecProtobuf(
+		ctx, config_obj, repository, scope, arg.Specs, nil)
 	if err != nil {
 		scope.Log("favorites_save: %s", err)
 		return vfilter.Null{}
