@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"os"
 	"runtime/debug"
+	"runtime/pprof"
 	"sync"
 	"time"
 
@@ -31,6 +32,13 @@ import (
 
 func PrintStack() {
 	debug.PrintStack()
+}
+
+func DumpGoroutines() {
+	p := pprof.Lookup("goroutine")
+	if p != nil {
+		_ = p.WriteTo(os.Stdout, 1)
+	}
 }
 
 func Debug(arg interface{}) {

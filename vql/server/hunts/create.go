@@ -136,7 +136,6 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 	principal := vql_subsystem.GetPrincipal(scope)
 	request := &flows_proto.ArtifactCollectorArgs{
 		Creator:        principal,
-		Artifacts:      arg.Artifacts,
 		OpsPerSecond:   float32(arg.OpsPerSecond),
 		CpuLimit:       float32(arg.CpuLimit),
 		IopsLimit:      float32(arg.IopsLimit),
@@ -145,8 +144,8 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		MaxUploadBytes: arg.MaxBytes,
 	}
 
-	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
-		arg.Spec, request)
+	request.Specs, request.Artifacts, err = collector.AddSpecProtobuf(
+		ctx, config_obj, repository, scope, arg.Spec, arg.Artifacts)
 	if err != nil {
 		scope.Log("hunt: %v", err)
 		return vfilter.Null{}

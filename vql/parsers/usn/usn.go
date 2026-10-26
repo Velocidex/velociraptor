@@ -49,8 +49,9 @@ func (self *USNPluginArgs) GetStreams(scope types.Scope) (
 		// of just a USN journal $J dump.
 		scope.Log("parse_usn: Unable to get MFT, Name resolution will be disabled.")
 		// Create an empty ntfs context
+		options := readers.GetScopeOptions(scope)
 		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
-			bytes.NewReader(nil), 0x200, 0x200)
+			bytes.NewReader(nil), 0x200, 0x200, options)
 		err = nil
 		self.disable_full_path_resolution = true
 	}

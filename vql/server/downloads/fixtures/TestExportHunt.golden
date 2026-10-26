@@ -235,6 +235,11 @@
    "artifacts": [
     "Custom.TestArtifactUpload"
    ],
+   "specs": [
+    {
+     "artifact": "Custom.TestArtifactUpload"
+    }
+   ],
    "max_upload_bytes": "1073741824",
    "compiled_collector_args": [
     {

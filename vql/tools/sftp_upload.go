@@ -300,6 +300,7 @@ func (self SFTPUploadFunction) Info(
 		Name:    "upload_sftp",
 		Doc:     "Upload files to SFTP.",
 		ArgType: type_map.AddType(scope, &SFTPUploadArgs{}),
+		Version: 2,
 		Metadata: vql.VQLMetadata().Permissions(
 			acls.FILESYSTEM_READ, acls.NETWORK).Build(),
 	}

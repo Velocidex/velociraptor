@@ -14,6 +14,11 @@
     "artifacts": [
      "Test.Artifact"
     ],
+    "specs": [
+     {
+      "artifact": "Test.Artifact"
+     }
+    ],
     "max_upload_bytes": "1073741824",
     "compiled_collector_args": [
      {
@@ -54,6 +59,11 @@
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
+    ],
+    "specs": [
+     {
+      "artifact": "Test.Artifact"
+     }
     ],
     "max_upload_bytes": "1073741824",
     "compiled_collector_args": [
@@ -96,6 +106,11 @@
     "artifacts": [
      "Test.Artifact"
     ],
+    "specs": [
+     {
+      "artifact": "Test.Artifact"
+     }
+    ],
     "max_upload_bytes": "1073741824",
     "compiled_collector_args": [
      {
@@ -136,6 +151,11 @@
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
+    ],
+    "specs": [
+     {
+      "artifact": "Test.Artifact"
+     }
     ],
     "max_upload_bytes": "1073741824",
     "compiled_collector_args": [
@@ -183,6 +203,11 @@
     "artifacts": [
      "Test.Artifact"
     ],
+    "specs": [
+     {
+      "artifact": "Test.Artifact"
+     }
+    ],
     "max_upload_bytes": "1073741824",
     "compiled_collector_args": [
      {
@@ -221,6 +246,11 @@
     "flow_id": "F.1234.H",
     "artifacts": [
      "Test.Artifact"
+    ],
+    "specs": [
+     {
+      "artifact": "Test.Artifact"
+     }
     ],
     "max_upload_bytes": "1073741824",
     "compiled_collector_args": [

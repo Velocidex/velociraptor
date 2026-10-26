@@ -2,7 +2,7 @@ name: Server.Utils.SaveFavoriteFlow
 description: |
   Saves a collection configuration spec as a named favorite template
   for reuse across client or server collections.
-  
+
   Users may collect various artifacts from hosts. Sometimes it might
   take a bit of effort to set up and configure just the right
   combination of parameters and artifacts to collect. This artifact
@@ -18,8 +18,11 @@ type: SERVER
 
 parameters:
   - name: Specs
-    type: json_array
-    description: The collection request that will be recreated.
+    description: The collection request that will be recreated encoded as a JSON dict.
+  - name: FlowId
+    description: If provided we copy the spec from this flow.
+  - name: ClientId
+    description: If provided we copy the spec from this client.
   - name: Name
     description: A name for this collection template
   - name: Description
@@ -39,6 +42,11 @@ parameters:
 
 sources:
   - query: |
+      LET _Flow = SELECT request FROM flows(
+         client_id=ClientId, flow_id=FlowId)
+      LET Specs <= if(condition=FlowId AND ClientId,
+         then=_Flow[0].request.specs, else=Specs)
+
       LET AddToAllOrgs = SELECT * FROM foreach(
       row={
         SELECT name, org_id
@@ -63,8 +71,15 @@ sources:
          name=Name,
          description=Description,
          specs=Specs,
-         type=Type)
+         type=Type) AS Favorite
       FROM scope()
 
-      SELECT * FROM if(condition=AllUsers,
+      LET DoIt = SELECT * FROM if(condition=AllUsers,
          then=AddToAllOrgs, else=AddToOneUser)
+
+      SELECT * FROM if(condition=Specs, then=DoIt,
+       else={
+         SELECT *
+         FROM scope()
+         WHERE log(message="No specs to save!", level="ERROR") AND FALSE
+      })

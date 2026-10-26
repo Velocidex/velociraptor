@@ -4,6 +4,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/Velocidex/ordereddict"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -89,7 +90,18 @@ func (self *NotebookManager) UpdateNotebookCell(
 			notebook_metadata.NotebookId, notebook_cell)
 	}
 
-	err := self.Store.SetNotebookCell(
+	// Audit that the user updated the cell.
+	err := services.LogAudit(ctx, self.config_obj, user_name,
+		"UpdateNotebookCell",
+		ordereddict.NewDict().
+			Set("NotebookId", notebook_metadata.NotebookId).
+			Set("CellId", notebook_cell.CellId).
+			Set("Input", in.Input))
+	if err != nil {
+		return nil, err
+	}
+
+	err = self.Store.SetNotebookCell(
 		notebook_metadata.NotebookId, notebook_cell)
 	if err != nil {
 		return notebook_cell, err

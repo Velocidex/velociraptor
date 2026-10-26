@@ -185,17 +185,17 @@ func (self *NTFSCachedContext) GetNTFSContext() (ntfs_ctx *ntfs.NTFSContext, err
 		}
 
 		ntfs_ctx = ntfs.GetNTFSContextFromRawMFT(
-			self.paged_reader, cluster_size, record_size)
+			self.paged_reader, cluster_size,
+			record_size, GetScopeOptions(self.scope))
 
 	} else {
-		ntfs_ctx, err = ntfs.GetNTFSContext(self.paged_reader, 0)
+		ntfs_ctx, err = ntfs.GetNTFSContext(
+			self.paged_reader, 0, GetScopeOptions(self.scope))
 		if err != nil {
 			self._CloseWithLock()
 			return nil, err
 		}
 	}
-
-	ntfs_ctx.SetOptions(GetScopeOptions(self.scope))
 
 	self.ntfs_ctx = ntfs_ctx
 
@@ -296,5 +296,6 @@ func GetScopeOptions(scope vfilter.Scope) ntfs.Options {
 		MaxLinks:                  int(max_links),
 		IncludeShortNames:         include_short_names,
 		DisableFullPathResolution: full_path_resolution,
+		Logger:                    scope.Log,
 	}
 }
