@@ -136,7 +136,7 @@ parameters:
 func (self *HuntDispatcherTestSuite) TestLoadingFromDisk() {
 	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
 		// All hunts are now running.
-		hunts := self.getAllHunts()
+		hunts := self.getAllHunts(self.master_dispatcher)
 		if len(hunts) != 5 {
 			return false
 		}
@@ -302,11 +302,15 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	var hunt_obj *api_proto.Hunt
 	var pres bool
 
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+	vtesting.WaitUntilWithError(5*time.Second, self.T(), func() bool {
 		// Check the hunt is running in the data store.
 		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx,
 			services.GetHuntOptions{Request: false}, "H.2")
 		return pres
+	}, func() string {
+		hunts := self.getAllHunts(self.minion_dispatcher)
+		serialized, _ := json.MarshalIndent(hunts)
+		return string(serialized)
 	})
 
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_RUNNING)
@@ -352,10 +356,11 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	})
 }
 
-func (self *HuntDispatcherTestSuite) getAllHunts() []*api_proto.Hunt {
+func (self *HuntDispatcherTestSuite) getAllHunts(
+	dispatcher services.IHuntDispatcher) []*api_proto.Hunt {
 	// Get the list of all hunts
 	hunts := []*api_proto.Hunt{}
-	err := self.master_dispatcher.ApplyFuncOnHunts(
+	err := dispatcher.ApplyFuncOnHunts(
 		self.Ctx, services.AllHunts,
 		services.GetHuntOptions{Request: false},
 		func(hunt *api_proto.Hunt) error {
