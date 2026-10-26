@@ -162,8 +162,8 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		arg.Spec = spec
 	}
 
-	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
-		arg.Spec, request)
+	request.Specs, err = collector.AddSpecProtobuf(
+		ctx, config_obj, repository, scope, arg.Spec)
 	if err != nil {
 		scope.Log("collect_client: %v", err)
 		return vfilter.Null{}

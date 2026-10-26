@@ -31,7 +31,7 @@ var (
 )
 
 type CollectPluginArgs struct {
-	Artifacts           []string            `vfilter:"required,field=artifacts,doc=A list of artifacts to collect."`
+	Artifacts           []string            `vfilter:"optional,field=artifacts,doc=A list of artifacts to collect."`
 	Output              string              `vfilter:"optional,field=output,doc=A path to write the output file on."`
 	Report              string              `vfilter:"optional,field=report,doc=A path to write the report on (deprecated and ignored)."`
 	Args                vfilter.Any         `vfilter:"optional,field=args,doc=Optional parameters."`
@@ -199,48 +199,27 @@ func getArtifactCollectorArgs(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
 	scope vfilter.Scope,
-	arg *CollectPluginArgs) (*flows_proto.ArtifactCollectorArgs, error) {
+	arg *CollectPluginArgs) (res *flows_proto.ArtifactCollectorArgs, err error) {
 
-	request := &flows_proto.ArtifactCollectorArgs{
-		Artifacts: arg.Artifacts,
-	}
+	request := &flows_proto.ArtifactCollectorArgs{}
 
-	err := AddSpecProtobuf(ctx, config_obj,
-		repository, scope, arg.Args, request)
+	request.Specs, err = AddSpecProtobuf(ctx, config_obj,
+		repository, scope, arg.Args)
 	if err != nil {
 		return nil, err
+	}
+
+	for _, item := range request.Specs {
+		if !utils.InString(request.Artifacts, item.Artifact) {
+			request.Artifacts = append(request.Artifacts, item.Artifact)
+		}
+	}
+
+	if len(request.Artifacts) == 0 {
+		return nil, fmt.Errorf("No artifacts to collect!")
 	}
 
 	return request, nil
-}
-
-func convertToArtifactSpecs(spec vfilter.Any) (*ordereddict.Dict, error) {
-	serialized, err := json.Marshal(spec)
-	if err != nil {
-		return nil, err
-	}
-	specs := []*flows_proto.ArtifactSpec{}
-	err = json.Unmarshal(serialized, &specs)
-	if err != nil {
-		spec := &flows_proto.ArtifactSpec{}
-		err = json.Unmarshal(serialized, spec)
-		if err != nil {
-			return nil, err
-		}
-		specs = append(specs, spec)
-	}
-
-	spec_dict := ordereddict.NewDict()
-	for _, spec := range specs {
-		env := ordereddict.NewDict()
-		if spec.Parameters != nil {
-			for _, item := range spec.Parameters.Env {
-				env.Set(item.Key, item.Value)
-			}
-		}
-		spec_dict.Set(spec.Artifact, env)
-	}
-	return spec_dict, nil
 }
 
 // Builds a spec protobuf from the arg.Args that was passed. Note that
@@ -249,40 +228,34 @@ func convertToArtifactSpecs(spec vfilter.Any) (*ordereddict.Dict, error) {
 func AddSpecProtobuf(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository,
-	scope vfilter.Scope, spec vfilter.Any,
-	request *flows_proto.ArtifactCollectorArgs) error {
+	scope vfilter.Scope, spec vfilter.Any) (res []*flows_proto.ArtifactSpec, err error) {
 
-	// The spec might be received from Flow.request.specs already
-	// which would make it in protobuf form.
-	_, pres := scope.Associative(spec, "artifact")
-	if pres {
-		spec_dict, err := convertToArtifactSpecs(spec)
-		if err == nil {
-			spec = spec_dict
-		}
+	spec_dict, err := utils.ConvertToArtifactSpecs(spec)
+	if err != nil {
+		return nil, err
 	}
 
-	for _, name := range scope.GetMembers(spec) {
-		artifact_definitions, pres := repository.Get(ctx, config_obj, name)
+	for _, item := range spec_dict.Items() {
+		artifact_definitions, pres := repository.Get(ctx, config_obj, item.Key)
 		if !pres {
 			// Artifact not known
-			return fmt.Errorf(`Parameter refers to an unknown artifact (%v). The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, name)
+			return nil, fmt.Errorf(`Parameter refers to an unknown artifact (%v). The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, item.Key)
 		}
 
 		// Check that we are allowed to collect this artifact
 		err := CheckArtifactCollection(scope, artifact_definitions)
 		if err != nil {
-			return err
+			return nil, err
 		}
 
 		spec_proto := &flows_proto.ArtifactSpec{
-			Artifact:   name,
+			Artifact:   item.Key,
 			Parameters: &flows_proto.ArtifactParameters{},
 		}
 
-		spec_parameters, pres := scope.Associative(spec, name)
+		spec_parameters, pres := item.Value.(*ordereddict.Dict)
 		if !pres {
-			continue
+			return nil, fmt.Errorf(`Parameters of artifact (%v) have incorrect types. The parameter should be of the form {"Custom.Artifact.Name":{"arg":"value"}}`, item.Key)
 		}
 
 		// The parameters dict provided in the spec is a
@@ -375,7 +348,7 @@ func AddSpecProtobuf(
 				if !is_str {
 					value, err := json.MarshalIndent(value_any)
 					if err != nil {
-						return err
+						return nil, err
 					}
 					value_str = string(value)
 				}
@@ -388,10 +361,10 @@ func AddSpecProtobuf(
 				})
 		}
 
-		request.Specs = append(request.Specs, spec_proto)
+		res = append(res, spec_proto)
 	}
 
-	return nil
+	return res, nil
 }
 
 // Check if the artifact can be added or modified.

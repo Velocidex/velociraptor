@@ -149,44 +149,29 @@ export class SaveCollectionDialog extends React.PureComponent {
 
     startSaveFlow = () => {
         let client_id = this.props.client && this.props.client.client_id;
+        let flow_id = this.props.flow && this.props.flow.session_id;
+        if (!client_id || !flow_id) {
+            return;
+        }
+
         let type = "CLIENT";
         if (client_id==="server") {
             type = "SERVER";
         }
 
-        let flow_id = this.props.flow && this.props.flow.session_id;
-        let flow_client_id = this.props.flow && this.props.flow.client_id;
-        if (!flow_id || !flow_client_id) {
-            return;
-        }
-
         this.setState({loading: true});
-
-        // The flow passed in may have its parameters truncated for
-        // display, so fetch the full request before saving it.
-        api.get("v1/GetFlowDetails", {
-            flow_id: flow_id,
-            client_id: flow_client_id,
-            include_full_request: true,
-        }, this.source.token).then((response) => {
-            if (response.cancel) {
-                return;
-            };
-
-            let flow = response.data.context || {};
-            let specs = flow.request && flow.request.specs;
-            runArtifact("server",   // This collection happens on the server.
-                        "Server.Utils.SaveFavoriteFlow",
-                        {
-                            Specs: JSON.stringify(specs),
-                            Name: this.state.name,
-                            Description: this.state.description,
-                            Type: type,
-                        }, ()=>{
-                            this.props.onClose();
-                            this.setState({loading: false});
-                        }, this.source.token);
-        });
+        runArtifact("server",   // This collection happens on the server.
+                    "Server.Utils.SaveFavoriteFlow",
+                    {
+                        FlowId: flow_id,
+                        ClientId: client_id,
+                        Name: this.state.name,
+                        Description: this.state.description,
+                        Type: type,
+                    }, ()=>{
+                        this.props.onClose();
+                        this.setState({loading: false});
+                    }, this.source.token);
     }
 
     render() {
@@ -396,6 +381,9 @@ class FlowsList extends React.Component {
         this.props.collapseToggle(SLIDE_STATES[next_slide].level);
     };
 
+    // Copying the collection needs to put the request into the
+    // GUI. If the request is too large, the flow can not be copied
+    // with the GUI (you can still use a notebook or the API).
     copyCollection = ()=> {
         // Get the full flow request so we can copy it into the
         // GUI. The selected flow's parameters are truncated for

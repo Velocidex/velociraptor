@@ -145,8 +145,8 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		MaxUploadBytes: arg.MaxBytes,
 	}
 
-	err = collector.AddSpecProtobuf(ctx, config_obj, repository, scope,
-		arg.Spec, request)
+	request.Specs, err = collector.AddSpecProtobuf(
+		ctx, config_obj, repository, scope, arg.Spec)
 	if err != nil {
 		scope.Log("hunt: %v", err)
 		return vfilter.Null{}
