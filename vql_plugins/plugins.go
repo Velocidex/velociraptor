@@ -28,6 +28,8 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/vql/efi"
 	_ "www.velocidex.com/golang/velociraptor/vql/filesystem"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
+	_ "www.velocidex.com/golang/velociraptor/vql/functions/bits"
+	_ "www.velocidex.com/golang/velociraptor/vql/functions/functional"
 	_ "www.velocidex.com/golang/velociraptor/vql/golang"
 	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers"

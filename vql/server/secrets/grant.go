@@ -60,6 +60,7 @@ func (self *ModifySecretFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	principal := vql_subsystem.GetPrincipal(scope)
 	err = secrets.ModifySecret(ctx, &api_proto.ModifySecretRequest{
 		Name:             arg.Name,
 		TypeName:         arg.Type,
@@ -69,7 +70,7 @@ func (self *ModifySecretFunction) Call(ctx context.Context,
 		AddOrgs:          arg.AddOrgs,
 		RemoveOrgs:       arg.RemoveOrgs,
 		VisibleToAllOrgs: arg.VisibleToAllOrgs,
-	})
+	}, principal)
 	if err != nil {
 		scope.Log("secret_modify: %v", err)
 		return vfilter.Null{}

@@ -54,7 +54,8 @@ func (self *AddSecretFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	err = secrets.AddSecret(ctx, scope, arg.Type, arg.Name, arg.Secret)
+	principal := vql_subsystem.GetPrincipal(scope)
+	err = secrets.AddSecret(ctx, scope, arg.Type, arg.Name, arg.Secret, principal)
 	if err != nil {
 		scope.Log("secret_add: %v", err)
 		return vfilter.Null{}
