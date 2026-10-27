@@ -38,7 +38,7 @@ func (self _MapFunction) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	parameters := arg.Lambda.GetParameters()
-	if len(parameters) != 1 || len(parameters) != 2 {
+	if len(parameters) != 1 && len(parameters) != 2 {
 		scope.Log("map: lambda parameters are %v but must accept 1 or 2 "+
 			"parameters: `value=> ...` or `value, idx=> ...`",
 			parameters)

@@ -58,7 +58,7 @@ func (self _ReduceFunction) Call(ctx context.Context, scope vfilter.Scope,
 	}
 
 	parameters := arg.Lambda.GetParameters()
-	if len(parameters) != 2 || len(parameters) != 3 {
+	if len(parameters) != 2 && len(parameters) != 3 {
 		scope.Log("reduce: lambda parameters are %v but must accept 2 or 3 "+
 			"parameters: `acc, value, i=> ...` or `acc, value=> ...`",
 			parameters)
