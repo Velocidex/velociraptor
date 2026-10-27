@@ -1,0 +1,303 @@
+name: Server.Utils.CreateClient
+description: |
+   # Utility Artifact: Client Creation for Endpoint
+   
+   This artifact facilitates the creation of a **Client for Endpoint**.
+
+   - Supports Client **proxy** configuration.
+   - Supports pre-labeling Clients:
+     - As soon as a client connects with the matching label, the [Hunt](https://docs.velociraptor.app/docs/hunting/) will be triggered and the artifacts will execute automatically. (Quarantine, other choosed Artifacts...).
+   - Supports [mTLS Client/Server authentication](https://docs.velociraptor.app/docs/deployment/security/#deploying-mtls-authentication).
+   - Supports **all operating systems**.
+   - The created Client will be associated with the current user's organization.
+   
+   ---
+   
+   ## Prerequisites
+   
+   ### Preparing Clients for Repacking
+
+   To enable this artifact to repack or create Linux and Darwin (macOS) clients, you must first download the appropriate AMD64 and ARM64 client binaries and place them in the following directories:
+
+   - `/velociraptor/clients/linux/velociraptor_client_amd64`
+   - `/velociraptor/clients/linux/velociraptor_client_arm64`
+   - `/velociraptor/clients/mac/velociraptor_client_amd64`
+   - `/velociraptor/clients/mac/velociraptor_client_arm64`
+
+   > **Note:** Make sure the file names and directory structure match exactly, as the repacking process depends on them.
+   
+   #### Automated pull from Github releases
+   You can configure your server to **automatically fetch** the latest clients from the **most recent GitHub release** using the following Bash commands:  
+   ```
+    BASE_URL="https://github.com/Velocidex/velociraptor/releases/download/${VELOCIRAPTOR_VERSION}" && \
+    echo "Using base URL: $BASE_URL" && \
+    echo "Downloading Velociraptor version: $VELOCIRAPTOR_VERSION" && \
+    wget -O /opt/velociraptor/linux/velociraptor_client_amd64 \
+        "${BASE_URL}/velociraptor-${VELOCIRAPTOR_VERSION}-linux-amd64-musl" && \
+    wget -O /opt/velociraptor/linux/velociraptor_client_arm64 \
+        "${BASE_URL}/velociraptor-${VELOCIRAPTOR_VERSION}-linux-arm64" && \
+    wget -O /opt/velociraptor/mac/velociraptor_client_amd64 \
+        "${BASE_URL}/velociraptor-${VELOCIRAPTOR_VERSION}-darwin-amd64" && \
+    wget -O /opt/velociraptor/mac/velociraptor_client_arm64 \
+        "${BASE_URL}/velociraptor-${VELOCIRAPTOR_VERSION}-darwin-arm64"
+   ```
+   
+   ### mTLS
+   If you want to use mTLS you will need to restrict the Server frontend to **only** accept connections from clients authenticated via **mTLS**, set the `Frontend.require_client_certificates` option to `true` in the server.config.yaml.  
+   👉 See the official documentation: [Frontend.require_client_certificates](https://docs.velociraptor.app/docs/deployment/references/#Frontend.require_client_certificates)
+
+required_permissions:
+  - EXECVE
+  - COLLECT_SERVER
+  - FILESYSTEM_READ
+  - FILESYSTEM_WRITE
+
+author: [@ThalesCERT](https://github.com/thalesgroup-cert) - [@Felix83000](https://github.com/Felix83000)
+
+type: SERVER
+
+parameters:
+  - name: OS
+    default: Windows_amd64
+    type: choices
+    choices:
+      - Windows_amd64
+      - Windows_amd64_exe
+      - Windows_x86
+      - Debian_Amd64
+      - Debian_Arm64
+      - RedHat_Amd64
+      - RedHat_Arm64
+      - MacOS_Amd64
+      - MacOS_Arm64
+
+  - name: proxy
+    default: ""
+    description: hxxp://proxy.test.com:8080
+
+  - name: label
+    default: ""
+    description: "ID #230825-XXXX"
+    
+  - name: mTLS
+    default: true
+    description: "Activate Certificate mutual authentication between the Client and the Velociraptor Server"
+    type: bool
+    
+sources:
+  - query: |
+     // Load the client_config
+     LET client_config = org()._client_config
+
+     // Transform the config to YAML
+     LET client_config_standard = serialize(format='yaml', item=client_config)
+
+     // Generate the Client certificates
+     LET generate_client_certs = SELECT * FROM execve(argv=["/velociraptor/velociraptor", "--config", "server.config.yaml", "config", "api_client", "--name", "'Client'", "/velociraptor/api.config.yaml"])
+     
+     // Get the Client public certificate
+     LET client_cert_exec_pub = SELECT * FROM execve(argv=["sh", "-c", "awk '/^client_cert:/ {flag=1; next} /^[^[:space:]]/ && flag {exit} flag {print}' /velociraptor/api.config.yaml"])
+
+     // Get the Client private certificate
+     LET client_cert_exec_priv = SELECT * FROM execve(argv=["sh", "-c", "awk '/^client_private_key:/ {flag=1; next} /^[^[:space:]]/ && flag {exit} flag {print}' /velociraptor/api.config.yaml"])
+   
+     // Store the public certificate and remove all chars before/after
+     LET client_cert_pub = regex_replace(source=client_cert_exec_pub.Stdout[-1], re='^\\s+|\\s+$', replace='')
+     // Add 4 spaces of indentation to the beginning of each line
+     LET client_cert_pub_indented = regex_replace(source=client_cert_pub, re='(?m)^', replace='    ')
+     
+     // Store the private certificate and remove all chars before/after
+     LET client_cert_priv = regex_replace(source=client_cert_exec_priv.Stdout[-1], re='^\\s+|\\s+$', replace='')
+     // Add 4 spaces of indentation to the beginning of each line
+     LET client_cert_priv_indented = regex_replace(source=client_cert_priv, re='(?m)^', replace='    ')
+
+     // Add the public certificate:
+     LET client_config_with_mTLS_pub = if(condition=mTLS = true,
+                                    then=client_config_standard + '    client_certificate: |\n  ' + client_cert_pub_indented + '\n',
+                                    else=client_config_standard)
+                                    
+     // Add the private certificate:
+     LET client_config_with_mTLS_priv = if(condition=mTLS = true,
+                                    then=client_config_with_mTLS_pub + '    client_certificate_private_key: |\n  ' + client_cert_priv_indented + '\n',
+                                    else=client_config_with_mTLS_pub)
+
+     // Add Proxy config if proxy is not empty
+     LET client_config_with_proxy = if(condition=proxy != "",
+                                    then=client_config_with_mTLS_priv + '  proxy: ' + proxy + '\n',
+                                    else=client_config_with_mTLS_priv)
+
+     // Add Label config if label is not empty
+     LET client_config_with_label = if(condition=label != "",
+                                     then=client_config_with_proxy + '  labels: ' + '\n' + '    - "' + label + '"\n',
+                                     else=client_config_with_proxy)
+
+     // Final YAML configuration
+     LET client_config_yaml = client_config_with_label
+     
+     // Final YAML configuration saved into temp file for Debian and Rpm builds
+     LET TempConfigFilePath = tempfile(data=client_config_yaml, extension=".yaml", remove_last=true)
+
+     // Build Windows Client
+     LET Build_Windows(target) = repack(
+        upload_name=format(
+            format='Org_%v_velociraptor_client_%v.msi',
+            args=[org().name, OS]),
+        target=target,
+        config=client_config_yaml)
+        
+     // Build Windows Exe Client
+     LET Build_Windows_Exe(target) = repack(
+        upload_name=format(
+            format='Org_%v_velociraptor_client_%v.exe',
+            args=[org().name, OS]),
+        target=target,
+        config=client_config_yaml)    
+
+     // Build MacOS Client
+     LET Build_Mac_os(exe) = repack(
+        upload_name=format(
+            format='Org_%v_velociraptor_client_%v',
+            args=[org().name, OS]),
+        exe=exe,
+        config=client_config_yaml)
+
+     // Build DebianAmd64 Client
+     LET ExecDebianAmd64 = SELECT * FROM execve(argv=["/velociraptor/velociraptor", "--config", TempConfigFilePath, "debian", "client", "--binary", "/velociraptor/clients/linux/velociraptor_client_amd64"])
+     LET DebianPathAmd64 = regex_replace(source=ExecDebianAmd64.Stdout[-1], re='(?s).*?(\/[^\s"]+\.deb).*', replace="$1")
+
+     LET Build_DebianAmd64 = upload(
+        file=DebianPathAmd64,
+        name=format(
+            format='Org_%v_%v',
+            args=[org().name, regex_replace(source=DebianPathAmd64,re='(?s).*/([^/\s"]+\.deb).*',replace="$1")]))
+            
+     LET DeleteTempDebianAmd64 = SELECT * FROM execve(argv=["rm", DebianPathAmd64])
+            
+     // Build DebianArm64 Client
+     LET ExecDebianArm64 = SELECT * FROM execve(argv=["/velociraptor/velociraptor", "--config", TempConfigFilePath, "debian", "client", "--binary", "/velociraptor/clients/linux/velociraptor_client_arm64"])
+     LET DebianPathArm64 = regex_replace(source=ExecDebianArm64.Stdout[-1], re='(?s).*?(\/[^\s"]+\.deb).*', replace="$1")
+
+     LET Build_DebianArm64 = upload(
+        file=DebianPathArm64,
+        name=format(
+            format='Org_%v_%v',
+            args=[org().name, regex_replace(source=DebianPathArm64,re='(?s).*/([^/\s"]+\.deb).*',replace="$1")]))
+            
+     LET DeleteTempDebianArm64 = SELECT * FROM execve(argv=["rm", DebianPathArm64])   
+
+     // Build RpmAmd64 Client
+     LET ExecRpmAmd64 = SELECT * FROM execve(argv=["/velociraptor/velociraptor", "--config", TempConfigFilePath, "rpm", "client", "--binary", "/velociraptor/clients/linux/velociraptor_client_amd64"])
+     LET RpmPathAmd64 = regex_replace(source=ExecRpmAmd64.Stdout[-1], re='(?s).*?(\/[^\s"]+\.rpm).*', replace="$1")
+
+     LET Build_RpmAmd64 = upload(
+        file=RpmPathAmd64,
+        name=format(
+            format='Org_%v_%v',
+            args=[org().name, regex_replace(source=RpmPathAmd64,re='(?s).*/([^/\s"]+\.rpm).*',replace="$1")]))
+            
+     LET DeleteTempRpmAmd64 = SELECT * FROM execve(argv=["rm", RpmPathAmd64]) 
+            
+     // Build RpmArm64 Client
+     LET ExecRpmArm64 = SELECT * FROM execve(argv=["/velociraptor/velociraptor", "--config", TempConfigFilePath, "rpm", "client", "--binary", "/velociraptor/clients/linux/velociraptor_client_arm64"])
+     LET RpmPathArm64 = regex_replace(source=ExecRpmArm64.Stdout[-1], re='(?s).*?(\/[^\s"]+\.rpm).*', replace="$1")
+
+     LET Build_RpmArm64 = upload(
+        file=RpmPathArm64,
+        name=format(
+            format='Org_%v_%v',
+            args=[org().name, regex_replace(source=RpmPathArm64,re='(?s).*/([^/\s"]+\.rpm).*',replace="$1")]))
+            
+     LET DeleteTempRpmArm64 = SELECT * FROM execve(argv=["rm", RpmPathArm64])
+
+     // Choose the right target binary depending on the target OS
+     SELECT *
+     FROM switch(
+        a={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                Build_Windows(target="VelociraptorWindowsMSI")
+            FROM scope()
+            WHERE OS = "Windows_amd64"
+        },
+        b={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                Build_Windows(target="VelociraptorWindows_x86MSI")
+            FROM scope()
+            WHERE OS = "Windows_x86"
+        },
+        c={
+            SELECT
+                client_config_yaml AS client_config_yaml,    
+                generate_client_certs AS generate_client_certs,
+                Build_Windows_Exe(target="VelociraptorWindows")
+            FROM scope()
+            WHERE OS = "Windows_amd64_exe"
+        },
+        d={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                Build_Mac_os(exe="/velociraptor/clients/mac/velociraptor_client_amd64")
+            FROM scope()
+            WHERE OS = "MacOS_Amd64"
+        },
+        e={
+            SELECT 
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                Build_Mac_os(exe="/velociraptor/clients/mac/velociraptor_client_arm64")
+            FROM scope()
+            WHERE OS = "MacOS_Arm64"
+        },
+        f={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                TempConfigFilePath AS TempConfigFilePath,
+                ExecDebianAmd64 AS ExecDebian,
+                Build_DebianAmd64 AS Build_Debian,
+                DeleteTempDebianAmd64 AS DeleteTempDebianAmd64
+            FROM scope()
+            WHERE OS = "Debian_Amd64"
+        },
+        g={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                TempConfigFilePath AS TempConfigFilePath,
+                ExecDebianArm64 AS ExecDebian,
+                Build_DebianArm64 AS Build_Debian ,
+                DeleteTempDebianArm64 AS DeleteTempDebianArm64
+            FROM scope()
+            WHERE OS = "Debian_Arm64"
+        },
+        h={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                TempConfigFilePath AS TempConfigFilePath,
+                ExecRpmAmd64 AS ExecRpm,
+                Build_RpmAmd64 AS Build_Rpm,
+                DeleteTempRpmAmd64 AS DeleteTempRpmAmd64
+            FROM scope()
+            WHERE OS = "RedHat_Amd64"
+        },
+        i={
+            SELECT
+                client_config_yaml AS client_config_yaml,
+                generate_client_certs AS generate_client_certs,
+                TempConfigFilePath AS TempConfigFilePath,
+                ExecRpmArm64 AS ExecRpm,
+                Build_RpmArm64 AS Build_Rpm,
+                DeleteTempRpmArm64 AS DeleteTempRpmArm64
+            FROM scope()
+            WHERE OS = "RedHat_Arm64"
+        },
+        j={
+            SELECT "" AS Type
+            FROM scope()
+            WHERE NOT log(message="Unknown target type " + OS)
+        })
