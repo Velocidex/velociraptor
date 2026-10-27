@@ -42,8 +42,8 @@ func (self *LSPTestSuite) TestWorkspaceSymbols() {
 		}
 
 		golden = append(golden, fmt.Sprintf(
-			"\nWorkspace symbols for query: (%v bytes) %v\n%v",
-			len(dump_symbols_json), query, dump_symbols_json_elided))
+			"\nWorkspace symbols for query:%v\n%v",
+			query, dump_symbols_json_elided))
 	}
 
 	goldie.Assert(self.T(), "TestWorkspaceSymbols",

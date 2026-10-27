@@ -1,0 +1,12 @@
+Query: SELECT bit_and(a=156, b=15), bit_or(a=156, b=15), bit_xor(a=156, b=15), bit_not(value=156), bit_shl(value=156, bits=2), bit_shr(value=156, bits=2) FROM scope()
+Output: [
+ {
+  "bit_and(a=156, b=15)": 12,
+  "bit_or(a=156, b=15)": 159,
+  "bit_xor(a=156, b=15)": 147,
+  "bit_not(value=156)": 18446744073709551459,
+  "bit_shl(value=156, bits=2)": 624,
+  "bit_shr(value=156, bits=2)": 39
+ }
+]
+

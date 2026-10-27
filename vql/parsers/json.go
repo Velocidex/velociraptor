@@ -289,11 +289,18 @@ func (self ParseJsonArrayPlugin) Call(
 		result_type := result_value.Type()
 		if result_type.Kind() == reflect.Slice {
 			for i := 0; i < result_value.Len(); i++ {
+				item := result_value.Index(i).Interface()
+				item_dict, ok := item.(*ordereddict.Dict)
+				if !ok {
+					item_dict = ordereddict.NewDict().
+						Set("_value", item)
+				}
+
 				select {
 				case <-ctx.Done():
 					return
 
-				case output_chan <- result_value.Index(i).Interface():
+				case output_chan <- item_dict:
 				}
 			}
 		}

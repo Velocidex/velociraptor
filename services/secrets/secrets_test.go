@@ -36,7 +36,7 @@ func (self *SecretsTestSuite) TestSecretsService() {
 	scope := vql_subsystem.MakeScope()
 	err = secrets.AddSecret(self.Ctx, scope,
 		constants.SSH_PRIVATE_KEY, "MySecret", ordereddict.NewDict().
-			Set("username", "fred"))
+			Set("username", "fred"), "admin")
 	assert.Error(self.T(), err)
 
 	// For a valid secret we need more fields.
@@ -45,7 +45,8 @@ func (self *SecretsTestSuite) TestSecretsService() {
 			Set("username", "fred").
 			Set("hostname", "myhost.com").
 			Set("password", "hunter2").
-			Set("extra_field", "This field will be removed"))
+			Set("extra_field", "This field will be removed"),
+		"admin")
 	assert.NoError(self.T(), err)
 
 	golden := ordereddict.NewDict()
@@ -60,7 +61,7 @@ func (self *SecretsTestSuite) TestSecretsService() {
 		&api_proto.ModifySecretRequest{
 			TypeName: constants.SSH_PRIVATE_KEY,
 			Name:     "MySecret",
-			AddUsers: []string{"User1", "User2"}})
+			AddUsers: []string{"User1", "User2"}}, "admin")
 	assert.NoError(self.T(), err)
 
 	golden.Set("Granted Secret",
@@ -79,7 +80,7 @@ func (self *SecretsTestSuite) TestSecretsService() {
 		&api_proto.ModifySecretRequest{
 			TypeName:    constants.SSH_PRIVATE_KEY,
 			Name:        "MySecret",
-			RemoveUsers: []string{"User2"}})
+			RemoveUsers: []string{"User2"}}, "admin")
 	assert.NoError(self.T(), err)
 
 	golden.Set("Revoked Secret",
@@ -125,7 +126,8 @@ func (self *SecretsTestSuite) TestInvalidSecret() {
 	err = secrets.AddSecret(self.Ctx, scope,
 		constants.HTTP_SECRETS, "MySecret", ordereddict.NewDict().
 			Set("url", "http://www.example.com/").
-			Set("extra_headers", "   sdkjkdsjh"))
+			Set("extra_headers", "   sdkjkdsjh"),
+		"admin")
 	assert.Error(self.T(), err)
 }
 
