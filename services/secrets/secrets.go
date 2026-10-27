@@ -142,7 +142,9 @@ func (self *SecretsService) getSecret(
 
 func (self *SecretsService) AddSecret(ctx context.Context,
 	scope vfilter.Scope,
-	type_name, secret_name string, secret *ordereddict.Dict) error {
+	type_name, secret_name string,
+	secret *ordereddict.Dict,
+	principal string) error {
 
 	secrets_definition, err := self.getSecretDefinition(ctx, type_name)
 	if err != nil {
@@ -185,7 +187,15 @@ func (self *SecretsService) AddSecret(ctx context.Context,
 	}
 
 	secret_record := NewSecret(type_name, secret_name, secret)
-	return self.setSecret(ctx, secret_record)
+	err = self.setSecret(ctx, secret_record)
+	if err != nil {
+		return err
+	}
+
+	return services.LogAudit(ctx, self.config_obj, principal, "Secret Added",
+		ordereddict.NewDict().
+			Set("Name", secret_record.Name).
+			Set("Type", type_name))
 }
 
 // Store the secret in datastore
@@ -300,10 +310,17 @@ func (self *SecretsService) deleteSecret(
 }
 
 func (self *SecretsService) ModifySecret(ctx context.Context,
-	request *api_proto.ModifySecretRequest) error {
+	request *api_proto.ModifySecretRequest,
+	principal string) error {
 
 	if request.Delete {
-		return self.deleteSecret(ctx, request.TypeName, request.Name)
+		err := self.deleteSecret(ctx, request.TypeName, request.Name)
+		if err != nil {
+			return err
+		}
+		return services.LogAudit(ctx, self.config_obj, principal, "Secret Deleted",
+			ordereddict.NewDict().
+				Set("Name", request.Name))
 	}
 
 	secret_record, err := self.getSecret(ctx, request.TypeName, request.Name)
@@ -341,7 +358,15 @@ func (self *SecretsService) ModifySecret(ctx context.Context,
 	secret_record.Orgs = orgs.Keys()
 	secret_record.VisibleToAllOrgs = request.VisibleToAllOrgs
 
-	return self.setSecret(ctx, secret_record)
+	err = self.setSecret(ctx, secret_record)
+	if err != nil {
+		return err
+	}
+	return services.LogAudit(ctx, self.config_obj, principal, "Secret Modified",
+		ordereddict.NewDict().
+			Set("Name", request.Name).
+			Set("Modification", request))
+
 }
 
 func (self *SecretsService) GetSecret(ctx context.Context,

@@ -1,0 +1,43 @@
+Parameters:
+  _TestList: |
+    [1,1,2,2,2,3,3]
+
+  IP: 192.168.1.137
+  Mask: 255.255.255.0
+
+Queries:
+  # Test that reduce works in a group by clause. This reduce function
+  # is basically the same as sum()
+  - SELECT _value AS Value,
+        reduce(items=_value, lambda="acc, x=>acc + x") AS Total,
+        sum(item=_value) AS Sum
+    FROM parse_json_array(data=_TestList)
+    GROUP BY _value
+
+  # Check that reduce works on an array
+  - LET TestList <= parse_json_array(data=_TestList)
+  - SELECT reduce(items=TestList, lambda="acc, x=>acc + x") AS Total
+    FROM scope()
+
+  # Check the map function
+  - SELECT map(items=TestList, lambda="x=>x+1") AS Map FROM scope()
+
+  # Filter function
+  - SELECT filter(list=TestList, condition="x=> x >= 3") AS Filter  FROM scope()
+
+  # Reverse function
+  - SELECT reverse(items=TestList) AS Reverse FROM scope()
+
+  # An example of using functional functions to mask an IP address
+  # Convert an IP address to a list of integers
+  - LET IPToInts(IP) = map(items=split(string=IP, sep_string='.'), lambda="x=>int(int=x)")
+
+  # Mask two lists of integers - note the use of index inside map callback.
+  - LET MaskIPLists(IP, Mask) = map(items=IP, lambda="x, i=>bit_and(a=x, b=Mask[i])")
+
+  # Join an array of integers into an IP address - note coercing of integers to a string
+  - LET GetNetworkAddress(IP, Mask) = join(array=MaskIPLists(IP=IPToInts(IP=IP), Mask=IPToInts(IP=Mask)), sep=".")
+
+  # Example use
+  - SELECT GetNetworkAddress(IP=IP, Mask=Mask) AS NetworkAddress
+    FROM scope()
