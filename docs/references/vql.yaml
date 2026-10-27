@@ -768,6 +768,64 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: bit_and
+  description: Returns a bitwise AND operation between two integers.
+  type: Function
+  args:
+  - name: a
+    type: uint64
+  - name: b
+    type: uint64
+  platforms:
+  - linux_amd64_cgo
+- name: bit_not
+  description: Returns a bitwise NOT operation on an integer.
+  type: Function
+  args:
+  - name: value
+    type: uint64
+  platforms:
+  - linux_amd64_cgo
+- name: bit_or
+  description: Returns a bitwise OR operation between two integers.
+  type: Function
+  args:
+  - name: a
+    type: uint64
+  - name: b
+    type: uint64
+  platforms:
+  - linux_amd64_cgo
+- name: bit_shl
+  description: Shifts the value to the left.
+  type: Function
+  args:
+  - name: value
+    type: uint64
+  - name: bits
+    type: uint64
+  platforms:
+  - linux_amd64_cgo
+- name: bit_shr
+  description: Shifts the value to the right.
+  type: Function
+  args:
+  - name: value
+    type: uint64
+  - name: bits
+    type: uint64
+  platforms:
+  - linux_amd64_cgo
+- name: bit_xor
+  description: Returns a bitwise XOR operation on an integer.
+  type: Function
+  args:
+  - name: a
+    type: uint64
+  - name: b
+    type: uint64
+  platforms:
+  - linux_amd64_cgo
 - name: bzip2
   description: |
     Access the content of bzip2 files.
@@ -6042,6 +6100,19 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: map
+  description: Apply a map on a list of items.
+  type: Function
+  args:
+  - name: items
+    type: Any
+    description: A list of items to apply the lambda on
+    required: true
+  - name: lambda
+    type: vfilter.Lambda
+    description: A VQL Lambda to apply on each item
+  platforms:
+  - linux_amd64_cgo
 - name: max
   description: |
     Finds the largest item in the aggregate.
@@ -9274,6 +9345,21 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: reduce
+  description: Apply a lambda function on each item and return the accumulator. The
+    lambda is expected to receive the accumulator and the item. For example `(acc,
+    x)=>acc + x`
+  type: Function
+  args:
+  - name: items
+    type: Any
+    description: A list of items to apply the lambda on
+    required: true
+  - name: lambda
+    type: vfilter.Lambda
+    description: A VQL Lambda to apply on each item
+  platforms:
+  - linux_amd64_cgo
 - name: reformat
   description: |-
     Reformat VQL
@@ -9590,6 +9676,17 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: reverse
+  description: reverse an array.
+  type: Function
+  args:
+  - name: items
+    type: Any
+    description: A list of items to reverse
+    repeated: true
+    required: true
+  platforms:
+  - linux_amd64_cgo
 - name: rm
   description: Remove a file from the filesystem using the API.
   type: Function

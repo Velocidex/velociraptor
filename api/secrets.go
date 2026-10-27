@@ -73,7 +73,7 @@ func (self *ApiServer) AddSecret(
 	}
 
 	scope := vql_subsystem.MakeScope()
-	err = secrets.AddSecret(ctx, scope, in.TypeName, in.Name, secret_data)
+	err = secrets.AddSecret(ctx, scope, in.TypeName, in.Name, secret_data, principal)
 	return &emptypb.Empty{}, Status(self.verbose, err)
 }
 
@@ -137,6 +137,6 @@ func (self *ApiServer) ModifySecret(
 		return nil, Status(self.verbose, err)
 	}
 
-	err = secrets.ModifySecret(ctx, in)
+	err = secrets.ModifySecret(ctx, in, principal)
 	return &emptypb.Empty{}, Status(self.verbose, err)
 }

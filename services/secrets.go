@@ -107,11 +107,13 @@ type SecretsService interface {
 	// to ensure the secret is valid.
 	AddSecret(ctx context.Context, scope vfilter.Scope,
 		type_name, secret_name string,
-		secret *ordereddict.Dict) error
+		secret *ordereddict.Dict,
+		principal string) error
 
 	// Grants access to the secret to the specified users.
 	ModifySecret(ctx context.Context,
-		request *api_proto.ModifySecretRequest) error
+		request *api_proto.ModifySecretRequest,
+		principal string) error
 
 	// Retrieve a secret. This function may only be called internally
 	// from VQL plugins/functions. The secrets may not be leaked into

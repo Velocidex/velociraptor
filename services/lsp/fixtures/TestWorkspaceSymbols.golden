@@ -1,5 +1,5 @@
 
-Workspace symbols for query: (26322 bytes) 
+Workspace symbols for query:
 [
  {
   "name": "Artifact",
@@ -83,7 +83,7 @@ Workspace symbols for query: (26322 bytes)
  ...  Elided .... 
 
 
-Workspace symbols for query: (504 bytes) Var
+Workspace symbols for query:Var
 [
  {
   "name": "MyVar",
@@ -126,7 +126,7 @@ Workspace symbols for query: (504 bytes) Var
  }
 ]
 
-Workspace symbols for query: (136 bytes) pslist
+Workspace symbols for query:pslist
 [
  {
   "name": "process_tracker_pslist",
@@ -140,5 +140,5 @@ Workspace symbols for query: (136 bytes) pslist
  }
 ]
 
-Workspace symbols for query: (2 bytes) XXXXXX
+Workspace symbols for query:XXXXXX
 []
