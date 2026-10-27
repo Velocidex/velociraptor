@@ -36,14 +36,14 @@ func (self *SSHSessionTestSuite) addSecret(
 	assert.NoError(self.T(), err)
 
 	err = secrets_service.AddSecret(self.Ctx, scope,
-		constants.SSH_PRIVATE_KEY, name, data)
+		constants.SSH_PRIVATE_KEY, name, data, "admin")
 	assert.NoError(self.T(), err)
 
 	err = secrets_service.ModifySecret(self.Ctx,
 		&api_proto.ModifySecretRequest{
 			TypeName: constants.SSH_PRIVATE_KEY,
 			Name:     name,
-			AddUsers: []string{constants.PinnedServerName}})
+			AddUsers: []string{constants.PinnedServerName}}, "admin")
 	assert.NoError(self.T(), err)
 }
 
