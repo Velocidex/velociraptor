@@ -2,8 +2,9 @@ package executor
 
 import (
 	"fmt"
-	"math/rand"
 	"strings"
+
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 )
 
 // PoolIdentity represents the emulated identity of a pool client.

@@ -49,6 +49,12 @@ checks = [Check(re=re.compile("ioutil.TempFile"),
                 allowed=re.compile("vtesting/tls"),
                 replaced="/vtesting/NewTLSServer"),
 
+          # Use our version of paged reader
+          Check(re=re.compile("ntfs.NewPagedReader"),
+                allowed=re.compile("utils.NewPagedReader"),
+                replaced="utils.NewPagedReader"),
+
+
           # We can not use the slices package because it does not
           # exist on go 1.20 so the legacy build will fail.
           Check(re=re.compile("slices\\.(.+)"),

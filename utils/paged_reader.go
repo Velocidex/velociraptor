@@ -3,6 +3,8 @@ package utils
 import (
 	"io"
 	"sync"
+
+	"github.com/Velocidex/ordereddict"
 )
 
 // Keep pages in a free list to avoid allocations.
@@ -107,7 +109,7 @@ func (self *PagedReader) ReadAt(buf []byte, offset int64) (
 			}
 
 			if bytes_read == 0 {
-				return 0, io.EOF
+				return buf_idx, io.EOF
 			}
 
 			page_buf = page_buf[:bytes_read]
@@ -156,6 +158,10 @@ func (self *PagedReader) Flush() {
 	}
 }
 
+func (self *PagedReader) Stats() *ordereddict.Dict {
+	return self.lru.Stats()
+}
+
 func NewPagedReader(reader io.ReaderAt, pagesize int64, cache_size int) (*PagedReader, error) {
 	self := &PagedReader{
 		reader:   reader,
@@ -167,8 +173,13 @@ func NewPagedReader(reader io.ReaderAt, pagesize int64, cache_size int) (*PagedR
 
 	// By default 10mb cache.
 	cache, err := NewLRU(cache_size, func(key int, value interface{}) {
+		slice := value.([]byte)
+
+		// Extend the slice back to its capacity
+		slice = slice[:cap(slice)]
+
 		// Put the page back on the free list
-		self.freelist.Put(value.([]byte))
+		self.freelist.Put(slice)
 	}, "NewPagedReader")
 	if err != nil {
 		return nil, err
