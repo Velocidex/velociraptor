@@ -421,13 +421,18 @@ func (self *ClientInfoManager) MutationSync(
 				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 				logger.Debug("ClientInfoManager: sending a mutation with %v items", size)
 
-				journal.PushRowsToArtifactAsync(ctx, config_obj,
-					ordereddict.NewDict().
-						Set("Mutation", self.mutation_manager.GetMutation()).
-						Set("From", self.uuid),
-					artifacts.CLIENT_INFO_SYNC.
-						WithSuperUser().WithFrom(
-						utils.ToString(self.uuid)))
+				mutation, len := self.mutation_manager.GetMutation()
+				if len > 0 {
+					row := ordereddict.NewDict().
+						Set("Mutation", mutation).
+						Set("From", self.uuid)
+
+					journal.PushRowsToArtifactAsync(ctx, config_obj,
+						row,
+						artifacts.CLIENT_INFO_SYNC.
+							WithSuperUser().WithFrom(
+							utils.ToString(self.uuid)))
+				}
 			}
 		}
 	}
@@ -608,7 +613,7 @@ func NewClientInfoManager(
 	service := &ClientInfoManager{
 		config_obj:       config_obj,
 		uuid:             utils.GetGUID(),
-		mutation_manager: NewMutationManager(),
+		mutation_manager: NewMutationManager(config_obj),
 	}
 	service.storage = NewStorage(service.uuid, config_obj)
 
