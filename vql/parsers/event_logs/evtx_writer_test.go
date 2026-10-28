@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"www.velocidex.com/golang/evtx"
-	"www.velocidex.com/golang/velociraptor/utils/rand"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 
@@ -64,7 +63,7 @@ func TestEvtxWriter(t *testing.T) {
 	damaged_data := append([]byte{}, others[1].Data...)
 	free_space := int(binary.LittleEndian.Uint32(damaged_data[chunkFreeSpaceOffset:]))
 	mid := evtx.EVTX_CHUNK_HEADER_SIZE + (free_space-evtx.EVTX_CHUNK_HEADER_SIZE)/2
-	copy(damaged_data[mid:free_space], noise(newRng(), free_space-mid))
+	copy(damaged_data[mid:free_space], noise(free_space-mid))
 	damaged := mustCheckChunk(t, damaged_data)
 	assert.False(t, damaged.DataChecksumValid)
 
@@ -157,8 +156,4 @@ func TestEvtxWriterEmpty(t *testing.T) {
 	assert.NoError(t, writer.Close())
 	assert.Equal(t, fileHeaderSize, len(out.buf))
 	assert.Equal(t, evtx.EVTX_HEADER_MAGIC, string(out.buf[:8]))
-}
-
-func newRng() *rand.Rand {
-	return rand.New(rand.NewSource(11))
 }

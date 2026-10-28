@@ -1,5 +1,5 @@
-//go:build !sumo
-// +build !sumo
+//go:build !aws
+// +build !aws
 
 /* An accessor for an S3 bucket */
 
