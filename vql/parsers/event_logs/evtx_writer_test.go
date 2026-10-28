@@ -3,11 +3,11 @@ package event_logs
 import (
 	"bytes"
 	"encoding/binary"
-	"math/rand"
 	"os"
 	"testing"
 
 	"www.velocidex.com/golang/evtx"
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
 

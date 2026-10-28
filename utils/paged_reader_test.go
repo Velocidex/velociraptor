@@ -2,6 +2,7 @@ package utils
 
 import (
 	"bytes"
+	"errors"
 	"io"
 	"strings"
 	"testing"
@@ -47,4 +48,34 @@ func TestPagedReader(t *testing.T) {
 	// generate less reads on the backing file.
 	assert.Equal(t, reads, 5)
 	assert.Equal(t, reader.counter, 3)
+}
+
+// Make sure that the pages that go on the free list are full size pages.
+func TestPagedReaderFreeList(t *testing.T) {
+	// Length 501
+	data := strings.Repeat("0123456789", 50) + "A"
+	reader := &CountingBuffer{Reader: bytes.NewReader([]byte(data))}
+
+	paged_reader, err := NewPagedReader(reader, 10, 10)
+	assert.NoError(t, err)
+
+	buf := make([]byte, 10)
+
+	// Read a bit at the end
+	n, err := paged_reader.ReadAt(buf, int64(len(data)-6))
+	assert.True(t, errors.Is(err, io.EOF))
+	assert.Equal(t, n, 6)
+
+	// Force the page to be returned to the freelist
+	paged_reader.Flush()
+
+	for _, f := range paged_reader.freelist.freelist {
+		// All freelist pages should be full size.
+		assert.Equal(t, 10, len(f))
+	}
+
+	// Next read will use the freelist page
+	n, err = paged_reader.ReadAt(buf, int64(len(data)-6))
+	assert.True(t, errors.Is(err, io.EOF))
+	assert.Equal(t, n, 6)
 }

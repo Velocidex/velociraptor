@@ -38,7 +38,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/Velocidex/ttlcache/v2"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/files"
@@ -96,7 +95,7 @@ type AccessorReader struct {
 	waiting_to_close bool
 
 	reader       accessors.ReadSeekCloser
-	paged_reader *ntfs.PagedReader
+	paged_reader *utils.PagedReader
 
 	// Owner pool
 	pool *ReaderPool
@@ -273,7 +272,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 			page_size = 10 * 1024 * 1024
 		}
 
-		paged_reader, err := ntfs.NewPagedReader(
+		paged_reader, err := utils.NewPagedReader(
 			utils.MakeReaderAtter(reader), page_size, lru_size)
 		if err != nil {
 			reader.Close()

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -192,7 +191,7 @@ func (self TimelineReader) New(
 		return nil, err
 	}
 
-	paged, err := ntfs.NewPagedReader(
+	paged, err := utils.NewPagedReader(
 		utils.MakeReaderAtter(index_fd), 1024*8, 10)
 	if err != nil {
 		return nil, err
