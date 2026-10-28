@@ -39,7 +39,7 @@ func NewMutationManager(config_obj *config_proto.Config) *MutationManager {
 
 func (self *MutationManager) AddPing(client_id string, ping uint64) {
 	// The master node does not update the ping info on the minions -
-	// they dont really need it.
+	// they don't really need it.
 	if self.I_am_master {
 		return
 	}
@@ -52,7 +52,7 @@ func (self *MutationManager) AddPing(client_id string, ping uint64) {
 
 func (self *MutationManager) AddIPAddress(client_id string, ip_address string) {
 	// The master node does not update the IP Address info on the minions -
-	// they dont really need it.
+	// they don't really need it.
 	if self.I_am_master {
 		return
 	}
@@ -97,7 +97,7 @@ func (self *MutationManager) clear() {
 }
 
 // Limit the size of the update so as not to overflow the gRPC limits.
-// The update should be random so it should eventualy update the
+// The update should be random so it should eventually update the
 // entire mutation pool if needed.
 func (self *MutationManager) capDictInt64(in map[string]uint64) *ordereddict.Dict {
 	res := ordereddict.NewDict()
