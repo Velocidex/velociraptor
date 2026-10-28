@@ -282,7 +282,7 @@ func (self *AccessorReader) ReadAt(buf []byte, offset int64) (int, error) {
 
 		// Try to read this buffer from the new reader
 		result, err := paged_reader.ReadAt(buf, offset)
-		if err != nil {
+		if result == 0 && err != nil {
 			reader.Close()
 			self.mu.Unlock()
 			return 0, err

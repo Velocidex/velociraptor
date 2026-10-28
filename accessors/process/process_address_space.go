@@ -82,7 +82,7 @@ func (self *ProcessReader) readDistinctPages(buf []byte) (int, error) {
 
 		// Repeat the read with a single page at the time.
 		_, err := self.handle.ReadAt(buf[buf_start:buf_end], self.offset)
-		if err != nil {
+		if err != nil && !errors.Is(err, io.EOF) {
 			// Error occurred reading a single page, zero
 			// it out and skip the page.
 			for i := buf_start; i < buf_end; i++ {
@@ -117,7 +117,7 @@ func (self *ProcessReader) Read(buf []byte) (int, error) {
 		// a reader asks to read from a memory region that contains
 		// no data, we never return an error - just zero pad those
 		// regions.
-		if err != nil {
+		if err != nil && !errors.Is(err, io.EOF) {
 			return self.readDistinctPages(buf)
 		}
 

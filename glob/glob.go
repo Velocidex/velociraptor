@@ -516,8 +516,6 @@ func convert_glob_into_path_components(
 		// match the pattern.
 		groups := _RECURSION_REGEX.FindStringSubmatch(path_component)
 		if len(groups) > 0 {
-
-			utils.DlvBreak()
 			if path_component != groups[0] {
 				scope.Warn("Invalid Glob component `%v`: recursive globs "+
 					"must appear on their own component - ignoring followed data",
