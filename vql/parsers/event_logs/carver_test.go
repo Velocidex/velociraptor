@@ -6,7 +6,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"io"
-	"math/rand"
 	"os"
 	"testing"
 
@@ -14,6 +13,7 @@ import (
 	"www.velocidex.com/golang/evtx"
 	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/rand"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -32,9 +32,9 @@ func getTestChunk(t *testing.T) []byte {
 	return chunk
 }
 
-func noise(rng *rand.Rand, size int) []byte {
+func noise(size int) []byte {
 	result := make([]byte, size)
-	rng.Read(result)
+	rand.Read(result)
 	return result
 }
 
@@ -52,7 +52,6 @@ func carveAll(t *testing.T, image []byte, start, end int64) (
 }
 
 func TestCarveChunks(t *testing.T) {
-	rng := rand.New(rand.NewSource(1))
 	chunk := getTestChunk(t)
 
 	// A copy of the chunk with a damaged string table - the header
@@ -61,21 +60,21 @@ func TestCarveChunks(t *testing.T) {
 	damaged[0x100] ^= 0xff
 
 	image := &bytes.Buffer{}
-	image.Write(noise(rng, 100003))
+	image.Write(noise(100003))
 
 	// 1. An intact chunk at an unaligned offset.
 	intact_offset := int64(image.Len())
 	image.Write(chunk)
-	image.Write(noise(rng, 5000))
+	image.Write(noise(5000))
 
 	// A false positive: the signature followed by garbage.
 	image.WriteString(evtx.EVTX_CHUNK_HEADER_MAGIC)
-	image.Write(noise(rng, 1000))
+	image.Write(noise(1000))
 
 	// 2. A chunk with a damaged header.
 	damaged_offset := int64(image.Len())
 	image.Write(damaged)
-	image.Write(noise(rng, 7777))
+	image.Write(noise(7777))
 
 	// 3. A chunk cut off by the end of the image.
 	truncated_offset := int64(image.Len())
@@ -132,14 +131,13 @@ func TestCarveChunks(t *testing.T) {
 
 // A signature split across two read blocks must be found exactly once.
 func TestCarveChunkAcrossBlockBoundary(t *testing.T) {
-	rng := rand.New(rand.NewSource(2))
 	chunk := getTestChunk(t)
 
 	for _, delta := range []int{-8, -7, -3, -1, 0, 1} {
 		offset := carveBlockSize + delta
-		image := noise(rng, offset)
+		image := noise(offset)
 		image = append(image, chunk...)
-		image = append(image, noise(rng, 100)...)
+		image = append(image, noise(100)...)
 
 		chunks, _ := carveAll(t, image, 0, 0)
 		assert.Equal(t, 1, len(chunks), "delta %v", delta)
@@ -148,10 +146,9 @@ func TestCarveChunkAcrossBlockBoundary(t *testing.T) {
 }
 
 func TestCarveRange(t *testing.T) {
-	rng := rand.New(rand.NewSource(3))
 	chunk := getTestChunk(t)
 
-	image := noise(rng, 1000)
+	image := noise(1000)
 	image = append(image, chunk...)
 	second := len(image)
 	image = append(image, chunk...)
@@ -171,16 +168,15 @@ func TestCarveRange(t *testing.T) {
 // io.ReaderAt. Its EOF flag is sticky, so a chunk read that runs past
 // the end of the stream must not stop the scan early.
 func TestCarveThroughAccessorAdapter(t *testing.T) {
-	rng := rand.New(rand.NewSource(5))
 	chunk := getTestChunk(t)
 
-	image := noise(rng, carveBlockSize/2)
+	image := noise(carveBlockSize / 2)
 	first := len(image)
 	image = append(image, chunk...)
-	image = append(image, noise(rng, 2*carveBlockSize)...)
+	image = append(image, noise(2*carveBlockSize)...)
 	second := len(image)
 	image = append(image, chunk...)
-	image = append(image, noise(rng, 1000)...)
+	image = append(image, noise(1000)...)
 
 	// A chunk cut off by the end of the stream.
 	third := len(image)
@@ -229,16 +225,15 @@ func NewDeviceReader(data []byte) (io.ReaderAt, error) {
 
 // Unaligned chunks and offsets must still be carved from a device.
 func TestCarveFromAlignedDevice(t *testing.T) {
-	rng := rand.New(rand.NewSource(6))
 	chunk := getTestChunk(t)
 
-	image := noise(rng, 3001)
+	image := noise(3001)
 	unaligned := len(image)
 	image = append(image, chunk...)
-	image = append(image, noise(rng, 4096-(len(image)%4096))...)
+	image = append(image, noise(4096-(len(image)%4096))...)
 	aligned := len(image)
 	image = append(image, chunk...)
-	image = append(image, noise(rng, carveBlockSize+123)...)
+	image = append(image, noise(carveBlockSize+123)...)
 	last := len(image)
 	image = append(image, chunk[:0x3000]...)
 
@@ -279,7 +274,7 @@ func TestCarveFromAlignedDevice(t *testing.T) {
 }
 
 func TestAlignedReadAt(t *testing.T) {
-	data := noise(rand.New(rand.NewSource(7)), 10000)
+	data := noise(10000)
 	reader, err := NewDeviceReader(data)
 	assert.NoError(t, err)
 
@@ -364,7 +359,7 @@ func lznt1CompressBlock(in []byte) []byte {
 // each starting on a new 4kb cluster. The slack at the end of a unit
 // holds stale data. Units listed in raw_units are stored
 // uncompressed.
-func ntfsCompress(rng *rand.Rand, file []byte, raw_units ...int) []byte {
+func ntfsCompress(file []byte, raw_units ...int) []byte {
 	var result []byte
 	for unit_idx := 0; unit_idx*lznt1UnitSize < len(file); unit_idx++ {
 		unit := file[unit_idx*lznt1UnitSize:]
@@ -389,7 +384,7 @@ func ntfsCompress(rng *rand.Rand, file []byte, raw_units ...int) []byte {
 
 		result = append(result, compressed...)
 		if rem := len(result) % lznt1BlockSize; rem != 0 {
-			result = append(result, noise(rng, lznt1BlockSize-rem)...)
+			result = append(result, noise(lznt1BlockSize-rem)...)
 		}
 	}
 	return result
@@ -410,15 +405,14 @@ func TestLZNT1Compressor(t *testing.T) {
 // The event logs are NTFS compressed by default so carving a raw
 // volume needs to decompress chunks.
 func TestCarveCompressedChunk(t *testing.T) {
-	rng := rand.New(rand.NewSource(8))
 	file, err := os.ReadFile(testEvtx)
 	assert.NoError(t, err)
 	chunk := getTestChunk(t)
 
 	for _, raw_units := range [][]int{nil, {1}} {
-		disk := noise(rng, 7*lznt1BlockSize)
-		disk = append(disk, ntfsCompress(rng, file, raw_units...)...)
-		disk = append(disk, noise(rng, 3*lznt1BlockSize)...)
+		disk := noise(7 * lznt1BlockSize)
+		disk = append(disk, ntfsCompress(file, raw_units...)...)
+		disk = append(disk, noise(3*lznt1BlockSize)...)
 
 		// The plain chunk header is not visible on disk.
 		assert.False(t, bytes.Contains(disk, chunk[:evtx.EVTX_CHUNK_HEADER_SIZE]))
@@ -457,12 +451,11 @@ func TestCarveCompressedChunk(t *testing.T) {
 // A compressed chunk cut off by the end of the image is still
 // recovered as far as possible.
 func TestCarveTruncatedCompressedChunk(t *testing.T) {
-	rng := rand.New(rand.NewSource(9))
 	file, err := os.ReadFile(testEvtx)
 	assert.NoError(t, err)
 
-	disk := noise(rng, lznt1BlockSize)
-	compressed := ntfsCompress(rng, file)
+	disk := noise(lznt1BlockSize)
+	compressed := ntfsCompress(file)
 	disk = append(disk, compressed[:len(compressed)/3]...)
 
 	chunks, _ := carveAll(t, disk, 0, 0)
@@ -487,10 +480,9 @@ func TestCarveTruncatedLZNT1Reference(t *testing.T) {
 	_, err := lznt1Decompress(truncatedReferenceBlock())
 	assert.Error(t, err)
 
-	rng := rand.New(rand.NewSource(10))
-	disk := noise(rng, 5000)
+	disk := noise(5000)
 	disk = append(disk, truncatedReferenceBlock()...)
-	disk = append(disk, noise(rng, 5000)...)
+	disk = append(disk, noise(5000)...)
 
 	chunks, stats := carveAll(t, disk, 0, 0)
 	assert.Equal(t, 0, len(chunks))
@@ -509,7 +501,7 @@ func FuzzCarveChunk(f *testing.F) {
 	f.Add([]byte(evtx.EVTX_CHUNK_HEADER_MAGIC))
 	f.Add(truncatedReferenceBlock())
 	if err == nil {
-		f.Add(ntfsCompress(rand.New(rand.NewSource(1)), data))
+		f.Add(ntfsCompress(data))
 	}
 
 	f.Fuzz(func(t *testing.T, image []byte) {
@@ -526,13 +518,12 @@ func FuzzCarveChunk(f *testing.F) {
 
 // Random data with forced signatures must never crash the carver.
 func TestCarveGarbage(t *testing.T) {
-	rng := rand.New(rand.NewSource(4))
 	chunk := getTestChunk(t)
 
 	for i := 0; i < 50; i++ {
 		// Keep a valid looking header but scramble the records.
 		data := append([]byte{}, chunk...)
-		rng.Read(data[evtx.EVTX_CHUNK_HEADER_SIZE:])
+		rand.Read(data[evtx.EVTX_CHUNK_HEADER_SIZE:])
 
 		chunks, _ := carveAll(t, data, 0, 0)
 		for _, c := range chunks {

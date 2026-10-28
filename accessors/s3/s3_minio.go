@@ -1,5 +1,5 @@
-//go:build !sumo
-// +build !sumo
+//go:build !aws
+// +build !aws
 
 /* An accessor for an S3 bucket */
 
@@ -108,8 +108,9 @@ func (self RawS3SystemAccessor) ReadDirWithOSPath(
 	child_files := []*S3FileInfo{}
 
 	opts := minio.ListObjectsOptions{
-		Prefix:  key,
-		MaxKeys: maxKeys,
+		Prefix:    key,
+		MaxKeys:   maxKeys,
+		Recursive: true,
 	}
 
 	obj_chan := s3Client.ListObjects(self.ctx, bucket, opts)

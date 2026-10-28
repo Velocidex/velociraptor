@@ -40,7 +40,7 @@ func (self *EWFReader) Close() error {
 
 func (self *EWFReader) Read(buff []byte) (int, error) {
 	n, err := self.ewf.ReadAt(buff, self.offset)
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return 0, err
 	}
 
