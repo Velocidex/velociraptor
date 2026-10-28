@@ -7,7 +7,6 @@ import (
 	"os"
 
 	"github.com/Velocidex/ordereddict"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	pe "www.velocidex.com/golang/go-pe"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -76,7 +75,7 @@ func (self _PEDumpFunction) Call(
 	}
 	defer fd.Close()
 
-	paged_reader, err := ntfs.NewPagedReader(
+	paged_reader, err := utils.NewPagedReader(
 		utils.MakeReaderAtter(fd), 1024*4, int(lru_size))
 	if err != nil {
 		scope.Log("pe_dump: %s", err)

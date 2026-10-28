@@ -418,7 +418,7 @@ func (self *NTFSFileSystemAccessor) OpenWithOSPath(
 
 		files.Add(device.String())
 
-		reader, err := ntfs.NewPagedReader(
+		reader, err := utils.NewPagedReader(
 			utils.MakeReaderAtter(file), 0x1000, 1000)
 		if err != nil {
 			return nil, err

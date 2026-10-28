@@ -15,7 +15,6 @@ import (
 	"fmt"
 	"os"
 
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -83,7 +82,7 @@ func (self RawFileSystemAccessor) Open(filename string) (accessors.ReadSeekClose
 
 	files.Add(filename)
 
-	reader, err := ntfs.NewPagedReader(file, 0x1000, 10000)
+	reader, err := utils.NewPagedReader(file, 0x1000, 10000)
 	if err != nil {
 		return nil, err
 	}

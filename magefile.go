@@ -159,7 +159,7 @@ func (self *Builder) Env() map[string]string {
 func (self *Builder) tags() string {
 	tags := base_tags + self.extra_tags
 	if self.sumo {
-		tags += " sumo "
+		tags += " sumo aws "
 	}
 	return tags
 }

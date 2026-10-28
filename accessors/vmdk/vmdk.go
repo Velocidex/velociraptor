@@ -1,6 +1,7 @@
 package vmdk
 
 import (
+	"errors"
 	"io"
 	"sync"
 
@@ -30,7 +31,7 @@ func (self *VMDKFile) Read(buff []byte) (int, error) {
 	defer self.mu.Unlock()
 
 	n, err := self.reader.ReadAt(buff, self.offset)
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		return 0, err
 	}
 

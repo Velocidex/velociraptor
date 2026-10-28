@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	ntfs "www.velocidex.com/golang/go-ntfs/parser"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/files"
@@ -139,7 +138,7 @@ func getDeviceReader(scope vfilter.Scope,
 	})
 
 	// Need to read the raw device in pagesize sizes
-	reader, err := ntfs.NewPagedReader(file, 0x10000, 100)
+	reader, err := utils.NewPagedReader(file, 0x10000, 100)
 	if err != nil {
 		return nil, err
 	}

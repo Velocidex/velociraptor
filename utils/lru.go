@@ -11,6 +11,8 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+
+	"github.com/Velocidex/ordereddict"
 )
 
 // EvictCallback is used to get a callback when a cache entry is evicted
@@ -29,6 +31,32 @@ type LRU struct {
 	hits  int64
 	miss  int64
 	total int64
+}
+
+func (self *LRU) Stats() *ordereddict.Dict {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	var efficiency int64
+	if self.hits > 0 {
+		efficiency = (self.hits * 100) / (self.hits + self.miss)
+	}
+
+	return ordereddict.NewDict().
+
+		// Total size of the cache.
+		Set("Size", len(self.items)).
+
+		// Total number of entries retrieved from the cache.
+		Set("Hits", self.hits).
+
+		// Total number of missed entries (Usually immediately
+		// followed by Add - so miss == total).
+		Set("Miss", self.miss).
+
+		// Total number of added entries.
+		Set("Total", self.total).
+		Set("Efficiency", efficiency)
 }
 
 // entry is used to hold a value in the evictList

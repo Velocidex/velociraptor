@@ -11,7 +11,8 @@ import (
 )
 
 type LZXpressFunctionArgs struct {
-	Data string `vfilter:"required,field=data,doc=The lzxpress stream (bytes)"`
+	Data             string `vfilter:"required,field=data,doc=The lzxpress stream (bytes)"`
+	UncompressedSize uint64 `vfilter:"optional,field=size,doc=The uncompressed size"`
 }
 
 // The hash function calculates a hash of a file. It may be expensive
@@ -32,7 +33,7 @@ func (self *LZXpressFunction) Call(ctx context.Context,
 	}
 
 	decompressed, err := prefetch.LZXpressHuffmanDecompressWithFallback(
-		[]byte(arg.Data), len(arg.Data))
+		[]byte(arg.Data), int(arg.UncompressedSize))
 	if err != nil {
 		scope.Log("lzxpress_decompress: %v", err)
 		return vfilter.Null{}
