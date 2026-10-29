@@ -444,7 +444,9 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		// Install a dummy frontend service
 	} else {
 		service_container.mu.Lock()
-		service_container.frontend = frontend.DummyFrontendService{}
+		if service_container.frontend == nil {
+			service_container.frontend = frontend.DummyFrontendService{}
+		}
 		service_container.mu.Unlock()
 	}
 
