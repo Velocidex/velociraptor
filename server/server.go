@@ -27,6 +27,7 @@ import (
 
 	"github.com/juju/ratelimit"
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/crypto"
@@ -37,6 +38,13 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+)
+
+var (
+	concurrencyControl = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "client_comms_concurrency",
+		Help: "The total number of currently executing client receive operations",
+	})
 )
 
 const (
@@ -53,7 +61,6 @@ type Server struct {
 	// Limit concurrency for processing messages.
 	mu                  sync.Mutex
 	concurrency         *utils.Concurrency
-	reader_concurrency  *utils.Concurrency
 	concurrency_timeout time.Duration
 	throttler           *utils.Throttler
 
@@ -68,13 +75,6 @@ func (self *Server) Concurrency() *utils.Concurrency {
 	defer self.mu.Unlock()
 
 	return self.concurrency
-}
-
-func (self *Server) ReaderConcurrency() *utils.Concurrency {
-	self.mu.Lock()
-	defer self.mu.Unlock()
-
-	return self.reader_concurrency
 }
 
 func (self *Server) Close() {
@@ -120,9 +120,7 @@ func NewServer(ctx context.Context,
 
 	result.concurrency = utils.NewConcurrencyControl(
 		int(concurrency), result.concurrency_timeout)
-
-	result.reader_concurrency = utils.NewConcurrencyControl(
-		int(100), result.concurrency_timeout)
+	result.concurrency.SetGauge(concurrencyControl)
 
 	if config_obj.Frontend.Resources.ConnectionsPerSecond > 0 {
 		result.logger.Info("Throttling connections to %v QPS",
@@ -174,27 +172,6 @@ func (self *Server) ProcessUnauthenticatedMessages(
 
 	return message_info.IterateJobs(ctx, config_obj,
 		self.ProcessSingleUnauthenticatedMessage)
-}
-
-func (self *Server) DecryptForReader(ctx context.Context, request []byte) (
-	*crypto.MessageInfo, error) {
-
-	// Keep track of the average time the request spends
-	// waiting for a concurrency slot. If this time is too
-	// long it means concurrency may need to be increased.
-	timer := prometheus.NewTimer(prometheus.ObserverFunc(func(v float64) {
-		concurrencyWaitHistorgram.Observe(v)
-	}))
-
-	cancel, err := self.ReaderConcurrency().StartConcurrencyControl(ctx)
-	if err != nil {
-		timeoutCounter.Inc()
-		return nil, errors.New("Timeout")
-	}
-	defer cancel()
-	timer.ObserveDuration()
-
-	return self.Decrypt(ctx, request)
 }
 
 func (self *Server) Decrypt(ctx context.Context, request []byte) (

@@ -17,6 +17,10 @@ func StartToolServices(
 	ctx context.Context,
 	config_obj *config_proto.Config) (*services.Service, error) {
 
+	if config_obj.Services == nil {
+		config_obj.Services = services.GenericToolServices()
+	}
+
 	scope := vql_subsystem.MakeScope()
 	scope.SetLogger(logging.NewPlainLogger(config_obj, &logging.ToolComponent))
 

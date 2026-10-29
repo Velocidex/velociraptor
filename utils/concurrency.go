@@ -2,23 +2,25 @@ package utils
 
 import (
 	"context"
+	"sync/atomic"
 	"time"
 
 	errors "github.com/go-errors/errors"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/promauto"
 )
 
-var (
-	concurrencyControl = promauto.NewGauge(prometheus.GaugeOpts{
-		Name: "client_comms_concurrency",
-		Help: "The total number of currently executing client receive operations",
-	})
-)
+type Gauge interface {
+	Inc()
+	Dec()
+}
 
 type Concurrency struct {
 	concurrency chan bool
+	counter     Gauge
 	timeout     time.Duration
+}
+
+func (self *Concurrency) SetGauge(counter Gauge) {
+	self.counter = counter
 }
 
 func (self *Concurrency) StartConcurrencyControl(ctx context.Context) (func(), error) {
@@ -26,7 +28,7 @@ func (self *Concurrency) StartConcurrencyControl(ctx context.Context) (func(), e
 	// channel.
 	select {
 	case self.concurrency <- true:
-		concurrencyControl.Inc()
+		self.counter.Inc()
 		return self.EndConcurrencyControl, nil
 
 	case <-ctx.Done():
@@ -39,12 +41,34 @@ func (self *Concurrency) StartConcurrencyControl(ctx context.Context) (func(), e
 
 func (self *Concurrency) EndConcurrencyControl() {
 	<-self.concurrency
-	concurrencyControl.Dec()
+	self.counter.Dec()
+}
+
+type NullGauge struct{}
+
+func (NullGauge) Inc() {}
+func (NullGauge) Dec() {}
+
+type AtomicGauge struct {
+	value int64
+}
+
+func (self *AtomicGauge) Inc() {
+	atomic.AddInt64(&self.value, 1)
+}
+
+func (self *AtomicGauge) Dec() {
+	atomic.AddInt64(&self.value, -1)
+}
+
+func (self *AtomicGauge) Get() int64 {
+	return atomic.LoadInt64(&self.value)
 }
 
 func NewConcurrencyControl(size int, timeout time.Duration) *Concurrency {
 	return &Concurrency{
 		timeout:     timeout,
+		counter:     NullGauge{},
 		concurrency: make(chan bool, size),
 	}
 }

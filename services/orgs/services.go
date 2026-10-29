@@ -440,6 +440,14 @@ func (self *OrgManager) startOrgFromContext(org_ctx *OrgContext) (err error) {
 		service_container.mu.Lock()
 		service_container.frontend = f
 		service_container.mu.Unlock()
+
+		// Install a dummy frontend service
+	} else {
+		service_container.mu.Lock()
+		if service_container.frontend == nil {
+			service_container.frontend = frontend.DummyFrontendService{}
+		}
+		service_container.mu.Unlock()
 	}
 
 	if spec.JournalService {

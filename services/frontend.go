@@ -49,6 +49,13 @@ type FrontendManager interface {
 
 	// The URL to the App.html itself
 	GetPublicUrl(config_obj *config_proto.Config) (res *url.URL, err error)
+
+	// Housekeeping threads are rate limited to maintain server
+	// stability.
+	ChargeHouseKeepingOp(ctx context.Context)
+
+	// Blocks until a housekeep slot is available.
+	GetHousekeepSlot(ctx context.Context) (func(), error)
 }
 
 // Are we running on the master node?
@@ -107,4 +114,31 @@ func GetNodeName(frontend_config *config_proto.FrontendConfig) string {
 	}
 	return fmt.Sprintf("%s-%d", frontend_config.Hostname,
 		frontend_config.BindPort)
+}
+
+// Housekeeping threads are rate limited to maintain server
+// stability.
+func ChargeHouseKeepingOp(
+	ctx context.Context,
+	config_obj *config_proto.Config) {
+	frontend_service, _ := GetFrontendManager(config_obj)
+	if frontend_service != nil {
+		frontend_service.ChargeHouseKeepingOp(ctx)
+	}
+}
+
+// Blocks until a housekeep slot is available.
+func GetHousekeepSlot(
+	ctx context.Context,
+	config_obj *config_proto.Config) (func(), error) {
+	frontend_service, err := GetFrontendManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	if frontend_service != nil {
+		return frontend_service.GetHousekeepSlot(ctx)
+	}
+
+	return func() {}, nil
 }
