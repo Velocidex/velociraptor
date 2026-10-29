@@ -24,6 +24,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -34,6 +36,13 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/responder"
+)
+
+var (
+	concurrencyControl = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "client_executor_concurrency",
+		Help: "The total number of queries running concurrently",
+	})
 )
 
 type Executor interface {
@@ -211,6 +220,7 @@ func NewClientExecutor(
 		config_obj:   config_obj,
 		flow_manager: responder.NewFlowManager(ctx, config_obj, client_id),
 	}
+	self.concurrency.SetGauge(concurrencyControl)
 
 	// Install and initialize the event manager
 	self.event_manager = actions.NewEventTable(ctx, wg, config_obj)

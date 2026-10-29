@@ -25,6 +25,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -65,7 +66,8 @@ func PushMetrics(ctx context.Context, wg *sync.WaitGroup,
 				continue
 			}
 
-			if calculateMetrics(metrics) == nil {
+			err = calculateMetrics(metrics)
+			if err == nil {
 				rows[0] = ordereddict.NewDict().
 					Set("Node", node_name).
 					Set("Metrics", metrics.ToDict())
@@ -178,6 +180,25 @@ type MasterFrontendManager struct {
 
 	mu    sync.Mutex
 	stats map[string]*FrontendMetrics
+
+	housekeep_throttler         *utils.Throttler
+	housekeep_concurrency       *utils.Concurrency
+	housekeep_concurrency_gauge utils.AtomicGauge
+}
+
+func (self *MasterFrontendManager) ChargeHouseKeepingOp(ctx context.Context) {
+	self.mu.Lock()
+	t := self.housekeep_throttler
+	self.mu.Unlock()
+
+	if t != nil {
+		t.Wait(ctx)
+	}
+}
+
+func (self *MasterFrontendManager) GetHousekeepSlot(
+	ctx context.Context) (func(), error) {
+	return self.housekeep_concurrency.StartConcurrencyControl(ctx)
 }
 
 func (self *MasterFrontendManager) processMetrics(ctx context.Context,
@@ -367,6 +388,15 @@ func NewMinionFrontendManager(
 	return &MinionFrontendManager{config_obj: config_obj, name: name}
 }
 
+func (self MinionFrontendManager) ChargeHouseKeepingOp(
+	ctx context.Context) {
+}
+
+func (self MinionFrontendManager) GetHousekeepSlot(
+	ctx context.Context) (func(), error) {
+	return func() {}, nil
+}
+
 func (self MinionFrontendManager) GetMinionCount() int {
 	return 0
 }
@@ -462,6 +492,38 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 			config_obj: config_obj,
 			stats:      make(map[string]*FrontendMetrics),
 		}
+
+		var housekeep_rate, concurrency int64
+		if config_obj.Frontend != nil && config_obj.Frontend.Resources != nil {
+			housekeep_rate = config_obj.Frontend.Resources.HousekeepOpRate
+			concurrency = config_obj.Frontend.Resources.HousekeepConcurrency
+		}
+
+		// Reasonable default
+		if housekeep_rate == 0 {
+			housekeep_rate = 100
+		}
+
+		if concurrency == 0 {
+			concurrency = 4
+		}
+
+		if housekeep_rate > 0 {
+			manager.housekeep_throttler = utils.NewThrottler(uint64(housekeep_rate))
+		}
+
+		manager.housekeep_concurrency = utils.NewConcurrencyControl(
+			int(concurrency), 10*time.Minute)
+		manager.housekeep_concurrency.SetGauge(
+			&manager.housekeep_concurrency_gauge)
+
+		debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+			Name:          "Frontend",
+			Description:   "Report Master Frontend stats",
+			ProfileWriter: manager.ProfileWriter,
+			Categories:    []string{"Global"},
+		})
+
 		return manager, manager.Start(ctx, wg, config_obj)
 	}
 
@@ -473,6 +535,14 @@ func NewFrontendService(ctx context.Context, wg *sync.WaitGroup,
 	}
 
 	manager := &MinionFrontendManager{config_obj: config_obj}
+
+	debug.RegisterProfileWriter(debug.ProfileWriterInfo{
+		Name:          "Frontend",
+		Description:   "Report Minion Frontend stats",
+		ProfileWriter: manager.ProfileWriter,
+		Categories:    []string{"Global"},
+	})
+
 	return manager, manager.Start(ctx, wg, config_obj)
 }
 

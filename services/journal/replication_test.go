@@ -35,6 +35,15 @@ type MockFrontendService struct {
 	mock *mock_proto.MockAPIClient
 }
 
+func (self MockFrontendService) ChargeHouseKeepingOp(
+	ctx context.Context) {
+}
+
+func (self MockFrontendService) GetHousekeepSlot(
+	ctx context.Context) (func(), error) {
+	return func() {}, nil
+}
+
 func (self MockFrontendService) GetMinionCount() int {
 	return 1
 }
@@ -74,7 +83,7 @@ type: CLIENT_EVENT
 `})
 
 	self.Services = &orgs.ServiceContainer{}
-	self.Services.MockFrontendManager(&MockFrontendService{self.mock})
+	self.Services.MockFrontendManager(&MockFrontendService{mock: self.mock})
 
 	self.ctrl = gomock.NewController(self.T())
 	self.mock = mock_proto.NewMockAPIClient(self.ctrl)
@@ -116,7 +125,7 @@ func (self *ReplicationTestSuite) TestReplicationServiceStandardWatchers() {
 		//gomock.AssignableToTypeOf(&api_proto.EventRequest{})).
 		DoAndReturn(mock_watch_event_recorder).AnyTimes()
 
-	self.Services.MockFrontendManager(&MockFrontendService{self.mock})
+	self.Services.MockFrontendManager(&MockFrontendService{mock: self.mock})
 	self.setupTest()
 
 	// Wait here until we call all the watchers.

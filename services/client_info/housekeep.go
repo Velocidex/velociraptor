@@ -63,6 +63,12 @@ func (self *Store) StartHouseKeep(
 func (self *Store) HouseKeep(
 	ctx context.Context, config_obj *config_proto.Config) {
 
+	closer, err := services.GetHousekeepSlot(ctx, config_obj)
+	if err != nil {
+		return
+	}
+	defer closer()
+
 	start := utils.GetTime().Now()
 
 	defer func() {
@@ -84,6 +90,7 @@ func (self *Store) HouseKeep(
 // outstanding notifications.
 func (self *Store) HouseKeepOutstandingTasks(
 	ctx context.Context, config_obj *config_proto.Config, client_id string) {
+
 	notifier, err := services.GetNotifier(config_obj)
 	if err != nil {
 		return
@@ -114,6 +121,9 @@ func (self *Store) HouseKeepOutstandingTasks(
 // fields in the client record and update the search index.
 func (self *Store) HouseKeepMetadataIndex(
 	ctx context.Context, config_obj *config_proto.Config, client_id string) {
+
+	// If there are no custom client metadata index terms we skip the
+	// whole thing.
 	if config_obj.Defaults == nil ||
 		len(config_obj.Defaults.IndexedClientMetadata) == 0 {
 		return

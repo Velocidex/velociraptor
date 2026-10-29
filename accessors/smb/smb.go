@@ -12,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -168,6 +169,11 @@ func (self *SMBFileSystemAccessor) listShares(
 
 func (self *SMBFileSystemAccessor) ReadDirWithOSPath(
 	full_path *accessors.OSPath) ([]accessors.FileInfo, error) {
+
+	// GO-2026-5051: Out-of-bounds read and panic in ReadDir in
+	// github.com/hirochachacha/go-smb2
+	defer utils.CheckForPanic("SMBFileSystemAccessor.ReadDirWithOSPath")
+
 	if len(full_path.Components) == 0 {
 		return nil, errors.New("First path component for smb accessor must be a server name or IP")
 	}
