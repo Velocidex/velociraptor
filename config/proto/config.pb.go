@@ -3598,7 +3598,6 @@ type ServerServicesConfig struct {
 	ClientMonitoring      bool                   `protobuf:"varint,11,opt,name=client_monitoring,json=clientMonitoring,proto3" json:"client_monitoring,omitempty"`
 	MonitoringService     bool                   `protobuf:"varint,12,opt,name=monitoring_service,json=monitoringService,proto3" json:"monitoring_service,omitempty"`
 	ApiServer             bool                   `protobuf:"varint,13,opt,name=api_server,json=apiServer,proto3" json:"api_server,omitempty"`
-	DummyFrontendServer   bool                   `protobuf:"varint,32,opt,name=dummy_frontend_server,json=dummyFrontendServer,proto3" json:"dummy_frontend_server,omitempty"`
 	FrontendServer        bool                   `protobuf:"varint,14,opt,name=frontend_server,json=frontendServer,proto3" json:"frontend_server,omitempty"`
 	GuiServer             bool                   `protobuf:"varint,15,opt,name=gui_server,json=guiServer,proto3" json:"gui_server,omitempty"`
 	IndexServer           bool                   `protobuf:"varint,16,opt,name=index_server,json=indexServer,proto3" json:"index_server,omitempty"`
@@ -3738,13 +3737,6 @@ func (x *ServerServicesConfig) GetMonitoringService() bool {
 func (x *ServerServicesConfig) GetApiServer() bool {
 	if x != nil {
 		return x.ApiServer
-	}
-	return false
-}
-
-func (x *ServerServicesConfig) GetDummyFrontendServer() bool {
-	if x != nil {
-		return x.DummyFrontendServer
 	}
 	return false
 }
@@ -5557,7 +5549,7 @@ const file_config_proto_rawDesc = "" +
 	"metricsUrl\"h\n" +
 	"\x0eAutoExecConfig\x12\x12\n" +
 	"\x04argv\x18\x01 \x03(\tR\x04argv\x12B\n" +
-	"\x14artifact_definitions\x18\x02 \x03(\v2\x0f.proto.ArtifactR\x13artifactDefinitions\"\xf5\t\n" +
+	"\x14artifact_definitions\x18\x02 \x03(\v2\x0f.proto.ArtifactR\x13artifactDefinitions\"\xc1\t\n" +
 	"\x14ServerServicesConfig\x12!\n" +
 	"\fhunt_manager\x18\x01 \x01(\bR\vhuntManager\x12'\n" +
 	"\x0fhunt_dispatcher\x18\x02 \x01(\bR\x0ehuntDispatcher\x12'\n" +
@@ -5574,8 +5566,7 @@ const file_config_proto_rawDesc = "" +
 	"\x11client_monitoring\x18\v \x01(\bR\x10clientMonitoring\x12-\n" +
 	"\x12monitoring_service\x18\f \x01(\bR\x11monitoringService\x12\x1d\n" +
 	"\n" +
-	"api_server\x18\r \x01(\bR\tapiServer\x122\n" +
-	"\x15dummy_frontend_server\x18  \x01(\bR\x13dummyFrontendServer\x12'\n" +
+	"api_server\x18\r \x01(\bR\tapiServer\x12'\n" +
 	"\x0ffrontend_server\x18\x0e \x01(\bR\x0efrontendServer\x12\x1d\n" +
 	"\n" +
 	"gui_server\x18\x0f \x01(\bR\tguiServer\x12!\n" +

@@ -1183,7 +1183,6 @@ message ServerServicesConfig {
    bool client_monitoring = 11;
    bool monitoring_service = 12;
    bool api_server = 13;
-   bool dummy_frontend_server = 32;
    bool frontend_server = 14;
    bool gui_server = 15;
    bool index_server = 16;

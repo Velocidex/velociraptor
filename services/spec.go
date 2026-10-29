@@ -19,7 +19,6 @@ func GenericToolServices() *config_proto.ServerServicesConfig {
 		JournalService:      true,
 		UserManager:         true,
 		NotificationService: true,
-		DummyFrontendServer: true,
 
 		// If the config provides a datastore we can use the real
 		// Client Info Manager, otherwise we will use a dummy
