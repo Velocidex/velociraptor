@@ -147,6 +147,14 @@ func (self *DeletionManager) RebuildPendingIndexes(
 	config_obj *config_proto.Config,
 	storage *FlowStorageManager) error {
 
+	// Rebuilding indexes is a low priority operation so we wait for a
+	// slot.
+	closer, err := services.GetHousekeepSlot(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+	defer closer()
+
 	self.mu.Lock()
 	defer self.mu.Unlock()
 

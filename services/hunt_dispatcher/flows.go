@@ -91,7 +91,7 @@ func syncFlowTables(
 	count := 0
 	for json_str := range json_chan {
 		if throttler != nil {
-			throttler.Wait()
+			throttler.Wait(ctx)
 		}
 
 		participation_row := &hunt_manager.ParticipationRecord{}

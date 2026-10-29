@@ -810,6 +810,14 @@ message FrontendResourceControl {
     // Disables file buffering for event queues. This may result in
     // poor performance under load.
     bool disable_file_buffering = 33;
+
+    // Various housekeeping tasks operate with lower priority on the
+    // server. This rate throttles these to a reasonable rate. Default
+    // is 100 per second. Set to -1 to disable.
+    int64 housekeep_op_rate = 35;
+
+    // How many housekeeping threads are allowed (default 4)
+    int64 housekeep_concurrency = 36;
 }
 
 
@@ -1175,6 +1183,7 @@ message ServerServicesConfig {
    bool client_monitoring = 11;
    bool monitoring_service = 12;
    bool api_server = 13;
+   bool dummy_frontend_server = 32;
    bool frontend_server = 14;
    bool gui_server = 15;
    bool index_server = 16;

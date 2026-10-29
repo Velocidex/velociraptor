@@ -1,6 +1,9 @@
 package utils
 
-import "time"
+import (
+	"context"
+	"time"
+)
 
 type Throttler struct {
 	ticker chan time.Time
@@ -16,8 +19,12 @@ func (self *Throttler) Ready() bool {
 	}
 }
 
-func (self *Throttler) Wait() {
-	<-self.ticker
+func (self *Throttler) Wait(ctx context.Context) {
+	select {
+	case <-ctx.Done():
+		return
+	case <-self.ticker:
+	}
 }
 
 func (self *Throttler) Close() {

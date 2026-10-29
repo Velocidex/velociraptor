@@ -2365,6 +2365,12 @@ type FrontendResourceControl struct {
 	// Disables file buffering for event queues. This may result in
 	// poor performance under load.
 	DisableFileBuffering bool `protobuf:"varint,33,opt,name=disable_file_buffering,json=disableFileBuffering,proto3" json:"disable_file_buffering,omitempty"`
+	// Various housekeeping tasks operate with lower priority on the
+	// server. This rate throttles these to a reasonable rate. Default
+	// is 100 per second. Set to -1 to disable.
+	HousekeepOpRate int64 `protobuf:"varint,35,opt,name=housekeep_op_rate,json=housekeepOpRate,proto3" json:"housekeep_op_rate,omitempty"`
+	// How many housekeeping threads are allowed (default 4)
+	HousekeepConcurrency int64 `protobuf:"varint,36,opt,name=housekeep_concurrency,json=housekeepConcurrency,proto3" json:"housekeep_concurrency,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -2544,6 +2550,20 @@ func (x *FrontendResourceControl) GetDisableFileBuffering() bool {
 		return x.DisableFileBuffering
 	}
 	return false
+}
+
+func (x *FrontendResourceControl) GetHousekeepOpRate() int64 {
+	if x != nil {
+		return x.HousekeepOpRate
+	}
+	return 0
+}
+
+func (x *FrontendResourceControl) GetHousekeepConcurrency() int64 {
+	if x != nil {
+		return x.HousekeepConcurrency
+	}
+	return 0
 }
 
 type FrontendConfig struct {
@@ -3578,6 +3598,7 @@ type ServerServicesConfig struct {
 	ClientMonitoring      bool                   `protobuf:"varint,11,opt,name=client_monitoring,json=clientMonitoring,proto3" json:"client_monitoring,omitempty"`
 	MonitoringService     bool                   `protobuf:"varint,12,opt,name=monitoring_service,json=monitoringService,proto3" json:"monitoring_service,omitempty"`
 	ApiServer             bool                   `protobuf:"varint,13,opt,name=api_server,json=apiServer,proto3" json:"api_server,omitempty"`
+	DummyFrontendServer   bool                   `protobuf:"varint,32,opt,name=dummy_frontend_server,json=dummyFrontendServer,proto3" json:"dummy_frontend_server,omitempty"`
 	FrontendServer        bool                   `protobuf:"varint,14,opt,name=frontend_server,json=frontendServer,proto3" json:"frontend_server,omitempty"`
 	GuiServer             bool                   `protobuf:"varint,15,opt,name=gui_server,json=guiServer,proto3" json:"gui_server,omitempty"`
 	IndexServer           bool                   `protobuf:"varint,16,opt,name=index_server,json=indexServer,proto3" json:"index_server,omitempty"`
@@ -3717,6 +3738,13 @@ func (x *ServerServicesConfig) GetMonitoringService() bool {
 func (x *ServerServicesConfig) GetApiServer() bool {
 	if x != nil {
 		return x.ApiServer
+	}
+	return false
+}
+
+func (x *ServerServicesConfig) GetDummyFrontendServer() bool {
+	if x != nil {
+		return x.DummyFrontendServer
 	}
 	return false
 }
@@ -5407,7 +5435,8 @@ const file_config_proto_rawDesc = "" +
 	"dns_server\x18\a \x01(\tR\tdnsServer\x12\x1b\n" +
 	"\tapi_token\x18\t \x01(\tR\bapiToken\x12\x1b\n" +
 	"\tzone_name\x18\n" +
-	" \x01(\tR\bzoneName\"\xf2\t\n" +
+	" \x01(\tR\bzoneName\"\xd3\n" +
+	"\n" +
 	"\x17FrontendResourceControl\x124\n" +
 	"\x16connections_per_second\x18\x01 \x01(\x04R\x14connectionsPerSecond\x128\n" +
 	"\x18notifications_per_second\x18\x02 \x01(\x04R\x16notificationsPerSecond\x124\n" +
@@ -5430,7 +5459,9 @@ const file_config_proto_rawDesc = "" +
 	"\x17max_journal_buffer_size\x18\x1c \x01(\x03R\x14maxJournalBufferSize\x123\n" +
 	"\x16default_log_batch_time\x18\x1f \x01(\x04R\x13defaultLogBatchTime\x12H\n" +
 	"!default_monitoring_log_batch_time\x18  \x01(\x04R\x1ddefaultMonitoringLogBatchTime\x124\n" +
-	"\x16disable_file_buffering\x18! \x01(\bR\x14disableFileBuffering\"\xa1\x13\n" +
+	"\x16disable_file_buffering\x18! \x01(\bR\x14disableFileBuffering\x12*\n" +
+	"\x11housekeep_op_rate\x18# \x01(\x03R\x0fhousekeepOpRate\x123\n" +
+	"\x15housekeep_concurrency\x18$ \x01(\x03R\x14housekeepConcurrency\"\xa1\x13\n" +
 	"\x0eFrontendConfig\x12\x1a\n" +
 	"\bhostname\x18\x13 \x01(\tR\bhostname\x12!\n" +
 	"\fbind_address\x18\x01 \x01(\tR\vbindAddress\x12\x1b\n" +
@@ -5526,7 +5557,7 @@ const file_config_proto_rawDesc = "" +
 	"metricsUrl\"h\n" +
 	"\x0eAutoExecConfig\x12\x12\n" +
 	"\x04argv\x18\x01 \x03(\tR\x04argv\x12B\n" +
-	"\x14artifact_definitions\x18\x02 \x03(\v2\x0f.proto.ArtifactR\x13artifactDefinitions\"\xc1\t\n" +
+	"\x14artifact_definitions\x18\x02 \x03(\v2\x0f.proto.ArtifactR\x13artifactDefinitions\"\xf5\t\n" +
 	"\x14ServerServicesConfig\x12!\n" +
 	"\fhunt_manager\x18\x01 \x01(\bR\vhuntManager\x12'\n" +
 	"\x0fhunt_dispatcher\x18\x02 \x01(\bR\x0ehuntDispatcher\x12'\n" +
@@ -5543,7 +5574,8 @@ const file_config_proto_rawDesc = "" +
 	"\x11client_monitoring\x18\v \x01(\bR\x10clientMonitoring\x12-\n" +
 	"\x12monitoring_service\x18\f \x01(\bR\x11monitoringService\x12\x1d\n" +
 	"\n" +
-	"api_server\x18\r \x01(\bR\tapiServer\x12'\n" +
+	"api_server\x18\r \x01(\bR\tapiServer\x122\n" +
+	"\x15dummy_frontend_server\x18  \x01(\bR\x13dummyFrontendServer\x12'\n" +
 	"\x0ffrontend_server\x18\x0e \x01(\bR\x0efrontendServer\x12\x1d\n" +
 	"\n" +
 	"gui_server\x18\x0f \x01(\bR\tguiServer\x12!\n" +

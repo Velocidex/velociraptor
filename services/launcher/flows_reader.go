@@ -45,6 +45,9 @@ func (self *FlowReader) Close() {
 	close(self.Out)
 }
 
+// The flow reader parallelizes reading flow objects from the
+// datastore to increase the speed. It is only called when rebuilding
+// the flow index. Most operations use the flow index now.
 func NewFlowReader(
 	ctx context.Context,
 	config_obj *config_proto.Config,
@@ -75,6 +78,10 @@ func NewFlowReader(
 			defer wg.Done()
 
 			for session_id := range in {
+				// This operation is expensive so we rate limit it to
+				// the housekeep thread.
+				services.ChargeHouseKeepingOp(ctx, config_obj)
+
 				collection_context, err := storage_manager.
 					LoadCollectionContext(ctx, config_obj,
 						client_id, session_id, options)

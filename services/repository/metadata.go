@@ -143,7 +143,6 @@ func (self *metadataManager) HouseKeeping(
 				}
 				continue
 			}
-
 			_ = self.SaveMetadata(ctx, config_obj, repository)
 		}
 	}
@@ -152,6 +151,12 @@ func (self *metadataManager) HouseKeeping(
 func (self *metadataManager) SaveMetadata(
 	ctx context.Context, config_obj *config_proto.Config,
 	repository services.Repository) error {
+
+	closer, err := services.GetHousekeepSlot(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+	defer closer()
 
 	db, err := datastore.GetDB(config_obj)
 	if err != nil {
@@ -212,7 +217,7 @@ func (self *metadataManager) SaveMetadata(
 
 	self.mu.Unlock()
 
-	// Flush the metadata file in the background.
+	// Flush the metadata file.
 	return db.SetSubject(config_obj, path_manager.Metadata(),
 		metadata_proto)
 }
