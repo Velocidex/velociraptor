@@ -38,6 +38,10 @@ The course covers many aspects of Velociraptor in detail.
 To run a Velociraptor server via Docker, follow the instructions here:
 https://github.com/Velocidex/velociraptor/tree/master/Docker
 
+## One-Click Deploy
+
+[![Deploy on RepoCloud](https://d16t0pc4846x52.cloudfront.net/deploylobe.svg)](https://repocloud.io/details/Velociraptor/)
+
 ## Running Velociraptor locally
 
 Velociraptor is also useful as a local triage tool. You can create a
