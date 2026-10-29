@@ -352,7 +352,8 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 func (self *ReplicationService) startMasterRegistrationLoop(
 	ctx context.Context, wg *sync.WaitGroup, config_obj *config_proto.Config) {
 
-	events, cancel := self.Watch(ctx, artifacts.MASTER_REGISTRATIONS, "ReplicationService")
+	events, cancel := self.Watch(ctx,
+		artifacts.MASTER_REGISTRATIONS, "ReplicationService")
 
 	wg.Add(1)
 	go func() {

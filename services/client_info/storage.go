@@ -239,6 +239,13 @@ func (self *Store) SaveSnapshot(
 		return nil
 	}
 
+	// Not critical - wait for a slot.
+	closer, err := services.GetHousekeepSlot(ctx, config_obj)
+	if err != nil {
+		return err
+	}
+	defer closer()
+
 	write_legacy_records := true
 	if config_obj.Frontend != nil &&
 		config_obj.Frontend.Resources != nil &&
@@ -255,6 +262,7 @@ func (self *Store) SaveSnapshot(
 		client_id string
 	}
 
+	// Store the snapshot in memory first to avoid long locks.
 	var snapshot []snapshot_record
 
 	// Critical Section....
@@ -305,6 +313,9 @@ func (self *Store) SaveSnapshot(
 		// allow to tune it out.
 		if write_legacy_records &&
 			snapshot_record.record.IsDirty() {
+
+			services.ChargeHouseKeepingOp(ctx, config_obj)
+
 			client_path_manager := paths.NewClientPathManager(
 				snapshot_record.client_id)
 
@@ -394,6 +405,9 @@ func (self *Store) LoadSnapshotFromLegacyData(
 	count := 0
 	for _, child := range children {
 
+		// Go slow here
+		services.ChargeHouseKeepingOp(ctx, config_obj)
+
 		// On a slow filesystem this can be very slow so we need to be
 		// able to interrupt it.
 		select {
@@ -456,8 +470,13 @@ func (self *Store) LoadSnapshotFromLegacyData(
 		}
 
 		self.mu.Lock()
-		self.data[client_id] = self.newClientRecord(client_info)
-		self._SetDirty()
+		// Assume that an existing record is fresher than the legacy
+		// record.
+		_, pres := self.data[client_id]
+		if !pres {
+			self.data[client_id] = self.newClientRecord(client_info)
+			self._SetDirty()
+		}
 		self.mu.Unlock()
 
 	}

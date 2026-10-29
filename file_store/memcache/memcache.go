@@ -81,6 +81,11 @@ var (
 			Help: "Total number of bytes writen on the delegate filestore",
 		})
 
+	metricConcurrency = promauto.NewGauge(prometheus.GaugeOpts{
+		Name: "memcache_filestore_writer_concurrency",
+		Help: "The total number of currently executing client receive operations",
+	})
+
 	currentlyFlushingError = errors.New("CurrentlyFlushingError")
 
 	currentlyShuttingDownError = errors.New("currentlyShuttingDownError")
@@ -595,6 +600,8 @@ func NewMemcacheFileStore(
 			pond.WithoutPanicRecovery()),
 		target_memory_use: target_memory_use,
 	}
+
+	result.concurrency.SetGauge(metricConcurrency)
 
 	// It is very useful to inspect the writer states.
 	debug.RegisterProfileWriter(debug.ProfileWriterInfo{

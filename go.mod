@@ -133,7 +133,7 @@ require (
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.58.0
 	golang.org/x/mod v0.41.0
-	golang.org/x/net v0.61.0
+	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sys v0.49.0
 	golang.org/x/text v0.43.0
@@ -250,10 +250,10 @@ require (
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/erikgeiser/coninput v0.0.0-20211004153227-1c3628e74d0f // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
-	github.com/geoffgarside/ber v1.1.0 // indirect
+	github.com/geoffgarside/ber v1.2.0 // indirect
 	github.com/gizak/termui/v3 v3.1.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
-	github.com/go-jose/go-jose/v4 v4.1.4 // indirect
+	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/goccy/go-yaml v1.19.2 // indirect

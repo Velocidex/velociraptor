@@ -2365,6 +2365,12 @@ type FrontendResourceControl struct {
 	// Disables file buffering for event queues. This may result in
 	// poor performance under load.
 	DisableFileBuffering bool `protobuf:"varint,33,opt,name=disable_file_buffering,json=disableFileBuffering,proto3" json:"disable_file_buffering,omitempty"`
+	// Various housekeeping tasks operate with lower priority on the
+	// server. This rate throttles these to a reasonable rate. Default
+	// is 100 per second. Set to -1 to disable.
+	HousekeepOpRate int64 `protobuf:"varint,35,opt,name=housekeep_op_rate,json=housekeepOpRate,proto3" json:"housekeep_op_rate,omitempty"`
+	// How many housekeeping threads are allowed (default 4)
+	HousekeepConcurrency int64 `protobuf:"varint,36,opt,name=housekeep_concurrency,json=housekeepConcurrency,proto3" json:"housekeep_concurrency,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -2544,6 +2550,20 @@ func (x *FrontendResourceControl) GetDisableFileBuffering() bool {
 		return x.DisableFileBuffering
 	}
 	return false
+}
+
+func (x *FrontendResourceControl) GetHousekeepOpRate() int64 {
+	if x != nil {
+		return x.HousekeepOpRate
+	}
+	return 0
+}
+
+func (x *FrontendResourceControl) GetHousekeepConcurrency() int64 {
+	if x != nil {
+		return x.HousekeepConcurrency
+	}
+	return 0
 }
 
 type FrontendConfig struct {
@@ -5407,7 +5427,8 @@ const file_config_proto_rawDesc = "" +
 	"dns_server\x18\a \x01(\tR\tdnsServer\x12\x1b\n" +
 	"\tapi_token\x18\t \x01(\tR\bapiToken\x12\x1b\n" +
 	"\tzone_name\x18\n" +
-	" \x01(\tR\bzoneName\"\xf2\t\n" +
+	" \x01(\tR\bzoneName\"\xd3\n" +
+	"\n" +
 	"\x17FrontendResourceControl\x124\n" +
 	"\x16connections_per_second\x18\x01 \x01(\x04R\x14connectionsPerSecond\x128\n" +
 	"\x18notifications_per_second\x18\x02 \x01(\x04R\x16notificationsPerSecond\x124\n" +
@@ -5430,7 +5451,9 @@ const file_config_proto_rawDesc = "" +
 	"\x17max_journal_buffer_size\x18\x1c \x01(\x03R\x14maxJournalBufferSize\x123\n" +
 	"\x16default_log_batch_time\x18\x1f \x01(\x04R\x13defaultLogBatchTime\x12H\n" +
 	"!default_monitoring_log_batch_time\x18  \x01(\x04R\x1ddefaultMonitoringLogBatchTime\x124\n" +
-	"\x16disable_file_buffering\x18! \x01(\bR\x14disableFileBuffering\"\xa1\x13\n" +
+	"\x16disable_file_buffering\x18! \x01(\bR\x14disableFileBuffering\x12*\n" +
+	"\x11housekeep_op_rate\x18# \x01(\x03R\x0fhousekeepOpRate\x123\n" +
+	"\x15housekeep_concurrency\x18$ \x01(\x03R\x14housekeepConcurrency\"\xa1\x13\n" +
 	"\x0eFrontendConfig\x12\x1a\n" +
 	"\bhostname\x18\x13 \x01(\tR\bhostname\x12!\n" +
 	"\fbind_address\x18\x01 \x01(\tR\vbindAddress\x12\x1b\n" +

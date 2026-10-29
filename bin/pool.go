@@ -134,7 +134,7 @@ func doPoolClient() error {
 		go func(i int) {
 
 			// Wait for our turn
-			throttler.Wait()
+			throttler.Wait(ctx)
 
 			client_config := &config_proto.Config{}
 			err := json.Unmarshal(serialized, &client_config)

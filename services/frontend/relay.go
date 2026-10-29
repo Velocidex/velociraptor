@@ -16,6 +16,13 @@ import (
 	"www.velocidex.com/golang/vfilter/utils/dict"
 )
 
+/*
+   Minion install notebook workers to evaluate notebook
+   queries. However, some functions can not run on the minion since
+   they require the master's state. The minion therefore installs
+   stubs for these VQL functions that relay to the master node.
+*/
+
 type RelayedFunction struct {
 	Delegate types.FunctionInterface
 
