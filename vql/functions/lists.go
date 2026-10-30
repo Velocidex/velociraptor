@@ -23,6 +23,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -142,7 +143,7 @@ func (self *LenFunction) Call(ctx context.Context,
 		return slice.Len()
 	}
 
-	dict, ok := arg.List.(*ordereddict.Dict)
+	dict, ok := arg.List.(utils.Lengther)
 	if ok {
 		return dict.Len()
 	}
