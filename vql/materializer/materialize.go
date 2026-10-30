@@ -7,6 +7,7 @@ import (
 	"context"
 	"io"
 	"os"
+	"sync"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -27,6 +28,8 @@ const (
 
 // A materializer that works off a disk file.
 type TempFileMatrializer struct {
+	mu sync.Mutex
+
 	filename string
 	tempfile io.Closer
 	writer   *bufio.Writer
@@ -70,9 +73,27 @@ func NewTempFileMatrializer(
 	return result, nil
 }
 
+func (self *TempFileMatrializer) Len() int {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	return self.size
+}
+
+// Reducing this materializer could expand a massive array into a
+// single list in memory. So we do not actually support this.
+func (self *TempFileMatrializer) Reduce(ctx context.Context) types.Any {
+	return vfilter.Null{}
+}
+
+func (self *TempFileMatrializer) ReduceWithScope(
+	ctx context.Context, scope vfilter.Scope) types.Any {
+	return vfilter.Null{}
+}
+
 func (self *TempFileMatrializer) Materialize(
 	ctx context.Context, scope types.Scope) types.Any {
-	return &types.Null{}
+	return self
 }
 
 func (self *TempFileMatrializer) Close() {
@@ -81,7 +102,6 @@ func (self *TempFileMatrializer) Close() {
 }
 
 func (self *TempFileMatrializer) WriteRow(row types.Row) error {
-	self.size++
 	serialized, err := json.Marshal(row)
 	if err != nil {
 		return err
@@ -92,16 +112,24 @@ func (self *TempFileMatrializer) WriteRow(row types.Row) error {
 		return err
 	}
 
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	self.size++
+
 	return self.writer.WriteByte('\n')
 }
 
 // Support StoredQuery protocol.
-func (self TempFileMatrializer) Eval(
+func (self *TempFileMatrializer) Eval(
 	ctx context.Context, scope types.Scope) <-chan types.Row {
 	output_chan := make(chan vfilter.Row)
 
 	go func() {
 		defer close(output_chan)
+
+		self.mu.Lock()
+		defer self.mu.Unlock()
 
 		fd, err := os.Open(self.filename)
 		if err != nil {
@@ -141,13 +169,12 @@ func (self TempFileMatrializer) Eval(
 }
 
 // Support Associative protocol
-func (self TempFileMatrializer) Applicable(a types.Any, b types.Any) bool {
+func (self *TempFileMatrializer) Applicable(a types.Any, b types.Any) bool {
 	_, ok := a.(*TempFileMatrializer)
 	return ok
 }
 
-// Just delegate to our contained rows array.
-func (self TempFileMatrializer) GetMembers(
+func (self *TempFileMatrializer) GetMembers(
 	scope types.Scope, a types.Any) []string {
 	return nil
 }
@@ -164,7 +191,7 @@ func (self TempFileMatrializer) GetMembers(
 // memory materializer will be used so this will still work for
 // queries with a small number of rows but not work at all for larger
 // number.
-func (self TempFileMatrializer) Associative(
+func (self *TempFileMatrializer) Associative(
 	scope types.Scope, a types.Any, b types.Any) (res types.Any, pres bool) {
 	return &vfilter.Null{}, false
 }
