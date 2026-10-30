@@ -59,8 +59,8 @@ func (self *queryContext) Close() {
 	if self.status.Status == crypto_proto.VeloStatus_PROGRESS {
 		self.status.Status = crypto_proto.VeloStatus_OK
 	}
-	self.status.Duration = (utils.GetTime().Now().UnixNano()/1000 -
-		self.start.UnixNano()/1000)
+	self.status.Duration = (utils.GetTime().Now().UnixNano() -
+		self.start.UnixNano())
 
 	self.logger.Close()
 

@@ -1,0 +1,24 @@
+#!/bin/bash
+
+PATH=$PLAIN_PATH
+
+# Example
+# dlv debug frontend -v
+if [ "$1" = "debug" ]; then
+    shift
+    echo dlv debug  --init ./scripts/dlv.init  --wd=. --build-flags="--tags 'velomain server_vql'" ./bin/ -- "$@"
+    dlv debug  --init ./scripts/dlv.init  --wd=. --build-flags="--tags 'velomain server_vql'" ./bin/ -- "$@"
+
+# Example
+# dlv test ./actions/ --test.run TestTimeout
+elif [ "$1" = "test" ]; then
+    shift
+    export TARGET="$1"
+    shift
+    echo dlv test  --init ./scripts/dlv.init  --wd=. --build-flags="--tags 'velomain server_vql'" "$TARGET" -- "$@"
+    dlv test  --init ./scripts/dlv.init  --wd=. --build-flags="--tags 'velomain server_vql'" "$TARGET" -- "$@"
+
+else
+    dlv "$@"
+
+fi

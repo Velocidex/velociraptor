@@ -439,7 +439,12 @@ type: SERVER
 resources:
   timeout: 1
 sources:
-- query: SELECT sleep(time=200) FROM scope()
+- query: |
+    // Cancellation of LET queries.
+    LET _ <= sleep(time=400)
+
+    // Cancel regular queries.
+    SELECT sleep(time=200) FROM scope()
 `)
 
 	details, err := self.ScheduleAndWait("Test2", "admin", "F.1234", nil)

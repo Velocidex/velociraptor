@@ -1,0 +1,11 @@
+#!/bin/bash
+
+PATH=$PLAIN_PATH
+
+if [ "$1" = "test" ]; then
+    shift
+    echo go test --tags "velomain server_vql" "$@"
+    go test --tags "velomain server_vql" "$@"
+else
+    go "$@"
+fi

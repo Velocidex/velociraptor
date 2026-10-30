@@ -153,7 +153,6 @@ func (self *ClientVQLTestSuite) TestExecve() {
 				{
 					Name: "Query",
 					VQL:  "SELECT * FROM execve(argv='ls')",
-					//					VQL:  "SELECT * FROM query(query={ SELECT * FROM execve(argv='ls') })",
 				},
 			},
 		})
@@ -208,6 +207,42 @@ func (self *ClientVQLTestSuite) TestMaxWait() {
 				payloads := getResponsePacketCounts(responses)
 				// Message will be split into 2 packets 2 messages in each
 				return len(payloads) == 2 && payloads[0] == 2 && payloads[1] == 2
+			})
+		}))
+}
+
+func (self *ClientVQLTestSuite) TestTimeout() {
+	assert.True(self.T(), test_utils.Retry(self.T(), 5, time.Millisecond*500,
+		func(r *test_utils.R) {
+			resp := responder.TestResponderWithFlowId(self.ConfigObj, "TestTimeout")
+
+			actions.VQLClientAction{}.StartQuery(self.ConfigObj, self.Sm.Ctx, resp,
+				&actions_proto.VQLCollectorArgs{
+					MaxRow:  1000,
+					MaxWait: 1,
+					Query: []*actions_proto.VQLRequest{
+						{
+							VQL: "LET _ <= sleep(time=400)",
+						},
+						{
+							Name: "Query",
+							VQL:  "SELECT sleep(time=400) FROM scope()",
+						},
+					},
+					Timeout: 1,
+				})
+
+			var responses []*crypto_proto.VeloMessage
+
+			vtesting.WaitUntil(5*time.Second, r, func() bool {
+				responses = resp.Drain.Messages()
+				for _, r := range responses {
+					if r.LogMessage != nil &&
+						strings.Contains(r.LogMessage.Jsonl, "Query timed out after") {
+						return true
+					}
+				}
+				return false
 			})
 		}))
 }

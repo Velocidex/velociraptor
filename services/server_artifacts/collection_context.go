@@ -366,9 +366,6 @@ func (self *contextManager) RunQuery(
 	query_context := self.GetQueryContext(arg)
 	defer query_context.Close()
 
-	sub_ctx, cancel := context.WithCancel(self.sub_ctx)
-	defer cancel()
-
 	// Set up the logger for writing query logs. Note this must be
 	// destroyed last since we need to be able to receive logs
 	// from scope destructors.
@@ -384,9 +381,8 @@ func (self *contextManager) RunQuery(
 		timeout = time.Minute * 10
 	}
 
-	// Cancel the query after this deadline
-	started := utils.GetTime().Now()
-	deadline := time.After(timeout)
+	sub_ctx, cancel := context.WithTimeout(self.sub_ctx, timeout)
+	defer cancel()
 
 	// Server artifacts run with full access. In order to collect
 	// them in the first place we need COLLECT_SERVER permissions.
@@ -454,11 +450,22 @@ func (self *contextManager) RunQuery(
 
 	scope.Log("<green>Starting</> query %v execution.", artifact_name)
 
+	// Check for timeout
+	started := utils.GetTime().Now()
+	defer func() {
+		err := sub_ctx.Err()
+		if err != nil && errors.Is(err, context.DeadlineExceeded) {
+			scope.Log(
+				"ERROR:Query timed out after %v seconds",
+				utils.GetTime().Now().Unix()-started.Unix())
+		}
+	}()
+
 	rate := arg.OpsPerSecond
 	cpu_limit := arg.CpuLimit
 	iops_limit := arg.IopsLimit
 
-	throttler, closer := throttler.NewThrottler(self.ctx, scope, self.config_obj,
+	throttler, closer := throttler.NewThrottler(sub_ctx, scope, self.config_obj,
 		float64(rate), float64(cpu_limit), float64(iops_limit))
 
 	if arg.ProgressTimeout > 0 {
@@ -528,22 +535,6 @@ func (self *contextManager) RunQuery(
 	process_query:
 		for {
 			select {
-
-			// Timed out! Cancel the query.
-			case <-deadline:
-				msg := fmt.Sprintf("ERROR:Query timed out after %v seconds",
-					utils.GetTime().Now().Unix()-started.Unix())
-				scope.Log(msg)
-
-				// Cancel the sub ctx but do not exit
-				// - we need to wait for the sub query
-				// to finish after cancelling so we
-				// can at least return any data it
-				// has.
-				cancel()
-
-				// Try again after a while to prevent spinning here.
-				deadline = time.After(time.Second)
 
 			// Read some data from the query
 			case row, ok := <-read_chan:
