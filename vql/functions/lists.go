@@ -126,11 +126,11 @@ func (self *LenFunction) Call(ctx context.Context,
 	}
 
 	switch t := arg.List.(type) {
-	case types.LazyExpr:
-		arg.List = t.Reduce(ctx)
-
 	case types.Materializer:
 		arg.List = t.Materialize(ctx, scope)
+
+	case types.LazyExpr:
+		arg.List = t.Reduce(ctx)
 	}
 
 	slice := reflect.ValueOf(arg.List)

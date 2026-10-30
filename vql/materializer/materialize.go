@@ -80,6 +80,17 @@ func (self *TempFileMatrializer) Len() int {
 	return self.size
 }
 
+// Reducing this materializer could expand a massive array into a
+// single list in memory. So we do not actually support this.
+func (self *TempFileMatrializer) Reduce(ctx context.Context) types.Any {
+	return vfilter.Null{}
+}
+
+func (self *TempFileMatrializer) ReduceWithScope(
+	ctx context.Context, scope vfilter.Scope) types.Any {
+	return vfilter.Null{}
+}
+
 func (self *TempFileMatrializer) Materialize(
 	ctx context.Context, scope types.Scope) types.Any {
 	return self

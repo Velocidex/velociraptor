@@ -11,6 +11,9 @@ Queries:
 - LET X <= SELECT * FROM range(end=100)
 - SELECT * FROM X LIMIT 5
 
+# Check that len works
+- SELECT len(list=X) FROM scope()
+
 # The following are not really supported for file backed materializers
 # because they may overflow the result JSON.
 - SELECT X, X[0] FROM scope()
