@@ -37,6 +37,14 @@ Output: [
  }
 ]
 
+# Check that len works
+Query: SELECT len(list=X) FROM scope()
+Output: [
+ {
+  "len(list=X)": 100
+ }
+]
+
 # The following are not really supported for file backed materializers
 # because they may overflow the result JSON.
 Query: SELECT X, X[0] FROM scope()
