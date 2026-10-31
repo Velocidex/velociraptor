@@ -31,16 +31,17 @@ re-connect and re-enroll.
 
 ## Quick start
 
-The CI pipeline uploads the container to the GitHub container
-registry, so all you need to do is copy the `compose.yaml` from this
+The CI pipeline uploads the container to the GitHub Container
+Registry, so all you need to do is copy the `compose.yaml` from this
 directory and simply run:
 
 ```
 docker-compose up
 ```
 
-The latest image will be fetched from the registry, a default
-configuration will be generated and the server will be started.
+The `latest` image (the most recent release) will be fetched from the
+registry, a default configuration will be generated and the server will
+be started.
 
 You can connect to the GUI on `https://localhost:8889/` with default
 password of `password`. You can tweak the `.env` file to update this
@@ -50,3 +51,23 @@ The datastore files will be stored in the `datastore` directory and
 the generated config file will be stored in `etc`. Make sure to back
 up the generated config file to ensure existing clients can still talk
 to this server.
+
+## Image tags
+
+The CI pipeline publishes the container to the GitHub Container
+Registry (`ghcr.io/velocidex/velociraptor-server`) with these tags:
+
+| Tag | Points to |
+|---|---|
+| `latest` | The most recent release |
+| `dev` | The latest build from the `master` branch |
+| `<version>` | A specific release, for example `0.77.3` |
+
+The `compose.yaml` in this directory uses `:latest`, so
+`docker-compose up` runs the most recent release. If you want to test
+unreleased changes, change the image in `compose.yaml` to
+`ghcr.io/velocidex/velociraptor-server:dev`. The `dev` image is not
+recommended for production deployments.
+
+To run a specific release, use the version tag, for example
+`ghcr.io/velocidex/velociraptor-server:0.77.3`.
