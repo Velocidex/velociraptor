@@ -137,6 +137,7 @@ Output: [
     "allow_custom_overrides": false,
     "log_batch_time": 0,
     "compiled_collector_args": [],
+    "DoNotSchedule": false,
     "ops_per_second": 0
    }
   }
