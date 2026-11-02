@@ -785,7 +785,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 		})
 }
 
-func vfsGetBuffer(config_obj *config_proto.Config, client_id string,
+func (self *ApiServer) vfsGetBuffer(config_obj *config_proto.Config, client_id string,
 	vfs_path api.FSPathSpec, offset uint64, length uint32, padding bool) (
 	*api_proto.VFSFileBuffer, error) {
 
@@ -820,8 +820,9 @@ func vfsGetBuffer(config_obj *config_proto.Config, client_id string,
 	n, err := reader_at.ReadAt(result.Data, int64(offset))
 	if err != nil &&
 		errors.Is(err, os.ErrNotExist) &&
+		!errors.Is(err, io.EOF) &&
 		!errors.Is(err, io.ErrUnexpectedEOF) {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	result.Data = result.Data[:n]

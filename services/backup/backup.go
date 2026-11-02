@@ -10,6 +10,7 @@ import (
 	"time"
 
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -282,7 +283,7 @@ func (self *BackupService) feedProvider(
 	}
 	defer member.Close()
 
-	reader := bufio.NewReader(member)
+	reader := bufio.NewReaderSize(member, constants.BLOCK_SIZE)
 
 	// Wait for the provider to finish before we go to the next
 	// provider.

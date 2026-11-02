@@ -182,58 +182,19 @@ func doArtifactCollect() error {
 	}
 	defer sm.Close()
 
-	manager, err := services.GetRepositoryManager(config_obj)
+	spec, err := parseSpecFromArgs(ctx, config_obj,
+		*artifact_command_collect_names,
+		*artifact_command_collect_args)
 	if err != nil {
 		return err
 	}
-
-	repository, err := manager.GetGlobalRepository(config_obj)
-	if err != nil {
-		return err
-	}
-
-	spec := ordereddict.NewDict()
-	for _, name := range *artifact_command_collect_names {
-		collect_args := ordereddict.NewDict()
-		for _, item := range *artifact_command_collect_args {
-			// If an arg has to apply only to a single
-			// artifact then the user may prepend the name
-			// of the artifact with a :: separator.
-			namespaces := strings.SplitN(item, "::", 2)
-			if len(namespaces) == 2 {
-				if namespaces[0] != name {
-					continue
-				}
-				item = namespaces[1]
-			}
-
-			parts := strings.SplitN(item, "=", 2)
-			arg_name := parts[0]
-
-			arg_type, err := getParameterType(ctx, config_obj,
-				repository, name, arg_name)
-			if err != nil {
-				return err
-			}
-
-			if len(parts) < 2 {
-				collect_args.Set(arg_name, "Y")
-			} else {
-				collect_args.Set(arg_name,
-					parseArtifactType(arg_type, parts[1]))
-			}
-		}
-
-		spec.Set(name, collect_args)
-	}
-
 	if len(*artifact_command_collect_names) == 0 {
 		return errors.New("Need some artifact to collect")
 	}
 
 	if *artifact_command_collect_cli_mode {
 		for _, name := range *artifact_command_collect_names {
-			return doArtifactCLIHelp(ctx, config_obj, manager, name)
+			return doArtifactCLIHelp(ctx, config_obj, name)
 		}
 	}
 
@@ -248,6 +209,11 @@ func doArtifactCollect() error {
 			*artifact_command_collect_client_id,
 			*artifact_command_collect_output,
 		)
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
 	}
 
 	logger := &LogWriter{config_obj: config_obj}
@@ -474,7 +440,13 @@ func doArtifactList() error {
 func doArtifactCLIHelp(
 	ctx context.Context,
 	config_obj *config_proto.Config,
-	manager services.RepositoryManager, artifact_name string) error {
+	artifact_name string) error {
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return err
+	}
+
 	repository, err := manager.GetGlobalRepository(config_obj)
 	if err != nil {
 		return err
@@ -588,6 +560,58 @@ func getParameterType(
 		param_name, artifact_name)
 }
 
+func parseSpecFromArgs(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	artifacts, args []string) (*ordereddict.Dict, error) {
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	repository, err := manager.GetGlobalRepository(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	spec := ordereddict.NewDict()
+	for _, name := range artifacts {
+		collect_args := ordereddict.NewDict()
+		for _, item := range args {
+			// If an arg has to apply only to a single
+			// artifact then the user may prepend the name
+			// of the artifact with a :: separator.
+			namespaces := strings.SplitN(item, "::", 2)
+			if len(namespaces) == 2 {
+				if namespaces[0] != name {
+					continue
+				}
+				item = namespaces[1]
+			}
+
+			parts := strings.SplitN(item, "=", 2)
+			arg_name := parts[0]
+
+			arg_type, err := getParameterType(ctx, config_obj,
+				repository, name, arg_name)
+			if err != nil {
+				return nil, err
+			}
+
+			if len(parts) < 2 {
+				collect_args.Set(arg_name, "Y")
+			} else {
+				collect_args.Set(arg_name,
+					parseArtifactType(arg_type, parts[1]))
+			}
+		}
+
+		spec.Set(name, collect_args)
+	}
+	return spec, nil
+}
+
 func init() {
 	command_handlers = append(command_handlers, func(command string) bool {
 		switch command {
@@ -599,6 +623,9 @@ func init() {
 
 		case artifact_command_collect.FullCommand():
 			FatalIfError(artifact_command_collect, doArtifactCollect)
+
+		case artifact_command_minion.FullCommand():
+			FatalIfError(artifact_command_minion, doArtifactCollectMinion)
 
 		default:
 			return false

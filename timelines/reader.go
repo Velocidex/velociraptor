@@ -11,6 +11,7 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -114,7 +115,7 @@ func (self *TimelineReader) Read(ctx context.Context) <-chan TimelineItem {
 		defer close(output_chan)
 
 		_, _ = self.fd.Seek(self.offset, os.SEEK_SET)
-		reader := bufio.NewReader(self.fd)
+		reader := bufio.NewReaderSize(self.fd, constants.BLOCK_SIZE)
 		for {
 			select {
 			case <-ctx.Done():

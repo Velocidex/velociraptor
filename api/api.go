@@ -50,12 +50,9 @@ import (
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
-	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/server"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -281,10 +278,10 @@ func (self *ApiServer) LabelClients(
 	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
 	if !perm || err != nil {
 		return &api_proto.APIResponse{
-				Error:        true,
-				ErrorMessage: "Permission Denied",
-			}, status.Error(codes.PermissionDenied,
-				"User is not allowed to label clients.")
+			Error:        true,
+			ErrorMessage: "Permission Denied",
+		}, status.Error(codes.PermissionDenied,
+			"User is not allowed to label clients.")
 	}
 
 	labeler := services.GetLabeler(org_config_obj)
@@ -615,68 +612,6 @@ func (self *ApiServer) VFSRefreshDirectory(
 
 	result, err := vfsRefreshDirectory(
 		self, ctx, in.ClientId, in.VfsComponents, in.Depth)
-	return result, Status(self.verbose, err)
-}
-
-func (self *ApiServer) VFSGetBuffer(
-	ctx context.Context,
-	in *api_proto.VFSFileBuffer) (
-	*api_proto.VFSFileBuffer, error) {
-
-	defer Instrument("VFSGetBuffer")()
-
-	users := services.GetUserManager()
-	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
-	// The user may request to download a buffer from any org.
-	if !utils.CompareOrgIds(org_config_obj.OrgId, in.OrgId) {
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			return nil, Status(self.verbose, err)
-		}
-
-		org_config_obj, err = org_manager.GetOrgConfig(in.OrgId)
-		if err != nil {
-			return nil, Status(self.verbose, err)
-		}
-	}
-
-	principal := user_record.Name
-
-	// Make sure the principal has permission in the org.
-	permissions := acls.READ_RESULTS
-	perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-	if !perm || err != nil {
-		return nil, PermissionDenied(err,
-			"User is not allowed to view the VFS.")
-	}
-
-	// If a client id is specified, the path is relative to the
-	// client's storage directory, otherwise it is relative to the
-	// root of the filestore.
-	var pathspec api.FSPathSpec
-	if in.ClientId != "" {
-		pathspec = paths.NewClientPathManager(
-			in.ClientId).FSItem(in.Components)
-
-	} else if len(in.Components) > 0 {
-		pathspec = path_specs.FromGenericComponentList(in.Components)
-
-	} else {
-		return nil, status.Error(codes.InvalidArgument,
-			"Invalid pathspec")
-	}
-
-	padding := true
-	if in.Padding != nil {
-		padding = *in.Padding
-	}
-
-	result, err := vfsGetBuffer(org_config_obj, in.ClientId, pathspec, in.Offset, in.Length, padding)
-
 	return result, Status(self.verbose, err)
 }
 

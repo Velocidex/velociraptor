@@ -9,6 +9,7 @@ import (
 	"io"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 )
@@ -133,7 +134,7 @@ func (self *ResultSetWriterImpl) update_row(
 
 	// Consume rows from the start of the blob to reach our
 	// desired row count.
-	reader := bufio.NewReader(fd)
+	reader := bufio.NewReaderSize(fd, constants.BLOCK_SIZE)
 	for i := 0; i < len(index_block); i++ {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {

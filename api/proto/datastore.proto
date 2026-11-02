@@ -30,3 +30,60 @@ message DataResponse {
 message ListChildrenResponse {
     repeated DSPathSpec children = 1;
 }
+
+
+// Used to read a buffer from a file in the filestore, or to write a
+// buffer to a file in the filestore.
+message VFSFileBuffer {
+    // Deprecated
+    string client_id = 1;
+
+
+    uint64 offset = 3;
+    uint32 length = 4;
+    bytes data = 5;
+
+    // Path of the filestore file
+    repeated string components = 6;
+
+    // Corresponds with api.PATH_TYPE_*
+    int64 path_type = 12;
+
+    string org_id = 7;
+    optional bool padding = 8;
+
+    // Used when writing a buffer.
+    bool truncate = 9;
+    uint64 uncompressed_size = 11;
+}
+
+// Reply from FSStat
+message FSFileInfo {
+    int64 size = 1;
+    uint32 mode = 2;
+    uint64 mod_time = 3;
+    int64 type = 4;
+    repeated string components = 5;
+
+    string org_id = 7;
+}
+
+message FSReadDirResponse {
+    repeated FSFileInfo items =1;
+}
+
+enum ErrorCode {
+    OK = 0;
+    EOF = 1;
+    ERROR = 2;
+}
+
+message Error {
+    ErrorCode code = 1;
+    string str = 2;
+}
+
+message FSWriteBufferResponse {
+    int64 written = 1;
+    Error error = 2;
+}

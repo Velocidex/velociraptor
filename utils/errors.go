@@ -25,6 +25,7 @@ var (
 	PermissionDenied    = errors.New("PermissionDenied")
 	EmbeddedConfigError = errors.New("EmbeddedConfigError")
 	MemoryError         = errors.New("MemoryError")
+	UnknownError        = errors.New("UnknownError")
 
 	// Not a real error, used to skip operations.
 	SkipError = errors.New("Skip")

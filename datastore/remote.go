@@ -4,12 +4,8 @@ package datastore
 
 import (
 	"context"
-	"errors"
 	"sync"
-	"time"
 
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -25,69 +21,7 @@ import (
 var (
 	remote_mu             sync.Mutex
 	remote_datastopre_imp *RemoteDataStore
-	RPC_BACKOFF           = 10.0
-	RPC_RETRY             = 10
-	timeoutError          = errors.New("gRPC Timeout in Remote datastore")
 )
-
-func RPCTimeout(config_obj *config_proto.Config) time.Duration {
-	if config_obj.Datastore == nil ||
-		config_obj.Datastore.RemoteDatastoreRpcDeadline == 0 {
-		return time.Duration(100 * time.Second)
-	}
-	return time.Duration(config_obj.Datastore.RemoteDatastoreRpcDeadline) * time.Second
-}
-
-func Retry(ctx context.Context,
-	config_obj *config_proto.Config,
-	failure_cb func(err error),
-	cb func() error) error {
-	var err error
-
-	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-
-	for i := 0; i < RPC_RETRY; i++ {
-		err = cb()
-		if err == nil {
-			return nil
-		}
-
-		if !isErrorRetriable(err) {
-			failure_cb(err)
-			return err
-		}
-
-		logger.Error("While connecting to remote datastore (retry %v): %v", i, err)
-		select {
-		case <-ctx.Done():
-			return timeoutError
-
-		case <-time.After(time.Duration(RPC_BACKOFF) * time.Second):
-		}
-	}
-	return err
-}
-
-func isErrorRetriable(err error) bool {
-
-	// Figure out if the error is retryable - only some errors
-	// mean a retry is appropriate (see
-	// https://pkg.go.dev/google.golang.org/grpc/codes)
-	st, ok := status.FromError(err)
-	if !ok {
-		return false
-	}
-
-	switch st.Code() {
-	case codes.ResourceExhausted:
-		return false
-
-	case codes.DeadlineExceeded, codes.Aborted, codes.Unavailable:
-		return true
-	default:
-		return false
-	}
-}
 
 type RemoteDataStore struct {
 	ctx context.Context
@@ -97,10 +31,9 @@ func (self *RemoteDataStore) GetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
-	return Retry(self.ctx, config_obj,
+	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("RemoteDataStore: GetSubject %s: %v", urn.String(), err)
+			maybeLog(config_obj, urn, "GetSubject", err)
 		},
 		func() error {
 			return self._GetSubject(config_obj, urn, message)
@@ -119,7 +52,7 @@ func (self *RemoteDataStore) _GetSubject(
 	defer Instrument("read", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		self.ctx, RPCTimeout(config_obj), timeoutError)
+		self.ctx, utils.RPCTimeout(config_obj), utils.TimeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -144,7 +77,7 @@ func (self *RemoteDataStore) _GetSubject(
 		}})
 
 	if err != nil {
-		return err
+		return utils.StatusToError(err)
 	}
 
 	serialized_content := result.Data
@@ -190,10 +123,9 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 		}
 	}()
 
-	return Retry(self.ctx, config_obj,
+	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("RemoteDataStore: GetSubject %s: %v", urn.String(), err)
+			maybeLog(config_obj, urn, "GetSubject", err)
 		},
 		func() error {
 			return self._SetSubjectWithCompletion(
@@ -225,7 +157,7 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 	}
 
 	ctx, cancel := utils.WithTimeoutCause(
-		self.ctx, RPCTimeout(config_obj), timeoutError)
+		self.ctx, utils.RPCTimeout(config_obj), utils.TimeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -251,7 +183,7 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 			Tag:        urn.Tag(),
 		}})
 
-	return err
+	return utils.StatusToError(err)
 }
 
 func (self *RemoteDataStore) Stat(config_obj *config_proto.Config,
@@ -259,7 +191,7 @@ func (self *RemoteDataStore) Stat(config_obj *config_proto.Config,
 	defer Instrument("read", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		self.ctx, RPCTimeout(config_obj), timeoutError)
+		self.ctx, utils.RPCTimeout(config_obj), utils.TimeoutError)
 	defer cancel()
 
 	// Make the call as the superuser
@@ -284,7 +216,7 @@ func (self *RemoteDataStore) Stat(config_obj *config_proto.Config,
 		}})
 
 	if err != nil {
-		return nil, err
+		return nil, utils.StatusToError(err)
 	}
 
 	return &vtesting.MockFileInfo{
@@ -300,10 +232,9 @@ func (self *RemoteDataStore) Stat(config_obj *config_proto.Config,
 func (self *RemoteDataStore) DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, completion func()) error {
-	return Retry(self.ctx, config_obj,
+	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("RemoteDataStore: DeleteSubjectWithCompletion %s: %v", urn.String(), err)
+			maybeLog(config_obj, urn, "DeleteSubjectWithCompletion", err)
 		},
 		func() error {
 			return self._DeleteSubjectWithCompletion(config_obj, urn, completion)
@@ -317,7 +248,7 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		self.ctx, RPCTimeout(config_obj), timeoutError)
+		self.ctx, utils.RPCTimeout(config_obj), utils.TimeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -346,16 +277,15 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 		completion()
 	}
 
-	return err
+	return utils.StatusToError(err)
 }
 
 func (self *RemoteDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
-	return Retry(self.ctx, config_obj,
+	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("RemoteDataStore: DeleteSubject %s: %v", urn.String(), err)
+			maybeLog(config_obj, urn, "DeleteSubject", err)
 		},
 		func() error {
 			return self._DeleteSubject(config_obj, urn)
@@ -369,7 +299,7 @@ func (self *RemoteDataStore) _DeleteSubject(
 	defer Instrument("delete", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		self.ctx, RPCTimeout(config_obj), timeoutError)
+		self.ctx, utils.RPCTimeout(config_obj), utils.TimeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -392,7 +322,7 @@ func (self *RemoteDataStore) _DeleteSubject(
 			Tag:        urn.Tag(),
 		}})
 
-	return err
+	return utils.StatusToError(err)
 }
 
 func (self *RemoteDataStore) ListChildren(
@@ -402,10 +332,9 @@ func (self *RemoteDataStore) ListChildren(
 	var result []api.DSPathSpec
 	var err error
 
-	err = Retry(self.ctx, config_obj,
+	err = utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
-			logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
-			logger.Error("RemoteDataStore: ListChildren %s: %v", urn.String(), err)
+			maybeLog(config_obj, urn, "ListChildren", err)
 		},
 		func() error {
 			result, err = self._ListChildren(config_obj, urn)
@@ -423,7 +352,7 @@ func (self *RemoteDataStore) _ListChildren(
 	defer Instrument("list", "RemoteDataStore", urn)()
 
 	ctx, cancel := utils.WithTimeoutCause(
-		self.ctx, RPCTimeout(config_obj), timeoutError)
+		self.ctx, utils.RPCTimeout(config_obj), utils.TimeoutError)
 	defer cancel()
 
 	conn, closer, err := grpc_client.Factory.GetAPIClient(
@@ -447,7 +376,7 @@ func (self *RemoteDataStore) _ListChildren(
 		}})
 
 	if err != nil {
-		return nil, err
+		return nil, utils.StatusToError(err)
 	}
 
 	children := make([]api.DSPathSpec, 0, len(result.Children))
@@ -487,7 +416,7 @@ func StartDatastore(
 
 	switch implementation {
 	// These datastores require starting the remote connection.
-	case "RemoteFileDataStore", "MemcacheFileDataStore":
+	case "RemoteFileDataStore", "MemcacheFileDataStore", "RemoteRPCFileStore":
 		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 		logger.Info("<green>Starting</> remote datastore service")
 		remote_mu.Lock()
@@ -499,4 +428,11 @@ func StartDatastore(
 		return startFullDiskChecker(ctx, wg, config_obj)
 	}
 	return nil
+}
+
+func maybeLog(config_obj *config_proto.Config, urn api.DSPathSpec, op string, err error) {
+	if !utils.IsNotFound(err) {
+		logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+		logger.Error("RemoteDataStore: %s %s: %v", op, urn.String(), err)
+	}
 }

@@ -57,17 +57,6 @@ message VFSRefreshDirectoryRequest {
         }];
 }
 
-message VFSFileBuffer {
-    string client_id = 1;
-    uint64 offset = 3;
-    uint32 length = 4;
-    bytes data = 5;
-    repeated string components = 6;
-    string org_id = 7;
-    optional bool padding = 8;
-}
-
-
 message NotificationRequest {
     string client_id = 1;
 
@@ -648,7 +637,14 @@ service API {
     rpc DeleteSubject(DataRequest) returns (google.protobuf.Empty) {}
     rpc ListChildren(DataRequest) returns (ListChildrenResponse) {}
 
-    // Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+    // Remote File store access.
+    rpc FSWriteBuffer(VFSFileBuffer) returns (FSWriteBufferResponse) {}
+    rpc FSStat(DataRequest) returns (FSFileInfo) {}
+    rpc FSReadDir(DataRequest) returns (FSReadDirResponse){}
+    rpc FSDelete(DataRequest) returns (DataRequest){}
+
+    // Health check protocol as in
+    // https://github.com/grpc/grpc/blob/master/doc/health-checking.md
     rpc Check(HealthCheckRequest) returns (HealthCheckResponse);
 
     // LSP only accessible over the API

@@ -18,6 +18,55 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+type ErrorCode int32
+
+const (
+	ErrorCode_OK    ErrorCode = 0
+	ErrorCode_EOF   ErrorCode = 1
+	ErrorCode_ERROR ErrorCode = 2
+)
+
+// Enum value maps for ErrorCode.
+var (
+	ErrorCode_name = map[int32]string{
+		0: "OK",
+		1: "EOF",
+		2: "ERROR",
+	}
+	ErrorCode_value = map[string]int32{
+		"OK":    0,
+		"EOF":   1,
+		"ERROR": 2,
+	}
+)
+
+func (x ErrorCode) Enum() *ErrorCode {
+	p := new(ErrorCode)
+	*p = x
+	return p
+}
+
+func (x ErrorCode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (ErrorCode) Descriptor() protoreflect.EnumDescriptor {
+	return file_datastore_proto_enumTypes[0].Descriptor()
+}
+
+func (ErrorCode) Type() protoreflect.EnumType {
+	return &file_datastore_proto_enumTypes[0]
+}
+
+func (x ErrorCode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use ErrorCode.Descriptor instead.
+func (ErrorCode) EnumDescriptor() ([]byte, []int) {
+	return file_datastore_proto_rawDescGZIP(), []int{0}
+}
+
 type DSPathSpec struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Components    []string               `protobuf:"bytes,1,rep,name=components,proto3" json:"components,omitempty"`
@@ -244,6 +293,361 @@ func (x *ListChildrenResponse) GetChildren() []*DSPathSpec {
 	return nil
 }
 
+// Used to read a buffer from a file in the filestore, or to write a
+// buffer to a file in the filestore.
+type VFSFileBuffer struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Deprecated
+	ClientId string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	Offset   uint64 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
+	Length   uint32 `protobuf:"varint,4,opt,name=length,proto3" json:"length,omitempty"`
+	Data     []byte `protobuf:"bytes,5,opt,name=data,proto3" json:"data,omitempty"`
+	// Path of the filestore file
+	Components []string `protobuf:"bytes,6,rep,name=components,proto3" json:"components,omitempty"`
+	// Corresponds with api.PATH_TYPE_*
+	PathType int64  `protobuf:"varint,12,opt,name=path_type,json=pathType,proto3" json:"path_type,omitempty"`
+	OrgId    string `protobuf:"bytes,7,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	Padding  *bool  `protobuf:"varint,8,opt,name=padding,proto3,oneof" json:"padding,omitempty"`
+	// Used when writing a buffer.
+	Truncate         bool   `protobuf:"varint,9,opt,name=truncate,proto3" json:"truncate,omitempty"`
+	UncompressedSize uint64 `protobuf:"varint,11,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *VFSFileBuffer) Reset() {
+	*x = VFSFileBuffer{}
+	mi := &file_datastore_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *VFSFileBuffer) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*VFSFileBuffer) ProtoMessage() {}
+
+func (x *VFSFileBuffer) ProtoReflect() protoreflect.Message {
+	mi := &file_datastore_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use VFSFileBuffer.ProtoReflect.Descriptor instead.
+func (*VFSFileBuffer) Descriptor() ([]byte, []int) {
+	return file_datastore_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *VFSFileBuffer) GetClientId() string {
+	if x != nil {
+		return x.ClientId
+	}
+	return ""
+}
+
+func (x *VFSFileBuffer) GetOffset() uint64 {
+	if x != nil {
+		return x.Offset
+	}
+	return 0
+}
+
+func (x *VFSFileBuffer) GetLength() uint32 {
+	if x != nil {
+		return x.Length
+	}
+	return 0
+}
+
+func (x *VFSFileBuffer) GetData() []byte {
+	if x != nil {
+		return x.Data
+	}
+	return nil
+}
+
+func (x *VFSFileBuffer) GetComponents() []string {
+	if x != nil {
+		return x.Components
+	}
+	return nil
+}
+
+func (x *VFSFileBuffer) GetPathType() int64 {
+	if x != nil {
+		return x.PathType
+	}
+	return 0
+}
+
+func (x *VFSFileBuffer) GetOrgId() string {
+	if x != nil {
+		return x.OrgId
+	}
+	return ""
+}
+
+func (x *VFSFileBuffer) GetPadding() bool {
+	if x != nil && x.Padding != nil {
+		return *x.Padding
+	}
+	return false
+}
+
+func (x *VFSFileBuffer) GetTruncate() bool {
+	if x != nil {
+		return x.Truncate
+	}
+	return false
+}
+
+func (x *VFSFileBuffer) GetUncompressedSize() uint64 {
+	if x != nil {
+		return x.UncompressedSize
+	}
+	return 0
+}
+
+// Reply from FSStat
+type FSFileInfo struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Size          int64                  `protobuf:"varint,1,opt,name=size,proto3" json:"size,omitempty"`
+	Mode          uint32                 `protobuf:"varint,2,opt,name=mode,proto3" json:"mode,omitempty"`
+	ModTime       uint64                 `protobuf:"varint,3,opt,name=mod_time,json=modTime,proto3" json:"mod_time,omitempty"`
+	Type          int64                  `protobuf:"varint,4,opt,name=type,proto3" json:"type,omitempty"`
+	Components    []string               `protobuf:"bytes,5,rep,name=components,proto3" json:"components,omitempty"`
+	OrgId         string                 `protobuf:"bytes,7,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FSFileInfo) Reset() {
+	*x = FSFileInfo{}
+	mi := &file_datastore_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FSFileInfo) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FSFileInfo) ProtoMessage() {}
+
+func (x *FSFileInfo) ProtoReflect() protoreflect.Message {
+	mi := &file_datastore_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FSFileInfo.ProtoReflect.Descriptor instead.
+func (*FSFileInfo) Descriptor() ([]byte, []int) {
+	return file_datastore_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *FSFileInfo) GetSize() int64 {
+	if x != nil {
+		return x.Size
+	}
+	return 0
+}
+
+func (x *FSFileInfo) GetMode() uint32 {
+	if x != nil {
+		return x.Mode
+	}
+	return 0
+}
+
+func (x *FSFileInfo) GetModTime() uint64 {
+	if x != nil {
+		return x.ModTime
+	}
+	return 0
+}
+
+func (x *FSFileInfo) GetType() int64 {
+	if x != nil {
+		return x.Type
+	}
+	return 0
+}
+
+func (x *FSFileInfo) GetComponents() []string {
+	if x != nil {
+		return x.Components
+	}
+	return nil
+}
+
+func (x *FSFileInfo) GetOrgId() string {
+	if x != nil {
+		return x.OrgId
+	}
+	return ""
+}
+
+type FSReadDirResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*FSFileInfo          `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FSReadDirResponse) Reset() {
+	*x = FSReadDirResponse{}
+	mi := &file_datastore_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FSReadDirResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FSReadDirResponse) ProtoMessage() {}
+
+func (x *FSReadDirResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_datastore_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FSReadDirResponse.ProtoReflect.Descriptor instead.
+func (*FSReadDirResponse) Descriptor() ([]byte, []int) {
+	return file_datastore_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *FSReadDirResponse) GetItems() []*FSFileInfo {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type Error struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Code          ErrorCode              `protobuf:"varint,1,opt,name=code,proto3,enum=proto.ErrorCode" json:"code,omitempty"`
+	Str           string                 `protobuf:"bytes,2,opt,name=str,proto3" json:"str,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Error) Reset() {
+	*x = Error{}
+	mi := &file_datastore_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Error) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Error) ProtoMessage() {}
+
+func (x *Error) ProtoReflect() protoreflect.Message {
+	mi := &file_datastore_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Error.ProtoReflect.Descriptor instead.
+func (*Error) Descriptor() ([]byte, []int) {
+	return file_datastore_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *Error) GetCode() ErrorCode {
+	if x != nil {
+		return x.Code
+	}
+	return ErrorCode_OK
+}
+
+func (x *Error) GetStr() string {
+	if x != nil {
+		return x.Str
+	}
+	return ""
+}
+
+type FSWriteBufferResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Written       int64                  `protobuf:"varint,1,opt,name=written,proto3" json:"written,omitempty"`
+	Error         *Error                 `protobuf:"bytes,2,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *FSWriteBufferResponse) Reset() {
+	*x = FSWriteBufferResponse{}
+	mi := &file_datastore_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *FSWriteBufferResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*FSWriteBufferResponse) ProtoMessage() {}
+
+func (x *FSWriteBufferResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_datastore_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use FSWriteBufferResponse.ProtoReflect.Descriptor instead.
+func (*FSWriteBufferResponse) Descriptor() ([]byte, []int) {
+	return file_datastore_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *FSWriteBufferResponse) GetWritten() int64 {
+	if x != nil {
+		return x.Written
+	}
+	return 0
+}
+
+func (x *FSWriteBufferResponse) GetError() *Error {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
 var File_datastore_proto protoreflect.FileDescriptor
 
 const file_datastore_proto_rawDesc = "" +
@@ -265,7 +669,44 @@ const file_datastore_proto_rawDesc = "" +
 	"\fDataResponse\x12\x12\n" +
 	"\x04data\x18\x02 \x01(\fR\x04data\"E\n" +
 	"\x14ListChildrenResponse\x12-\n" +
-	"\bchildren\x18\x01 \x03(\v2\x11.proto.DSPathSpecR\bchildrenB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
+	"\bchildren\x18\x01 \x03(\v2\x11.proto.DSPathSpecR\bchildren\"\xb8\x02\n" +
+	"\rVFSFileBuffer\x12\x1b\n" +
+	"\tclient_id\x18\x01 \x01(\tR\bclientId\x12\x16\n" +
+	"\x06offset\x18\x03 \x01(\x04R\x06offset\x12\x16\n" +
+	"\x06length\x18\x04 \x01(\rR\x06length\x12\x12\n" +
+	"\x04data\x18\x05 \x01(\fR\x04data\x12\x1e\n" +
+	"\n" +
+	"components\x18\x06 \x03(\tR\n" +
+	"components\x12\x1b\n" +
+	"\tpath_type\x18\f \x01(\x03R\bpathType\x12\x15\n" +
+	"\x06org_id\x18\a \x01(\tR\x05orgId\x12\x1d\n" +
+	"\apadding\x18\b \x01(\bH\x00R\apadding\x88\x01\x01\x12\x1a\n" +
+	"\btruncate\x18\t \x01(\bR\btruncate\x12+\n" +
+	"\x11uncompressed_size\x18\v \x01(\x04R\x10uncompressedSizeB\n" +
+	"\n" +
+	"\b_padding\"\x9a\x01\n" +
+	"\n" +
+	"FSFileInfo\x12\x12\n" +
+	"\x04size\x18\x01 \x01(\x03R\x04size\x12\x12\n" +
+	"\x04mode\x18\x02 \x01(\rR\x04mode\x12\x19\n" +
+	"\bmod_time\x18\x03 \x01(\x04R\amodTime\x12\x12\n" +
+	"\x04type\x18\x04 \x01(\x03R\x04type\x12\x1e\n" +
+	"\n" +
+	"components\x18\x05 \x03(\tR\n" +
+	"components\x12\x15\n" +
+	"\x06org_id\x18\a \x01(\tR\x05orgId\"<\n" +
+	"\x11FSReadDirResponse\x12'\n" +
+	"\x05items\x18\x01 \x03(\v2\x11.proto.FSFileInfoR\x05items\"?\n" +
+	"\x05Error\x12$\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x10.proto.ErrorCodeR\x04code\x12\x10\n" +
+	"\x03str\x18\x02 \x01(\tR\x03str\"U\n" +
+	"\x15FSWriteBufferResponse\x12\x18\n" +
+	"\awritten\x18\x01 \x01(\x03R\awritten\x12\"\n" +
+	"\x05error\x18\x02 \x01(\v2\f.proto.ErrorR\x05error*'\n" +
+	"\tErrorCode\x12\x06\n" +
+	"\x02OK\x10\x00\x12\a\n" +
+	"\x03EOF\x10\x01\x12\t\n" +
+	"\x05ERROR\x10\x02B1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_datastore_proto_rawDescOnce sync.Once
@@ -279,21 +720,31 @@ func file_datastore_proto_rawDescGZIP() []byte {
 	return file_datastore_proto_rawDescData
 }
 
-var file_datastore_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_datastore_proto_enumTypes = make([]protoimpl.EnumInfo, 1)
+var file_datastore_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_datastore_proto_goTypes = []any{
-	(*DSPathSpec)(nil),           // 0: proto.DSPathSpec
-	(*DataRequest)(nil),          // 1: proto.DataRequest
-	(*DataResponse)(nil),         // 2: proto.DataResponse
-	(*ListChildrenResponse)(nil), // 3: proto.ListChildrenResponse
+	(ErrorCode)(0),                // 0: proto.ErrorCode
+	(*DSPathSpec)(nil),            // 1: proto.DSPathSpec
+	(*DataRequest)(nil),           // 2: proto.DataRequest
+	(*DataResponse)(nil),          // 3: proto.DataResponse
+	(*ListChildrenResponse)(nil),  // 4: proto.ListChildrenResponse
+	(*VFSFileBuffer)(nil),         // 5: proto.VFSFileBuffer
+	(*FSFileInfo)(nil),            // 6: proto.FSFileInfo
+	(*FSReadDirResponse)(nil),     // 7: proto.FSReadDirResponse
+	(*Error)(nil),                 // 8: proto.Error
+	(*FSWriteBufferResponse)(nil), // 9: proto.FSWriteBufferResponse
 }
 var file_datastore_proto_depIdxs = []int32{
-	0, // 0: proto.DataRequest.pathspec:type_name -> proto.DSPathSpec
-	0, // 1: proto.ListChildrenResponse.children:type_name -> proto.DSPathSpec
-	2, // [2:2] is the sub-list for method output_type
-	2, // [2:2] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 0: proto.DataRequest.pathspec:type_name -> proto.DSPathSpec
+	1, // 1: proto.ListChildrenResponse.children:type_name -> proto.DSPathSpec
+	6, // 2: proto.FSReadDirResponse.items:type_name -> proto.FSFileInfo
+	0, // 3: proto.Error.code:type_name -> proto.ErrorCode
+	8, // 4: proto.FSWriteBufferResponse.error:type_name -> proto.Error
+	5, // [5:5] is the sub-list for method output_type
+	5, // [5:5] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_datastore_proto_init() }
@@ -301,18 +752,20 @@ func file_datastore_proto_init() {
 	if File_datastore_proto != nil {
 		return
 	}
+	file_datastore_proto_msgTypes[4].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_datastore_proto_rawDesc), len(file_datastore_proto_rawDesc)),
-			NumEnums:      0,
-			NumMessages:   4,
+			NumEnums:      1,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   0,
 		},
 		GoTypes:           file_datastore_proto_goTypes,
 		DependencyIndexes: file_datastore_proto_depIdxs,
+		EnumInfos:         file_datastore_proto_enumTypes,
 		MessageInfos:      file_datastore_proto_msgTypes,
 	}.Build()
 	File_datastore_proto = out.File

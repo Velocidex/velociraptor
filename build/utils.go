@@ -15,6 +15,7 @@ import (
 	"strings"
 
 	"github.com/ulikunitz/xz"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -134,7 +135,7 @@ func (self *ToolchainDesc) extractZip(
 
 func (self *ToolchainDesc) extractXZ(
 	ctx context.Context, fd *os.File) error {
-	gzr, err := xz.NewReader(bufio.NewReader(fd))
+	gzr, err := xz.NewReader(bufio.NewReaderSize(fd, constants.BLOCK_SIZE))
 	if err != nil {
 		return err
 	}
