@@ -27,7 +27,7 @@ func GetQueueManager(config_obj *config_proto.Config) (api.QueueManager, error) 
 	switch implementation {
 
 	// For now everyone uses an in-memory queue manager.
-	case "Test":
+	case "Test", "RemoteRPCFileStore":
 		return memory.NewMemoryQueueManager(config_obj, file_store), nil
 
 	case "FileBaseDataStore", "MemcacheFileDataStore",

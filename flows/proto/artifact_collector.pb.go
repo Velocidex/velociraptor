@@ -277,6 +277,8 @@ type ArtifactCollectorArgs struct {
 	LogBatchTime uint64 `protobuf:"varint,28,opt,name=log_batch_time,json=logBatchTime,proto3" json:"log_batch_time,omitempty"`
 	// This is a private field - Callers can not set it.
 	CompiledCollectorArgs []*proto.VQLCollectorArgs `protobuf:"bytes,20,rep,name=compiled_collector_args,json=compiledCollectorArgs,proto3" json:"compiled_collector_args,omitempty"`
+	// Do not schedule the flow - only write it.
+	DoNotSchedule bool `protobuf:"varint,34,opt,name=DoNotSchedule,proto3" json:"DoNotSchedule,omitempty"`
 	// DEPRECATED:
 	OpsPerSecond  float32 `protobuf:"fixed32,6,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -444,6 +446,13 @@ func (x *ArtifactCollectorArgs) GetCompiledCollectorArgs() []*proto.VQLCollector
 		return x.CompiledCollectorArgs
 	}
 	return nil
+}
+
+func (x *ArtifactCollectorArgs) GetDoNotSchedule() bool {
+	if x != nil {
+		return x.DoNotSchedule
+	}
+	return false
 }
 
 func (x *ArtifactCollectorArgs) GetOpsPerSecond() float32 {
@@ -1170,7 +1179,7 @@ const file_artifact_collector_proto_rawDesc = "" +
 	"\x0emax_batch_wait\x18\a \x01(\x04R\fmaxBatchWait\x12$\n" +
 	"\x0emax_batch_rows\x18\b \x01(\x04R\fmaxBatchRows\x121\n" +
 	"\x15max_batch_rows_buffer\x18\t \x01(\x04R\x12maxBatchRowsBuffer\x12\x18\n" +
-	"\atimeout\x18\v \x01(\x04R\atimeout\"\xf0\a\n" +
+	"\atimeout\x18\v \x01(\x04R\atimeout\"\x96\b\n" +
 	"\x15ArtifactCollectorArgs\x12\x18\n" +
 	"\acreator\x18\x01 \x01(\tR\acreator\x12\x1b\n" +
 	"\tuser_data\x18\x1e \x01(\tR\buserData\x12\x1b\n" +
@@ -1191,7 +1200,8 @@ const file_artifact_collector_proto_rawDesc = "" +
 	"\x0etrace_freq_sec\x18\x1d \x01(\x04R\ftraceFreqSec\x12\x8d\x01\n" +
 	"\x16allow_custom_overrides\x18\b \x01(\bBW\xe2\xfc\xe3\xc4\x01Q\x12OIf true we will use a custom artifact if present instead of the named artifact.R\x14allowCustomOverrides\x12$\n" +
 	"\x0elog_batch_time\x18\x1c \x01(\x04R\flogBatchTime\x12O\n" +
-	"\x17compiled_collector_args\x18\x14 \x03(\v2\x17.proto.VQLCollectorArgsR\x15compiledCollectorArgs\x12j\n" +
+	"\x17compiled_collector_args\x18\x14 \x03(\v2\x17.proto.VQLCollectorArgsR\x15compiledCollectorArgs\x12$\n" +
+	"\rDoNotSchedule\x18\" \x01(\bR\rDoNotSchedule\x12j\n" +
 	"\x0eops_per_second\x18\x06 \x01(\x02BD\xe2\xfc\xe3\xc4\x01>\x12#Operations per second (Throttling).\"\x0eOps Per Second2\a1000000R\fopsPerSecond\"l\n" +
 	"\x19ArtifactCollectorResponse\x12\x17\n" +
 	"\aflow_id\x18\x01 \x01(\tR\x06flowId\x126\n" +

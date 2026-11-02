@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	utils_tempfile "www.velocidex.com/golang/velociraptor/utils/tempfile"
@@ -326,7 +327,7 @@ func (self *dataFile) prepareFile(scope vfilter.Scope, items []vfilter.Row) {
 		}
 
 		self.fd = fd
-		self.reader = bufio.NewReader(fd)
+		self.reader = bufio.NewReaderSize(fd, constants.BLOCK_SIZE)
 
 		self._Consume()
 	}()

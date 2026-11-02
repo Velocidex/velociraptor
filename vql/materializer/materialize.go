@@ -138,7 +138,7 @@ func (self *TempFileMatrializer) Eval(
 		}
 		defer fd.Close()
 
-		reader := bufio.NewReader(fd)
+		reader := bufio.NewReaderSize(fd, constants.BLOCK_SIZE)
 		for {
 			select {
 			case <-ctx.Done():

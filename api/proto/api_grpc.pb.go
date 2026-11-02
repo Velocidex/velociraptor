@@ -141,7 +141,13 @@ type APIClient interface {
 	SetSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataResponse, error)
 	DeleteSubject(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	ListChildren(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*ListChildrenResponse, error)
-	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+	// Remote File store access.
+	FSWriteBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*FSWriteBufferResponse, error)
+	FSStat(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*FSFileInfo, error)
+	FSReadDir(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*FSReadDirResponse, error)
+	FSDelete(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataRequest, error)
+	// Health check protocol as in
+	// https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 	Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error)
 	// LSP only accessible over the API
 	LSP(ctx context.Context, in *LSPRequest, opts ...grpc.CallOption) (*LSPResponse, error)
@@ -961,6 +967,42 @@ func (c *aPIClient) ListChildren(ctx context.Context, in *DataRequest, opts ...g
 	return out, nil
 }
 
+func (c *aPIClient) FSWriteBuffer(ctx context.Context, in *VFSFileBuffer, opts ...grpc.CallOption) (*FSWriteBufferResponse, error) {
+	out := new(FSWriteBufferResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/FSWriteBuffer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) FSStat(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*FSFileInfo, error) {
+	out := new(FSFileInfo)
+	err := c.cc.Invoke(ctx, "/proto.API/FSStat", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) FSReadDir(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*FSReadDirResponse, error) {
+	out := new(FSReadDirResponse)
+	err := c.cc.Invoke(ctx, "/proto.API/FSReadDir", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *aPIClient) FSDelete(ctx context.Context, in *DataRequest, opts ...grpc.CallOption) (*DataRequest, error) {
+	out := new(DataRequest)
+	err := c.cc.Invoke(ctx, "/proto.API/FSDelete", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *aPIClient) Check(ctx context.Context, in *HealthCheckRequest, opts ...grpc.CallOption) (*HealthCheckResponse, error) {
 	out := new(HealthCheckResponse)
 	err := c.cc.Invoke(ctx, "/proto.API/Check", in, out, opts...)
@@ -1101,7 +1143,13 @@ type APIServer interface {
 	SetSubject(context.Context, *DataRequest) (*DataResponse, error)
 	DeleteSubject(context.Context, *DataRequest) (*emptypb.Empty, error)
 	ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error)
-	// Health check protocol as in https://github.com/grpc/grpc/blob/master/doc/health-checking.md
+	// Remote File store access.
+	FSWriteBuffer(context.Context, *VFSFileBuffer) (*FSWriteBufferResponse, error)
+	FSStat(context.Context, *DataRequest) (*FSFileInfo, error)
+	FSReadDir(context.Context, *DataRequest) (*FSReadDirResponse, error)
+	FSDelete(context.Context, *DataRequest) (*DataRequest, error)
+	// Health check protocol as in
+	// https://github.com/grpc/grpc/blob/master/doc/health-checking.md
 	Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error)
 	// LSP only accessible over the API
 	LSP(context.Context, *LSPRequest) (*LSPResponse, error)
@@ -1357,6 +1405,18 @@ func (UnimplementedAPIServer) DeleteSubject(context.Context, *DataRequest) (*emp
 }
 func (UnimplementedAPIServer) ListChildren(context.Context, *DataRequest) (*ListChildrenResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ListChildren not implemented")
+}
+func (UnimplementedAPIServer) FSWriteBuffer(context.Context, *VFSFileBuffer) (*FSWriteBufferResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FSWriteBuffer not implemented")
+}
+func (UnimplementedAPIServer) FSStat(context.Context, *DataRequest) (*FSFileInfo, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FSStat not implemented")
+}
+func (UnimplementedAPIServer) FSReadDir(context.Context, *DataRequest) (*FSReadDirResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FSReadDir not implemented")
+}
+func (UnimplementedAPIServer) FSDelete(context.Context, *DataRequest) (*DataRequest, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method FSDelete not implemented")
 }
 func (UnimplementedAPIServer) Check(context.Context, *HealthCheckRequest) (*HealthCheckResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Check not implemented")
@@ -2867,6 +2927,78 @@ func _API_ListChildren_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
+func _API_FSWriteBuffer_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(VFSFileBuffer)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).FSWriteBuffer(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/FSWriteBuffer",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).FSWriteBuffer(ctx, req.(*VFSFileBuffer))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_FSStat_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).FSStat(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/FSStat",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).FSStat(ctx, req.(*DataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_FSReadDir_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).FSReadDir(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/FSReadDir",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).FSReadDir(ctx, req.(*DataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _API_FSDelete_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(APIServer).FSDelete(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/proto.API/FSDelete",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(APIServer).FSDelete(ctx, req.(*DataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _API_Check_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(HealthCheckRequest)
 	if err := dec(in); err != nil {
@@ -3225,6 +3357,22 @@ var API_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "ListChildren",
 			Handler:    _API_ListChildren_Handler,
+		},
+		{
+			MethodName: "FSWriteBuffer",
+			Handler:    _API_FSWriteBuffer_Handler,
+		},
+		{
+			MethodName: "FSStat",
+			Handler:    _API_FSStat_Handler,
+		},
+		{
+			MethodName: "FSReadDir",
+			Handler:    _API_FSReadDir_Handler,
+		},
+		{
+			MethodName: "FSDelete",
+			Handler:    _API_FSDelete_Handler,
 		},
 		{
 			MethodName: "Check",

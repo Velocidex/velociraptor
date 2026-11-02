@@ -10,6 +10,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/zip"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -30,7 +31,8 @@ func parseIndexRanges(serialized []byte) (*actions_proto.Index, error) {
 	index := &actions_proto.Index{}
 
 	if arg.JsonlRanges != "" {
-		reader := bufio.NewReader(bytes.NewReader([]byte(arg.JsonlRanges)))
+		reader := bufio.NewReaderSize(bytes.NewReader([]byte(arg.JsonlRanges)),
+			constants.BLOCK_SIZE)
 		for {
 			row_data, err := reader.ReadBytes('\n')
 			if err != nil || len(row_data) == 0 {

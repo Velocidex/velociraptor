@@ -675,13 +675,64 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		return "", err
 	}
 
-	var existing_flow *api_proto.FlowDetails
-
 	// The session Id we use to store the flow.
-	session_id := collector_request.FlowId
+	existing_flow, server_session_id, client_session_id := self.calculateSessionId(
+		ctx, config_obj, client_id, collector_request.FlowId)
 
-	// The session_id we send to the client.
-	var client_session_id string
+	// Record the final client side flow id in the request object.
+	collector_request.FlowId = client_session_id
+
+	collection_context, task, err := self.buildCollectionContext(
+		ctx, config_obj, collector_request, vql_collector_args,
+		server_session_id, client_session_id)
+	if err != nil {
+		return "", err
+	}
+
+	// If this is a resumable flow:
+	// 1.  Move the previous request to the previous flows list.
+	// 2. Assign the new request to the flow request.
+	if existing_flow != nil {
+		previous_flows := existing_flow.Context.PreviousFlows
+		existing_flow.Context.PreviousFlows = nil
+		previous_flows = append(previous_flows, existing_flow.Context)
+		collection_context.PreviousFlows = previous_flows
+	}
+
+	// Handle server flows especially.
+	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		err := self.scheduleServerCollection(ctx, config_obj, collector_request,
+			collection_context, task)
+		return collection_context.SessionId, err
+	}
+
+	// Write the flow on the index only if the flow was not
+	// resumed. Otherwise it should already be in the index.
+	if existing_flow == nil {
+		err = self.Storage().WriteFlowIndex(ctx, config_obj, collection_context)
+	}
+
+	err = self.scheduleClientCollection(ctx, config_obj,
+		collector_request, collection_context, task, completion)
+
+	return collection_context.SessionId, err
+}
+
+// Calculates the session id to store the flow under. For flows with
+// child sessions, the flow is stored under the parent's flow id, but
+// we send the child flow to the client.
+func (self *Launcher) calculateSessionId(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id, session_id string) (
+	existing_flow *api_proto.FlowDetails,
+	// The session_id we save the flow under.
+	server_session_id string,
+
+	// The session_id we sent to the client.
+	client_session_id string) {
+
+	var err error
 
 	// If the session_id contains a / it is a relative child
 	// flow. Relative flow results will be stored inside the parent's
@@ -715,6 +766,8 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 				// We need to modify the flow requests for resuming.
 				Request: true,
 			}, client_id, session_id)
+
+		// There is an existing flow, record the previous flows.
 		if err == nil &&
 			existing_flow.Context != nil &&
 			existing_flow.Context.Request != nil &&
@@ -727,8 +780,17 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		}
 	}
 
-	// Record the final client side flow id in the request object.
-	collector_request.FlowId = client_session_id
+	return existing_flow, session_id, client_session_id
+}
+
+func (self *Launcher) buildCollectionContext(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	collector_request *flows_proto.ArtifactCollectorArgs,
+	vql_collector_args []*actions_proto.VQLCollectorArgs,
+	server_session_id, client_session_id string) (
+	collection_context *flows_proto.ArtifactCollectorContext,
+	task *crypto_proto.VeloMessage, err error) {
 
 	// How long to batch log messages for on the client.
 	batch_delay := time.Second * 2
@@ -744,7 +806,7 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 
 	// Compile all the requests into specific tasks to be sent to the
 	// client.
-	task := &crypto_proto.VeloMessage{
+	task = &crypto_proto.VeloMessage{
 		SessionId: client_session_id,
 		RequestId: constants.ProcessVQLResponses,
 		FlowRequest: &crypto_proto.FlowRequest{
@@ -767,13 +829,13 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 		task.FlowRequest.Trace, err = self.calculateTraceQuery(ctx, config_obj,
 			collector_request.TraceFreqSec)
 		if err != nil {
-			return "", err
+			return nil, nil, err
 		}
 	}
 
 	for _, arg := range vql_collector_args {
 		// If sending to the server, record who actually launched this.
-		if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
+		if collector_request.ClientId == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
 			arg.Principal = collector_request.Creator
 		}
 
@@ -787,67 +849,82 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 	}
 
 	// Generate a new collection context for this flow.
-	collection_context := &flows_proto.ArtifactCollectorContext{
-		SessionId:           session_id,
+	collection_context = &flows_proto.ArtifactCollectorContext{
+		SessionId:           server_session_id,
 		CreateTime:          uint64(utils.GetTime().Now().UnixNano() / 1000),
 		State:               flows_proto.ArtifactCollectorContext_RUNNING,
 		Request:             collector_request,
-		ClientId:            client_id,
+		ClientId:            collector_request.ClientId,
 		TotalRequests:       int64(len(vql_collector_args)),
 		OutstandingRequests: int64(len(vql_collector_args)),
 	}
 
-	// If this is a resumable flow:
-	// 1.  Move the previous request to the previous flows list.
-	// 2. Assign the new request to the flow request.
-	if existing_flow != nil {
-		previous_flows := existing_flow.Context.PreviousFlows
-		existing_flow.Context.PreviousFlows = nil
-		previous_flows = append(previous_flows, existing_flow.Context)
-		collection_context.PreviousFlows = previous_flows
-	}
+	return collection_context, task, nil
+}
 
-	// Record the tasks for provenance of what we actually did.
-	err = self.Storage().WriteTask(
-		ctx, config_obj, client_id, redactTask(task))
+func (self *Launcher) scheduleServerCollection(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	collector_request *flows_proto.ArtifactCollectorArgs,
+	collection_context *flows_proto.ArtifactCollectorContext,
+	task *crypto_proto.VeloMessage) error {
+
+	err := self.Storage().WriteTask(
+		ctx, config_obj, collector_request.ClientId, redactTask(task))
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Run server artifacts inline.
-	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
-		server_artifacts_service, err := services.GetServerArtifactRunner(
-			config_obj)
-		if err != nil {
-			return "", err
-		}
-
-		// Write the collection object so the GUI can start tracking
-		// it. Redact the request object from sensitive parameters.
-		redacted := redactCollectContext(collection_context)
-		err = self.Storage().WriteFlow(
-			ctx, config_obj, redacted,
-			services.GetFlowOptions{
-				// The request was updated so write it to storage.
-				Request: true,
-			},
-			utils.BackgroundWriter)
-		if err != nil {
-			return "", err
-		}
-
-		// Write the flow on the index.
-		err = self.Storage().WriteFlowIndex(ctx, config_obj, redacted)
-		if err != nil {
-			return "", err
-		}
-
-		err = server_artifacts_service.LaunchServerArtifact(
-			config_obj, session_id, task.FlowRequest, collection_context)
-		return collection_context.SessionId, err
+	// Write the collection object so the GUI can start tracking
+	// it. Redact the request object from sensitive parameters.
+	redacted := redactCollectContext(collection_context)
+	err = self.Storage().WriteFlow(
+		ctx, config_obj, redacted,
+		services.GetFlowOptions{
+			// The request was updated so write it to storage.
+			Request: true,
+		},
+		utils.BackgroundWriter)
+	if err != nil {
+		return err
 	}
 
-	// The below are client artifacts
+	// Write the flow on the index.
+	err = self.Storage().WriteFlowIndex(ctx, config_obj, redacted)
+	if err != nil {
+		return err
+	}
+
+	// Do not actually schedule the collection, just write the record.
+	if collector_request.DoNotSchedule {
+		return nil
+	}
+
+	// Schedule the collection in line.
+	server_artifacts_service, err := services.GetServerArtifactRunner(
+		config_obj)
+	if err != nil {
+		return err
+	}
+
+	return server_artifacts_service.LaunchServerArtifact(
+		config_obj, collection_context.SessionId, task.FlowRequest, collection_context)
+}
+
+func (self *Launcher) scheduleClientCollection(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	collector_request *flows_proto.ArtifactCollectorArgs,
+	collection_context *flows_proto.ArtifactCollectorContext,
+	task *crypto_proto.VeloMessage,
+	completion func(task *crypto_proto.VeloMessage)) error {
+
+	// Schedule the task for the client.
+	err := self.Storage().WriteTask(
+		ctx, config_obj, collector_request.ClientId, redactTask(task))
+	if err != nil {
+		return err
+	}
 
 	// Store the collection_context first, then queue all the tasks.
 	err = self.Storage().WriteFlow(ctx, config_obj,
@@ -862,15 +939,10 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 			completion(task)
 		})
 	if err != nil {
-		return "", err
+		return err
 	}
 
-	// Write the flow on the index only if the flow was not
-	// resumed. Otherwise it should already be in the index.
-	if existing_flow == nil {
-		err = self.Storage().WriteFlowIndex(ctx, config_obj, collection_context)
-	}
-	return collection_context.SessionId, err
+	return err
 }
 
 // Adds any parameters set in the ArtifactCollectorArgs into the

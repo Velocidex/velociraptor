@@ -8,6 +8,7 @@ import (
 	"github.com/glaslos/tlsh"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -47,7 +48,8 @@ func (self *TLSHashFunction) Call(ctx context.Context,
 	}
 	defer file.Close()
 
-	tlsh_hash, err := tlsh.HashReader(bufio.NewReader(file))
+	tlsh_hash, err := tlsh.HashReader(bufio.NewReaderSize(
+		file, constants.BLOCK_SIZE))
 	if err != nil {
 		return vfilter.Null{}
 	}

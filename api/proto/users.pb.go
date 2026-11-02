@@ -180,10 +180,14 @@ type VelociraptorUser struct {
 	// username as we can verify against the oid. For example,
 	// changing the user's email will retain the original OID so we
 	// wont be confused.
-	Oid         string              `protobuf:"bytes,14,opt,name=oid,proto3" json:"oid,omitempty"`
-	ReadOnly    bool                `protobuf:"varint,7,opt,name=read_only,json=readOnly,proto3" json:"read_only,omitempty"`
-	Locked      bool                `protobuf:"varint,8,opt,name=locked,proto3" json:"locked,omitempty"`
-	Permissions *proto.ApiClientACL `protobuf:"bytes,9,opt,name=Permissions,proto3" json:"Permissions,omitempty"`
+	Oid string `protobuf:"bytes,14,opt,name=oid,proto3" json:"oid,omitempty"`
+	// Deprecated
+	ReadOnly bool `protobuf:"varint,7,opt,name=read_only,json=readOnly,proto3" json:"read_only,omitempty"`
+	// If set the user is not allowed to log in.
+	Locked bool `protobuf:"varint,8,opt,name=locked,proto3" json:"locked,omitempty"`
+	// If this is set, the user is a superuser.
+	UserIsSuperuser bool                `protobuf:"varint,15,opt,name=user_is_superuser,json=userIsSuperuser,proto3" json:"user_is_superuser,omitempty"`
+	Permissions     *proto.ApiClientACL `protobuf:"bytes,9,opt,name=Permissions,proto3" json:"Permissions,omitempty"`
 	// A list of org id's the user belongs to.
 	Orgs []*OrgRecord `protobuf:"bytes,11,rep,name=orgs,proto3" json:"orgs,omitempty"`
 	// Only used by the GUI/API to determine the currently selected
@@ -283,6 +287,13 @@ func (x *VelociraptorUser) GetReadOnly() bool {
 func (x *VelociraptorUser) GetLocked() bool {
 	if x != nil {
 		return x.Locked
+	}
+	return false
+}
+
+func (x *VelociraptorUser) GetUserIsSuperuser() bool {
+	if x != nil {
+		return x.UserIsSuperuser
 	}
 	return false
 }
@@ -1362,7 +1373,7 @@ const file_users_proto_rawDesc = "" +
 	"\astrings\x18\x01 \x03(\tR\astrings\"]\n" +
 	"\tUserStats\x12(\n" +
 	"\x10last_active_time\x18\x01 \x01(\x03R\x0elastActiveTime\x12&\n" +
-	"\x0flast_ip_address\x18\x02 \x01(\tR\rlastIpAddress\"\xfa\x04\n" +
+	"\x0flast_ip_address\x18\x02 \x01(\tR\rlastIpAddress\"\x9c\x04\n" +
 	"\x10VelociraptorUser\x12(\n" +
 	"\x04name\x18\x01 \x01(\tB\x14\xe2\xfc\xe3\xc4\x01\x0e\x12\fThe usernameR\x04name\x12I\n" +
 	"\rpassword_hash\x18\x02 \x01(\fB$\xe2\xfc\xe3\xc4\x01\x1e\x12\x1cSHA256 hash of the password.R\fpasswordHash\x12#\n" +
@@ -1370,9 +1381,10 @@ const file_users_proto_rawDesc = "" +
 	"\x05email\x18\x04 \x01(\tR\x05email\x12\x18\n" +
 	"\apicture\x18\x05 \x01(\tR\apicture\x12%\n" +
 	"\x0everified_email\x18\x06 \x01(\bR\rverifiedEmail\x12\x10\n" +
-	"\x03oid\x18\x0e \x01(\tR\x03oid\x12r\n" +
-	"\tread_only\x18\a \x01(\bBU\xe2\xfc\xe3\xc4\x01O\x12MA read only user can use the GUI but is not allowed to launch flows or hunts.R\breadOnly\x12I\n" +
-	"\x06locked\x18\b \x01(\bB1\xe2\xfc\xe3\xc4\x01+\x12)If set the user is not allowed to log in.R\x06locked\x125\n" +
+	"\x03oid\x18\x0e \x01(\tR\x03oid\x12\x1b\n" +
+	"\tread_only\x18\a \x01(\bR\breadOnly\x12\x16\n" +
+	"\x06locked\x18\b \x01(\bR\x06locked\x12*\n" +
+	"\x11user_is_superuser\x18\x0f \x01(\bR\x0fuserIsSuperuser\x125\n" +
 	"\vPermissions\x18\t \x01(\v2\x13.proto.ApiClientACLR\vPermissions\x12$\n" +
 	"\x04orgs\x18\v \x03(\v2\x10.proto.OrgRecordR\x04orgs\x12\x1f\n" +
 	"\vcurrent_org\x18\f \x01(\tR\n" +

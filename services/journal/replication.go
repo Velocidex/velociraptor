@@ -14,7 +14,6 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
-	"github.com/sirupsen/logrus"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store"
@@ -329,7 +328,6 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 
 	names, ok := names_any.([]interface{})
 	if ok {
-		// -----
 		self.mu.Lock()
 		self.masterRegistrations = make(map[artifact_modes.QueueName]bool)
 
@@ -340,12 +338,7 @@ func (self *ReplicationService) ProcessMasterRegistrations(event *ordereddict.Di
 				self.masterRegistrations[queue_name] = true
 			}
 		}
-		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-		logger.WithFields(logrus.Fields{
-			"events": names,
-		}).Info("Master event registrations")
 		self.mu.Unlock()
-		// -----
 	}
 }
 
@@ -803,7 +796,6 @@ func (self *ReplicationService) watchOnce(
 
 			replicationTotalReceive.Inc()
 
-			logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 			dict := ordereddict.NewDict()
 			err = dict.UnmarshalJSON(event.Jsonl)
 			if err == nil {
@@ -812,8 +804,11 @@ func (self *ReplicationService) watchOnce(
 					return
 
 				case output_chan <- dict:
-					logger.Debug("<green>ReplicationService %v</>: Received event on %v\n",
-						services.GetOrgName(self.config_obj), queue)
+					/*
+						logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+						logger.Debug("<green>ReplicationService %v</>: Received event on %v\n",
+							services.GetOrgName(self.config_obj), queue)
+					*/
 				}
 			}
 		}

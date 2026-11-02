@@ -35,6 +35,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/artifacts"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	json_tools "www.velocidex.com/golang/velociraptor/tools/json"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -196,7 +197,7 @@ func (self ParseJsonlPlugin) Call(
 		defer fd.Close()
 
 		count := 0
-		reader := bufio.NewReader(fd)
+		reader := bufio.NewReaderSize(fd, constants.BLOCK_SIZE)
 		for {
 			select {
 			case <-ctx.Done():

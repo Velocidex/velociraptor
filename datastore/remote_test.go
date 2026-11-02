@@ -19,6 +19,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -73,7 +74,7 @@ func (self *RemoteTestSuite) TearDownTest() {
 }
 
 func (self *RemoteTestSuite) TestRemoteDataStore() {
-	datastore.RPC_BACKOFF = 0.5
+	utils.RPC_BACKOFF = 0.5
 	self.startAPIServer()
 
 	db := datastore.NewRemoteDataStore(self.Ctx)
@@ -97,8 +98,8 @@ func (self *RemoteTestSuite) TestRemoteDataStoreMissing() {
 		self.T().Skip("skipping test in short mode.")
 	}
 
-	datastore.RPC_BACKOFF = 0
-	datastore.RPC_RETRY = 2
+	utils.RPC_BACKOFF = 0
+	utils.RPC_RETRY = 2
 	logging.ClearMemoryLogs()
 
 	db := datastore.NewRemoteDataStore(self.Ctx)

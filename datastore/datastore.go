@@ -149,7 +149,7 @@ func getImpl(
 		}
 		return read_only_imp, nil
 
-	case "RemoteFileDataStore":
+	case "RemoteFileDataStore", "RemoteRPCFileStore":
 		return remote_datastopre_imp, nil
 
 	case "Memcache":
