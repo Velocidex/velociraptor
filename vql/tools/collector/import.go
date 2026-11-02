@@ -574,7 +574,7 @@ func (self ImportCollectionFunction) copyResultSet(
 	defer rs_writer.Close()
 
 	// Copy the file into the results set 100 rows at the time.
-	reader := bufio.NewReader(fd)
+	reader := bufio.NewReaderSize(fd, constants.BLOCK_SIZE)
 	count := uint64(0)
 	buffer := bytes.Buffer{}
 

@@ -26,7 +26,8 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 	// If the call comes from the super user we allow it.
 	if grpc_user_info.Name == utils.GetSuperuserName(org_config_obj) {
 		user_record = &api_proto.VelociraptorUser{
-			Name: grpc_user_info.Name,
+			Name:            grpc_user_info.Name,
+			UserIsSuperuser: true,
 		}
 
 	} else {
@@ -49,6 +50,7 @@ func (self UserManager) GetUserFromContext(ctx context.Context) (
 	}
 
 	org_config_obj, err = org_manager.GetOrgConfig(user_record.CurrentOrg)
+	user_record.UserIsSuperuser = false
 	return user_record, org_config_obj, err
 }
 

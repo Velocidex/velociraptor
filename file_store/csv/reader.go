@@ -79,6 +79,7 @@ import (
 	"unicode"
 	"unicode/utf8"
 
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -206,7 +207,7 @@ type Reader struct {
 func NewReader(r io.ReadSeeker) (*Reader, error) {
 	result := &Reader{
 		Comma:      ',',
-		r:          bufio.NewReader(r),
+		r:          bufio.NewReaderSize(r, constants.BLOCK_SIZE),
 		raw_reader: r,
 	}
 
@@ -329,7 +330,7 @@ func (r *Reader) Seek(offset int64) error {
 		return err
 	}
 
-	r.r = bufio.NewReader(r.raw_reader)
+	r.r = bufio.NewReaderSize(r.raw_reader, constants.BLOCK_SIZE)
 	r.ByteOffset = offset
 
 	return nil

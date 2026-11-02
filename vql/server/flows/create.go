@@ -35,19 +35,20 @@ import (
 )
 
 type ScheduleCollectionFunctionArg struct {
-	ClientId     string            `vfilter:"required,field=client_id,doc=The client id to schedule a collection on. The use 'server' to schedule a server artifact collection."`
-	FlowId       string            `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add the collection to this flow."`
-	Artifacts    []string          `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
-	Env          *ordereddict.Dict `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
-	Spec         *ordereddict.Dict `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
-	Timeout      uint64            `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
-	OpsPerSecond float64           `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
-	CpuLimit     float64           `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
-	IopsLimit    float64           `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
-	MaxRows      uint64            `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
-	MaxBytes     uint64            `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
-	Urgent       bool              `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
-	OrgId        string            `vfilter:"optional,field=org_id,doc=If set the collection will be started in the specified org."`
+	ClientId      string            `vfilter:"required,field=client_id,doc=The client id to schedule a collection on. The use 'server' to schedule a server artifact collection."`
+	FlowId        string            `vfilter:"optional,field=flow_id,doc=If a flow id is specified we do not create a new flow, but instead add the collection to this flow."`
+	Artifacts     []string          `vfilter:"required,field=artifacts,doc=A list of artifacts to collect"`
+	Env           *ordereddict.Dict `vfilter:"optional,field=env,doc=Parameters to apply to the artifact (an alternative to a full spec)"`
+	Spec          *ordereddict.Dict `vfilter:"optional,field=spec,doc=Parameters to apply to the artifacts"`
+	Timeout       uint64            `vfilter:"optional,field=timeout,doc=Set query timeout (default 10 min)"`
+	OpsPerSecond  float64           `vfilter:"optional,field=ops_per_sec,doc=Set query ops_per_sec value"`
+	CpuLimit      float64           `vfilter:"optional,field=cpu_limit,doc=Set query cpu_limit value"`
+	IopsLimit     float64           `vfilter:"optional,field=iops_limit,doc=Set query iops_limit value"`
+	MaxRows       uint64            `vfilter:"optional,field=max_rows,doc=Max number of rows to fetch"`
+	MaxBytes      uint64            `vfilter:"optional,field=max_bytes,doc=Max number of bytes to upload"`
+	Urgent        bool              `vfilter:"optional,field=urgent,doc=Set the collection as urgent - skips other queues collections on the client."`
+	OrgId         string            `vfilter:"optional,field=org_id,doc=If set the collection will be started in the specified org."`
+	DoNotSchedule bool              `vfilter:"optional,field=do_not_schedule,doc=If set we do not actually schedule the flow, only write the flow object into the filestore."`
 }
 
 type ScheduleCollectionFunction struct{}
@@ -149,6 +150,7 @@ func (self *ScheduleCollectionFunction) Call(ctx context.Context,
 		MaxRows:        arg.MaxRows,
 		MaxUploadBytes: arg.MaxBytes,
 		Urgent:         arg.Urgent,
+		DoNotSchedule:  arg.DoNotSchedule,
 	}
 
 	if arg.Spec == nil {

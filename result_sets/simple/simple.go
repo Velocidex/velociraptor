@@ -368,7 +368,7 @@ func (self *ResultSetReaderImpl) SeekToRow(start int64) error {
 
 	if self.idx_fd == nil {
 		// There is no index file, we fallback to reading slowly
-		reader := bufio.NewReader(self.fd)
+		reader := bufio.NewReaderSize(self.fd, constants.BLOCK_SIZE)
 		for i := int64(0); i < start; i++ {
 			_, err := reader.ReadBytes('\n')
 			if err != nil {
@@ -407,7 +407,7 @@ func (self *ResultSetReaderImpl) SeekToRow(start int64) error {
 
 	// Consume rows from the start of the blob to reach our
 	// desired row count.
-	reader := bufio.NewReader(self.fd)
+	reader := bufio.NewReaderSize(self.fd, constants.BLOCK_SIZE)
 	for i := int64(0); i < row_count; i++ {
 		line, err := reader.ReadBytes('\n')
 		if err != nil {
@@ -428,7 +428,7 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 	go func() {
 		defer close(output)
 
-		reader := bufio.NewReader(self.fd)
+		reader := bufio.NewReaderSize(self.fd, constants.BLOCK_SIZE)
 		for {
 			row_data, err := reader.ReadBytes('\n')
 			if err != nil && err != io.EOF {
@@ -464,7 +464,7 @@ func (self *ResultSetReaderImpl) Rows(ctx context.Context) <-chan *ordereddict.D
 
 				// Make a new private buffer so as not to disturb the
 				// original buffer.
-				reader := bufio.NewReader(self.fd)
+				reader := bufio.NewReaderSize(self.fd, constants.BLOCK_SIZE)
 				row_data, err = reader.ReadBytes('\n')
 				if err != nil {
 					return
@@ -515,7 +515,7 @@ func (self *ResultSetReaderImpl) JSON(ctx context.Context) (<-chan []byte, error
 	go func() {
 		defer close(output)
 
-		reader := bufio.NewReader(self.fd)
+		reader := bufio.NewReaderSize(self.fd, constants.BLOCK_SIZE)
 		for {
 			row_data, err := reader.ReadBytes('\n')
 			if err != nil {

@@ -90,6 +90,34 @@ func (self *ServerArtifactRunner) LaunchServerArtifact(
 	return nil
 }
 
+func (self *ServerArtifactRunner) RunServerArtifactInline(
+	config_obj *config_proto.Config,
+	session_id string,
+	req *crypto_proto.FlowRequest,
+	collection_context *flows_proto.ArtifactCollectorContext) error {
+
+	collection_context_manager, err := NewCollectionContextManager(
+		self.ctx, self.wg, config_obj, req, collection_context)
+	if err != nil {
+		return err
+	}
+
+	// Install the manager now so it is available for cancellation
+	self.mu.Lock()
+	self.in_flight_collections[session_id] = collection_context_manager
+	self.mu.Unlock()
+
+	sub_ctx, cancel := context.WithCancel(self.ctx)
+	defer cancel()
+
+	collection_context_manager.StartRefresh(self.wg)
+
+	defer collection_context_manager.Close(self.ctx)
+
+	return self.ProcessTask(sub_ctx, config_obj,
+		session_id, collection_context_manager, req)
+}
+
 func (self *ServerArtifactRunner) Cancel(
 	ctx context.Context, flow_id, principal string) {
 	self.mu.Lock()

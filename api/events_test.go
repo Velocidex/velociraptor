@@ -243,7 +243,7 @@ func (self *GeneralAPITest) TestVFSGetBuffer() {
 	_, err = client.VFSGetBuffer(self.Ctx, message)
 	assert.Error(self.T(), err)
 	assert.Contains(self.T(), err.Error(),
-		"PermissionDenied desc = User is not allowed to view the VFS")
+		"PermissionDenied desc = User is not allowed to access")
 
 	// Give permission and try again.
 	err = services.GrantUserToOrg(self.Ctx,
