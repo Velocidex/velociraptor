@@ -6,17 +6,34 @@ import (
 	"io"
 	"time"
 
-	"github.com/kaptinlin/messageformat-go/pkg/logger"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 )
 
-const (
+var (
 	RPC_BACKOFF = 10.0
 	RPC_RETRY   = 10
 )
+
+type RPCError struct {
+	error
+	inner error
+	s     *status.Status
+}
+
+func (self *RPCError) Unwrap() error {
+	return self.inner
+}
+
+func (self *RPCError) GRPCStatus() *status.Status {
+	return self.s
+}
+
+func (self *RPCError) Error() string {
+	return self.error.Error()
+}
 
 // Convert a gRPC Status error into a standard error. This allows
 // callers to test for the type of error.
@@ -26,22 +43,24 @@ func StatusToError(err error) error {
 		return err
 	}
 
+	var perm error
 	switch status.Code() {
 	case codes.PermissionDenied:
-		return Wrap(PermissionDenied, "%v", err)
+		perm = PermissionDenied
 
 	case codes.InvalidArgument:
-		return Wrap(InvalidStatus, "%v", err)
+		perm = InvalidStatus
 
 	case codes.NotFound:
-		return Wrap(NotFoundError, "%v", err)
+		perm = NotFoundError
 
 	case codes.Unavailable:
-		return Wrap(IOError, "%v", err)
+		perm = IOError
 
 	default:
 		return err
 	}
+	return &RPCError{err, perm, status}
 }
 
 func RPCTimeout(config_obj *config_proto.Config) time.Duration {
@@ -55,7 +74,8 @@ func RPCTimeout(config_obj *config_proto.Config) time.Duration {
 func GrpcRetry(ctx context.Context,
 	config_obj *config_proto.Config,
 	failure_cb func(err error),
-	cb func() error) error {
+	cb func() error,
+	logger func(format string, v ...interface{})) error {
 	var err error
 
 	for i := 0; i < RPC_RETRY; i++ {
@@ -69,7 +89,8 @@ func GrpcRetry(ctx context.Context,
 			return err
 		}
 
-		logger.Error("While connecting to remote datastore (retry %v): %v", i, err)
+		logger("While connecting to remote datastore (retry %v): %v",
+			i, err.Error())
 		select {
 		case <-ctx.Done():
 			return timeoutError

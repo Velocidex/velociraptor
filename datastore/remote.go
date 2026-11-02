@@ -31,13 +31,15 @@ func (self *RemoteDataStore) GetSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec,
 	message proto.Message) error {
+
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
 			maybeLog(config_obj, urn, "GetSubject", err)
 		},
 		func() error {
 			return self._GetSubject(config_obj, urn, message)
-		})
+		}, logger.Error)
 }
 
 func (self *RemoteDataStore) Healthy() error {
@@ -123,6 +125,7 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 		}
 	}()
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
 			maybeLog(config_obj, urn, "GetSubject", err)
@@ -130,7 +133,7 @@ func (self *RemoteDataStore) SetSubjectWithCompletion(
 		func() error {
 			return self._SetSubjectWithCompletion(
 				config_obj, urn, message, completion)
-		})
+		}, logger.Error)
 }
 
 func (self *RemoteDataStore) _SetSubjectWithCompletion(
@@ -232,13 +235,14 @@ func (self *RemoteDataStore) Stat(config_obj *config_proto.Config,
 func (self *RemoteDataStore) DeleteSubjectWithCompletion(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec, completion func()) error {
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
 			maybeLog(config_obj, urn, "DeleteSubjectWithCompletion", err)
 		},
 		func() error {
 			return self._DeleteSubjectWithCompletion(config_obj, urn, completion)
-		})
+		}, logger.Error)
 }
 
 func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
@@ -283,13 +287,14 @@ func (self *RemoteDataStore) _DeleteSubjectWithCompletion(
 func (self *RemoteDataStore) DeleteSubject(
 	config_obj *config_proto.Config,
 	urn api.DSPathSpec) error {
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	return utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
 			maybeLog(config_obj, urn, "DeleteSubject", err)
 		},
 		func() error {
 			return self._DeleteSubject(config_obj, urn)
-		})
+		}, logger.Error)
 }
 
 func (self *RemoteDataStore) _DeleteSubject(
@@ -332,6 +337,7 @@ func (self *RemoteDataStore) ListChildren(
 	var result []api.DSPathSpec
 	var err error
 
+	logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
 	err = utils.GrpcRetry(self.ctx, config_obj,
 		func(err error) {
 			maybeLog(config_obj, urn, "ListChildren", err)
@@ -339,7 +345,7 @@ func (self *RemoteDataStore) ListChildren(
 		func() error {
 			result, err = self._ListChildren(config_obj, urn)
 			return err
-		})
+		}, logger.Error)
 
 	return result, err
 }
