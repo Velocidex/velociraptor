@@ -97,6 +97,8 @@ message ArtifactCollectorArgs {
     // This is a private field - Callers can not set it.
     repeated VQLCollectorArgs compiled_collector_args = 20;
 
+    // Do not schedule the flow - only write it.
+    bool DoNotSchedule = 34;
 
     // DEPRECATED:
     float ops_per_second = 6 [(sem_type) = {

@@ -28,6 +28,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/directory"
 	"www.velocidex.com/golang/velociraptor/file_store/memcache"
 	"www.velocidex.com/golang/velociraptor/file_store/memory"
+	"www.velocidex.com/golang/velociraptor/file_store/remote"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -71,6 +72,10 @@ func getImpl(implementation string,
 	switch implementation {
 	case "Test":
 		return memory.NewMemoryFileStore(config_obj), nil
+
+	case "RemoteRPCFileStore":
+		return remote.NewRemoteFileStore(
+			context.Background(), config_obj)
 
 	case "MemcacheFileDataStore", "RemoteFileDataStore":
 		return memcache.NewMemcacheFileStore(

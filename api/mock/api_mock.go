@@ -301,6 +301,86 @@ func (mr *MockAPIClientMockRecorder) EstimateHunt(arg0, arg1 interface{}, arg2 .
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "EstimateHunt", reflect.TypeOf((*MockAPIClient)(nil).EstimateHunt), varargs...)
 }
 
+// FSDelete mocks base method.
+func (m *MockAPIClient) FSDelete(arg0 context.Context, arg1 *proto0.DataRequest, arg2 ...grpc.CallOption) (*proto0.DataRequest, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FSDelete", varargs...)
+	ret0, _ := ret[0].(*proto0.DataRequest)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FSDelete indicates an expected call of FSDelete.
+func (mr *MockAPIClientMockRecorder) FSDelete(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FSDelete", reflect.TypeOf((*MockAPIClient)(nil).FSDelete), varargs...)
+}
+
+// FSReadDir mocks base method.
+func (m *MockAPIClient) FSReadDir(arg0 context.Context, arg1 *proto0.DataRequest, arg2 ...grpc.CallOption) (*proto0.FSReadDirResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FSReadDir", varargs...)
+	ret0, _ := ret[0].(*proto0.FSReadDirResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FSReadDir indicates an expected call of FSReadDir.
+func (mr *MockAPIClientMockRecorder) FSReadDir(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FSReadDir", reflect.TypeOf((*MockAPIClient)(nil).FSReadDir), varargs...)
+}
+
+// FSStat mocks base method.
+func (m *MockAPIClient) FSStat(arg0 context.Context, arg1 *proto0.DataRequest, arg2 ...grpc.CallOption) (*proto0.FSFileInfo, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FSStat", varargs...)
+	ret0, _ := ret[0].(*proto0.FSFileInfo)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FSStat indicates an expected call of FSStat.
+func (mr *MockAPIClientMockRecorder) FSStat(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FSStat", reflect.TypeOf((*MockAPIClient)(nil).FSStat), varargs...)
+}
+
+// FSWriteBuffer mocks base method.
+func (m *MockAPIClient) FSWriteBuffer(arg0 context.Context, arg1 *proto0.VFSFileBuffer, arg2 ...grpc.CallOption) (*proto0.FSWriteBufferResponse, error) {
+	m.ctrl.T.Helper()
+	varargs := []interface{}{arg0, arg1}
+	for _, a := range arg2 {
+		varargs = append(varargs, a)
+	}
+	ret := m.ctrl.Call(m, "FSWriteBuffer", varargs...)
+	ret0, _ := ret[0].(*proto0.FSWriteBufferResponse)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FSWriteBuffer indicates an expected call of FSWriteBuffer.
+func (mr *MockAPIClientMockRecorder) FSWriteBuffer(arg0, arg1 interface{}, arg2 ...interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	varargs := append([]interface{}{arg0, arg1}, arg2...)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FSWriteBuffer", reflect.TypeOf((*MockAPIClient)(nil).FSWriteBuffer), varargs...)
+}
+
 // GetArtifactFile mocks base method.
 func (m *MockAPIClient) GetArtifactFile(arg0 context.Context, arg1 *proto0.GetArtifactRequest, arg2 ...grpc.CallOption) (*proto0.GetArtifactResponse, error) {
 	m.ctrl.T.Helper()

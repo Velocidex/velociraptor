@@ -3,6 +3,8 @@ package api
 import (
 	"fmt"
 	"strings"
+
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetExtensionForDatastore(path_spec DSPathSpec) string {
@@ -27,9 +29,10 @@ func GetExtensionForFilestore(path_spec FSPathSpec) string {
 
 	switch t {
 	case PATH_TYPE_DATASTORE_PROTO, PATH_TYPE_DATASTORE_JSON:
-		panic(fmt.Sprintf(
-			"datastore path used for filestore for %v ",
-			path_spec.Components()))
+		fmt.Printf("datastore path used for filestore for %v ",
+			path_spec.Components())
+		utils.PrintStack()
+		return ""
 
 	case PATH_TYPE_FILESTORE_JSON:
 		return ".json"

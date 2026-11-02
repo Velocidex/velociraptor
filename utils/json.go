@@ -10,6 +10,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 
+	"www.velocidex.com/golang/velociraptor/constants"
 	vjson "www.velocidex.com/golang/velociraptor/json"
 )
 
@@ -89,7 +90,7 @@ func ReadJsonFromFile(ctx context.Context, fd io.Reader) chan *ordereddict.Dict 
 	go func() {
 		defer close(output_chan)
 
-		reader := bufio.NewReader(fd)
+		reader := bufio.NewReaderSize(fd, constants.BLOCK_SIZE)
 
 		for {
 			select {

@@ -56,7 +56,9 @@ func (self SparseFileStoreFileSystemAccessor) Describe() *accessors.AccessorDesc
 
 This accessor expands sparse files. Reading from a sparse region will result in zeros being returned.
 `,
-		Permissions: []acls.ACL_PERMISSION{acls.SERVER_ADMIN},
+		// All users can read anything from the file_store via the GUI
+		// anyway. See api.vfsFileDownloadHandler
+		Permissions: []acls.ACL_PERMISSION{acls.READ_RESULTS},
 	}
 }
 
@@ -77,7 +79,9 @@ func (self FileStoreFileSystemAccessor) Describe() *accessors.AccessorDescriptor
 
 Many VQL plugins produce references to files stored on the server. This accessor can be used to open those files and read them. Typically references to filestore or datastore files have the "fs:" or "ds:" prefix.
 `,
-		Permissions: []acls.ACL_PERMISSION{acls.SERVER_ADMIN},
+		// All users can read anything from the file_store via the GUI
+		// anyway. See api.vfsFileDownloadHandler
+		Permissions: []acls.ACL_PERMISSION{acls.READ_RESULTS},
 	}
 }
 

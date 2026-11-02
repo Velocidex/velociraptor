@@ -14,4 +14,7 @@ const (
 
 	// The default max size of datastore objects.
 	MAX_DATASTORE_OBJECTS = 4 * 1024 * 1024
+
+	// A reasonable size for IO transfers
+	BLOCK_SIZE = 512 * 1024
 )

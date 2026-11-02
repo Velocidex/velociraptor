@@ -20,13 +20,17 @@ package main
 import (
 	"context"
 	"io"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/Velocidex/ordereddict"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	vfilter "www.velocidex.com/golang/vfilter"
 )
 
@@ -136,4 +140,49 @@ func isConfigSpecified(argv []string) bool {
 		}
 	}
 	return false
+}
+
+type capturingLogger struct {
+	rows []string
+}
+
+func (self *capturingLogger) Write(b []byte) (int, error) {
+	self.rows = append(self.rows, string(b))
+	return len(b), nil
+}
+
+func captureQueryWithEnv(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	query string,
+	logger io.Writer,
+	env *ordereddict.Dict) (results []*ordereddict.Dict, err error) {
+
+	builder := services.ScopeBuilder{
+		Config:     config_obj,
+		ACLManager: acl_managers.NullACLManager{},
+		Logger:     log.New(logger, "", 0),
+		Env:        env,
+	}
+
+	manager, err := services.GetRepositoryManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	statements, err := vfilter.MultiParse(query)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, vql := range statements {
+		for row := range vql.Eval(ctx, scope) {
+			results = append(results, vfilter.RowToDict(ctx, scope, row))
+		}
+	}
+
+	return results, nil
 }
