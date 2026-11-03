@@ -1,0 +1,246 @@
+name: Windows.Forensics.MPLog
+description: |
+  Parses the Microsoft Defender support logs (`MPLog-*.log`, also
+  called Microsoft Protection Logs).
+
+  MPLog is Defender's own troubleshooting log, but it also records
+  what the scan engine touched. It is useful even when Defender raised
+  no alert, because it can show that a binary ran and what it accessed:
+
+  * `EstimatedImpact` lines (`ProcessImageName: ...`) name each process
+    that caused scan load, how many files it touched and the file that
+    took longest to scan. This is evidence of execution.
+  * `DetectionAdd`, `DetectionEvent`, `EMSDetection`, `ThreatCommandLine`
+    and `Lowfi` lines record detections, the threat name and often the
+    file path or command line.
+  * `EMSScan` lines record memory scans of a process (possible injection).
+  * `BlockedFile`, `UnsuccessfulScan`, `Exclusion` and
+    `OriginalFileName` lines record file paths the engine handled.
+  * `SDN` lines record cloud lookups. Where a SHA1 or SHA256 appears in
+    any line it is extracted into the `SHA1` and `SHA256` columns.
+
+  The files are usually UTF-16LE. Each file is read into memory and
+  decoded, so files larger than `MaxFileSize` are truncated with a
+  warning in the query log.
+
+  The `Lines` source returns one row per recognised line. The rules
+  are held in the `LineRules` table: each row has a `Type`, a `Keyword`
+  regex used to select the rule and a `Regex` with named groups that
+  become the `Details` column. Add rows to recognise more line types.
+  Set `AllLines` to also return lines no rule matches (as type `Other`),
+  which is useful together with `SearchRegex` to hunt for a tool name.
+
+  The `Blocks` source parses the multi-line `BM telemetry`,
+  `Resource Scan` and `threat actions` sections into key/value fields.
+
+  Reading the files requires administrator rights.
+
+author: Abdelghafour Bouhdyd
+
+reference:
+  - https://www.crowdstrike.com/blog/how-to-use-microsoft-protection-logging-for-forensic-investigations/
+  - https://github.com/Intrinsec/mplog_parser
+  - https://attack.mitre.org/techniques/T1562/001/
+
+type: CLIENT
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: MPLogGlob
+    description: Glob for the MPLog files.
+    default: C:\ProgramData\Microsoft\Windows Defender\Support\MPLog-*.log
+
+  - name: Accessor
+    description: |
+      Accessor used to read the files. `auto` falls back to raw NTFS
+      access when the file is locked.
+    default: auto
+
+  - name: MaxFileSize
+    type: int
+    description: Maximum number of bytes read from each file.
+    default: 104857600
+
+  - name: TypeRegex
+    type: regex
+    description: Only return rows whose Type matches this regex.
+    default: .
+
+  - name: SearchRegex
+    type: regex
+    description: Only return rows whose raw line or block matches this regex.
+    default: .
+
+  - name: AllLines
+    type: bool
+    description: Also return lines that no rule matches, with Type `Other`.
+
+  - name: DateAfter
+    type: timestamp
+    description: Only return lines with a timestamp after this time.
+
+  - name: DateBefore
+    type: timestamp
+    description: Only return lines with a timestamp before this time.
+
+  - name: UploadFiles
+    type: bool
+    description: Upload the raw MPLog files.
+
+  - name: LineRules
+    type: csv
+    description: |
+      Rules applied in order to each line; the first rule whose Keyword
+      matches is used.
+    default: |
+      Type,Keyword,Regex
+      EstimatedImpact,ProcessImageName: ,"ProcessImageName: (?P<ProcessImageName>.+?), (?:Pid: (?P<Pid>\d+), )?TotalTime: (?P<TotalTime>\d+), Count: (?P<Count>\d+), MaxTime: (?P<MaxTime>\d+), MaxTimeFile: (?P<MaxTimeFile>.*), EstimatedImpact: (?P<EstimatedImpact>\d+)%"
+      DetectionAdd,DETECTION_ADD,"DETECTION_ADD(?:#\d+)? (?P<ThreatName>\S+) (?P<ResourceType>\w+):(?P<Resource>.*)"
+      DetectionEvent,DETECTIONEVENT ,"DETECTIONEVENT (?P<Source>\S+) (?P<Details>.*)"
+      EMSDetection,EMS detection: ,"EMS detection: (?P<ThreatName>[^,]+), sigseq=(?P<SigSeq>\w+), pid=(?P<Pid>\d+)"
+      EMSScan,EMS scan for process: ,"EMS scan for process: (?P<Process>\S+) pid: (?P<Pid>\d+), sigseq: (?P<SigSeq>\w+), sendMemoryScanReport: (?P<SendMemoryScanReport>\d+), source: (?P<ScanSource>\d+)"
+      BlockedFile,\[Mini-filter\] Blocked file: ,"Blocked file: (?P<Path>.+?) Process: (?P<Process>.+?), Status: (?P<Status>[^,]+), State: (?P<State>[^,]+), ScanRequest (?P<ScanRequest>[^,]+), FileId: (?P<FileId>[^,]+), Reason: (?P<Reason>[^,]+)"
+      UnsuccessfulScan,\[Mini-filter\] Unsuccessful scan status: ,"Unsuccessful scan status: (?P<Path>.+?) Process: (?P<Process>.+?), Status: (?P<Status>[^,]+), State: (?P<State>[^,]+), ScanRequest (?P<ScanRequest>[^,]+), FileId: (?P<FileId>[^,]+), Reason: (?P<Reason>[^,]+)"
+      Exclusion,\[Exclusion\] ,\[Exclusion\] (?P<Path>.+) -> (?P<DevicePath>.+)
+      OriginalFileName,original file name ,"original file name ""(?P<OriginalFileName>.*)"" for ""(?P<Path>.*)"", hr=(?P<HResult>\w*)"
+      ThreatCommandLine,threat: ,threat: (?P<Details>.+)
+      Lowfi,lowfi: ,lowfi: (?P<Details>.+)
+      SDN,SDN,SDN[: ]+(?P<Details>.+)
+
+export: |
+  -- Returns the decoded text of an MPLog file. The files are normally
+  -- UTF-16LE, but fall back to UTF-8 when no NUL bytes are found.
+  LET MPLogText(OSPath, Accessor, MaxFileSize) = regex_replace(
+      re="^\\x{FEFF}", replace="",
+      source=if(
+        condition=read_file(filename=OSPath, accessor=Accessor,
+                            length=64) =~ "\\x00",
+        then=utf16(string=read_file(filename=OSPath, accessor=Accessor,
+                                    length=MaxFileSize)),
+        else=read_file(filename=OSPath, accessor=Accessor,
+                       length=MaxFileSize)))
+
+  LET MPLogTimestampRegex = "^\\s*(?P<Time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z)"
+
+  -- Parse "Key: Value" lines of a block into a dict.
+  LET MPLogBlockFields(Body) = to_dict(item={
+      SELECT Fields.Key AS _key, Fields.Value AS _value
+      FROM foreach(row=split(string=Body, sep="\\r?\\n"),
+                   query={
+         SELECT parse_string_with_regex(
+             string=_value,
+             regex="^\\s*(?P<Key>[^:]+?)\\s*:\\s*(?P<Value>.*?)\\s*$") AS Fields
+         FROM scope()
+         WHERE Fields.Key
+      })
+  })
+
+sources:
+  - name: Lines
+    query: |
+      LET Rules <= SELECT * FROM LineRules
+      LET KeywordRegex <= join(array=Rules.Keyword, sep="|")
+
+      LET StartTime <= if(condition=DateAfter, then=timestamp(epoch=DateAfter),
+                          else=timestamp(epoch=0))
+      LET EndTime <= if(condition=DateBefore, then=timestamp(epoch=DateBefore),
+                        else=timestamp(epoch="2200-01-01"))
+
+      LET Files = SELECT OSPath, Size, Mtime
+        FROM glob(globs=MPLogGlob, accessor=Accessor)
+        WHERE NOT IsDir
+          AND if(condition=Size > MaxFileSize,
+                 then=log(level="WARN", dedup=-1,
+                          message="%v is %v bytes, only the first %v are parsed",
+                          args=[OSPath, Size, MaxFileSize]),
+                 else=TRUE)
+
+      -- Return the first rule that matches the line.
+      LET MatchRule(Line) = SELECT Type,
+             parse_string_with_regex(string=Line, regex=Regex) AS Details
+        FROM foreach(row=Rules)
+        WHERE Line =~ Keyword
+        LIMIT 1
+
+      LET ParseFile(OSPath) = SELECT * FROM foreach(
+          row=split(string=MPLogText(OSPath=OSPath, Accessor=Accessor,
+                                     MaxFileSize=MaxFileSize),
+                    sep="\\r?\\n"),
+          query={
+            SELECT _value AS Line,
+                   MatchRule(Line=_value)[0] AS Rule
+            FROM scope()
+            WHERE _value =~ SearchRegex
+              AND (AllLines OR _value =~ KeywordRegex)
+          })
+
+      LET Rows = SELECT * FROM foreach(row=Files, query={
+          SELECT timestamp(string=parse_string_with_regex(
+                    string=Line, regex=MPLogTimestampRegex).Time) AS Timestamp,
+                 Rule.Type || "Other" AS Type,
+                 Rule.Details AS Details,
+                 parse_string_with_regex(string=Line,
+                    regex="(?i)sha-?1[=: ]+(?P<Hash>[0-9a-f]{40})\\b").Hash AS SHA1,
+                 parse_string_with_regex(string=Line,
+                    regex="(?i)sha-?2(?:56)?[=: ]+(?P<Hash>[0-9a-f]{64})\\b").Hash AS SHA256,
+                 Line, OSPath
+          FROM ParseFile(OSPath=OSPath)
+      }, workers=1)
+
+      SELECT * FROM Rows
+      WHERE Type =~ TypeRegex
+        AND if(condition=DateAfter OR DateBefore,
+               then=Timestamp AND Timestamp > StartTime AND Timestamp < EndTime,
+               else=TRUE)
+
+  - name: Blocks
+    query: |
+      LET BlockTypes <= (
+        dict(Type="BMTelemetry", Begin="BEGIN BM telemetry", End="END BM telemetry"),
+        dict(Type="ResourceScan", Begin="Begin Resource Scan", End="End Scan"),
+        dict(Type="ThreatActions", Begin="Beginning threat actions",
+             End="Finished threat actions"))
+
+      LET Files = SELECT OSPath FROM glob(globs=MPLogGlob, accessor=Accessor)
+        WHERE NOT IsDir
+
+      -- Split the text on each block's start marker; every piece after
+      -- the first starts with a block body that runs to the end marker.
+      LET FileBlocks(OSPath) = SELECT * FROM foreach(
+          row={
+            SELECT MPLogText(OSPath=OSPath, Accessor=Accessor,
+                             MaxFileSize=MaxFileSize) AS Text
+            FROM scope()
+          },
+          query={
+            SELECT * FROM foreach(row=BlockTypes, query={
+              SELECT Type, Body FROM foreach(
+                 row=split(string=Text, sep_string=Begin)[1:],
+                 query={
+                   SELECT parse_string_with_regex(
+                      string=_value,
+                      regex="(?s)^(?P<Body>.*?)" + End).Body AS Body
+                   FROM scope()
+                 })
+              WHERE Body
+            })
+          })
+
+      SELECT * FROM foreach(row=Files, query={
+          SELECT Type, MPLogBlockFields(Body=Body) AS Fields,
+                 Body AS Raw, OSPath
+          FROM FileBlocks(OSPath=OSPath)
+          WHERE Type =~ TypeRegex AND Body =~ SearchRegex
+      }, workers=1)
+
+  - name: Uploads
+    query: |
+      SELECT OSPath, Size, Mtime,
+             upload(file=OSPath, accessor=Accessor) AS Upload
+      FROM glob(globs=MPLogGlob, accessor=Accessor)
+      WHERE UploadFiles AND NOT IsDir
+
+column_types:
+  - name: Upload
+    type: preview_upload
