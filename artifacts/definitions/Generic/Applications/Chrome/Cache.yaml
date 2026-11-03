@@ -1,0 +1,477 @@
+name: Generic.Applications.Chrome.Cache
+description: |
+  Parses the HTTP disk cache of Chromium based browsers (Chrome, Edge,
+  Brave, Opera, Vivaldi, Chromium) and Electron applications.
+
+  The cache keeps copies of the responses a browser received,
+  including the background JSON responses that web applications
+  fetch. It is often still present after the browsing history has
+  been cleared, and it holds data that the history never records:
+  response headers, server timestamps and the response body itself.
+
+  Both on disk formats are supported:
+
+  * The **blockfile** format (`index`, `data_0` to `data_3` and
+    `f_XXXXXX` files) used by Chrome and Edge on Windows.
+  * The **simple cache** format (`<hash>_0` files and
+    `index-dir/the-real-index`) used on Linux, macOS and Android.
+
+  For each cache entry the artifact returns the URL, the top frame
+  site that the request was made from (part of the cache key since
+  network isolation was introduced), the HTTP status, the response
+  headers and the request, response, creation and last used times.
+
+  Response bodies are only decoded when `IncludeBody` or `BodyRegex`
+  is set. Bodies are stored as they were received, so they are
+  decompressed according to their `Content-Encoding`. gzip is always
+  supported; brotli (`br`) and `zstd` need a client that has the
+  `brotli_decompress()` and `zstd_decompress()` functions. Bodies
+  using shared dictionary compression (`dcb`, `dcz`, `zsdch`) can not
+  be decoded without the dictionary and are reported in `BodyStatus`.
+
+  Example: find cached ChatGPT account settings and show whether the
+  user allowed model training.
+
+  ```
+  URLRegex: chatgpt\.com/backend-api/settings
+  BodyRegex: training_allowed
+  ```
+
+  NOTES:
+
+  * Times are UTC. `CreationTime` and `LastUsed` come from the cache
+    bookkeeping; for the simple cache format `CreationTime` is the
+    birth time of the entry file and `LastUsed` comes from the cache
+    index (it may be missing if the index was not flushed).
+  * Only live entries reachable from the cache index are returned for
+    the blockfile format.
+
+reference:
+  - https://chromium.googlesource.com/chromium/src/+/HEAD/net/disk_cache/blockfile/disk_format.h
+  - https://chromium.googlesource.com/chromium/src/+/HEAD/net/disk_cache/simple/simple_entry_format.h
+  - https://www.chromium.org/developers/design-documents/network-stack/disk-cache/
+
+author: Abdelghafour Bouhdyd
+
+type: CLIENT
+
+parameters:
+- name: CacheGlobs
+  type: csv
+  description: Globs matching cache directories (the directory holding the cache files).
+  default: |
+    Glob
+    C:/Users/*/AppData/Local/Google/Chrome*/User Data/*/Cache/Cache_Data
+    C:/Users/*/AppData/Local/Microsoft/Edge*/User Data/*/Cache/Cache_Data
+    C:/Users/*/AppData/Local/BraveSoftware/Brave-Browser*/User Data/*/Cache/Cache_Data
+    C:/Users/*/AppData/Local/Chromium/User Data/*/Cache/Cache_Data
+    C:/Users/*/AppData/Local/Vivaldi/User Data/*/Cache/Cache_Data
+    C:/Users/*/AppData/Local/Opera Software/*/Cache/Cache_Data
+    C:/Users/*/AppData/Roaming/*/Cache/Cache_Data
+    /Users/*/Library/Caches/Google/Chrome*/*/Cache/Cache_Data
+    /Users/*/Library/Caches/Microsoft Edge*/*/Cache/Cache_Data
+    /Users/*/Library/Caches/BraveSoftware/Brave-Browser*/*/Cache/Cache_Data
+    /Users/*/Library/Caches/Chromium/*/Cache/Cache_Data
+    /home/*/.cache/google-chrome*/*/Cache/Cache_Data
+    /home/*/.cache/microsoft-edge*/*/Cache/Cache_Data
+    /home/*/.cache/BraveSoftware/Brave-Browser*/*/Cache/Cache_Data
+    /home/*/.cache/chromium/*/Cache/Cache_Data
+
+- name: URLRegex
+  type: regex
+  default: .
+  description: Only return entries whose URL matches this regex.
+
+- name: ContentTypeRegex
+  type: regex
+  default: .
+  description: Only return entries whose Content-Type matches this regex.
+
+- name: IncludeBody
+  type: bool
+  description: Decode the response bodies of textual content types.
+
+- name: BodyContentTypeRegex
+  type: regex
+  default: json|text|javascript|xml|urlencoded
+  description: Content types whose decoded body is returned in the Body column.
+
+- name: BodyRegex
+  type: regex
+  default: ""
+  description: |
+    Only return entries whose decoded body matches this regex. Setting
+    this decodes bodies even if IncludeBody is not set.
+
+- name: MaxBodySize
+  type: int
+  default: 5242880
+  description: Bodies larger than this (stored or decoded size) are not decoded.
+
+- name: AlsoUpload
+  type: bool
+  description: Upload the decoded body of every returned entry.
+
+- name: Accessor
+  default: auto
+
+export: |
+  LET ChromeCacheProfile = '''[
+    ["CacheAddr", 4, [
+      ["Value", 0, "uint32"],
+      ["Initialized", 0, "BitField", {type: "uint32", start_bit: 31, end_bit: 32}],
+      ["FileType", 0, "BitField", {type: "uint32", start_bit: 28, end_bit: 31}],
+      ["NumBlocks", 0, "BitField", {type: "uint32", start_bit: 24, end_bit: 26}],
+      ["FileSelector", 0, "BitField", {type: "uint32", start_bit: 16, end_bit: 24}],
+      ["StartBlock", 0, "BitField", {type: "uint32", start_bit: 0, end_bit: 16}],
+      ["FileNumber", 0, "BitField", {type: "uint32", start_bit: 0, end_bit: 28}]
+    ]],
+    ["IndexHeader", 368, [
+      ["Magic", 0, "uint32"],
+      ["Version", 4, "uint32"],
+      ["NumEntries", 8, "int32"],
+      ["TableLen", 28, "int32"],
+      ["Table", 368, "Array", {
+        type: "CacheAddr",
+        count: "x=>if(condition=x.TableLen > 0, then=x.TableLen, else=65536)",
+        max_count: 1048576
+      }]
+    ]],
+    ["EntryStore", 256, [
+      ["Hash", 0, "uint32"],
+      ["Next", 4, "CacheAddr"],
+      ["RankingsNode", 8, "CacheAddr"],
+      ["State", 20, "Enumeration", {
+        type: "int32",
+        choices: {"0": "Normal", "1": "Evicted", "2": "Doomed"}
+      }],
+      ["CreationTime", 24, "uint64"],
+      ["KeyLen", 32, "int32"],
+      ["LongKey", 36, "CacheAddr"],
+      ["DataSize", 40, "Array", {type: "int32", count: 4}],
+      ["DataAddr", 56, "Array", {type: "CacheAddr", count: 4}],
+      ["InlineKey", 96, "String", {length: "x=>x.KeyLen", max_length: 1024}]
+    ]],
+    ["RankingsNode", 36, [
+      ["LastUsed", 0, "uint64"],
+      ["LastModified", 8, "uint64"]
+    ]],
+    ["ResponseInfo", 0, [
+      ["Flags", 4, "uint32"],
+      ["HasExtraFlags", 4, "BitField", {type: "uint32", start_bit: 31, end_bit: 32}],
+      ["RequestTime", "x=>8 + 4 * x.HasExtraFlags", "uint64"],
+      ["ResponseTime", "x=>16 + 4 * x.HasExtraFlags", "uint64"]
+    ]],
+    ["SimpleFileHeader", 24, [
+      ["Magic", 0, "uint64"],
+      ["Version", 8, "uint32"],
+      ["KeyLength", 12, "uint32"],
+      ["Key", 24, "String", {length: "x=>x.KeyLength", max_length: 65536}]
+    ]],
+    ["SimpleFileEOF", 24, [
+      ["Magic", 0, "uint64"],
+      ["HasKeySHA256", 8, "BitField", {type: "uint32", start_bit: 1, end_bit: 2}],
+      ["StreamSize", 16, "uint32"]
+    ]],
+    ["SimpleIndex", 0, [
+      ["Magic", 8, "uint64"],
+      ["Version", 16, "uint32"],
+      ["EntryCount", 20, "uint64"],
+      ["Entries", "x=>if(condition=x.Version >= 8, then=40, else=36)", "Array", {
+        type: "SimpleIndexEntry",
+        count: "x=>x.EntryCount",
+        max_count: 10000000
+      }]
+    ]],
+    ["SimpleIndexEntry", 24, [
+      ["Hash", 0, "uint64"],
+      ["LastUsed", 8, "uint64"]
+    ]]
+  ]'''
+
+  -- Chromium stores times as microseconds since 1601. Small values
+  -- are not times (e.g. the simple index of an APP_CACHE).
+  LET ChromeTime(T) = if(condition=T > 10000000000000000,
+        then=timestamp(winfiletime=T * 10))
+
+  -- Blockfile cache addresses point into a block file (data_N) or
+  -- an external file (f_XXXXXX). Block files have an 8kb header.
+  LET BlockSizes <= dict(`1`=36, `2`=256, `3`=1024, `4`=4096)
+
+  LET AddrFile(Dir, A) = if(condition=A.FileType = 0,
+        then=Dir + format(format="f_%06x", args=A.FileNumber),
+        else=Dir + format(format="data_%d", args=A.FileSelector))
+
+  LET AddrOffset(A) = if(condition=A.FileType = 0, then=0,
+        else=8192 + A.StartBlock * get(item=BlockSizes, field=str(str=A.FileType)))
+
+  LET ParseAddr(Dir, A, Struct) = if(condition=A.Initialized,
+        then=parse_binary(accessor=Accessor, filename=AddrFile(Dir=Dir, A=A),
+                          offset=AddrOffset(A=A),
+                          profile=ChromeCacheProfile, struct=Struct))
+
+  -- Parsed structs cache their fields in a map that is not safe to
+  -- share between query stages, so copy what we need into dicts in
+  -- the stage that parsed them.
+  LET AddrDict(A) = dict(Value=A.Value, Initialized=A.Initialized,
+        FileType=A.FileType, FileSelector=A.FileSelector,
+        StartBlock=A.StartBlock, FileNumber=A.FileNumber)
+
+  LET EntryDict(E) = if(condition=E.KeyLen > 0, then=dict(
+        Next=AddrDict(A=E.Next),
+        RankingsNode=AddrDict(A=E.RankingsNode),
+        State=str(str=E.State),
+        CreationTime=E.CreationTime,
+        KeyLen=E.KeyLen,
+        LongKey=AddrDict(A=E.LongKey),
+        InlineKey=E.InlineKey,
+        InfoSize=E.DataSize[0],
+        InfoAddr=AddrDict(A=E.DataAddr[0]),
+        BodySize=E.DataSize[1],
+        BodyAddr=AddrDict(A=E.DataAddr[1])))
+
+  -- Both formats have a file called "index" but only the blockfile
+  -- index starts with 0xC103CAC3.
+  LET IsBlockfile(Dir) = stat(accessor=Accessor, filename=Dir + "index").Size >= 368
+    AND parse_binary(accessor=Accessor, filename=Dir + "index",
+                     profile=ChromeCacheProfile,
+                     struct="IndexHeader").Magic = 3238251203
+
+  LET BlockfileDirs = SELECT CacheDir, parse_binary(
+         accessor=Accessor, filename=CacheDir + "index",
+         profile=ChromeCacheProfile, struct="IndexHeader") AS Header
+    FROM CacheDirs
+    WHERE IsBlockfile(Dir=CacheDir)
+
+  -- Entries whose keys hash to the same bucket are chained with
+  -- the Next pointer. Depth guards against loops in corrupt files.
+  LET WalkChain(Dir, A, Depth) = SELECT * FROM foreach(
+    row={
+      SELECT EntryDict(E=ParseAddr(Dir=Dir, A=A, Struct="EntryStore")) AS Entry
+      FROM scope()
+    },
+    query={
+      SELECT * FROM chain(
+        a={ SELECT A AS Addr, Entry FROM scope() },
+        b={
+          SELECT * FROM if(
+            condition=Entry.Next.Initialized AND Depth < 64,
+            then={
+              SELECT * FROM WalkChain(Dir=Dir, A=Entry.Next, Depth=Depth + 1)
+            })
+        })
+    })
+
+  LET BlockfileRawEntries = SELECT * FROM foreach(row=BlockfileDirs,
+    query={
+      SELECT * FROM foreach(row={
+        SELECT dict(Value=Value, Initialized=Initialized,
+                    FileType=FileType, FileSelector=FileSelector,
+                    StartBlock=StartBlock, FileNumber=FileNumber) AS Bucket
+        FROM foreach(row=Header.Table)
+        WHERE Initialized
+      }, query={
+        SELECT CacheDir, Addr, Entry
+        FROM WalkChain(Dir=CacheDir, A=Bucket, Depth=0)
+        WHERE Entry
+      })
+    })
+
+  LET BlockfileEntries = SELECT
+      CacheDir, "blockfile" AS Format,
+      format(format="%08x", args=Addr.Value) AS EntryID,
+      if(condition=Entry.LongKey.Initialized,
+         then=read_file(accessor=Accessor,
+                        filename=AddrFile(Dir=CacheDir, A=Entry.LongKey),
+                        offset=AddrOffset(A=Entry.LongKey),
+                        length=Entry.KeyLen),
+         else=Entry.InlineKey) AS Key,
+      Entry.State AS State,
+      ChromeTime(T=Entry.CreationTime) AS CreationTime,
+      ChromeTime(T=ParseAddr(Dir=CacheDir, A=Entry.RankingsNode,
+                             Struct="RankingsNode").LastUsed) AS LastUsed,
+      AddrFile(Dir=CacheDir, A=Entry.InfoAddr) AS InfoFile,
+      AddrOffset(A=Entry.InfoAddr) AS InfoOffset,
+      if(condition=Entry.InfoAddr.Initialized,
+         then=Entry.InfoSize, else=0) AS InfoSize,
+      AddrFile(Dir=CacheDir, A=Entry.BodyAddr) AS BodyFile,
+      AddrOffset(A=Entry.BodyAddr) AS BodyOffset,
+      if(condition=Entry.BodyAddr.Initialized,
+         then=Entry.BodySize, else=0) AS BodySize
+    FROM BlockfileRawEntries
+
+  -- Simple cache: one <hash>_0 file per entry laid out as
+  -- header, key, body (stream 1), EOF, HTTP info (stream 0),
+  -- optional SHA256 of the key, EOF.
+  LET SimpleLastUsed(Dir) = to_dict(item={
+      SELECT format(format="%016x", args=Hash) AS _key,
+             ChromeTime(T=LastUsed) AS _value
+      FROM foreach(row=parse_binary(
+             accessor=Accessor, filename=Dir + "index-dir" + "the-real-index",
+             profile=ChromeCacheProfile, struct="SimpleIndex").Entries)
+    })
+
+  LET SimpleDirs = SELECT CacheDir,
+      if(condition=stat(accessor=Accessor,
+                        filename=CacheDir + "index-dir" + "the-real-index"),
+         then=SimpleLastUsed(Dir=CacheDir)) AS LastUsedMap
+    FROM CacheDirs
+    WHERE NOT IsBlockfile(Dir=CacheDir)
+
+  LET SimpleFiles = SELECT * FROM foreach(row=SimpleDirs,
+    query={
+      SELECT CacheDir, LastUsedMap, OSPath, Size, Btime,
+             parse_binary(accessor=Accessor, filename=OSPath,
+                          profile=ChromeCacheProfile,
+                          struct="SimpleFileHeader") AS Header,
+             parse_binary(accessor=Accessor, filename=OSPath, offset=Size - 24,
+                          profile=ChromeCacheProfile,
+                          struct="SimpleFileEOF") AS EOF
+      FROM glob(globs="*_0", root=CacheDir, accessor=Accessor)
+      WHERE Name =~ "^[0-9a-f]{16}_0$" AND Size > 72
+        AND format(format="%x", args=Header.Magic) = "fcfb6d1ba7725c30"
+        AND format(format="%x", args=EOF.Magic) = "f4fa6f45970d41d8"
+    })
+
+  LET SimpleEntries = SELECT
+      CacheDir, "simple" AS Format,
+      OSPath.Basename AS EntryID,
+      Header.Key AS Key,
+      NULL AS State,
+      Btime AS CreationTime,
+      get(item=LastUsedMap, field=OSPath.Basename[0:16]) AS LastUsed,
+      OSPath AS InfoFile,
+      Size - 24 - 32 * EOF.HasKeySHA256 - EOF.StreamSize AS InfoOffset,
+      EOF.StreamSize AS InfoSize,
+      OSPath AS BodyFile,
+      24 + Header.KeyLength AS BodyOffset,
+      Size - 48 - 32 * EOF.HasKeySHA256 - EOF.StreamSize
+        - 24 - Header.KeyLength AS BodySize
+    FROM SimpleFiles
+
+  -- The cache key is "1/0/_dk_<top frame site> <frame site> <url>"
+  -- (possibly with a credential or range prefix) or just the URL.
+  LET KeyRegex = '''^(?:.*?_dk_(?:[a-z]+_)?(?P<TopFrameSite>\S+) \S+ )?(?:.* )?(?:[0-9]+/[0-9]+/)?(?P<URL>\S+)$'''
+
+  LET ResponseTimesDict(R) = dict(
+        RequestTime=ChromeTime(T=R.RequestTime),
+        ResponseTime=ChromeTime(T=R.ResponseTime))
+
+  LET ResponseTimes(Info) = ResponseTimesDict(R=parse_binary(
+        accessor="data", filename=Info,
+        profile=ChromeCacheProfile, struct="ResponseInfo"))
+
+  -- parse_string_with_regex() keeps the last match, and the
+  -- negotiated protocol stored after the headers (e.g. "http/1.1")
+  -- can match too. Anchor the regex so only the first header block
+  -- matches.
+  LET HeaderRegex = '''(?s)^.*?(?P<Raw>HTTP/[^\x00]*(?:\x00[^\x00]+)*)\x00\x00'''
+
+  LET ParseHeaders(Lines) = to_dict(item={
+      SELECT lowcase(string=H.Name) AS _key, H.Value AS _value
+      FROM foreach(row={
+        SELECT parse_string_with_regex(string=_value,
+                 regex='''^(?P<Name>[^:]+):\s*(?P<Value>.*)$''') AS H
+        FROM foreach(row=Lines[1:])
+      })
+      WHERE H.Name
+    })
+
+  LET HasBrotli <= version(function="brotli_decompress") != NULL
+  LET HasZstd <= version(function="zstd_decompress") != NULL
+  LET NeedBody <= IncludeBody OR BodyRegex OR AlsoUpload
+
+  LET DecodeBody(Data, Encoding) = if(
+      condition=Encoding = "" OR Encoding = "identity", then=Data,
+      else=if(condition=Encoding = "gzip" OR Encoding = "x-gzip",
+              then=gunzip(string=Data, max_bytes=MaxBodySize),
+      else=if(condition=Encoding = "br" AND HasBrotli,
+              then=brotli_decompress(string=Data, max_bytes=MaxBodySize),
+      else=if(condition=Encoding = "zstd" AND HasZstd,
+              then=zstd_decompress(string=Data, max_bytes=MaxBodySize)))))
+
+sources:
+- query: |
+    LET _ <= if(condition=NeedBody AND NOT (HasBrotli AND HasZstd),
+       then=log(level="WARN",
+                message="This client has no brotli_decompress() or zstd_decompress(): br and zstd bodies will not be decoded"))
+
+    LET CacheDirs = SELECT OSPath AS CacheDir
+      FROM glob(globs=CacheGlobs.Glob, accessor=Accessor)
+      WHERE IsDir
+
+    LET AllEntries = SELECT *,
+          parse_string_with_regex(string=Key, regex=KeyRegex) AS K
+      FROM chain(a=BlockfileEntries, b=SimpleEntries)
+      WHERE K.URL =~ URLRegex
+
+    LET WithHeaders = SELECT *,
+          read_file(accessor=Accessor, filename=InfoFile,
+                    offset=InfoOffset, length=InfoSize) AS Info
+      FROM AllEntries
+      WHERE InfoSize > 0
+
+    LET Parsed = SELECT *,
+          ResponseTimes(Info=Info) AS RI,
+          split(string=parse_string_with_regex(
+                  string=Info, regex=HeaderRegex).Raw,
+                sep="\x00") AS HeaderLines
+      FROM WithHeaders
+
+    LET WithMeta = SELECT *,
+          ParseHeaders(Lines=HeaderLines) AS Headers
+      FROM Parsed
+      WHERE get(item=Headers, field="content-type", default="") =~ ContentTypeRegex
+
+    LET Decoded = SELECT *,
+          lowcase(string=get(item=Headers, field="content-encoding", default="")) AS Encoding,
+          if(condition=NeedBody AND BodySize > 0 AND BodySize <= MaxBodySize,
+             then=read_file(accessor=Accessor, filename=BodyFile,
+                            offset=BodyOffset, length=BodySize)) AS RawBody
+      FROM WithMeta
+
+    LET WithBody = SELECT *,
+          if(condition=RawBody, then=DecodeBody(Data=RawBody, Encoding=Encoding)) AS _Plain
+      FROM Decoded
+
+    -- gunzip() returns FALSE and the other decoders NULL on error. An
+    -- empty string is a successfully decoded empty body.
+    LET Checked = SELECT *, typeof(x=_Plain) = "string" AS _Ok
+      FROM WithBody
+
+    LET Results = SELECT *,
+          if(condition=_Ok, then=_Plain) AS Plain,
+          if(condition=NOT NeedBody, then="Not requested",
+          else=if(condition=BodySize = 0, then="Empty",
+          else=if(condition=BodySize > MaxBodySize, then="Too large",
+          else=if(condition=_Ok, then="Decoded",
+          else=if(condition=(Encoding = "br" AND NOT HasBrotli)
+                    OR (Encoding = "zstd" AND NOT HasZstd),
+                  then="Decoder not available on client",
+          else=if(condition=Encoding =~ "^(gzip|x-gzip|br|zstd)$",
+                  then="Decode failed",
+          else=format(format="Unsupported encoding: %v", args=Encoding))))))) AS BodyStatus
+      FROM Checked
+      WHERE NOT BodyRegex OR Plain =~ BodyRegex
+
+    SELECT CacheDir, Format, EntryID,
+           K.URL AS URL,
+           K.TopFrameSite AS TopFrameSite,
+           Key,
+           if(condition=HeaderLines[0], then=HeaderLines[0]) AS Status,
+           get(item=Headers, field="content-type") AS ContentType,
+           get(item=Headers, field="content-encoding") AS ContentEncoding,
+           BodySize,
+           CreationTime, LastUsed,
+           RI.RequestTime AS RequestTime,
+           RI.ResponseTime AS ResponseTime,
+           State,
+           Headers,
+           if(condition=(IncludeBody OR BodyRegex)
+                AND get(item=Headers, field="content-type", default="") =~ BodyContentTypeRegex,
+              then=Plain) AS Body,
+           BodyStatus,
+           if(condition=AlsoUpload AND _Ok,
+              then=upload(accessor="data", file=Plain,
+                          name=CacheDir + (EntryID + ".body"))) AS Upload
+    FROM Results
