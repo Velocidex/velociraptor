@@ -11,7 +11,7 @@ description: |
 
   Both on disk formats are supported:
 
-  * The **blockfile** format (`index`, `data_0` to `data_3` and
+  * The **block file** format (`index`, `data_0` to `data_3` and
     `f_XXXXXX` files) used by Chrome and Edge on Windows.
   * The **simple cache** format (`<hash>_0` files and
     `index-dir/the-real-index`) used on Linux, macOS and Android.
@@ -44,7 +44,7 @@ description: |
     birth time of the entry file and `LastUsed` comes from the cache
     index (it may be missing if the index was not flushed).
   * Only live entries reachable from the cache index are returned for
-    the blockfile format.
+    the block file format.
 
 reference:
   - https://chromium.googlesource.com/chromium/src/+/HEAD/net/disk_cache/blockfile/disk_format.h
