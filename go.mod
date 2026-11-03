@@ -91,6 +91,7 @@ require (
 	github.com/jackwakefield/gopac v1.0.2
 	github.com/juju/ratelimit v1.0.1
 	github.com/kaptinlin/jsonschema v0.5.2
+	github.com/klauspost/compress v1.20.3
 	github.com/leodido/go-syslog v1.0.1
 	github.com/lib/pq v1.10.9
 	github.com/lpar/gzipped v1.1.0
@@ -283,7 +284,6 @@ require (
 	github.com/kaptinlin/go-i18n v0.2.0 // indirect
 	github.com/kaptinlin/messageformat-go v0.4.6 // indirect
 	github.com/karrick/godirwalk v1.17.0 // indirect
-	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/klauspost/crc32 v1.3.0 // indirect
 	github.com/klauspost/pgzip v1.2.6 // indirect
