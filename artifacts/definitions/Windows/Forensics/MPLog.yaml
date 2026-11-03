@@ -96,9 +96,9 @@ parameters:
     default: |
       Type,Keyword,Regex
       EstimatedImpact,ProcessImageName: ,"ProcessImageName: (?P<ProcessImageName>.+?), (?:Pid: (?P<Pid>\d+), )?TotalTime: (?P<TotalTime>\d+), Count: (?P<Count>\d+), MaxTime: (?P<MaxTime>\d+), MaxTimeFile: (?P<MaxTimeFile>.*), EstimatedImpact: (?P<EstimatedImpact>\d+)%"
-      DetectionAdd,DETECTION_ADD,"DETECTION_ADD(?:#\d+)? (?P<ThreatName>\S+) (?P<ResourceType>\w+):(?P<Resource>.*)"
-      DetectionEvent,DETECTIONEVENT ,"DETECTIONEVENT (?P<Source>\S+) (?P<Details>.*)"
-      EMSDetection,EMS detection: ,"EMS detection: (?P<ThreatName>[^,]+), sigseq=(?P<SigSeq>\w+), pid=(?P<Pid>\d+)"
+      DetectionAdd,DETECTION_ADD,"DETECTION_ADD(?:#\d+)? (?P<ThreatName>\S+) (?P<ResourceType>\w+):(?P<Resource>.*?)(?: PropBag \[.*)?$"
+      DetectionEvent,DETECTIONEVENT ,"DETECTIONEVENT (?P<Source>\S+) (?P<ThreatName>\S+)(?: (?P<ResourceType>\w+):(?P<Resource>[^;]*))?"
+      EMSDetection,EMS detection: ,"EMS detection: (?P<ThreatName>[^,]+), sigseq=(?P<SigSeq>\w+)(?:, sigsha=(?P<SigSha>\w+))?, pid=(?P<Pid>\d+)"
       EMSScan,EMS scan for process: ,"EMS scan for process: (?P<Process>\S+) pid: (?P<Pid>\d+), sigseq: (?P<SigSeq>\w+), sendMemoryScanReport: (?P<SendMemoryScanReport>\d+), source: (?P<ScanSource>\d+)"
       BlockedFile,\[Mini-filter\] Blocked file: ,"Blocked file: (?P<Path>.+?) Process: (?P<Process>.+?), Status: (?P<Status>[^,]+), State: (?P<State>[^,]+), ScanRequest (?P<ScanRequest>[^,]+), FileId: (?P<FileId>[^,]+), Reason: (?P<Reason>[^,]+)"
       UnsuccessfulScan,\[Mini-filter\] Unsuccessful scan status: ,"Unsuccessful scan status: (?P<Path>.+?) Process: (?P<Process>.+?), Status: (?P<Status>[^,]+), State: (?P<State>[^,]+), ScanRequest (?P<ScanRequest>[^,]+), FileId: (?P<FileId>[^,]+), Reason: (?P<Reason>[^,]+)"
@@ -121,7 +121,9 @@ export: |
         else=read_file(filename=OSPath, accessor=Accessor,
                        length=MaxFileSize)))
 
-  LET MPLogTimestampRegex = "^\\s*(?P<Time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z)"
+  -- Older Defender versions end the timestamp with Z, newer ones
+  -- (4.18.2608x) do not. Both are treated as UTC.
+  LET MPLogTimestampRegex = "^\\s*(?P<Time>\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?Z?)"
 
   -- Parse "Key: Value" lines of a block into a dict.
   LET MPLogBlockFields(Body) = to_dict(item={

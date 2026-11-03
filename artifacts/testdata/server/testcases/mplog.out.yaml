@@ -77,6 +77,7 @@ Output: [
   "Details": {
    "ThreatName": "HackTool:Win64/CobaltStrike.A!!CobaltStrike.A64",
    "SigSeq": "0x0000C0C53E1F0B73",
+   "SigSha": "",
    "Pid": "6108"
   },
   "SHA1": null,
@@ -99,6 +100,60 @@ Output: [
   "Details": {
    "Path": "C:\\Temp\\",
    "DevicePath": "\\Device\\HarddiskVolume3\\Temp\\"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-09-30T22:28:09.2Z",
+  "Type": "EstimatedImpact",
+  "Details": {
+   "ProcessImageName": "notepad.exe",
+   "Pid": "5808",
+   "TotalTime": "738",
+   "Count": "54",
+   "MaxTime": "250",
+   "MaxTimeFile": "\\Device\\HarddiskVolume3\\Users\\bob\\Downloads\\setup.exe",
+   "EstimatedImpact": "0"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-09-30T22:18:54.74Z",
+  "Type": "DetectionAdd",
+  "Details": {
+   "ThreatName": "Trojan:Win32/Example!rfn",
+   "ResourceType": "file",
+   "Resource": "C:\\Users\\bob\\Downloads\\payload.exe"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-09-30T22:18:54.738Z",
+  "Type": "DetectionEvent",
+  "Details": {
+   "Source": "MPSOURCE_REALTIME",
+   "ThreatName": "Trojan:Win32/Example!rfn",
+   "ResourceType": "file",
+   "Resource": "C:\\Users\\bob\\Downloads\\payload.exe"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-10-05T22:06:20.913Z",
+  "Type": "EMSDetection",
+  "Details": {
+   "ThreatName": "Trojan:Win32/Example.AR!!Example.S3",
+   "SigSeq": "0x0001F7C5C2F2908D",
+   "SigSha": "f6a5ad6a670289e5337a36171d2b9bfa50ff731b",
+   "Pid": "11608"
   },
   "SHA1": null,
   "SHA256": null,
