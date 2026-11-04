@@ -1,0 +1,340 @@
+name: Windows.Forensics.BITS
+description: |
+  Parses the Background Intelligent Transfer Service (BITS) job
+  database `qmgr.db` used by Windows 10 and later.
+
+  BITS is the download service used by Windows Update, browsers and
+  many updaters, so its traffic blends in. Attackers abuse it to
+  download payloads and to gain persistence: a job can carry a
+  **notify command line** that BITS runs when the job finishes or
+  fails, and a job that is never completed keeps retrying across
+  reboots (MITRE ATT&CK T1197).
+
+  The `Microsoft-Windows-Bits-Client/Operational` event log only
+  records that a transfer started or stopped and its URL. The
+  database also holds the notify command line, the destination and
+  temporary file paths, the owner SID and the job timestamps.
+
+  `qmgr.db` is an ESE database. Each row of its `Jobs` and `Files`
+  tables holds an undocumented binary blob. The artifact locates
+  these blobs directly in the database file by their record
+  signatures and decodes them, the same way as Mandiant's
+  `BitsParser` in `--carvedb` mode. Because the whole file is scanned,
+  older versions of a job and records of deleted jobs that are still
+  present in free space are returned as well.
+
+  Sources:
+
+  * **Jobs**: one row per job record. `InJobsTable` is true when the
+    job is still listed in the `Jobs` table; other rows are deleted
+    jobs or older copies of a job. The same job can appear several
+    times with different states, which shows how it progressed.
+  * **Files**: one row per file record with the source URL, the
+    destination path and the temporary `BIT*.tmp` file. On Windows 10
+    and later a file record does not hold the ID of its job, so files
+    can not be linked to a job unless the job is still in the
+    database (see `FileIdsInFilesTable` in the Jobs source).
+
+  NOTES:
+
+  * The database is locked by the BITS service. The `auto` accessor
+    falls back to raw NTFS access to read it.
+  * Records are found by signature, so a record that is split across
+    two database pages may be incomplete or missing.
+  * The database is read into memory, up to `MaxSize` bytes.
+  * Times are UTC. `ExpirationTime` is the time after which BITS
+    cancels a job that was not completed (90 days by default).
+
+reference:
+  - https://attack.mitre.org/techniques/T1197/
+  - https://cloud.google.com/blog/topics/threat-intelligence/attacker-use-of-windows-background-intelligent-transfer-service/
+  - https://github.com/fireeye/BitsParser
+  - https://github.com/ANSSI-FR/bits_parser
+  - https://learn.microsoft.com/en-us/windows/win32/bits/background-intelligent-transfer-service-portal
+
+author: Abdelghafour Bouhdyd
+
+type: CLIENT
+
+implied_permissions:
+  - FILESYSTEM_WRITE
+
+parameters:
+  - name: QmgrGlob
+    description: Glob matching the BITS job database.
+    default: C:/ProgramData/Microsoft/Network/Downloader/qmgr.db
+  - name: Accessor
+    description: Accessor used to read the database.
+    default: auto
+  - name: NameRegex
+    type: regex
+    default: .
+    description: Only return jobs whose name or description matches this regex.
+  - name: CommandRegex
+    type: regex
+    default: .
+    description: |
+      Only return jobs whose notify command line matches this regex.
+      Use `\S` to only see jobs that run a command.
+  - name: URLRegex
+    type: regex
+    default: .
+    description: Only return files whose source URL or destination matches this regex.
+  - name: OnlyInJobsTable
+    type: bool
+    description: Only return jobs that are still listed in the Jobs table.
+  - name: MaxSize
+    type: int
+    default: 268435456
+    description: Maximum number of bytes of the database to read.
+  - name: UploadDatabase
+    type: bool
+    description: Also upload the qmgr.db file.
+
+imports:
+  - Windows.Sys.AllUsers
+
+export: |
+  -- Each Jobs and Files blob starts with one of these 16 byte
+  -- signatures (hex encoded). A job blob holds the control block, an
+  -- XFER header, the list of file IDs, a second XFER header and the
+  -- job metadata.
+  LET JobSignatures = '(a15609e143afc94292e66f9856eba7f6|9f95d44c6470f24b84d7476a7e62699f|f11926a93203bf4c9427898818958831|c133bcddfb5aaf4db8a12268b39d01ad|d057568f2c013e4ead2cf4a5d7656faf|5067419457031d46a4cc5dd9990706e4)'
+  LET FileSignature = 'e4cf9e5146d99743b73e268513051ab2'
+  LET XferHeader = '36da56776f515a43acac44a248fff34d'
+
+  LET BITSProfile = '''[
+    ["PString", "x=>4 + x.Length * 2", [
+      ["Length", 0, "uint32"],
+      ["Value", 4, "String", {
+         "encoding": "utf16", "length": "x=>x.Length * 2",
+         "max_length": 65536}]
+    ]],
+    ["GUID", 16, [
+      ["__D1", 0, "uint32"],
+      ["__D2", 4, "uint16"],
+      ["__D3", 6, "uint16"],
+      ["__D4", 8, "String", {"term": "", "length": 2}],
+      ["__D5", 10, "String", {"term": "", "length": 6}],
+      ["Value", 0, "Value", {
+        "value": "x=>format(format='{%08x-%04x-%04x-%02x-%02x}', args=[x.__D1, x.__D2, x.__D3, x.__D4, x.__D5])"
+      }]
+    ]],
+    ["Control", 0, [
+      ["Type", 0, "uint32"],
+      ["Priority", 4, "uint32"],
+      ["State", 8, "uint32"],
+      ["TypeName", 0, "Enumeration", {"type": "uint32", "choices": {
+         "0": "Download", "1": "Upload", "2": "UploadReply"}}],
+      ["PriorityName", 4, "Enumeration", {"type": "uint32", "choices": {
+         "0": "Foreground", "1": "High", "2": "Normal", "3": "Low"}}],
+      ["StateName", 8, "Enumeration", {"type": "uint32", "choices": {
+         "0": "Queued", "1": "Connecting", "2": "Transferring",
+         "3": "Suspended", "4": "Error", "5": "TransientError",
+         "6": "Transferred", "7": "Acknowledged", "8": "Cancelled"}}],
+      ["__JobId", 16, "GUID"],
+      ["JobId", 0, "Value", {"value": "x=>x.__JobId.Value"}],
+      ["__Name", 32, "PString"],
+      ["__Desc", "x=>x.__Name.EndOf", "PString"],
+      ["__Cmd", "x=>x.__Desc.EndOf", "PString"],
+      ["__Args", "x=>x.__Cmd.EndOf", "PString"],
+      ["__Sid", "x=>x.__Args.EndOf", "PString"],
+      ["NotifyFlags", "x=>x.__Sid.EndOf", "Flags", {"type": "uint32", "bitmap": {
+         "JobTransferred": 0, "JobError": 1, "Disable": 2,
+         "JobModification": 3, "FileTransferred": 4}}],
+      ["Name", 0, "Value", {"value": "x=>x.__Name.Value"}],
+      ["NameLength", 0, "Value", {"value": "x=>x.__Name.Length"}],
+      ["Description", 0, "Value", {"value": "x=>x.__Desc.Value"}],
+      ["Command", 0, "Value", {"value": "x=>x.__Cmd.Value"}],
+      ["Arguments", 0, "Value", {"value": "x=>x.__Args.Value"}],
+      ["OwnerSID", 0, "Value", {"value": "x=>x.__Sid.Value"}],
+      ["SidLength", 0, "Value", {"value": "x=>x.__Sid.Length"}]
+    ]],
+    ["FileList", 0, [
+      ["Count", 0, "uint32"],
+      ["Ids", 4, "Array", {
+         "type": "GUID", "count": "x=>x.Count", "max_count": 1000}]
+    ]],
+    ["Metadata", 0, [
+      ["ErrorCount", 0, "uint32"],
+      ["__Times", "x=>4 + x.ErrorCount * 25", "Times"],
+      ["TransientErrorCount", 0, "Value", {"value": "x=>x.__Times.TransientErrorCount"}],
+      ["RetryDelay", 0, "Value", {"value": "x=>x.__Times.RetryDelay"}],
+      ["NoProgressTimeout", 0, "Value", {"value": "x=>x.__Times.NoProgressTimeout"}],
+      ["CreationTime", 0, "Value", {"value": "x=>x.__Times.CreationTime"}],
+      ["ModificationTime", 0, "Value", {"value": "x=>x.__Times.ModificationTime"}],
+      ["ExpirationTime", 0, "Value", {"value": "x=>x.__Times.ExpirationTime"}]
+    ]],
+    ["Times", 66, [
+      ["TransientErrorCount", 0, "uint32"],
+      ["RetryDelay", 4, "uint32"],
+      ["NoProgressTimeout", 8, "uint32"],
+      ["CreationTime", 12, "uint64"],
+      ["ModificationTime", 20, "uint64"],
+      ["ExpirationTime", 58, "uint64"]
+    ]],
+    ["File", 0, [
+      ["__Dest", 0, "PString"],
+      ["__Src", "x=>x.__Dest.EndOf", "PString"],
+      ["__Tmp", "x=>x.__Src.EndOf", "PString"],
+      ["DownloadByteSize", "x=>x.__Tmp.EndOf", "uint64"],
+      ["TransferByteSize", "x=>x.__Tmp.EndOf + 8", "uint64"],
+      ["__Drive", "x=>x.__Tmp.EndOf + 17", "PString"],
+      ["__Volume", "x=>x.__Drive.EndOf", "PString"],
+      ["CreationTime", "x=>x.__Volume.EndOf + 29", "uint64"],
+      ["DestFile", 0, "Value", {"value": "x=>x.__Dest.Value"}],
+      ["DestLength", 0, "Value", {"value": "x=>x.__Dest.Length"}],
+      ["SourceURL", 0, "Value", {"value": "x=>x.__Src.Value"}],
+      ["SrcLength", 0, "Value", {"value": "x=>x.__Src.Length"}],
+      ["TmpFile", 0, "Value", {"value": "x=>x.__Tmp.Value"}],
+      ["TmpLength", 0, "Value", {"value": "x=>x.__Tmp.Length"}],
+      ["Drive", 0, "Value", {"value": "x=>x.__Drive.Value"}],
+      ["VolumeGUID", 0, "Value", {"value": "x=>x.__Volume.Value"}]
+    ]]
+  ]'''
+
+  -- A zero FILETIME means the time is not set.
+  LET FileTime(T) = if(condition=T, then=timestamp(winfiletime=T))
+
+  -- Strings may carry trailing NUL characters.
+  LET Clean(S) = regex_replace(source=S || "", re='\x00+$', replace="")
+
+  LET Parse(Hex, Struct) = parse_binary(accessor="data",
+     filename=unhex(string=Hex), profile=BITSProfile, struct=Struct)
+
+  -- The whole database, hex encoded so that the signatures can be
+  -- found with split().
+  LET ReadHex(OSPath) = format(format="%x",
+     args=read_file(filename=OSPath, accessor=Accessor, length=MaxSize))
+
+  LET GUIDList(List) = SELECT Value FROM foreach(row=List)
+
+  -- IDs of the jobs and files that are still listed in the tables.
+  LET TableIds(OSPath, Table) = SELECT Id
+    FROM parse_ese(file=OSPath, accessor=Accessor, table=Table)
+
+  -- Each record runs from its signature to the next signature. The
+  -- first piece is the data before the first signature. A signature
+  -- found at an odd hex position gives a piece that fails the
+  -- checks below.
+  LET Pieces(Hex, Sep) = SELECT _value AS Piece
+    FROM foreach(row=split(string=Hex, sep=Sep)[1:])
+
+  LET JobRows(Hex) = SELECT * FROM foreach(
+    row={
+      SELECT split(string=Piece, sep=XferHeader) AS Parts
+      FROM Pieces(Hex=Hex, Sep=JobSignatures)
+    },
+    query={
+      SELECT Parse(Hex=Parts[0], Struct="Control") AS Job,
+             Parse(Hex=Parts[1], Struct="FileList") AS Files,
+             Parse(Hex=Parts[2], Struct="Metadata") AS Meta,
+             len(list=Parts[1]) AS FileListLength
+      FROM scope()
+      WHERE len(list=Parts) >= 3
+    })
+    WHERE Job.Type <= 2 AND Job.Priority <= 3 AND Job.State <= 8
+      AND Job.NameLength < 4096 AND Job.SidLength < 256
+      AND Job.OwnerSID =~ "^S-1-"
+      AND FileListLength = ( 4 + Files.Count * 16 ) * 2
+
+  LET FileRows(Hex) = SELECT * FROM foreach(
+    row={
+      SELECT Parse(Hex=Piece, Struct="File") AS File
+      FROM Pieces(Hex=Hex, Sep=FileSignature)
+    },
+    query={
+      SELECT Clean(S=File.SourceURL) AS SourceURL,
+             Clean(S=File.DestFile) AS DestFile,
+             Clean(S=File.TmpFile) AS TmpFile,
+             File.DownloadByteSize AS DownloadByteSize,
+             File.TransferByteSize AS TransferByteSize,
+             Clean(S=File.Drive) AS Drive,
+             Clean(S=File.VolumeGUID) AS VolumeGUID,
+             FileTime(T=File.CreationTime) AS CreationTime
+      FROM scope()
+      WHERE File.DestLength > 0 AND File.DestLength < 4096
+        AND File.SrcLength > 0 AND File.SrcLength < 65536
+        AND File.TmpLength < 4096
+        AND File.DestFile =~ '^([A-Za-z]:|\\\\)'
+    })
+
+  LET QmgrFiles = SELECT OSPath
+    FROM glob(globs=QmgrGlob, accessor=Accessor)
+
+sources:
+  - name: Jobs
+    query: |
+      LET Rows = SELECT * FROM foreach(row=QmgrFiles, query={
+        SELECT * FROM foreach(
+          row={
+            SELECT ReadHex(OSPath=OSPath) AS Hex,
+                   TableIds(OSPath=OSPath, Table="Jobs").Id AS ActiveJobs,
+                   TableIds(OSPath=OSPath, Table="Files").Id AS ActiveFiles
+            FROM scope()
+          },
+          query={
+            SELECT Job.JobId AS JobId,
+                   Job.JobId IN ActiveJobs AS InJobsTable,
+                   Clean(S=Job.Name) AS JobName,
+                   Clean(S=Job.Description) AS Description,
+                   Job.TypeName AS Type,
+                   Job.StateName AS State,
+                   Job.PriorityName AS Priority,
+                   Clean(S=Job.Command) AS NotifyCommand,
+                   Clean(S=Job.Arguments) AS NotifyArguments,
+                   Job.NotifyFlags AS NotifyFlags,
+                   Clean(S=Job.OwnerSID) AS OwnerSID,
+                   FileTime(T=Meta.CreationTime) AS CreationTime,
+                   FileTime(T=Meta.ModificationTime) AS ModificationTime,
+                   FileTime(T=Meta.ExpirationTime) AS ExpirationTime,
+                   GUIDList(List=Files.Ids).Value AS FileIds,
+                   filter(list=GUIDList(List=Files.Ids).Value,
+                          condition="x=>x IN ActiveFiles") AS FileIdsInFilesTable,
+                   Meta.ErrorCount AS ErrorCount,
+                   Meta.TransientErrorCount AS TransientErrorCount,
+                   Meta.RetryDelay AS RetryDelay,
+                   Meta.NoProgressTimeout AS NoProgressTimeout,
+                   OSPath
+            FROM JobRows(Hex=Hex)
+          })
+      })
+
+      -- The same record can be stored more than once, so keep one row
+      -- for each distinct record.
+      SELECT *, LookupSIDCache(SID=OwnerSID) AS Owner
+      FROM Rows
+      WHERE ( JobName =~ NameRegex OR Description =~ NameRegex )
+        AND ( NotifyCommand + " " + NotifyArguments ) =~ CommandRegex
+        AND ( InJobsTable OR NOT OnlyInJobsTable )
+      GROUP BY OSPath, JobId, State, JobName, Description, NotifyCommand,
+               NotifyArguments, ModificationTime, ErrorCount,
+               join(array=FileIds, sep=",")
+
+  - name: Files
+    query: |
+      LET Rows = SELECT * FROM foreach(row=QmgrFiles, query={
+        SELECT *, OSPath
+        FROM FileRows(Hex=ReadHex(OSPath=OSPath))
+      })
+
+      SELECT * FROM Rows
+      WHERE ( SourceURL =~ URLRegex OR DestFile =~ URLRegex )
+      GROUP BY OSPath, SourceURL, DestFile, TmpFile, DownloadByteSize,
+               TransferByteSize, CreationTime
+
+  - name: Upload
+    precondition: SELECT * FROM scope() WHERE UploadDatabase
+    query: |
+      SELECT OSPath, upload(file=OSPath, accessor=Accessor) AS Upload
+      FROM QmgrFiles
+
+column_types:
+  - name: CreationTime
+    type: timestamp
+  - name: ModificationTime
+    type: timestamp
+  - name: ExpirationTime
+    type: timestamp
+  - name: Upload
+    type: upload
