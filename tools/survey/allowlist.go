@@ -77,6 +77,7 @@ var (
 		"base64decode",
 		"base64encode",
 		"basename",
+		"brotli_decompress",
 		"cache",
 		"cancel_flow",
 		"cidr_contains",
@@ -177,6 +178,7 @@ var (
 		"version",
 		"whoami",
 		"xor",
+		"zstd_decompress",
 	}
 
 	allowed_accessors = []string{

@@ -1,0 +1,31 @@
+Queries:
+  # Parse a blockfile and a simple cache. For simple cache entries
+  # CreationTime is the file birth time, so it is not checked here.
+  - SELECT CacheDir.Basename AS CacheDir, Format, EntryID, URL, TopFrameSite,
+           Status, ContentType, ContentEncoding, BodySize,
+           if(condition=Format = "blockfile", then=CreationTime) AS CreationTime,
+           LastUsed, RequestTime, ResponseTime, State, BodyStatus
+    FROM Artifact.Generic.Applications.Chrome.Cache(
+        CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*",
+        Accessor="file")
+    ORDER BY URL
+
+  # Decode br, gzip, zstd and identity bodies.
+  - SELECT URL, Headers, Body, BodyStatus
+    FROM Artifact.Generic.Applications.Chrome.Cache(
+        CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*",
+        Accessor="file", IncludeBody=TRUE,
+        URLRegex="chatgpt|example.net|robots")
+    ORDER BY URL
+
+  # Search inside the decoded bodies.
+  - SELECT URL, TopFrameSite, Body
+    FROM Artifact.Generic.Applications.Chrome.Cache(
+        CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*",
+        Accessor="file", BodyRegex="training_allowed[^,]*true")
+
+  # Bodies of non textual content types are decoded but not returned.
+  - SELECT URL, ContentType, Body, BodyStatus
+    FROM Artifact.Generic.Applications.Chrome.Cache(
+        CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*",
+        Accessor="file", IncludeBody=TRUE, ContentTypeRegex="image")
