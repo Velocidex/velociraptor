@@ -1,0 +1,223 @@
+# Parse a blockfile and a simple cache. For simple cache entries
+# CreationTime is the file birth time, so it is not checked here.
+Query: SELECT CacheDir.Basename AS CacheDir, Format, EntryID, URL, TopFrameSite, Status, ContentType, ContentEncoding, BodySize, if(condition=Format = "blockfile", then=CreationTime) AS CreationTime, LastUsed, RequestTime, ResponseTime, State, BodyStatus FROM Artifact.Generic.Applications.Chrome.Cache( CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*", Accessor="file") ORDER BY URL
+Output: [
+ {
+  "CacheDir": "blockfile",
+  "Format": "blockfile",
+  "EntryID": "a001000b",
+  "URL": "https://api.example.net/v1/me",
+  "TopFrameSite": "https://example.net",
+  "Status": "HTTP/2.0 200",
+  "ContentType": "application/json",
+  "ContentEncoding": "zstd",
+  "BodySize": 77,
+  "CreationTime": "2026-10-21T11:00:00Z",
+  "LastUsed": "2026-10-21T11:30:00Z",
+  "RequestTime": "2026-10-21T11:00:00Z",
+  "ResponseTime": "2026-10-21T11:00:00Z",
+  "State": "Normal",
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "blockfile",
+  "Format": "blockfile",
+  "EntryID": "a0010003",
+  "URL": "https://chatgpt.com/backend-api/conversations?offset=0\u0026limit=28",
+  "TopFrameSite": "https://chatgpt.com",
+  "Status": "HTTP/2.0 200",
+  "ContentType": "application/json; charset=utf-8",
+  "ContentEncoding": "gzip",
+  "BodySize": 133,
+  "CreationTime": "2026-10-20T09:16:41Z",
+  "LastUsed": "2026-10-20T09:20:00Z",
+  "RequestTime": "2026-10-20T09:16:41Z",
+  "ResponseTime": "2026-10-20T09:16:41Z",
+  "State": "Normal",
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "simple",
+  "Format": "simple",
+  "EntryID": "cdd0ef98e79a68e3_0",
+  "URL": "https://chatgpt.com/backend-api/me",
+  "TopFrameSite": "https://chatgpt.com",
+  "Status": "HTTP/2.0 200",
+  "ContentType": "application/json",
+  "ContentEncoding": "br",
+  "BodySize": 85,
+  "CreationTime": null,
+  "LastUsed": "2026-10-22T07:00:01Z",
+  "RequestTime": "2026-10-22T07:00:00Z",
+  "ResponseTime": "2026-10-22T07:00:01Z",
+  "State": null,
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "blockfile",
+  "Format": "blockfile",
+  "EntryID": "a0010000",
+  "URL": "https://chatgpt.com/backend-api/settings/user",
+  "TopFrameSite": "https://chatgpt.com",
+  "Status": "HTTP/2.0 200",
+  "ContentType": "application/json",
+  "ContentEncoding": "br",
+  "BodySize": 94,
+  "CreationTime": "2026-10-20T09:15:02Z",
+  "LastUsed": "2026-10-20T09:15:03Z",
+  "RequestTime": "2026-10-20T09:15:02Z",
+  "ResponseTime": "2026-10-20T09:15:03Z",
+  "State": "Normal",
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "blockfile",
+  "Format": "blockfile",
+  "EntryID": "a0010008",
+  "URL": "https://static.example.org/logo.png",
+  "TopFrameSite": "https://example.org",
+  "Status": "HTTP/1.1 200",
+  "ContentType": "image/png",
+  "ContentEncoding": null,
+  "BodySize": 32,
+  "CreationTime": "2026-10-18T08:00:00Z",
+  "LastUsed": "2026-10-18T08:00:00Z",
+  "RequestTime": "2026-10-18T08:00:00Z",
+  "ResponseTime": "2026-10-18T08:00:00Z",
+  "State": "Normal",
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "blockfile",
+  "Format": "blockfile",
+  "EntryID": "a001000e",
+  "URL": "https://www.example.com/beacon",
+  "TopFrameSite": "https://example.com",
+  "Status": "HTTP/1.1 204",
+  "ContentType": null,
+  "ContentEncoding": null,
+  "BodySize": 0,
+  "CreationTime": "2026-10-19T14:00:02Z",
+  "LastUsed": "2026-10-19T14:00:02Z",
+  "RequestTime": "2026-10-19T14:00:02Z",
+  "ResponseTime": "2026-10-19T14:00:02Z",
+  "State": "Normal",
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "simple",
+  "Format": "simple",
+  "EntryID": "3d719c6738a608c6_0",
+  "URL": "https://www.example.com/robots.txt",
+  "TopFrameSite": "https://example.com",
+  "Status": "HTTP/1.1 200",
+  "ContentType": "text/plain",
+  "ContentEncoding": "gzip",
+  "BodySize": 54,
+  "CreationTime": null,
+  "LastUsed": "2026-10-22T07:06:00Z",
+  "RequestTime": "2026-10-22T07:05:00Z",
+  "ResponseTime": "2026-10-22T07:05:00Z",
+  "State": null,
+  "BodyStatus": "Not requested"
+ },
+ {
+  "CacheDir": "blockfile",
+  "Format": "blockfile",
+  "EntryID": "a0010006",
+  "URL": "https://www.example.com/search?q=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "TopFrameSite": "https://example.com",
+  "Status": "HTTP/1.1 200",
+  "ContentType": "text/html; charset=utf-8",
+  "ContentEncoding": null,
+  "BodySize": 21026,
+  "CreationTime": "2026-10-19T14:00:00Z",
+  "LastUsed": "2026-10-19T14:05:00Z",
+  "RequestTime": "2026-10-19T14:00:00Z",
+  "ResponseTime": "2026-10-19T14:00:01Z",
+  "State": "Normal",
+  "BodyStatus": "Not requested"
+ }
+]
+
+# Decode br, gzip, zstd and identity bodies.
+Query: SELECT URL, Headers, Body, BodyStatus FROM Artifact.Generic.Applications.Chrome.Cache( CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*", Accessor="file", IncludeBody=TRUE, URLRegex="chatgpt|example.net|robots") ORDER BY URL
+Output: [
+ {
+  "URL": "https://api.example.net/v1/me",
+  "Headers": {
+   "content-type": "application/json",
+   "content-encoding": "zstd",
+   "date": "Tue, 20 Oct 2026 09:15:03 GMT",
+   "content-length": "77"
+  },
+  "Body": "{\"name\":\"Jane Doe\",\"plan\":\"free\",\"email\":\"jane.doe@example.net\"}",
+  "BodyStatus": "Decoded"
+ },
+ {
+  "URL": "https://chatgpt.com/backend-api/conversations?offset=0\u0026limit=28",
+  "Headers": {
+   "content-type": "application/json; charset=utf-8",
+   "content-encoding": "gzip",
+   "date": "Tue, 20 Oct 2026 09:15:03 GMT",
+   "content-length": "133"
+  },
+  "Body": "{\"items\": [{\"id\": \"00000000-0000-4000-8000-000000000001\", \"title\": \"Quarterly revenue forecast\", \"create_time\": \"2026-10-20T09:16:40Z\"}], \"total\": 1}",
+  "BodyStatus": "Decoded"
+ },
+ {
+  "URL": "https://chatgpt.com/backend-api/me",
+  "Headers": {
+   "content-type": "application/json",
+   "content-encoding": "br",
+   "date": "Tue, 20 Oct 2026 09:15:03 GMT",
+   "content-length": "85"
+  },
+  "Body": "{\"object\": \"user\", \"id\": \"user-EXAMPLE0000000000000000\", \"email\": \"jane.doe@example.com\", \"training_allowed\": false}",
+  "BodyStatus": "Decoded"
+ },
+ {
+  "URL": "https://chatgpt.com/backend-api/settings/user",
+  "Headers": {
+   "content-type": "application/json",
+   "content-encoding": "br",
+   "date": "Tue, 20 Oct 2026 09:15:03 GMT",
+   "content-length": "94"
+  },
+  "Body": "{\"user_id\": \"user-EXAMPLE0000000000000000\", \"settings\": {\"training_allowed\": true, \"show_expanded_code_view\": false}, \"memory\": {\"enabled\": true}}",
+  "BodyStatus": "Decoded"
+ },
+ {
+  "URL": "https://www.example.com/robots.txt",
+  "Headers": {
+   "content-type": "text/plain",
+   "content-encoding": "gzip",
+   "date": "Tue, 20 Oct 2026 09:15:03 GMT",
+   "content-length": "54"
+  },
+  "Body": "User-agent: *\nDisallow: /private/\n",
+  "BodyStatus": "Decoded"
+ }
+]
+
+# Search inside the decoded bodies.
+Query: SELECT URL, TopFrameSite, Body FROM Artifact.Generic.Applications.Chrome.Cache( CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*", Accessor="file", BodyRegex="training_allowed[^,]*true")
+Output: [
+ {
+  "URL": "https://chatgpt.com/backend-api/settings/user",
+  "TopFrameSite": "https://chatgpt.com",
+  "Body": "{\"user_id\": \"user-EXAMPLE0000000000000000\", \"settings\": {\"training_allowed\": true, \"show_expanded_code_view\": false}, \"memory\": {\"enabled\": true}}"
+ }
+]
+
+# Bodies of non textual content types are decoded but not returned.
+Query: SELECT URL, ContentType, Body, BodyStatus FROM Artifact.Generic.Applications.Chrome.Cache( CacheGlobs="Glob\n" + srcDir + "/artifacts/testdata/files/chromium_cache/*", Accessor="file", IncludeBody=TRUE, ContentTypeRegex="image")
+Output: [
+ {
+  "URL": "https://static.example.org/logo.png",
+  "ContentType": "image/png",
+  "Body": null,
+  "BodyStatus": "Decoded"
+ }
+]
+
