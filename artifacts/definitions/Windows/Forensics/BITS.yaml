@@ -177,8 +177,8 @@ export: |
       ["__Dest", 0, "PString"],
       ["__Src", "x=>x.__Dest.EndOf", "PString"],
       ["__Tmp", "x=>x.__Src.EndOf", "PString"],
-      ["DownloadByteSize", "x=>x.__Tmp.EndOf", "uint64"],
-      ["TransferByteSize", "x=>x.__Tmp.EndOf + 8", "uint64"],
+      ["DownloadByteSize", "x=>x.__Tmp.EndOf", "int64"],
+      ["TransferByteSize", "x=>x.__Tmp.EndOf + 8", "int64"],
       ["__Drive", "x=>x.__Tmp.EndOf + 17", "PString"],
       ["__Volume", "x=>x.__Drive.EndOf", "PString"],
       ["CreationTime", "x=>x.__Volume.EndOf + 29", "uint64"],
@@ -195,6 +195,9 @@ export: |
 
   -- A zero FILETIME means the time is not set.
   LET FileTime(T) = if(condition=T, then=timestamp(winfiletime=T))
+
+  -- BITS stores -1 (BG_SIZE_UNKNOWN) when a size is not known yet.
+  LET Size(N) = if(condition=N >= 0, then=N)
 
   -- Strings may carry trailing NUL characters.
   LET Clean(S) = regex_replace(source=S || "", re='\x00+$', replace="")
@@ -247,8 +250,8 @@ export: |
       SELECT Clean(S=File.SourceURL) AS SourceURL,
              Clean(S=File.DestFile) AS DestFile,
              Clean(S=File.TmpFile) AS TmpFile,
-             File.DownloadByteSize AS DownloadByteSize,
-             File.TransferByteSize AS TransferByteSize,
+             Size(N=File.DownloadByteSize) AS DownloadByteSize,
+             Size(N=File.TransferByteSize) AS TransferByteSize,
              Clean(S=File.Drive) AS Drive,
              Clean(S=File.VolumeGUID) AS VolumeGUID,
              FileTime(T=File.CreationTime) AS CreationTime
