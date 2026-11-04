@@ -1,0 +1,203 @@
+# Parse the line records of a UTF-16LE MPLog file.
+Query: SELECT Timestamp, Type, Details, SHA1, SHA256, OSPath.Basename AS OSPath FROM Artifact.Windows.Forensics.MPLog( MPLogGlob=srcDir+"/artifacts/testdata/files/mplog/MPLog-*.log", Accessor="file", source="Lines")
+Output: [
+ {
+  "Timestamp": "2020-06-14T20:11:42.88Z",
+  "Type": "EstimatedImpact",
+  "Details": {
+   "ProcessImageName": "explorer.exe",
+   "Pid": "",
+   "TotalTime": "30",
+   "Count": "11",
+   "MaxTime": "15",
+   "MaxTimeFile": "\\Device\\HarddiskVolume1\\Users\\Public\\Desktop\\PuTTY (64-bit).lnk-\u003e",
+   "EstimatedImpact": "9"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:31:10.12Z",
+  "Type": "EstimatedImpact",
+  "Details": {
+   "ProcessImageName": "rclone.exe",
+   "Pid": "4152",
+   "TotalTime": "1250",
+   "Count": "3850",
+   "MaxTime": "63",
+   "MaxTimeFile": "\\Device\\Mup\\fileserver\\VOL1\\PRIVATE\\HR\\PAYROLL\\report.xlsx",
+   "EstimatedImpact": "87"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:38:04.557Z",
+  "Type": "DetectionAdd",
+  "Details": {
+   "ThreatName": "Ransom:Win32/Conti.ZA",
+   "ResourceType": "file",
+   "Resource": "C:\\ProgramData\\badfile.exe"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:38:04.557Z",
+  "Type": "DetectionAdd",
+  "Details": {
+   "ThreatName": "Ransom:Win32/Conti.ZA",
+   "ResourceType": "process",
+   "Resource": "pid:100128,ProcessStart:132696072639875080"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:38:05Z",
+  "Type": "EMSScan",
+  "Details": {
+   "Process": "explorer",
+   "Pid": "6108",
+   "SigSeq": "0x0",
+   "SendMemoryScanReport": "0",
+   "ScanSource": "1"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:38:06Z",
+  "Type": "EMSDetection",
+  "Details": {
+   "ThreatName": "HackTool:Win64/CobaltStrike.A!!CobaltStrike.A64",
+   "SigSeq": "0x0000C0C53E1F0B73",
+   "SigSha": "",
+   "Pid": "6108"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:38:07Z",
+  "Type": "SDN",
+  "Details": {
+   "Details": "Issuing SDN query for \\Device\\HarddiskVolume3\\ProgramData\\badfile.exe (sha1=3395856ce81f2b7382dee72602f798b642f14140, sha2=275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f)"
+  },
+  "SHA1": "3395856ce81f2b7382dee72602f798b642f14140",
+  "SHA256": "275a021bbfb6489e54d471899f7db9d1663fc695ec2fe2a2c4538aabf651fd0f",
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2021-07-22T15:38:08Z",
+  "Type": "Exclusion",
+  "Details": {
+   "Path": "C:\\Temp\\",
+   "DevicePath": "\\Device\\HarddiskVolume3\\Temp\\"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-09-30T22:28:09.2Z",
+  "Type": "EstimatedImpact",
+  "Details": {
+   "ProcessImageName": "notepad.exe",
+   "Pid": "5808",
+   "TotalTime": "738",
+   "Count": "54",
+   "MaxTime": "250",
+   "MaxTimeFile": "\\Device\\HarddiskVolume3\\Users\\bob\\Downloads\\setup.exe",
+   "EstimatedImpact": "0"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-09-30T22:18:54.74Z",
+  "Type": "DetectionAdd",
+  "Details": {
+   "ThreatName": "Trojan:Win32/Example!rfn",
+   "ResourceType": "file",
+   "Resource": "C:\\Users\\bob\\Downloads\\payload.exe"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-09-30T22:18:54.738Z",
+  "Type": "DetectionEvent",
+  "Details": {
+   "Source": "MPSOURCE_REALTIME",
+   "ThreatName": "Trojan:Win32/Example!rfn",
+   "ResourceType": "file",
+   "Resource": "C:\\Users\\bob\\Downloads\\payload.exe"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ },
+ {
+  "Timestamp": "2026-10-05T22:06:20.913Z",
+  "Type": "EMSDetection",
+  "Details": {
+   "ThreatName": "Trojan:Win32/Example.AR!!Example.S3",
+   "SigSeq": "0x0001F7C5C2F2908D",
+   "SigSha": "f6a5ad6a670289e5337a36171d2b9bfa50ff731b",
+   "Pid": "11608"
+  },
+  "SHA1": null,
+  "SHA256": null,
+  "OSPath": "MPLog-20210722-153000.log"
+ }
+]
+
+# Lines that no rule matches are returned with AllLines.
+Query: SELECT Type, Line FROM Artifact.Windows.Forensics.MPLog( MPLogGlob=srcDir+"/artifacts/testdata/files/mplog/MPLog-*.log", Accessor="file", source="Lines", AllLines=TRUE, SearchRegex="rclone")
+Output: [
+ {
+  "Type": "EstimatedImpact",
+  "Line": "2021-07-22T15:31:10.120Z ProcessImageName: rclone.exe, Pid: 4152, TotalTime: 1250, Count: 3850, MaxTime: 63, MaxTimeFile: \\Device\\Mup\\fileserver\\VOL1\\PRIVATE\\HR\\PAYROLL\\report.xlsx, EstimatedImpact: 87%"
+ },
+ {
+  "Type": "Other",
+  "Line": "2021-07-22T15:38:09.000Z Unrelated line mentioning rclone.exe"
+ },
+ {
+  "Type": "Other",
+  "Line": "ImagePath:\\Device\\HarddiskVolume3\\Users\\bob\\Downloads\\rclone.exe"
+ }
+]
+
+# Parse the multi-line blocks.
+Query: SELECT Type, Fields FROM Artifact.Windows.Forensics.MPLog( MPLogGlob=srcDir+"/artifacts/testdata/files/mplog/MPLog-*.log", Accessor="file", source="Blocks")
+Output: [
+ {
+  "Type": "BMTelemetry",
+  "Fields": {
+   "GUID": "{2A5D8B9C-1111-2222-3333-444455556666}",
+   "SignatureID": "123456789",
+   "ProcessID": "4152",
+   "ProcessCreationTime": "132696072639875080",
+   "ImagePath": "\\Device\\HarddiskVolume3\\Users\\bob\\Downloads\\rclone.exe"
+  }
+ },
+ {
+  "Type": "ResourceScan",
+  "Fields": {
+   "Scan ID": "{AAAAAAAA-BBBB-CCCC-DDDD-EEEEEEEEEEEE}",
+   "Threat Name": "Ransom:Win32/Conti.ZA",
+   "Resource Path": "C:\\ProgramData\\badfile.exe"
+  }
+ }
+]
+

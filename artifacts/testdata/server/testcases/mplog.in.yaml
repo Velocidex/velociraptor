@@ -1,0 +1,18 @@
+Queries:
+  # Parse the line records of a UTF-16LE MPLog file.
+  - SELECT Timestamp, Type, Details, SHA1, SHA256, OSPath.Basename AS OSPath
+    FROM Artifact.Windows.Forensics.MPLog(
+        MPLogGlob=srcDir+"/artifacts/testdata/files/mplog/MPLog-*.log",
+        Accessor="file", source="Lines")
+
+  # Lines that no rule matches are returned with AllLines.
+  - SELECT Type, Line
+    FROM Artifact.Windows.Forensics.MPLog(
+        MPLogGlob=srcDir+"/artifacts/testdata/files/mplog/MPLog-*.log",
+        Accessor="file", source="Lines", AllLines=TRUE, SearchRegex="rclone")
+
+  # Parse the multi-line blocks.
+  - SELECT Type, Fields
+    FROM Artifact.Windows.Forensics.MPLog(
+        MPLogGlob=srcDir+"/artifacts/testdata/files/mplog/MPLog-*.log",
+        Accessor="file", source="Blocks")
