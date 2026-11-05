@@ -345,8 +345,6 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 	self.context.UserNotified = true
 	self.mu.Unlock()
 
-	flows.SendFlowCompletion(ctx, self.config_obj, flow_context)
-
 	launcher, err := services.GetLauncher(self.config_obj)
 	if err != nil {
 		return
@@ -360,11 +358,16 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 			// Request was not modified, don't touch it.
 			Request: false,
 		},
-		utils.SyncCompleter)
+		func() {
+			// Make sure the flow completion event happens **after**
+			// the flow is written.
+			flows.SendFlowCompletion(ctx, self.config_obj, flow_context)
+		})
 	if err != nil {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("<red>maybeSendCompletionMessage WriteFlow</> %v", err)
 	}
+
 }
 
 // Run all the queries and wait for them to finish.
