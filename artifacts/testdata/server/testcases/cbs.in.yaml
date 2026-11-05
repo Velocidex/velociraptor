@@ -1,0 +1,21 @@
+Queries:
+  # TelnetClient turned on and off again with dism.exe.
+  - SELECT Time, Feature, PreviousState, NewState, RemovePayload, Package,
+           Client, Session, SessionResult, RebootRequired
+    FROM Artifact.Windows.Forensics.CBS(
+      source="FeatureChanges", Accessor="file", LogTimezone="UTC",
+      CBSLogGlob=srcDir+"/artifacts/testdata/files/servicing/CBS.log")
+
+  - SELECT Time, Package, StartState, TargetState, CurrentState, Status,
+           FailureSource, RebootRequired, Client, ReleaseType,
+           ExecutionSequence
+    FROM Artifact.Windows.Forensics.CBS(
+      source="PackageChanges", Accessor="file", LogTimezone="UTC",
+      CBSLogGlob=srcDir+"/artifacts/testdata/files/servicing/CBS.log")
+
+  # dism.exe command lines and DISM API calls with their parent process.
+  - SELECT Time, Tool, Operation, CommandLine, Parameters, ParentProcess,
+           ParentPid, Pid
+    FROM Artifact.Windows.Forensics.CBS(
+      source="DismOperations", Accessor="file", LogTimezone="UTC",
+      DISMLogGlob=srcDir+"/artifacts/testdata/files/servicing/dism.log")

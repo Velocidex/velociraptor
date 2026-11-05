@@ -1,0 +1,245 @@
+name: Windows.Applications.WinGet
+description: |
+  Parses the diagnostic logs of the Windows Package Manager (WinGet).
+
+  WinGet writes one log file for every run of `winget.exe` and for
+  every call made through its COM API, for example by the Microsoft
+  Store, Intune or PowerShell. The logs record the full command line,
+  the package that was installed or removed, the download URL, the
+  installer that was started with its arguments, the files written by
+  portable packages and the result of the command.
+
+  Attackers use WinGet to install remote access tools, tunnels and
+  other utilities from a trusted Microsoft signed binary (MITRE ATT&CK
+  T1072, T1105, T1219). The logs are kept for a while after the
+  package itself has been removed.
+
+  Sources:
+
+  * **Sessions**: one row per log file, with the command line, the
+    caller, the packages, download URLs, installers started, files
+    written and the result.
+  * **Events**: one row per interesting log line, with its type.
+    Use `EventTypeRegex` to select the types to return.
+
+  Log locations:
+
+  * `%LOCALAPPDATA%\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir`
+    when WinGet runs as the packaged App Installer (the usual case).
+  * `%TEMP%\WinGet\defaultState` when WinGet runs outside the App
+    Installer package, for example as SYSTEM (`C:\Windows\Temp` or
+    `C:\Windows\SystemTemp`).
+
+  NOTES:
+
+  * WinGet writes its log times in the local time of the machine,
+    without a time zone. `LogTimezone` sets the time zone used to
+    convert them to UTC (`local` uses the time zone of the machine
+    running the query).
+  * WinGet removes old log files, so the history is limited.
+
+reference:
+  - https://learn.microsoft.com/en-us/windows/package-manager/winget/troubleshooting
+  - https://github.com/microsoft/winget-cli
+  - https://attack.mitre.org/techniques/T1072/
+
+author: Abdelghafour Bouhdyd
+
+type: CLIENT
+
+parameters:
+  - name: LogGlobs
+    type: csv
+    description: Globs matching the WinGet log files.
+    default: |
+      Glob
+      C:/Users/*/AppData/Local/Packages/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe/LocalState/DiagOutputDir/WinGet*.log
+      C:/Users/*/AppData/Local/Temp/WinGet/defaultState/WinGet*.log
+      C:/Windows/Temp/WinGet/defaultState/WinGet*.log
+      C:/Windows/SystemTemp/WinGet/defaultState/WinGet*.log
+  - name: Accessor
+    description: Accessor used to read the logs.
+    default: auto
+  - name: CommandLineRegex
+    type: regex
+    default: .
+    description: Only return sessions whose command line or caller matches this regex.
+  - name: PackageRegex
+    type: regex
+    default: .
+    description: |
+      Only return sessions or events that mention a package, URL or
+      file matching this regex.
+  - name: EventTypeRegex
+    type: regex
+    default: .
+    description: |
+      Only return events whose type matches this regex (Events
+      source). Types are CommandLine, Arguments, Caller, Process,
+      Command, Package, PackageVersion, PackageQueried, DownloadURL,
+      DownloadPath, DownloadHash, HashVerified, InstallerStarted,
+      InstallerArgs, FileWritten, PathModified, FileDeleted, Removed,
+      Result, InstallerFailed and Error.
+  - name: LogTimezone
+    default: local
+    description: |
+      Time zone of the log times, `local` for the time zone of the
+      machine running the query or a name such as `Europe/Paris`.
+
+export: |
+  -- Interesting log messages. Value is the main value of the event and
+  -- Detail holds extra information.
+  LET WinGetRules <= (
+    dict(Type="CommandLine", Regex='^Command line Args: (?P<Value>.+)$'),
+    dict(Type="Arguments", Regex='^WinGet invoked with arguments: (?P<Value>.+)$'),
+    dict(Type="Caller", Regex='^IsCOMCall:(?P<Detail>\\d+); Caller: (?P<Value>.+)$'),
+    dict(Type="Process", Regex='^Process: (?P<Value>[^\\[]+)\\[(?P<Detail>\\d+)\\]'),
+    dict(Type="Version", Regex='^WinGet, version \\[(?P<Value>[^\\]]+)\\]'),
+    dict(Type="Command", Regex='^Leaf command to execute: (?P<Value>.+)$'),
+    dict(Type="Package", Regex='^Found one app\\. App id: (?P<Value>.+?) App name: (?P<Detail>.*)$'),
+    dict(Type="PackageVersion", Regex='^Manifest fields: Name \\[(?P<Detail>.*)\\], Version \\[(?P<Value>[^\\]]*)\\]'),
+    dict(Type="PackageQueried", Regex='^Sending http GET request to: (?P<Detail>.+/packageManifests/(?P<Value>[^?/]+).*)$'),
+    dict(Type="DownloadURL", Regex='downloading from url: (?P<Value>.+)$'),
+    dict(Type="DownloadPath", Regex='^Downloading to path: (?P<Value>.+)$'),
+    dict(Type="DownloadHash", Regex='^Download hash: (?P<Value>[0-9a-fA-F]+)'),
+    dict(Type="HashVerified", Regex='^(?P<Value>(Installer|Microsoft Store package) hash verified)'),
+    dict(Type="InstallerStarted", Regex="^Starting: '(?P<Value>.*)' with arguments '(?P<Detail>.*)'$"),
+    dict(Type="InstallerArgs", Regex='^Installer args: (?P<Value>.*)$'),
+    dict(Type="FileWritten", Regex='^(?P<Detail>Moving portable exe to|Created target install directory|Successfully renamed downloaded installer\\. Path|Extracting archive to): (?P<Value>.+)$'),
+    dict(Type="PathModified", Regex='^Appending portable target directory to PATH registry: (?P<Value>.+)$'),
+    dict(Type="FileDeleted", Regex='^(?P<Detail>Deleting portable exe at|Removing empty install directory): (?P<Value>.+)$'),
+    dict(Type="Removed", Regex='^(?P<Detail>Removing MSIX package|Removing installer|Removing): (?P<Value>.+)$'),
+    dict(Type="Result", Regex='^Leaf command (?P<Value>succeeded): (?P<Detail>.+)$'),
+    dict(Type="Result", Regex='^Terminating context: (?P<Value>0x[0-9a-fA-F]+)(?P<Detail>.*)$'),
+    dict(Type="InstallerFailed", Regex='^(?P<Detail>.+) (?P<Value>(un)?installer failed: .+)$'),
+    dict(Type="InstallerFailed", Regex='^(?P<Value>Installer failed security check\\..+)$')
+  )
+
+  LET WinGetLineRegex = '^(?P<Time>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d{3}) <(?P<Level>[A-Z])> \\[(?P<Channel>[^\\]]+)\\] (?P<Message>.*)$'
+
+  LET WinGetFiles = SELECT OSPath,
+      parse_string_with_regex(
+         string=OSPath.String,
+         regex='(?i)[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)[\\\\/]').User
+        || "SYSTEM" AS User
+    FROM glob(globs=LogGlobs.Glob, accessor=Accessor)
+
+  -- Some log entries are written without a line break, so one line
+  -- can hold more than one entry. Only the first entry of such a line
+  -- is parsed.
+  LET WinGetLines(OSPath) = SELECT * FROM foreach(
+    row={
+      SELECT parse_string_with_regex(string=Line, regex=WinGetLineRegex) AS L
+      FROM parse_lines(filename=OSPath, accessor=Accessor)
+    },
+    query={
+      SELECT L.Time AS LocalTime, L.Level AS Level,
+             L.Message AS Message
+      FROM scope()
+      WHERE L.Time
+    })
+
+  LET WinGetEvents(OSPath, User) = SELECT * FROM foreach(
+    row=WinGetLines(OSPath=OSPath),
+    query={
+      SELECT * FROM chain(
+        rules={
+          SELECT LocalTime, Type,
+                 parse_string_with_regex(string=Message, regex=Regex) AS M
+          FROM foreach(row=WinGetRules)
+          WHERE Message =~ Regex
+          LIMIT 1
+        },
+        errors={
+          -- Error lines that did not match a rule above.
+          SELECT LocalTime, "Error" AS Type, dict(Value=Message) AS M
+          FROM scope()
+          WHERE Level = "E"
+            AND NOT Message =~ '^Terminating context: |installer failed: |Installer failed security check'
+        })
+    })
+
+  LET AllEvents = SELECT * FROM foreach(row=WinGetFiles, query={
+    SELECT timestamp(string=LocalTime) AS Time, User, Type,
+           M.Value AS Value, M.Detail AS Detail,
+           OSPath AS LogFile
+    FROM WinGetEvents(OSPath=OSPath, User=User)
+  })
+
+  LET Values(List) = filter(list=List, condition="x=>x")
+
+  -- Distinct values in the order they were first seen.
+  LET Distinct(List) = SELECT _value AS Value
+    FROM foreach(row=Values(List=List))
+    GROUP BY Value
+
+sources:
+  - name: Sessions
+    query: |
+      LET PARSE_TZ <= LogTimezone
+
+      LET Grouped = SELECT LogFile, User,
+          min(item=Time) AS StartTime,
+          max(item=Time) AS EndTime,
+          enumerate(items=if(condition=Type = "Process", then=Value)) AS _Process,
+          enumerate(items=if(condition=Type = "Process", then=Detail)) AS _Pid,
+          enumerate(items=if(condition=Type = "Caller", then=Value)) AS _Caller,
+          enumerate(items=if(condition=Type = "Version", then=Value)) AS _Version,
+          enumerate(items=if(condition=Type = "CommandLine", then=Value)) AS _CommandLine,
+          enumerate(items=if(condition=Type = "Command", then=Value)) AS _Command,
+          enumerate(items=if(condition=Type = "Package", then=Value)) AS _Packages,
+          enumerate(items=if(condition=Type = "PackageVersion", then=Value)) AS _Versions,
+          enumerate(items=if(condition=Type = "PackageQueried", then=Value)) AS _Queried,
+          enumerate(items=if(condition=Type = "DownloadURL", then=Value)) AS _URLs,
+          enumerate(items=if(condition=Type = "DownloadHash", then=Value)) AS _Hashes,
+          enumerate(items=if(condition=Type = "InstallerStarted",
+                             then=Value + " " + Detail)) AS _Installers,
+          enumerate(items=if(condition=Type = "FileWritten", then=Value)) AS _FilesWritten,
+          enumerate(items=if(condition=Type = "FileDeleted", then=Value)) AS _FilesDeleted,
+          enumerate(items=if(condition=Type = "Result", then=Value)) AS _Results,
+          enumerate(items=if(condition=Type =~ "InstallerFailed|Error",
+                             then=Value)) AS _Errors
+        FROM AllEvents
+        GROUP BY LogFile
+
+      SELECT StartTime, EndTime, User,
+             Values(List=_Process)[0] AS Process,
+             Values(List=_Pid)[0] AS Pid,
+             Values(List=_Caller)[0] AS Caller,
+             Values(List=_CommandLine)[0] AS CommandLine,
+             Values(List=_Command)[-1] AS Command,
+             Distinct(List=_Packages).Value AS Packages,
+             Distinct(List=_Versions).Value AS PackageVersions,
+             Distinct(List=_Queried).Value AS PackagesQueried,
+             Distinct(List=_URLs).Value AS DownloadURLs,
+             Distinct(List=_Hashes).Value AS DownloadHashes,
+             Distinct(List=_Installers).Value AS InstallersStarted,
+             Distinct(List=_FilesWritten).Value AS FilesWritten,
+             Distinct(List=_FilesDeleted).Value AS FilesDeleted,
+             Values(List=_Results)[-1] AS Result,
+             Distinct(List=_Errors).Value AS Errors,
+             Values(List=_Version)[0] AS WinGetVersion,
+             LogFile
+      FROM Grouped
+      WHERE ( CommandLine =~ CommandLineRegex OR Caller =~ CommandLineRegex )
+        AND ( PackageRegex = "." OR
+              serialize(item=[Packages, PackagesQueried, DownloadURLs,
+                              InstallersStarted, FilesWritten]) =~ PackageRegex )
+      ORDER BY StartTime
+
+  - name: Events
+    query: |
+      LET PARSE_TZ <= LogTimezone
+
+      SELECT * FROM AllEvents
+      WHERE Type =~ EventTypeRegex
+        AND ( PackageRegex = "." OR Value =~ PackageRegex OR Detail =~ PackageRegex )
+      ORDER BY Time
+
+column_types:
+  - name: StartTime
+    type: timestamp
+  - name: EndTime
+    type: timestamp
+  - name: Time
+    type: timestamp
