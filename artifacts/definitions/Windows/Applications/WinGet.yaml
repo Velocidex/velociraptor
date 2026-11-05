@@ -26,8 +26,9 @@ description: |
 
   * `%LOCALAPPDATA%\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\DiagOutputDir`
     when WinGet runs as the packaged App Installer (the usual case).
-  * `%TEMP%\WinGet\defaultState` when WinGet runs unpackaged, for
-    example as SYSTEM (`C:\Windows\Temp` or `C:\Windows\SystemTemp`).
+  * `%TEMP%\WinGet\defaultState` when WinGet runs outside the App
+    Installer package, for example as SYSTEM (`C:\Windows\Temp` or
+    `C:\Windows\SystemTemp`).
 
   NOTES:
 
