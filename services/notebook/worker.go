@@ -417,24 +417,9 @@ func (self *NotebookWorker) RegisterWorker(
 		return err
 	}
 
-	var priority int64
-	if config_obj.Defaults != nil {
-		priority = config_obj.Defaults.NotebookWorkerPriority
-	}
-
-	if services.IsMinion(config_obj) {
-		// By default minion workers have lower priority if not
-		// specified to keep the default running notebook processing
-		// on the master.
-		priority = -10
-		if config_obj.Minion != nil &&
-			config_obj.Minion.NotebookWorkerPriority != 0 {
-			priority = config_obj.Minion.NotebookWorkerPriority
-		}
-	}
-
 	queue := "Notebook"
-	job_chan, err := scheduler.RegisterWorker(ctx, queue, name, int(priority))
+	job_chan, err := scheduler.RegisterWorker(
+		ctx, queue, name, services.GetWorkerPriority(config_obj))
 	if err != nil {
 		return err
 	}
@@ -544,16 +529,8 @@ func (self *NotebookManager) Start(
 
 	// Start a few local workers for notebooks. This also limits
 	// concurrency on notebook processing.
-	local_workers := int64(1)
-	if config_obj.Defaults.NotebookNumberOfLocalWorkers != 0 {
-		local_workers = config_obj.Defaults.NotebookNumberOfLocalWorkers
-	}
-	if services.IsMinion(config_obj) && config_obj.Minion != nil &&
-		config_obj.Minion.NotebookNumberOfLocalWorkers > 0 {
-		local_workers = config_obj.Minion.NotebookNumberOfLocalWorkers
-	}
-
-	_, err := NewWorkerPool(ctx, config_obj, local_workers)
+	_, err := NewWorkerPool(ctx, config_obj,
+		services.GetLocalWorkers(config_obj))
 	return err
 }
 

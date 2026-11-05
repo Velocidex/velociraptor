@@ -150,6 +150,7 @@ func (self *NotebookManager) UpdateNotebookCell(
 
 	select {
 	case <-fast_ctx.Done():
+		services.DrainAndDiscardResponses(response_chan)
 		return notebook_cell, nil
 
 	case job_resp, ok := <-response_chan:

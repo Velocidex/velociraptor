@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/alitto/pond/v2"
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/actions"
@@ -19,6 +20,7 @@ import (
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
 	"www.velocidex.com/golang/velociraptor/file_store"
+	"www.velocidex.com/golang/velociraptor/flows"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -26,6 +28,7 @@ import (
 	artifact_paths "www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/result_sets"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/journal"
 	"www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -43,11 +46,16 @@ type contextManager struct {
 
 	// This is our parent context - it needs to remain alive after
 	// Cancel() so we can write the collection results
-	ctx context.Context
+	// ctx context.Context
 
 	// The sub context will be cancelled by Cancel()
-	sub_ctx    context.Context
-	cancel     func()
+	sub_ctx context.Context
+	cancel  func()
+
+	// Set to true when we cancel the flow. Prevents writing out of
+	// place data.
+	cancelled bool
+
 	wg         *sync.WaitGroup
 	session_id string
 
@@ -65,7 +73,6 @@ type contextManager struct {
 
 func NewCollectionContextManager(
 	ctx context.Context,
-	wg *sync.WaitGroup,
 	config_obj *config_proto.Config,
 	req *crypto_proto.FlowRequest,
 	collection_context *flows_proto.ArtifactCollectorContext) (
@@ -98,7 +105,6 @@ func NewCollectionContextManager(
 	self := &contextManager{
 		config_obj: config_obj,
 		context:    collection_context,
-		ctx:        ctx,
 		sub_ctx:    sub_ctx,
 		cancel:     cancel,
 		wg:         &sync.WaitGroup{},
@@ -109,7 +115,13 @@ func NewCollectionContextManager(
 		dirty:      true,
 	}
 
-	return self, nil
+	// Support cancellations
+	err = journal.WatchQueueWithCB(sub_ctx, config_obj, self.wg,
+		artifact_paths.CANCEL_TASK,
+		"ServerArtifactWorker",
+		self.Cancel)
+
+	return self, err
 }
 
 func (self *contextManager) ChargeRow() {
@@ -158,14 +170,11 @@ func (self *contextManager) GetQueryContext(
 		self.config_obj, utils.GetQueryName(query.Query))
 	base, _ := paths.SplitFullSourceName(artifact_name)
 
-	// Will be done when query is closed.
-	self.wg.Add(1)
 	result := &queryContext{
 		id:         utils.GetId(),
 		config_obj: self.config_obj,
 		session_id: self.session_id,
 		start:      utils.GetTime().Now(),
-		wg:         self.wg,
 		status: crypto_proto.VeloStatus{
 			// Initial state for all running queries - will be changed
 			// to either OK or GENERIC_ERROR when the query is done.
@@ -205,31 +214,26 @@ func (self *contextManager) GetContext() *flows_proto.ArtifactCollectorContext {
 
 // Starts a go routine which saves the context state so the GUI can
 // monitor progress.
-func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		for {
-			select {
-			case <-self.sub_ctx.Done():
-				err := self.Save()
-				if err != nil {
-					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-					logger.Error("<red>contextManager Save</> %v", err)
-				}
-				return
-
-			case <-time.After(utils.Jitter(time.Duration(10) * time.Second)):
-				err := self.Save()
-				if err != nil {
-					logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
-					logger.Error("<red>contextManager Save</> %v", err)
-				}
-
+func (self *contextManager) StartRefresh() {
+	for {
+		select {
+		case <-self.sub_ctx.Done():
+			err := self.Save()
+			if err != nil {
+				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+				logger.Error("<red>contextManager Save</> %v", err)
 			}
+			return
+
+		case <-time.After(utils.Jitter(time.Duration(10) * time.Second)):
+			err := self.Save()
+			if err != nil {
+				logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
+				logger.Error("<red>contextManager Save</> %v", err)
+			}
+
 		}
-	}()
+	}
 }
 
 func (self *contextManager) Load() error {
@@ -242,7 +246,7 @@ func (self *contextManager) Load() error {
 	}
 
 	details, err := launcher.GetFlowDetails(
-		self.ctx, self.config_obj, services.GetFlowOptions{},
+		self.sub_ctx, self.config_obj, services.GetFlowOptions{},
 		self.context.ClientId, self.context.SessionId)
 	if err != nil {
 		return err
@@ -264,7 +268,7 @@ func (self *contextManager) Save() error {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	if !self.dirty {
+	if !self.dirty || self.cancelled {
 		return nil
 	}
 
@@ -274,7 +278,7 @@ func (self *contextManager) Save() error {
 	}
 
 	return launcher.Storage().WriteFlow(
-		self.ctx, // Write with parent context as query may have cancelled.
+		self.sub_ctx, // Write with parent context as query may have cancelled.
 		self.config_obj, context,
 
 		services.GetFlowOptions{
@@ -284,19 +288,37 @@ func (self *contextManager) Save() error {
 		utils.BackgroundWriter)
 }
 
-func (self *contextManager) Cancel(ctx context.Context, principal string) {
-	self.mu.Lock()
-	for _, query_ctx := range self.query_contexts {
-		query_ctx.UpdateStatus(func(s *crypto_proto.VeloStatus) {
-			s.Status = crypto_proto.VeloStatus_GENERIC_ERROR
-			s.ErrorMessage = fmt.Sprintf("Cancelled by %v", principal)
-		})
+// Watch for cancel messages and cancel processing.
+func (self *contextManager) Cancel(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	row *ordereddict.Dict) error {
+
+	client_id, _ := row.GetString("ClientId")
+	flow_id, _ := row.GetString("FlowId")
+	principal, _ := row.GetString("Principal")
+
+	if client_id != "server" || flow_id != self.session_id {
+		return nil
 	}
+
+	// Mark the collection as cancelled - we wont try to save it again.
+	self.mu.Lock()
+	self.cancelled = true
 	self.mu.Unlock()
 
-	self.maybeSendCompletionMessage(ctx)
-	self.cancel()
-	self.wg.Wait()
+	// Do this in the background not in the critical path of the
+	// journal handler.
+	go func() {
+		// First cancel all execution.
+		self.cancel()
+		self.wg.Wait()
+
+		// Now mark the flow as errored.
+		CancelFlow(ctx, config_obj, flow_id, principal)
+	}()
+
+	return nil
 }
 
 func (self *contextManager) Close(ctx context.Context) {
@@ -316,8 +338,14 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 
 	// Remember that we notified this already.
 	self.mu.Lock()
+	if self.cancelled {
+		self.mu.Unlock()
+		return
+	}
 	self.context.UserNotified = true
 	self.mu.Unlock()
+
+	flows.SendFlowCompletion(ctx, self.config_obj, flow_context)
 
 	launcher, err := services.GetLauncher(self.config_obj)
 	if err != nil {
@@ -337,29 +365,38 @@ func (self *contextManager) maybeSendCompletionMessage(ctx context.Context) {
 		logger := logging.GetLogger(self.config_obj, &logging.FrontendComponent)
 		logger.Error("<red>maybeSendCompletionMessage WriteFlow</> %v", err)
 	}
-
-	// Send a flow completion to trigger any post processing/hunts
-	// etc.
-	row := ordereddict.NewDict().
-		Set("Timestamp", utils.GetTime().Now().UTC().Unix()).
-		Set("Flow", flow_context).
-		Set("FlowId", self.session_id).
-		Set("ClientId", constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
-
-	journal, err := services.GetJournal(self.config_obj)
-	if err != nil {
-		return
-	}
-	journal.PushRowsToArtifactAsync(
-		ctx, self.config_obj, row,
-		artifact_paths.FLOW_COMPLETION.
-			WithSuperUser().WithFrom(
-			constants.VELOCIRAPTOR_SERVER_CLIENT_ID).
-			WithClientId(constants.VELOCIRAPTOR_SERVER_CLIENT_ID))
 }
 
-func (self *contextManager) RunQuery(
+// Run all the queries and wait for them to finish.
+func (self *contextManager) RunQueries(
+	request []*actions_proto.VQLCollectorArgs) (err error) {
+
+	// Run the query in a thread pool
+	pool := pond.NewPool(10, pond.WithContext(self.sub_ctx))
+
+	var tasks []pond.Task
+	for _, task := range request {
+		tasks = append(tasks, pool.SubmitErr(func() error {
+			return self.runQuery(task)
+		}))
+	}
+
+	// Return any of the err
+	for _, t := range tasks {
+		err1 := t.Wait()
+		if err == nil {
+			err = err1
+		}
+	}
+	return err
+}
+
+func (self *contextManager) runQuery(
 	arg *actions_proto.VQLCollectorArgs) (err error) {
+
+	// Will be done when query is closed.
+	self.wg.Add(1)
+	defer self.wg.Done()
 
 	names_with_response := make(map[string]bool)
 
@@ -570,4 +607,61 @@ func (self *contextManager) Logger() LogWriter {
 		config_obj: self.config_obj,
 		writer:     self.log_writer.Copy(),
 	}
+}
+
+func CancelFlow(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	flow_id string, principal string) error {
+
+	// Cancel the flow record immediately because the minion in which
+	// the flow is running may actually be missing.
+	launcher, err := services.GetLauncher(config_obj)
+	if err != nil {
+		return err
+	}
+
+	collection_context, err := launcher.Storage().LoadCollectionContext(
+		ctx, config_obj, "server", flow_id, services.GetFlowOptions{
+			Request:   false,
+			Downloads: false,
+		})
+	if err != nil {
+		return err
+	}
+
+	// Only update collections that are still running.
+	if collection_context.State != flows_proto.ArtifactCollectorContext_RUNNING {
+		return nil
+	}
+
+	now := uint64(utils.GetTime().Now().UnixNano() / 1000)
+	for _, s := range collection_context.QueryStats {
+		s.Status = crypto_proto.VeloStatus_GENERIC_ERROR
+		s.ErrorMessage = fmt.Sprintf("Cancelled by %v", principal)
+		s.LastActive = now
+	}
+	collection_context.State = flows_proto.ArtifactCollectorContext_ERROR
+	collection_context.Status = fmt.Sprintf("Cancelled by %v", principal)
+
+	// Send notification if needed
+	if !collection_context.UserNotified {
+		flows.SendFlowCompletion(ctx, config_obj, collection_context)
+	}
+
+	err = launcher.Storage().WriteFlow(
+		ctx, config_obj, collection_context, services.GetFlowOptions{
+			Request:   false,
+			Downloads: false,
+		}, utils.SyncCompleter)
+	if err != nil {
+		return err
+	}
+
+	// Send notification if needed
+	if !collection_context.UserNotified {
+		flows.SendFlowCompletion(ctx, config_obj, collection_context)
+	}
+
+	return nil
 }
