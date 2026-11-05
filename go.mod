@@ -70,7 +70,7 @@ require (
 	github.com/glaslos/tlsh v0.2.0
 	github.com/go-errors/errors v1.4.2
 	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3
-	github.com/go-ole/go-ole v1.2.6
+	github.com/go-ole/go-ole v1.3.1-0.20261012162311-28687b437c4b
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang/mock v1.6.0
@@ -136,7 +136,7 @@ require (
 	golang.org/x/mod v0.41.0
 	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.36.0
-	golang.org/x/sys v0.49.0
+	golang.org/x/sys v0.49.1-0.20261030184735-4a36a34831dc
 	golang.org/x/text v0.43.0
 	golang.org/x/time v0.14.0
 	google.golang.org/api v0.264.0
@@ -151,7 +151,7 @@ require (
 	software.sslmate.com/src/go-pkcs12 v0.2.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20261007074225-6bf21c30f7fe
 	www.velocidex.com/golang/go-ese v0.2.1-0.20260812030448-458e8abf4a57
-	www.velocidex.com/golang/go-ntfs v0.2.2-0.20261026054837-93c0d7ecf7a4
+	www.velocidex.com/golang/go-ntfs v0.2.2-0.20261103162018-5a41b3a7eccf
 	www.velocidex.com/golang/go-pe v0.1.1-0.20261028151057-4246ef149d68
 	www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959

@@ -76,6 +76,7 @@ sources:
 func (self *LauncherTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.ServerArtifacts = true
+	self.ConfigObj.Services.SchedulerService = true
 
 	self.TestSuite.SetupTest()
 }

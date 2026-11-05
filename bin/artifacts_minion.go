@@ -7,6 +7,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/config"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/server_artifacts"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -101,15 +102,16 @@ FROM scope()`,
 		return err
 	}
 
-	server_artifacts_service, err := services.GetServerArtifactRunner(config_obj)
-	if err != nil {
-		return err
-	}
+	worker := &server_artifacts.ServerArtifactWorker{}
 
 	for _, task := range tasks.Items {
 		if task.FlowRequest != nil {
-			err = server_artifacts_service.RunServerArtifactInline(
-				config_obj, collection_context.SessionId, task.FlowRequest, collection_context)
+			_, err = worker.ProcessUpdateRequest(
+				ctx, config_obj,
+				&server_artifacts.ServerArtifactRequest{
+					Req:               task.FlowRequest,
+					CollectionContext: collection_context,
+				})
 			if err != nil {
 				return err
 			}

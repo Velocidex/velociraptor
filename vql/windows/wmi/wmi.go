@@ -53,6 +53,7 @@ const S_FALSE = 0x00000001
 func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 	lock.Lock()
 	defer lock.Unlock()
+
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
 

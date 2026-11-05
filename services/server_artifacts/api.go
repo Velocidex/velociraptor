@@ -3,7 +3,6 @@ package server_artifacts
 import (
 	"context"
 	"io"
-	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -35,18 +34,16 @@ type CollectionContextManager interface {
 	Load() error
 
 	// Start writing the collection context to storage.
-	StartRefresh(wg *sync.WaitGroup)
+	StartRefresh()
 
 	// A Query context track a single query in the collection.
 	GetQueryContext(query *actions_proto.VQLCollectorArgs) QueryContext
 
-	RunQuery(arg *actions_proto.VQLCollectorArgs) error
+	// Start the queries in other goroutines and wait for them all to
+	// finish
+	RunQueries(request []*actions_proto.VQLCollectorArgs) (err error)
 
 	Save() error
-
-	// Cancel all the queries in this collection immediately and wait
-	// for them to complete
-	Cancel(ctx context.Context, princiapl string)
 
 	Close(ctx context.Context)
 
