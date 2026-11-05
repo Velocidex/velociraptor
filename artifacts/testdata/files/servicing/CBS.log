@@ -1,0 +1,62 @@
+2026-11-02 17:03:25, Info                  CBS    Exec: Processing started.  Client: CbsTask, Session: 31288044_312645782, Package: Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.1742.1.10, Identifier: KB5043080
+2026-11-02 17:06:27, Info                  CBS    Reporting package change for package: Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.8655.1.20, current: Superseded, pending: Default, start: Superseded, applicable: Absent, target: Absent, limit: Absent, status: 0x0, failure source: Execute, reboot required: False, client id: CbsTask, initiated offline: False, execution sequence: 63, first merged sequence: 63, reboot reason: REBOOT_NOT_REQUIRED, RM App session: -1, RM App name: N/A, FileName in use: N/A, release type: Security Update, OC operation: False, download source: 0, download time (secs): 0, download status: 0x0 (S_OK), Download Size: 0 Used lower priority: False Priority changes: 0 
+2026-11-02 17:06:27, Info                  CBS    Reporting package change completion for package: Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.8655.1.20, current: Absent, original: Superseded, target: Absent, status: 0x0, failure source: Execute, failure details: "(null)", client id: CbsTask, initiated offline: False, execution sequence: 63, first merged sequence: 63, pending decision: InteractiveInstallSucceeded, primitive execution context: Interactive 
+2026-11-02 17:07:06, Info                  CBS    Reporting package change for package: Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.9168.1.19, current: Superseded, pending: Default, start: Superseded, applicable: Absent, target: Absent, limit: Absent, status: 0x0, failure source: Execute, reboot required: False, client id: CbsTask, initiated offline: False, execution sequence: 64, first merged sequence: 64, reboot reason: REBOOT_NOT_REQUIRED, RM App session: -1, RM App name: N/A, FileName in use: N/A, release type: Security Update, OC operation: False, download source: 0, download time (secs): 0, download status: 0x0 (S_OK), Download Size: 0 Used lower priority: False Priority changes: 0 
+2026-11-02 17:07:06, Info                  CBS    Reporting package change completion for package: Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.9168.1.19, current: Absent, original: Superseded, target: Absent, status: 0x0, failure source: Execute, failure details: "(null)", client id: CbsTask, initiated offline: False, execution sequence: 64, first merged sequence: 64, pending decision: InteractiveInstallSucceeded, primitive execution context: Interactive 
+2026-11-05 00:16:25, Info                  CBS    TI: --- Initializing Trusted Installer ---
+2026-11-05 00:16:25, Info                  CBS    TI: Last boot time: 2026-11-04 15:48:13.244
+2026-11-05 00:16:25, Info                  CBS    Starting TrustedInstaller initialization.
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: CCbsPublicSessionClassFactory, level: 30, total lock:4
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: CCbsPublicSessionClassFactory, level: 30, total lock:5
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: WinlogonNotifyLock, level: 8, total lock:6
+2026-11-05 00:16:25, Info                  CBS    Ending TrustedInstaller initialization.
+2026-11-05 00:16:25, Info                  CBS    Starting the TrustedInstaller main loop.
+2026-11-05 00:16:25, Info                  CBS    TrustedInstaller service starts successfully.
+2026-11-05 00:16:25, Info                  CBS    No startup processing required, TrustedInstaller service was not set as autostart
+2026-11-05 00:16:25, Info                  CBS    Startup processing thread terminated normally
+2026-11-05 00:16:25, Info                  CBS    TI: Startup Processing completes, release startup processing lock.
+2026-11-05 00:16:25, Info                  CBS    Starting TiWorker initialization.
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: TiWorkerClassFactory, level: 30, total lock:2
+2026-11-05 00:16:25, Info                  CBS    Ending TiWorker initialization.
+2026-11-05 00:16:25, Info                  CBS    Starting the TiWorker main loop.
+2026-11-05 00:16:25, Info                  CBS    TiWorker starts successfully.
+2026-11-05 00:16:25, Info                  CBS    No content found - 'C:\WINDOWS\SystemTemp\CbsTemp._ForDelete'
+2026-11-05 00:16:25, Info                  CBS    Priority: Restoring default priority
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: CCbsWorker, level: 5, total lock:3
+2026-11-05 00:16:25, Info                  CBS    Universal Time is: 2026-11-05 00:16:25.429
+2026-11-05 00:16:25, Info                  CBS    Loaded Servicing Stack v10.0.26100.9703 with Core: C:\WINDOWS\winsxs\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_10.0.26100.9703_none_a5009b9d7769c1f5\cbscore.dll
+2026-11-05 00:16:25, Info                  CBS    Build: 26100.1.amd64fre.ge_release.240331-1435
+2026-11-05 00:16:25, Info                  CBS    Current Overlay Status: 0, Velocity configured status: 0
+2026-11-05 00:16:25, Info                  CSI    00000001@2026/11/5:00:16:25.436 WcpInitialize: wcp.dll version 10.0.26100.9703 (WinBuild.160101.0800)
+2026-11-05 00:16:25, Info                  CBS    TurboContainer load Successful
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: CCbsSessionManager, level: 11, total lock:9
+2026-11-05 00:16:25, Info                  CBS    Lock: New lock added: CSIInventoryCriticalSection, level: 64, total lock:10
+2026-11-05 00:16:25, Info                  CBS    NonStart: Set pending store consistency check.
+2026-11-05 00:16:25, Info                  CBS    Module starts contributing to an existing logging session
+2026-11-05 00:16:25, Info                  SXS    TurboStack version 10.0.26100.9703 (WinBuild.160101.0800) loaded from C:\WINDOWS\winsxs\amd64_microsoft-windows-servicingstack_31bf3856ad364e35_10.0.26100.9703_none_a5009b9d7769c1f5
+2026-11-05 00:16:25, Info                  CSI    00000002@2026/11/5:00:16:25.481 WcpInitialize: wcp.dll version 10.0.26100.9703 (WinBuild.160101.0800)
+2026-11-05 00:16:25, Info                  CSI    00000003 Perf: LRU Cache Initialize @0x254da503f00; Maximum Size: 961 MiB; Initial Elements: 9840
+2026-11-05 00:16:25, Info                  SXS    Initialized store, arch=amd64, style=Desktop, compact=true, windir=(null), sandbox=
+2026-11-05 00:16:25, Info                  CBS    Session: 31288506_3844093720 initialized by client DISM Package Manager Provider
+2026-11-05 00:16:25, Info                  CBS    Feature to discover metadata container disabled.
+2026-11-05 00:16:25, Info                  CBS    Update: Setting Install State, Package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Update: TelnetClient, new state: On
+2026-11-05 00:16:25, Info                  CBS    Update: Setting Install State, Package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Update: TelnetClient, current State: Default, new state: On, RemovePayload: 0
+2026-11-05 00:16:25, Info                         Arbiter invoked from servicing stack; skip locking
+2026-11-05 00:16:25, Info                         Starting CreateActionListInternal in online mode.
+2026-11-05 00:16:26, Info                  CBS    Session: 31288506_3849416741 initialized by client Arbiter
+2026-11-05 00:16:26, Info                  CBS    Session: 31288506_3852335037 initialized by client Arbiter
+2026-11-05 00:16:28, Info                  CBS    Exec: Processing started.  Client: DISM Package Manager Provider, Session: 31288506_3844093720, Package: Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Identifier: Windows Foundation
+2026-11-05 00:16:37, Info                  CBS    Reporting package change for package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, current: Installed, pending: Default, start: Installed, applicable: Installed, target: Installed, limit: Installed, status: 0x0, failure source: Execute, reboot required: False, client id: DISM Package Manager Provider, initiated offline: False, execution sequence: 65, first merged sequence: 65, reboot reason: REBOOT_NOT_REQUIRED, RM App session: -1, RM App name: N/A, FileName in use: N/A, release type: Feature Pack, OC operation: True, download source: 0, download time (secs): 0, download status: 0x0 (S_OK), Download Size: 0 Used lower priority: False Priority changes: 1 
+2026-11-05 00:16:37, Info                  CBS    Reporting package change completion for package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, current: Installed, original: Installed, target: Installed, status: 0x0, failure source: Execute, failure details: "(null)", client id: DISM Package Manager Provider, initiated offline: False, execution sequence: 65, first merged sequence: 65, pending decision: InteractiveInstallSucceeded, primitive execution context: Interactive 
+2026-11-05 00:16:38, Info                  CBS    Exec: Processing complete.  Session: 31288506_3844093720, Package: Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Identifier: Windows Foundation [HRESULT = 0x00000000 - S_OK]
+2026-11-05 00:16:38, Info                  CBS    Session: 31288506_3844093720 finalized. Reboot required: no, RepairNeeded: no [HRESULT = 0x00000000 - S_OK]
+2026-11-05 00:16:39, Info                  CBS    Session: 31288506_3984527333 initialized by client DISM Package Manager Provider
+2026-11-05 00:16:44, Info                  CBS    Session: 31288506_4038741005 initialized by client DISM Package Manager Provider
+2026-11-05 00:16:45, Info                  CBS    Update: Setting Install State, Package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Update: TelnetClient, new state: Off
+2026-11-05 00:16:45, Info                  CBS    Update: Setting Install State, Package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Update: TelnetClient, current State: On, new state: Off, RemovePayload: 0
+2026-11-05 00:16:45, Info                  CBS    Exec: Processing started.  Client: DISM Package Manager Provider, Session: 31288506_4038741005, Package: Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Identifier: Windows Foundation
+2026-11-05 00:16:57, Info                  CBS    Reporting package change for package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, current: Installed, pending: Default, start: Installed, applicable: Installed, target: Installed, limit: Installed, status: 0x0, failure source: Execute, reboot required: False, client id: DISM Package Manager Provider, initiated offline: False, execution sequence: 66, first merged sequence: 66, reboot reason: REBOOT_NOT_REQUIRED, RM App session: -1, RM App name: N/A, FileName in use: N/A, release type: Feature Pack, OC operation: True, download source: 0, download time (secs): 0, download status: 0x0 (S_OK), Download Size: 0 Used lower priority: False Priority changes: 1 
+2026-11-05 00:16:57, Info                  CBS    Reporting package change completion for package: Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1, current: Installed, original: Installed, target: Installed, status: 0x0, failure source: Execute, failure details: "(null)", client id: DISM Package Manager Provider, initiated offline: False, execution sequence: 66, first merged sequence: 66, pending decision: InteractiveInstallSucceeded, primitive execution context: Interactive 
+2026-11-05 00:16:57, Info                  CBS    Exec: Processing complete.  Session: 31288506_4038741005, Package: Microsoft-Windows-Foundation-Package~31bf3856ad364e35~amd64~~10.0.26100.1, Identifier: Windows Foundation [HRESULT = 0x00000000 - S_OK]
+2026-11-05 00:16:57, Info                  CBS    Session: 31288506_4038741005 finalized. Reboot required: no, RepairNeeded: no [HRESULT = 0x00000000 - S_OK]
+2026-11-05 00:16:57, Info                  CBS    Session: 31288506_4168718289 initialized by client DISM Package Manager Provider

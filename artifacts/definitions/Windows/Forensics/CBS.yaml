@@ -1,0 +1,313 @@
+name: Windows.Forensics.CBS
+description: |
+  Parses the Windows servicing logs, `CBS.log` (Component Based
+  Servicing) and `dism.log`, to show which optional features,
+  capabilities and packages were turned on, turned off, added or
+  removed, when, and by which process.
+
+  Attackers turn on Windows features to gain capabilities that are
+  signed by Microsoft and rarely monitored: the OpenSSH server for
+  remote access, the Windows Subsystem for Linux or Hyper-V to run
+  tools outside the view of endpoint security, or Telnet and TFTP
+  clients for transfer. Removing Windows Defender or other security
+  features shows up here as well (MITRE ATT&CK T1543, T1562.001,
+  T1564.006).
+
+  Sources:
+
+  * **FeatureChanges**: every optional feature whose state was set,
+    from `CBS.log`, with the previous and new state, the CBS client
+    that asked for the change and the result of its session. This
+    covers changes made through DISM, PowerShell, the Settings app and
+    Windows Update.
+  * **PackageChanges**: every CBS package change reported in
+    `CBS.log`, for example updates, language packs and the packages
+    behind features and capabilities.
+  * **DismOperations**: every `dism.exe` command line and every call to
+    the DISM API that changes the image (enable or disable a feature,
+    add or remove a capability or package), from `dism.log`, with the
+    parent process that started it.
+
+  NOTES:
+
+  * `CBS.log` is rotated into `CbsPersist_*.log` files, which are
+    parsed as well. Older history is compressed into
+    `CbsPersist_*.cab` files, which are not parsed.
+  * The servicing logs are written in the local time of the machine,
+    without a time zone. `LogTimezone` sets the time zone used to
+    convert them to UTC (`local` uses the time zone of the machine
+    running the query).
+  * The client of a feature change is taken from the last CBS session
+    started before the change.
+
+reference:
+  - https://learn.microsoft.com/en-us/troubleshoot/windows-client/installing-updates-features-roles/windows-servicing-logs
+  - https://learn.microsoft.com/en-us/windows-hardware/manufacture/desktop/what-is-dism
+  - https://attack.mitre.org/techniques/T1562/001/
+
+author: Abdelghafour Bouhdyd
+
+type: CLIENT
+
+parameters:
+  - name: CBSLogGlob
+    description: Glob matching the CBS logs.
+    default: C:/Windows/Logs/CBS/{CBS,CbsPersist_*}.log
+  - name: DISMLogGlob
+    description: Glob matching the DISM logs.
+    default: C:/Windows/Logs/DISM/dism*.log
+  - name: Accessor
+    description: Accessor used to read the logs.
+    default: auto
+  - name: NameRegex
+    type: regex
+    default: .
+    description: |
+      Only return features, packages or operations whose name, command
+      line or parameters match this regex.
+  - name: IncludeQueries
+    type: bool
+    description: |
+      Also return DISM API calls that only read information (for
+      example DismGetFeatures) and session management calls.
+  - name: LogTimezone
+    default: local
+    description: |
+      Time zone of the log times, `local` for the time zone of the
+      machine running the query or a name such as `Europe/Paris`.
+
+export: |
+  LET CBSLineRegex = '^(?P<Time>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}), (?P<Level>\\w+) +(?P<Component>\\S+) +(?P<Message>.*)$'
+
+  -- Only the lines used by this artifact are kept, which keeps the
+  -- large CBS logs fast to process.
+  LET CBSInteresting = 'Setting Install State.*current State|initialized by client|Exec: Processing complete|Session: [0-9_]+ finalized|Reporting package change for package'
+
+  LET CBSFiles = SELECT OSPath FROM glob(globs=CBSLogGlob, accessor=Accessor)
+
+  LET CBSLines(OSPath) = SELECT count() AS LineNo, * FROM foreach(
+    row={
+      SELECT Line FROM parse_lines(filename=OSPath, accessor=Accessor)
+      WHERE Line =~ CBSInteresting
+    },
+    query={
+      SELECT parse_string_with_regex(string=Line, regex=CBSLineRegex) AS L
+      FROM scope()
+    })
+
+  LET SessionStarts(Lines) = SELECT LineNo,
+      parse_string_with_regex(string=L.Message,
+        regex='^Session: (?P<Session>[0-9_]+) initialized by client (?P<Client>.+?)(, external.*)?$') AS S
+    FROM foreach(row=Lines)
+    WHERE L.Message =~ ' initialized by client '
+
+  LET SessionEnds(Lines) = SELECT
+      parse_string_with_regex(string=L.Message,
+        regex='^Session: (?P<Session>[0-9_]+) finalized\\. Reboot required: (?P<Reboot>\\w+).*\\[HRESULT = (?P<Result>[^\\]]+)\\]') AS S
+    FROM foreach(row=Lines)
+    WHERE L.Message =~ ' finalized\\. Reboot required'
+
+  -- The CBS session that was started last before a line. The rows are
+  -- in line order, so the last match is the latest session.
+  LET LastSession(Starts, Before) = SELECT enumerate(items=S)[-1] AS S
+    FROM foreach(row=Starts)
+    WHERE LineNo < Before
+    GROUP BY 1
+
+  LET FeatureRows(OSPath) = SELECT * FROM foreach(
+    row={
+      SELECT CBSLines(OSPath=OSPath) AS Lines FROM scope()
+    },
+    query={
+      SELECT * FROM foreach(
+        row={
+          SELECT SessionStarts(Lines=Lines) AS Starts,
+                 SessionEnds(Lines=Lines) AS Ends
+          FROM scope()
+        },
+        query={
+          SELECT * FROM foreach(
+            row={
+              SELECT LineNo AS LineNo_, L.Time AS LocalTime,
+                parse_string_with_regex(string=L.Message,
+                  regex='Package: (?P<Package>[^,]+), Update: (?P<Feature>[^,]+), current State: (?P<Previous>[^,]+), new state: (?P<New>[^,]+), RemovePayload: (?P<RemovePayload>\\d+)') AS F
+              FROM foreach(row=Lines)
+              WHERE L.Message =~ 'Setting Install State.*current State'
+            },
+            query={
+              SELECT LocalTime, F, Session.Session AS Session,
+                     Session.Client AS Client,
+                     filter(list=Ends,
+                            condition="x=>x.S.Session = Session.Session")[0].S AS End
+              FROM foreach(row={
+                SELECT LastSession(Starts=Starts, Before=LineNo_)[0].S AS Session
+                FROM scope()
+              })
+            })
+        })
+    })
+
+  LET DISMLineRegex = '^(?P<Time>\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}), (?P<Level>\\w+) +DISM +(?P<Message>.*)$'
+
+  LET DISMInteresting = 'DISM\\.EXE: (Instance information|Executing command line)|Parent process command line: |Input parameters: '
+
+  -- DISM API calls that do not change the image.
+  LET DISMQueryCalls = '^Dism(Initialize|Shutdown|OpenSession|CloseSession|Get[A-Za-z]+|CheckImageHealth|Delete)Internal$'
+
+  LET DISMFiles = SELECT OSPath FROM glob(globs=DISMLogGlob, accessor=Accessor)
+
+  LET DISMLines(OSPath) = SELECT count() AS LineNo, * FROM foreach(
+    row={
+      SELECT Line FROM parse_lines(filename=OSPath, accessor=Accessor)
+      WHERE Line =~ DISMInteresting
+    },
+    query={
+      SELECT parse_string_with_regex(string=Line, regex=DISMLineRegex) AS L
+      FROM scope()
+      WHERE L.Time
+    })
+
+  -- Parent process of dism.exe and of each process using the DISM API.
+  LET DISMParents(Lines) = SELECT * FROM foreach(row=Lines,
+    query={
+      SELECT * FROM chain(
+        exe={
+          SELECT LineNo, "dism.exe" AS Pid,
+            parse_string_with_regex(string=L.Message,
+              regex='Parent process=(?P<Parent>.*), Parent process PID=(?P<ParentPid>\\d+)') AS P
+          FROM scope()
+          WHERE L.Message =~ '^DISM\\.EXE: Instance information'
+        },
+        api={
+          SELECT LineNo, parse_string_with_regex(string=L.Message,
+                   regex='^API: PID=(?P<Pid>\\d+) ').Pid AS Pid,
+            parse_string_with_regex(string=L.Message,
+              regex='Parent process command line: (?P<Parent>.*?)( - DismInitializeInternal)?$') AS P
+          FROM scope()
+          WHERE L.Message =~ 'Parent process command line: '
+        })
+    })
+
+  -- The parent logged last before a line for the same process.
+  LET LastParent(Parents, ForPid, Before) = SELECT enumerate(items=P)[-1] AS P
+    FROM foreach(row=Parents)
+    WHERE Pid = ForPid AND LineNo < Before
+    GROUP BY 1
+
+  LET DISMOperationRows(OSPath) = SELECT * FROM foreach(
+    row={
+      SELECT DISMLines(OSPath=OSPath) AS Lines FROM scope()
+    },
+    query={
+      SELECT * FROM foreach(
+        row={
+          SELECT DISMParents(Lines=Lines) AS Parents FROM scope()
+        },
+        query={
+          SELECT * FROM foreach(
+            row={
+              SELECT * FROM chain(
+                exe={
+                  SELECT LineNo AS LineNo_, L.Time AS LocalTime,
+                         "dism.exe" AS Pid_, "dism.exe" AS Tool,
+                         parse_string_with_regex(string=L.Message,
+                           regex='Executing command line: (?P<CommandLine>.*)$').CommandLine AS CommandLine,
+                         "" AS Operation, "" AS Parameters
+                  FROM foreach(row=Lines)
+                  WHERE L.Message =~ '^DISM\\.EXE: Executing command line'
+                },
+                api={
+                  SELECT LineNo AS LineNo_, L.Time AS LocalTime,
+                         A.Pid AS Pid_, "DISM API" AS Tool, "" AS CommandLine,
+                         regex_replace(source=A.Function, re='Internal$', replace="") AS Operation,
+                         A.Parameters AS Parameters
+                  FROM foreach(row={
+                    SELECT LineNo, L,
+                      parse_string_with_regex(string=L.Message,
+                        regex='^API: PID=(?P<Pid>\\d+) TID=\\d+ Input parameters: (?P<Parameters>.*) - (?P<Function>Dism[A-Za-z]+)$') AS A
+                    FROM foreach(row=Lines)
+                    WHERE L.Message =~ 'Input parameters: '
+                  })
+                  WHERE A.Function
+                    AND ( IncludeQueries OR NOT A.Function =~ DISMQueryCalls )
+                })
+            },
+            query={
+              SELECT LocalTime, Tool, Pid_ AS Pid, CommandLine,
+                     Operation, Parameters,
+                     LastParent(Parents=Parents, ForPid=Pid_, Before=LineNo_)[0].P AS Parent
+              FROM scope()
+            })
+        })
+    })
+
+  LET PackageChangeRegex = 'for package: (?P<Package>[^,]+), current: (?P<Current>[^,]+), pending: [^,]+, start: (?P<Start>[^,]+), applicable: [^,]+, target: (?P<Target>[^,]+),.*status: (?P<Status>[^,]+), failure source: (?P<FailureSource>[^,]+), reboot required: (?P<RebootRequired>[^,]+), client id: (?P<Client>[^,]+),.*execution sequence: (?P<Sequence>\\d+)(.*release type: (?P<ReleaseType>[^,]+))?'
+
+sources:
+  - name: FeatureChanges
+    query: |
+      LET PARSE_TZ <= LogTimezone
+
+      SELECT * FROM foreach(row=CBSFiles, query={
+        SELECT timestamp(string=LocalTime) AS Time,
+               F.Feature AS Feature,
+               F.Previous AS PreviousState,
+               F.New AS NewState,
+               F.RemovePayload = "1" AS RemovePayload,
+               F.Package AS Package,
+               Client, Session,
+               End.Result AS SessionResult,
+               End.Reboot AS RebootRequired,
+               OSPath AS LogFile
+        FROM FeatureRows(OSPath=OSPath)
+        WHERE ( F.Feature =~ NameRegex OR F.Package =~ NameRegex )
+      })
+      ORDER BY Time
+
+  - name: PackageChanges
+    query: |
+      LET PARSE_TZ <= LogTimezone
+
+      SELECT * FROM foreach(row=CBSFiles, query={
+        SELECT timestamp(string=L.Time) AS Time,
+               P.Package AS Package,
+               P.Start AS StartState,
+               P.Target AS TargetState,
+               P.Current AS CurrentState,
+               P.Status AS Status,
+               P.FailureSource AS FailureSource,
+               P.RebootRequired AS RebootRequired,
+               P.Client AS Client,
+               P.ReleaseType AS ReleaseType,
+               int(int=P.Sequence) AS ExecutionSequence,
+               OSPath AS LogFile
+        FROM foreach(row={
+          SELECT L, parse_string_with_regex(string=L.Message,
+                      regex=PackageChangeRegex) AS P
+          FROM CBSLines(OSPath=OSPath)
+          WHERE L.Message =~ '^Reporting package change for package: '
+        })
+        WHERE P.Package =~ NameRegex
+      })
+      ORDER BY Time
+
+  - name: DismOperations
+    query: |
+      LET PARSE_TZ <= LogTimezone
+
+      SELECT * FROM foreach(row=DISMFiles, query={
+        SELECT timestamp(string=LocalTime) AS Time,
+               Tool, Operation, CommandLine, Parameters,
+               Parent.Parent AS ParentProcess,
+               if(condition=Parent.ParentPid,
+                  then=int(int=Parent.ParentPid)) AS ParentPid,
+               if(condition=Pid = "dism.exe", then=NULL, else=int(int=Pid)) AS Pid,
+               OSPath AS LogFile
+        FROM DISMOperationRows(OSPath=OSPath)
+        WHERE ( Operation + " " + CommandLine + " " + Parameters ) =~ NameRegex
+      })
+      ORDER BY Time
+
+column_types:
+  - name: Time
+    type: timestamp
