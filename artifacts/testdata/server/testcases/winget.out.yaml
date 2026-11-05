@@ -1,0 +1,138 @@
+# One row per WinGet run: a portable install, its uninstall and a
+# Microsoft Store call through the COM API.
+Query: SELECT StartTime, EndTime, User, Process, Pid, Caller, CommandLine, Command, Packages, PackageVersions, PackagesQueried, DownloadURLs, InstallersStarted, FilesWritten, FilesDeleted, Result, Errors, WinGetVersion, basename(path=LogFile) AS LogFile FROM Artifact.Windows.Applications.WinGet( source="Sessions", Accessor="file", LogTimezone="UTC", LogGlobs=[dict(Glob=srcDir+"/artifacts/testdata/files/winget/Users/*/AppData/WinGet*.log")])
+Output: [
+ {
+  "StartTime": "2026-11-03T23:37:21.832Z",
+  "EndTime": "2026-11-03T23:37:22.685Z",
+  "User": "alice",
+  "Process": "WindowsPackageManagerServer.exe",
+  "Pid": "960",
+  "Caller": "Microsoft.WindowsStore_8wekyb3d8bbwe",
+  "CommandLine": "\"C:\\Program Files\\WindowsApps\\Microsoft.DesktopAppInstaller_1.29.379.0_x64__8wekyb3d8bbwe\\WindowsPackageManagerServer.exe\" -Embedding",
+  "Command": null,
+  "Packages": [],
+  "PackageVersions": [],
+  "PackagesQueried": [
+   "XPDP273C0XHQH2",
+   "XP8BT8DW290MPQ"
+  ],
+  "DownloadURLs": [],
+  "InstallersStarted": [],
+  "FilesWritten": [],
+  "FilesDeleted": [],
+  "Result": null,
+  "Errors": [],
+  "WinGetVersion": "1.29.380",
+  "LogFile": "WinGetCOM-2026-11-03-23-37-21.697.log"
+ },
+ {
+  "StartTime": "2026-11-05T00:15:22.784Z",
+  "EndTime": "2026-11-05T00:15:26.159Z",
+  "User": "alice",
+  "Process": "winget.exe",
+  "Pid": "12128",
+  "Caller": "winget-cli",
+  "CommandLine": "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WindowsApps\\winget.exe install --id Microsoft.Sysinternals.Strings --exact --scope user --accept-source-agreements --accept-package-agreements --disable-interactivity",
+  "Command": "root:install",
+  "Packages": [
+   "Microsoft.Sysinternals.Strings"
+  ],
+  "PackageVersions": [
+   "2.54"
+  ],
+  "PackagesQueried": [
+   "Microsoft.Sysinternals.Strings"
+  ],
+  "DownloadURLs": [
+   "https://download.sysinternals.com/files/Strings.zip"
+  ],
+  "InstallersStarted": [],
+  "FilesWritten": [
+   "C:\\Users\\alice\\AppData\\Local\\Temp\\WinGet\\Microsoft.Sysinternals.Strings.2.54\\Strings.zip",
+   "C:\\Users\\alice\\AppData\\Local\\Temp\\WinGet\\Microsoft.Sysinternals.Strings.2.54\\extracted",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\Eula.txt",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\strings.exe",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\strings64.exe",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\strings64a.exe"
+  ],
+  "FilesDeleted": [],
+  "Result": "succeeded",
+  "Errors": [],
+  "WinGetVersion": "1.29.380",
+  "LogFile": "WinGet-2026-11-05-00-15-22.782.log"
+ },
+ {
+  "StartTime": "2026-11-05T00:15:30.453Z",
+  "EndTime": "2026-11-05T00:15:31.205Z",
+  "User": "alice",
+  "Process": "winget.exe",
+  "Pid": "8724",
+  "Caller": "winget-cli",
+  "CommandLine": "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WindowsApps\\winget.exe uninstall --id Microsoft.Sysinternals.Strings --exact --disable-interactivity",
+  "Command": "root:uninstall",
+  "Packages": [
+   "Microsoft.Sysinternals.Strings"
+  ],
+  "PackageVersions": [],
+  "PackagesQueried": [
+   "Microsoft.Sysinternals.Strings"
+  ],
+  "DownloadURLs": [],
+  "InstallersStarted": [],
+  "FilesWritten": [],
+  "FilesDeleted": [
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\Eula.txt",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\strings.exe",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\strings64.exe",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\\strings64a.exe",
+   "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe"
+  ],
+  "Result": "succeeded",
+  "Errors": [],
+  "WinGetVersion": "1.29.380",
+  "LogFile": "WinGet-2026-11-05-00-15-30.450.log"
+ }
+]
+
+# Download and install events for one package.
+Query: SELECT Time, User, Type, Value, Detail FROM Artifact.Windows.Applications.WinGet( source="Events", Accessor="file", LogTimezone="UTC", PackageRegex="Strings", EventTypeRegex="Download|Package$|PathModified", LogGlobs=[dict(Glob=srcDir+"/artifacts/testdata/files/winget/Users/*/AppData/WinGet*.log")])
+Output: [
+ {
+  "Time": "2026-11-05T00:15:23.542Z",
+  "User": "alice",
+  "Type": "Package",
+  "Value": "Microsoft.Sysinternals.Strings",
+  "Detail": "Strings"
+ },
+ {
+  "Time": "2026-11-05T00:15:23.581Z",
+  "User": "alice",
+  "Type": "DownloadPath",
+  "Value": "C:\\Users\\alice\\AppData\\Local\\Temp\\WinGet\\Microsoft.Sysinternals.Strings.2.54\\b1a0a3dc5f639af1c98ae5832676727646eb3d543640e65e310dff747e733a25",
+  "Detail": null
+ },
+ {
+  "Time": "2026-11-05T00:15:23.581Z",
+  "User": "alice",
+  "Type": "DownloadURL",
+  "Value": "https://download.sysinternals.com/files/Strings.zip",
+  "Detail": null
+ },
+ {
+  "Time": "2026-11-05T00:15:26.13Z",
+  "User": "alice",
+  "Type": "PathModified",
+  "Value": "C:\\Users\\alice\\AppData\\Local\\Microsoft\\WinGet\\Packages\\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe",
+  "Detail": null
+ },
+ {
+  "Time": "2026-11-05T00:15:31.177Z",
+  "User": "alice",
+  "Type": "Package",
+  "Value": "Microsoft.Sysinternals.Strings",
+  "Detail": "Strings"
+ }
+]
+

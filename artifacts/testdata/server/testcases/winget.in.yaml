@@ -1,0 +1,17 @@
+Queries:
+  # One row per WinGet run: a portable install, its uninstall and a
+  # Microsoft Store call through the COM API.
+  - SELECT StartTime, EndTime, User, Process, Pid, Caller, CommandLine,
+           Command, Packages, PackageVersions, PackagesQueried,
+           DownloadURLs, InstallersStarted, FilesWritten, FilesDeleted,
+           Result, Errors, WinGetVersion, basename(path=LogFile) AS LogFile
+    FROM Artifact.Windows.Applications.WinGet(
+      source="Sessions", Accessor="file", LogTimezone="UTC",
+      LogGlobs=[dict(Glob=srcDir+"/artifacts/testdata/files/winget/Users/*/AppData/WinGet*.log")])
+
+  # Download and install events for one package.
+  - SELECT Time, User, Type, Value, Detail
+    FROM Artifact.Windows.Applications.WinGet(
+      source="Events", Accessor="file", LogTimezone="UTC",
+      PackageRegex="Strings", EventTypeRegex="Download|Package$|PathModified",
+      LogGlobs=[dict(Glob=srcDir+"/artifacts/testdata/files/winget/Users/*/AppData/WinGet*.log")])
