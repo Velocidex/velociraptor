@@ -63,6 +63,4 @@ func (self *queryContext) Close() {
 		self.start.UnixNano())
 
 	self.logger.Close()
-
-	self.wg.Done()
 }

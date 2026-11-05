@@ -82,10 +82,7 @@ func (self *FlowStorageManager) DeleteFlow(
 		ctx:          ctx,
 		config_obj:   config_obj,
 		seen:         make(map[string]bool),
-		pool: pond.NewPool(100,
-			pond.WithContext(ctx),
-			pond.WithQueueSize(2),
-			pond.WithoutPanicRecovery()),
+		pool:         pond.NewPool(100, pond.WithContext(ctx)),
 	}
 
 	// Delete the uploads if they are there.

@@ -25,12 +25,6 @@ type ServerArtifactRunner interface {
 		req *crypto_proto.FlowRequest,
 		collection_context *flows_proto.ArtifactCollectorContext) error
 
-	RunServerArtifactInline(
-		config_obj *config_proto.Config,
-		session_id string,
-		req *crypto_proto.FlowRequest,
-		collection_context *flows_proto.ArtifactCollectorContext) error
-
 	// Cancel the current running collection if possible.
-	Cancel(ctx context.Context, session_id, principal string)
+	Cancel(ctx context.Context, session_id, principal string) error
 }
