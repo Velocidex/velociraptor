@@ -302,6 +302,10 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntPropagateChanges() {
 	var hunt_obj *api_proto.Hunt
 	var pres bool
 
+	_, err = self.minion_dispatcher.Store.LoadHuntsFromDatastore(
+		self.Ctx, self.ConfigObj, true)
+	assert.NoError(self.T(), err)
+
 	vtesting.WaitUntilWithError(5*time.Second, self.T(), func() bool {
 		// Check the hunt is running in the data store.
 		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx,

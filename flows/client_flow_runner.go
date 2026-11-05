@@ -50,7 +50,7 @@ type ClientFlowRunner struct {
 
 	// If the flow is complete we send a completion message to the
 	// master.
-	flow_completion_messages []*ordereddict.Dict
+	flow_completion_messages []*flows_proto.ArtifactCollectorContext
 
 	upload_completion_messages []*ordereddict.Dict
 }
@@ -72,18 +72,8 @@ func NewFlowRunner(
 // complete and data becomes visible.
 func (self *ClientFlowRunner) Complete() {
 	if len(self.flow_completion_messages) > 0 {
-		journal, err := services.GetJournal(self.config_obj)
-		if err != nil {
-			return
-		}
-
-		for _, row := range self.flow_completion_messages {
-			client_id, _ := row.GetString("ClientId")
-			journal.PushRowsToArtifactAsync(self.ctx,
-				self.config_obj, row,
-				artifact_paths.FLOW_COMPLETION.
-					WithSuperUser().WithFrom(client_id).
-					WithClientId(client_id))
+		for _, flow := range self.flow_completion_messages {
+			SendFlowCompletion(self.ctx, self.config_obj, flow)
 		}
 	}
 
@@ -712,12 +702,7 @@ func (self *ClientFlowRunner) FlowStats(
 			}
 		}
 
-		self.flow_completion_messages = append(self.flow_completion_messages,
-			ordereddict.NewDict().
-				Set("Timestamp", time.Now().UTC().Unix()).
-				Set("Flow", stats).
-				Set("FlowId", flow_id).
-				Set("ClientId", client_id))
+		self.flow_completion_messages = append(self.flow_completion_messages, stats)
 
 		return launcher_service.Storage().WriteFlowStats(
 			ctx, self.config_obj, stats, completion)

@@ -141,10 +141,10 @@ func (self *Launcher) CancelFlow(
 			return nil, err
 		}
 
-		server_artifacts_service.Cancel(ctx, flow_id, username)
+		err = server_artifacts_service.Cancel(ctx, flow_id, username)
 		return &api_proto.StartFlowResponse{
 			FlowId: flow_id,
-		}, nil
+		}, err
 	}
 
 	collection_context, err := self.Storage().LoadCollectionContext(

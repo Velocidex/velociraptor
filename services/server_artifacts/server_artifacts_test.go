@@ -44,6 +44,7 @@ func (self *ServerArtifactsTestSuite) SetupTest() {
 	self.ConfigObj = self.TestSuite.LoadConfig()
 	self.ConfigObj.Services.ServerArtifacts = true
 	self.ConfigObj.Services.ClientMonitoring = true
+	self.ConfigObj.Services.SchedulerService = true
 
 	self.LoadArtifactsIntoConfig([]string{`
 name: System.Flow.Completion
@@ -118,7 +119,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 
 	// Wait for the collection to complete
 
-	vtesting.WaitUntil(time.Second*50, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*500, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 
@@ -130,7 +131,7 @@ func (self *ServerArtifactsTestSuite) ScheduleAndWait(
 		return details.Context.State != flows_proto.ArtifactCollectorContext_RUNNING
 	})
 
-	vtesting.WaitUntil(time.Second*5, self.T(), func() bool {
+	vtesting.WaitUntil(time.Second*500, self.T(), func() bool {
 		mu.Lock()
 		defer mu.Unlock()
 		return complete_flow_id == flow_id

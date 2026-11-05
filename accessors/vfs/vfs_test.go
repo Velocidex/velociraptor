@@ -81,6 +81,7 @@ func (self *TestSuite) SetupTest() {
 	self.ConfigObj.Services.HuntDispatcher = true
 	self.ConfigObj.Services.HuntManager = true
 	self.ConfigObj.Services.ServerArtifacts = true
+	self.ConfigObj.Services.SchedulerService = true
 	self.ConfigObj.Services.VfsService = true
 
 	self.TestSuite.SetupTest()

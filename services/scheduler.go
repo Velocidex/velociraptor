@@ -62,3 +62,16 @@ type Scheduler interface {
 	// scheduled to one of the available workers.
 	Schedule(ctx context.Context, job SchedulerJob) (chan JobResponse, error)
 }
+
+func DrainAndDiscardResponses(result_chan chan JobResponse) {
+	go func() {
+		for {
+			select {
+			case _, ok := <-result_chan:
+				if !ok {
+					return
+				}
+			}
+		}
+	}()
+}
