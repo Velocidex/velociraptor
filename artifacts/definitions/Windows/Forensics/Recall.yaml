@@ -1,0 +1,329 @@
+name: Windows.Forensics.Recall
+description: |
+  Discovers, validates, and triages Windows 11 Recall (User Knowledge
+  Protocol / UKP) storage artifacts, user activity timelines, active
+  application window titles, and OCR text.
+
+  Windows Recall is an AI-assisted feature introduced on Windows 11
+  Copilot+ systems that periodically takes background snapshots, performs
+  Optical Character Recognition (OCR), and indexes user interaction into a
+  local SQLite database (`ukg.db` / `ukp.db`).
+
+  > [!NOTE]
+  > **Storage Validation & Protection**: On released Windows Recall
+  > implementations, databases may be secured by TPM-backed keys, DPAPI, or
+  > Virtualization-Based Security (VBS) enclaves. This artifact inspects the
+  > file header to verify SQLite availability, identifies sidecar WAL/SHM
+  > transaction logs, and calculates SHA-256 hashes for evidence integrity,
+  > reporting neutral status classifications rather than failing when non-SQLite
+  > or protected formats are encountered.
+
+  > [!NOTE]
+  > **Operating System Filtering**: Windows Recall operates under built-in OS
+  > filtering rules. Supported browsers' Private/Incognito browsing sessions
+  > and DRM-protected content are excluded from capture by the operating
+  > system by default.
+
+  > [!WARNING]
+  > **Privacy & Evidence Handling**: Screen captures and OCR text may contain
+  > sensitive personal information, credentials, or confidential chats.
+  > `UploadImages` is disabled by default to protect user privacy.
+
+  This artifact provides four forensic sources:
+  * `StorageValidation`: Discovers database files (`ukg.db`) and transaction
+    sidecars (`ukg.db-wal`, `ukg.db-shm`). Validates the 16-byte magic header,
+    classifies storage status neutrally, and records SHA-256 hashes for limited
+    candidates to prevent excessive processing overhead.
+  * `WindowCaptures`: Reconstructs the timeline of active application windows,
+    timestamps, and screenshot references (`ImageToken`) from validated
+    databases. Uses `sqlite_master` inspection to verify table availability
+    before querying.
+  * `TextSearch`: Queries the OCR full-text search table
+    (`WindowCaptureTextIndex_content`), allowing incident responders to hunt
+    for sensitive keywords (e.g. passwords, AWS keys, confidential terms)
+    that were visible on the user's screen.
+  * `ImageSnapshots`: Lists screenshot files in the `ImageStore` directory,
+    correlates composite image tokens (`User:Token`) against the database to
+    recover exact capture timestamps and window titles, records filesystem
+    timestamps, and defers SHA-256 hashing to filtered candidates.
+
+author: Furious-05
+
+reference:
+  - https://attack.mitre.org/techniques/T1113/
+  - https://attack.mitre.org/techniques/T1552/
+  - https://github.com/xaitax/TotalRecall
+  - https://learn.microsoft.com/en-us/windows/client-management/manage-recall
+
+type: CLIENT
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: RecallGlob
+    description: Glob for the Windows Recall SQLite database files and journals.
+    default: C:\Users\*\AppData\Local\CoreAIPlatform.00\UKP\*\*.db*
+
+  - name: ImageStoreGlob
+    description: Glob for screenshot image files in ImageStore.
+    default: C:\Users\*\AppData\Local\CoreAIPlatform.00\UKP\*\ImageStore\*
+
+  - name: Accessor
+    description: |
+      Accessor used to read files. 'auto' falls back to raw NTFS
+      when files are locked by system services.
+    default: auto
+
+  - name: WindowTitleRegex
+    type: regex
+    description: Only return captures whose WindowTitle matches this regex.
+    default: .
+
+  - name: SearchRegex
+    type: regex
+    description: |
+      Search regex applied across OCR text and window titles (e.g. 'password|secret|confidential|token').
+    default: .
+
+  - name: DateAfter
+    type: timestamp
+    description: Only return entries after this timestamp.
+
+  - name: DateBefore
+    type: timestamp
+    description: Only return entries before this timestamp.
+
+  - name: UploadImages
+    type: bool
+    description: |
+      Upload screenshot files from ImageStore for preservation.
+      Disabled by default due to privacy implications.
+    default: false
+
+  - name: MaxEntries
+    type: int
+    description: Maximum number of rows to return per source.
+    default: 10000
+
+sources:
+  - name: StorageValidation
+    query: |
+      LET candidate_files = SELECT
+          parse_string_with_regex(
+              string=OSPath,
+              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          OSPath,
+          Size,
+          Mtime,
+          Ctime,
+          read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) AS Header
+      FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
+      WHERE NOT IsDir
+      LIMIT MaxEntries
+
+      SELECT
+          User,
+          OSPath,
+          Size,
+          Mtime,
+          Ctime,
+          hash(path=OSPath, accessor=Accessor).SHA256 AS SHA256,
+          if(condition=OSPath =~ "-wal$|-shm$",
+             then=if(condition=Header,
+                     then="SQLite Sidecar (WAL/SHM)",
+                     else="SQLite Sidecar (Inaccessible)"),
+             else=if(condition=Header =~ "^SQLite format 3",
+                     then="SQLite Header Detected",
+                     else=if(condition=Header,
+                             then="Non-SQLite / Unknown Format",
+                             else="Read Error / Inaccessible"))) AS StorageStatus
+      FROM candidate_files
+
+  - name: WindowCaptures
+    query: |
+      LET StartTime <= if(condition=DateAfter,
+                          then=timestamp(epoch=DateAfter),
+                          else=timestamp(epoch=0))
+      LET EndTime <= if(condition=DateBefore,
+                        then=timestamp(epoch=DateBefore),
+                        else=timestamp(epoch="2200-01-01"))
+
+      -- Only query databases verified as readable SQLite
+      LET valid_dbs = SELECT
+          parse_string_with_regex(
+              string=OSPath,
+              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) AS Header,
+          OSPath, Mtime
+      FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
+      WHERE NOT IsDir
+        AND OSPath =~ "\\.db$"
+        AND Header =~ "^SQLite format 3"
+
+      SELECT * FROM foreach(row=valid_dbs,
+        query={
+          LET tables = SELECT name FROM sqlite(
+              file=OSPath,
+              accessor=Accessor,
+              query="SELECT name FROM sqlite_master WHERE type='table'"
+          )
+
+          SELECT * FROM if(condition="WindowCapture" in tables.name,
+            then={
+              SELECT
+                  timestamp(epoch=TimeStamp / 1000) AS CaptureTime,
+                  User,
+                  WindowTitle,
+                  CaptureId,
+                  WindowId,
+                  ImageToken,
+                  IsForeground,
+                  OSPath
+              FROM sqlite(
+                  file=OSPath,
+                  accessor=Accessor,
+                  query='SELECT Id AS CaptureId, WindowId, WindowTitle, TimeStamp, ImageToken, IsForeground FROM WindowCapture WHERE (WindowTitle IS NOT NULL OR ImageToken IS NOT NULL)'
+              )
+              WHERE WindowTitle =~ WindowTitleRegex
+                AND (NOT DateAfter OR CaptureTime > StartTime)
+                AND (NOT DateBefore OR CaptureTime < EndTime)
+              LIMIT MaxEntries
+            })
+      })
+
+  - name: TextSearch
+    query: |
+      -- Only search databases verified as readable SQLite
+      LET valid_dbs = SELECT
+          parse_string_with_regex(
+              string=OSPath,
+              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) AS Header,
+          OSPath, Mtime
+      FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
+      WHERE NOT IsDir
+        AND OSPath =~ "\\.db$"
+        AND Header =~ "^SQLite format 3"
+
+      SELECT * FROM foreach(row=valid_dbs,
+        query={
+          LET tables = SELECT name FROM sqlite(
+              file=OSPath,
+              accessor=Accessor,
+              query="SELECT name FROM sqlite_master WHERE type='table'"
+          )
+
+          SELECT * FROM if(condition="WindowCaptureTextIndex_content" in tables.name,
+            then={
+              SELECT
+                  User,
+                  WindowTitle,
+                  OcrText,
+                  TextIndexId,
+                  OSPath
+              FROM sqlite(
+                  file=OSPath,
+                  accessor=Accessor,
+                  query='SELECT c0 AS TextIndexId, c1 AS WindowTitle, c2 AS OcrText FROM WindowCaptureTextIndex_content WHERE (c1 IS NOT NULL OR c2 IS NOT NULL)'
+              )
+              WHERE (WindowTitle =~ SearchRegex OR OcrText =~ SearchRegex)
+              LIMIT MaxEntries
+            })
+      })
+
+  - name: ImageSnapshots
+    query: |
+      LET StartTime <= if(condition=DateAfter,
+                          then=timestamp(epoch=DateAfter),
+                          else=timestamp(epoch=0))
+      LET EndTime <= if(condition=DateBefore,
+                        then=timestamp(epoch=DateBefore),
+                        else=timestamp(epoch="2200-01-01"))
+
+      -- Discover valid readable databases to build token correlation lookup
+      LET valid_dbs = SELECT
+          parse_string_with_regex(
+              string=OSPath,
+              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          OSPath
+      FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
+      WHERE NOT IsDir
+        AND OSPath =~ "\\.db$"
+        AND read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) =~ "^SQLite format 3"
+
+      -- Query captures with image tokens to build composite correlation lookup
+      LET token_records = SELECT * FROM foreach(row=valid_dbs,
+        query={
+          LET tables = SELECT name FROM sqlite(
+              file=OSPath,
+              accessor=Accessor,
+              query="SELECT name FROM sqlite_master WHERE type='table'"
+          )
+
+          SELECT * FROM if(condition="WindowCapture" in tables.name,
+            then={
+              SELECT
+                  User,
+                  ImageToken,
+                  timestamp(epoch=TimeStamp / 1000) AS CaptureTime,
+                  WindowTitle
+              FROM sqlite(
+                  file=OSPath,
+                  accessor=Accessor,
+                  query='SELECT ImageToken, TimeStamp, WindowTitle FROM WindowCapture WHERE ImageToken IS NOT NULL'
+              )
+            })
+        })
+
+      LET TokenMap <= to_dict(item={
+          SELECT format(format="%v:%v", args=[User, ImageToken]) AS _key,
+                 dict(CaptureTime=CaptureTime, WindowTitle=WindowTitle) AS _value
+          FROM token_records
+      })
+
+      LET candidate_images = SELECT
+          parse_string_with_regex(
+              string=OSPath,
+              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          parse_string_with_regex(
+              string=OSPath,
+              regex="(?P<Token>[^\\\\/]+)$").Token AS ImageToken,
+          Size,
+          Mtime AS FileMtime,
+          Ctime AS FileCtime,
+          OSPath
+      FROM glob(globs=split(string=ImageStoreGlob, sep=","), accessor=Accessor)
+      WHERE NOT IsDir
+
+      LET filtered_images = SELECT
+          get(item=TokenMap, field=format(format="%v:%v", args=[User, ImageToken])).CaptureTime AS CaptureTime,
+          get(item=TokenMap, field=format(format="%v:%v", args=[User, ImageToken])).WindowTitle AS WindowTitle,
+          FileMtime,
+          FileCtime,
+          User,
+          ImageToken,
+          Size,
+          OSPath
+      FROM candidate_images
+      WHERE (NOT DateAfter OR (CaptureTime AND CaptureTime > StartTime) OR (NOT CaptureTime AND FileMtime > StartTime))
+        AND (NOT DateBefore OR (CaptureTime AND CaptureTime < EndTime) OR (NOT CaptureTime AND FileMtime < EndTime))
+      LIMIT MaxEntries
+
+      SELECT
+          CaptureTime,
+          FileMtime,
+          FileCtime,
+          User,
+          ImageToken,
+          WindowTitle,
+          Size,
+          hash(path=OSPath, accessor=Accessor).SHA256 AS SHA256,
+          OSPath,
+          if(condition=UploadImages,
+             then=upload(file=OSPath, accessor=Accessor),
+             else=NULL) AS Upload
+      FROM filtered_images
+
+column_types:
+  - name: Upload
+    type: preview_upload
