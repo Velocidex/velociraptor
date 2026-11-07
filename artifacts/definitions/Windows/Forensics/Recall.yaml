@@ -32,8 +32,8 @@ description: |
   This artifact provides four forensic sources:
   * `StorageValidation`: Discovers database files (`ukg.db`) and transaction
     sidecars (`ukg.db-wal`, `ukg.db-shm`). Validates the 16-byte magic header,
-    classifies storage status neutrally, and records SHA-256 hashes for limited
-    candidates to prevent excessive processing overhead.
+    classifies storage status neutrally, and records SHA-256 hashes to verify
+    evidence integrity.
   * `WindowCaptures`: Reconstructs the timeline of active application windows,
     timestamps, and screenshot references (`ImageToken`) from validated
     databases.
@@ -99,11 +99,6 @@ parameters:
       Disabled by default due to privacy implications.
     default: false
 
-  - name: MaxEntries
-    type: int
-    description: Maximum number of rows to return per source.
-    default: 10000
-
 sources:
   - name: StorageValidation
     query: |
@@ -116,7 +111,6 @@ sources:
           read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) AS Header
       FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
       WHERE NOT IsDir
-      LIMIT MaxEntries
 
       SELECT
           User,
@@ -174,7 +168,6 @@ sources:
           WHERE WindowTitle =~ WindowTitleRegex
             AND (NOT DateAfter OR CaptureTime > StartTime)
             AND (NOT DateBefore OR CaptureTime < EndTime)
-          LIMIT MaxEntries
         })
 
   - name: TextSearch
@@ -203,7 +196,6 @@ sources:
               query='SELECT c0 AS TextIndexId, c1 AS WindowTitle, c2 AS OcrText FROM WindowCaptureTextIndex_content WHERE (c1 IS NOT NULL OR c2 IS NOT NULL)'
           )
           WHERE (WindowTitle =~ SearchRegex OR OcrText =~ SearchRegex)
-          LIMIT MaxEntries
         })
 
   - name: ImageSnapshots
@@ -267,7 +259,6 @@ sources:
       FROM candidate_images
       WHERE (NOT DateAfter OR (CaptureTime AND CaptureTime > StartTime) OR (NOT CaptureTime AND FileMtime > StartTime))
         AND (NOT DateBefore OR (CaptureTime AND CaptureTime < EndTime) OR (NOT CaptureTime AND FileMtime < EndTime))
-      LIMIT MaxEntries
 
       SELECT
           CaptureTime,
