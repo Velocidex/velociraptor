@@ -242,6 +242,13 @@ var (
 		EventFilter:  ServerOnlyFilter,
 	}
 
+	// Queue to request cancellation of ongoing operation
+	CANCEL_TASK = services.JournalOptions{
+		ArtifactName: "Server.Internal.Cancel",
+		ArtifactType: artifact_modes.MODE_INTERNAL,
+		EventFilter:  ServerOnlyFilter,
+	}
+
 	// Message all the other nodes that these new flows are in
 	// flight. The event listener will add them to the client info
 	// service.
