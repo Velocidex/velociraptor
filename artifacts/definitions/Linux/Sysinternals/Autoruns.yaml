@@ -70,7 +70,7 @@ parameters:
     description: systemd system/user services and modules-load configuration.
     type: bool
   - name: ScheduledTasks
-    description: cron, anacron, run-parts jobs and systemd timers.
+    description: "`cron`, `anacron` and `run-parts` jobs, and systemd timers."
     type: bool
   - name: Boot
     description: rc.local and SysV init scripts.
@@ -82,13 +82,13 @@ parameters:
     description: ld.so.preload and ld.so.conf search configuration.
     type: bool
   - name: Network
-    description: NetworkManager dispatcher, ifupdown and dhclient hooks.
+    description: NetworkManager dispatcher, `ifupdown` and `dhclient` hooks.
     type: bool
   - name: Browser
     description: Chromium and Firefox extensions, policies and native messaging hosts.
     type: bool
   - name: DeviceMount
-    description: udev rules, fstab x-systemd options, autofs maps, systemd device/mount/path units and autorun media.
+    description: "`udev` rules, `fstab` x-systemd options, `autofs` maps, systemd device/mount/path units and autorun media."
     type: bool
   - name: Applications
     description: LibreOffice and OpenOffice extensions, macros and UNO components.
