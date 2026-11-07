@@ -29,6 +29,12 @@ description: |
   recommend this artifact is collected with a rate limited applied
   (about 20-50 ops per second should be reasonable).
 
+  MaxFileSize and ModifiedWithinDays optionally filter file metadata before
+  content searches, hashing, or uploading. Both are disabled by default.
+  MaxFileSize is a selection filter, not an upload byte limit: a selected
+  file may grow after it is listed. These filters do not impose an aggregate
+  upload quota or avoid filesystem traversal.
+
 
 precondition:
   SELECT * FROM info() where OS = 'windows'
@@ -76,6 +82,22 @@ parameters:
     default: ""
     type: timestamp
 
+  - name: MaxFileSize
+    type: int
+    default: "0"
+    description: |
+      Select files whose listed size is at most this many bytes. Zero means
+      unlimited. Applied before content searches, hashing, and uploads;
+      this does not limit bytes read if a selected file subsequently grows.
+
+  - name: ModifiedWithinDays
+    type: int
+    default: "0"
+    description: |
+      Select files modified at or after this many days before collection
+      starts. Zero disables the relative age filter. Intersects the existing
+      MoreRecentThan and ModifiedBefore timestamp filters.
+
   - name: VSS_MAX_AGE_DAYS
     type: int
     description: |
@@ -90,6 +112,13 @@ parameters:
 
 sources:
   - query: |
+      LET limits_valid <= MaxFileSize >= 0 AND ModifiedWithinDays >= 0
+      LET _ <= if(condition=NOT limits_valid,
+        then=log(level="ERROR",
+          message="MaxFileSize and ModifiedWithinDays must be non-negative"))
+      LET relative_cutoff <= if(condition=limits_valid AND ModifiedWithinDays > 0,
+        then=timestamp(epoch=now() - ModifiedWithinDays * 86400))
+
       LET file_search = SELECT OSPath,
                get(item=Data, field="mft") as Inode,
                Mode.String AS Mode, Size,
@@ -98,8 +127,12 @@ sources:
                Btime AS BTime,
                Ctime AS CTime, "" AS Keywords,
                IsDir, Data
-        FROM glob(globs=Glob || SearchFilesGlobTable.Glob,
-                  accessor=Accessor)
+        FROM if(condition=limits_valid, then={
+          SELECT * FROM glob(globs=Glob || SearchFilesGlobTable.Glob,
+                            accessor=Accessor)
+        })
+        WHERE (MaxFileSize = 0 OR Size <= MaxFileSize)
+          AND (ModifiedWithinDays = 0 OR Mtime >= relative_cutoff)
 
       LET more_recent = SELECT * FROM if(
         condition=MoreRecentThan,
