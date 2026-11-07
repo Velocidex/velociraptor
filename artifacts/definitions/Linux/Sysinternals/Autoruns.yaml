@@ -18,10 +18,14 @@ description: |
 
   - amd64 or arm64.
   - glibc 2.28 or later (e.g. RHEL 8+, Debian 10+, Ubuntu 20.04+,
-    SLES 15 SP3+, Amazon Linux 2023). RHEL 7 and Amazon Linux 2 are
-    not supported by the release binaries.
+    SLES 15 SP3+, Amazon Linux 2023).
   - Older clients without `xz_decompress()` need `xz` in the PATH to
     decompress the RPM payload.
+
+  The bundled Rocky Linux 8 binary does not run on systems with glibc
+  older than 2.28, such as RHEL/CentOS 7, Amazon Linux 2, Ubuntu 18.04
+  and earlier, or Debian 9 and earlier. For those systems, build a
+  static Autoruns for Linux binary and use it as the tool override.
 
   To use a different build, override the `AutorunsLinux_amd64` or
   `AutorunsLinux_arm64` tool with an RPM or a raw ELF binary. A raw
