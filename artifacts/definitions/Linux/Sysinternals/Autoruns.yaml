@@ -12,7 +12,7 @@ description: |
   Microsoft publishes Autoruns for Linux only as DEB and RPM packages.
   This artifact deploys the Rocky Linux 8 RPM, which has the widest
   compatibility of the release builds, and unpacks the binary in a
-  temporary directory.
+  temporary directory with `xz_decompress()`.
 
   Requirements:
 
@@ -20,7 +20,8 @@ description: |
   - glibc 2.28 or later (e.g. RHEL 8+, Debian 10+, Ubuntu 20.04+,
     SLES 15 SP3+, Amazon Linux 2023). RHEL 7 and Amazon Linux 2 are
     not supported by the release binaries.
-  - `xz` in the PATH to decompress the RPM payload.
+  - Older clients without `xz_decompress()` need `xz` in the PATH to
+    decompress the RPM payload.
 
   To use a different build, override the `AutorunsLinux_amd64` or
   `AutorunsLinux_arm64` tool with an RPM or a raw ELF binary. A raw
@@ -184,21 +185,30 @@ sources:
          profile=PackageProfile, struct="RPMHeader", offset=MainOffset)
       LET PayloadOffset = MainOffset + MainHeader.Size
 
-      LET PayloadCopied <= IsRpm AND copy(accessor="data", dest=XzPath,
-         filename=read_file(filename=ToolPath, offset=PayloadOffset,
-            length=stat(filename=ToolPath).Size - PayloadOffset))
+      LET Payload = read_file(filename=ToolPath, offset=PayloadOffset,
+         length=stat(filename=ToolPath).Size - PayloadOffset)
 
-      LET Decompress <= SELECT * FROM if(condition=PayloadCopied,
-      then={
-        SELECT * FROM execve(
-          argv=["xz", "--decompress", "--keep", "--force", XzPath])
-      })
+      // Clients without xz_decompress() fall back to the xz utility.
+      LET NativeXz <= version(function="xz_decompress") >= 0
+
+      LET Decompress <= SELECT * FROM if(
+        condition=IsRpm AND NOT NativeXz AND copy(
+           accessor="data", dest=XzPath, filename=Payload),
+        then={
+          SELECT * FROM execve(
+            argv=["xz", "--decompress", "--keep", "--force", XzPath])
+        })
 
       // NOTE: VQL binds OR tighter than AND so parenthesize.
-      LET Decompressed <= PayloadCopied AND (
-         Decompress[-1].ReturnCode = 0 OR (log(level="ERROR",
-            message="Unable to decompress the RPM payload, is xz installed? %v",
-            args=Decompress[-1].Stderr) AND FALSE))
+      LET Decompressed <= IsRpm AND if(condition=NativeXz,
+         then=copy(accessor="data", dest=CpioPath,
+                   filename=xz_decompress(string=Payload)) OR (
+              log(level="ERROR",
+                  message="Unable to decompress the RPM payload") AND FALSE),
+         else=Decompress[-1].ReturnCode = 0 OR (
+              log(level="ERROR",
+                  message="Unable to decompress the RPM payload, is xz installed? %v",
+                  args=Decompress[-1].Stderr) AND FALSE))
 
       // The binary is the first member of the newc cpio archive.
       LET CpioEntry = parse_binary(filename=CpioPath,
