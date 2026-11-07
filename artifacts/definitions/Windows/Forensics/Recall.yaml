@@ -36,8 +36,7 @@ description: |
     candidates to prevent excessive processing overhead.
   * `WindowCaptures`: Reconstructs the timeline of active application windows,
     timestamps, and screenshot references (`ImageToken`) from validated
-    databases. Uses `sqlite_master` inspection to verify table availability
-    before querying.
+    databases.
   * `TextSearch`: Queries the OCR full-text search table
     (`WindowCaptureTextIndex_content`), allowing incident responders to hunt
     for sensitive keywords (e.g. passwords, AWS keys, confidential terms)
@@ -109,9 +108,7 @@ sources:
   - name: StorageValidation
     query: |
       LET candidate_files = SELECT
-          parse_string_with_regex(
-              string=OSPath,
-              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          OSPath[2] AS User,
           OSPath,
           Size,
           Mtime,
@@ -150,9 +147,7 @@ sources:
 
       -- Only query databases verified as readable SQLite
       LET valid_dbs = SELECT
-          parse_string_with_regex(
-              string=OSPath,
-              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          OSPath[2] AS User,
           read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) AS Header,
           OSPath, Mtime
       FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
@@ -162,42 +157,31 @@ sources:
 
       SELECT * FROM foreach(row=valid_dbs,
         query={
-          LET tables = SELECT name FROM sqlite(
+          SELECT
+              timestamp(epoch=TimeStamp / 1000) AS CaptureTime,
+              User,
+              WindowTitle,
+              CaptureId,
+              WindowId,
+              ImageToken,
+              IsForeground,
+              OSPath
+          FROM sqlite(
               file=OSPath,
               accessor=Accessor,
-              query="SELECT name FROM sqlite_master WHERE type='table'"
+              query='SELECT Id AS CaptureId, WindowId, WindowTitle, TimeStamp, ImageToken, IsForeground FROM WindowCapture WHERE (WindowTitle IS NOT NULL OR ImageToken IS NOT NULL)'
           )
-
-          SELECT * FROM if(condition="WindowCapture" in tables.name,
-            then={
-              SELECT
-                  timestamp(epoch=TimeStamp / 1000) AS CaptureTime,
-                  User,
-                  WindowTitle,
-                  CaptureId,
-                  WindowId,
-                  ImageToken,
-                  IsForeground,
-                  OSPath
-              FROM sqlite(
-                  file=OSPath,
-                  accessor=Accessor,
-                  query='SELECT Id AS CaptureId, WindowId, WindowTitle, TimeStamp, ImageToken, IsForeground FROM WindowCapture WHERE (WindowTitle IS NOT NULL OR ImageToken IS NOT NULL)'
-              )
-              WHERE WindowTitle =~ WindowTitleRegex
-                AND (NOT DateAfter OR CaptureTime > StartTime)
-                AND (NOT DateBefore OR CaptureTime < EndTime)
-              LIMIT MaxEntries
-            })
-      })
+          WHERE WindowTitle =~ WindowTitleRegex
+            AND (NOT DateAfter OR CaptureTime > StartTime)
+            AND (NOT DateBefore OR CaptureTime < EndTime)
+          LIMIT MaxEntries
+        })
 
   - name: TextSearch
     query: |
       -- Only search databases verified as readable SQLite
       LET valid_dbs = SELECT
-          parse_string_with_regex(
-              string=OSPath,
-              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          OSPath[2] AS User,
           read_file(filename=OSPath, accessor=Accessor, offset=0, length=16) AS Header,
           OSPath, Mtime
       FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
@@ -207,29 +191,20 @@ sources:
 
       SELECT * FROM foreach(row=valid_dbs,
         query={
-          LET tables = SELECT name FROM sqlite(
+          SELECT
+              User,
+              WindowTitle,
+              OcrText,
+              TextIndexId,
+              OSPath
+          FROM sqlite(
               file=OSPath,
               accessor=Accessor,
-              query="SELECT name FROM sqlite_master WHERE type='table'"
+              query='SELECT c0 AS TextIndexId, c1 AS WindowTitle, c2 AS OcrText FROM WindowCaptureTextIndex_content WHERE (c1 IS NOT NULL OR c2 IS NOT NULL)'
           )
-
-          SELECT * FROM if(condition="WindowCaptureTextIndex_content" in tables.name,
-            then={
-              SELECT
-                  User,
-                  WindowTitle,
-                  OcrText,
-                  TextIndexId,
-                  OSPath
-              FROM sqlite(
-                  file=OSPath,
-                  accessor=Accessor,
-                  query='SELECT c0 AS TextIndexId, c1 AS WindowTitle, c2 AS OcrText FROM WindowCaptureTextIndex_content WHERE (c1 IS NOT NULL OR c2 IS NOT NULL)'
-              )
-              WHERE (WindowTitle =~ SearchRegex OR OcrText =~ SearchRegex)
-              LIMIT MaxEntries
-            })
-      })
+          WHERE (WindowTitle =~ SearchRegex OR OcrText =~ SearchRegex)
+          LIMIT MaxEntries
+        })
 
   - name: ImageSnapshots
     query: |
@@ -242,9 +217,7 @@ sources:
 
       -- Discover valid readable databases to build token correlation lookup
       LET valid_dbs = SELECT
-          parse_string_with_regex(
-              string=OSPath,
-              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
+          OSPath[2] AS User,
           OSPath
       FROM glob(globs=split(string=RecallGlob, sep=","), accessor=Accessor)
       WHERE NOT IsDir
@@ -254,25 +227,16 @@ sources:
       -- Query captures with image tokens to build composite correlation lookup
       LET token_records = SELECT * FROM foreach(row=valid_dbs,
         query={
-          LET tables = SELECT name FROM sqlite(
+          SELECT
+              User,
+              ImageToken,
+              timestamp(epoch=TimeStamp / 1000) AS CaptureTime,
+              WindowTitle
+          FROM sqlite(
               file=OSPath,
               accessor=Accessor,
-              query="SELECT name FROM sqlite_master WHERE type='table'"
+              query='SELECT ImageToken, TimeStamp, WindowTitle FROM WindowCapture WHERE ImageToken IS NOT NULL'
           )
-
-          SELECT * FROM if(condition="WindowCapture" in tables.name,
-            then={
-              SELECT
-                  User,
-                  ImageToken,
-                  timestamp(epoch=TimeStamp / 1000) AS CaptureTime,
-                  WindowTitle
-              FROM sqlite(
-                  file=OSPath,
-                  accessor=Accessor,
-                  query='SELECT ImageToken, TimeStamp, WindowTitle FROM WindowCapture WHERE ImageToken IS NOT NULL'
-              )
-            })
         })
 
       LET TokenMap <= to_dict(item={
@@ -282,12 +246,8 @@ sources:
       })
 
       LET candidate_images = SELECT
-          parse_string_with_regex(
-              string=OSPath,
-              regex="[\\\\/]Users[\\\\/](?P<User>[^\\\\/]+)").User AS User,
-          parse_string_with_regex(
-              string=OSPath,
-              regex="(?P<Token>[^\\\\/]+)$").Token AS ImageToken,
+          OSPath[2] AS User,
+          OSPath.Basename AS ImageToken,
           Size,
           Mtime AS FileMtime,
           Ctime AS FileCtime,
