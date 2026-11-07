@@ -1,0 +1,88 @@
+Queries:
+  - |
+    LET MockRows <= SELECT OSPath, Size, IsDir,
+        timestamp(epoch=Mtime) AS Mtime,
+        timestamp(epoch=Mtime) AS Atime,
+        timestamp(epoch=Mtime) AS Btime,
+        timestamp(epoch=Mtime) AS Ctime,
+        dict(String="rw-rw-rw") AS Mode, dict() AS Data
+      FROM foreach(row=[
+        dict(OSPath="old", Size=10, Mtime=1699308800, IsDir=FALSE),
+        dict(OSPath="boundary", Size=100, Mtime=1699395200, IsDir=FALSE),
+        dict(OSPath="recent", Size=100, Mtime=1699481600, IsDir=FALSE),
+        dict(OSPath="large", Size=101, Mtime=1699481600, IsDir=FALSE),
+        dict(OSPath="empty", Size=0, Mtime=1700000000, IsDir=FALSE),
+        dict(OSPath="directory", Size=0, Mtime=1700000000, IsDir=TRUE)
+      ])
+  - LET _ <= mock(plugin="info", results=dict(OS="windows"))
+  - LET _ <= mock(plugin="glob", results=MockRows)
+  - LET _ <= mock(function="now", results=1700000000)
+  - LET _ <= mock(function="upload", results=dict(Path="mock-upload"))
+  - LET _ <= mock(function="hash", results=dict(SHA256="mock-hash"))
+  - LET _ <= mock(plugin="yara", results=dict(String=dict(Data="match")))
+
+# Disabled limits preserve metadata rows, including directories, without
+# consulting the clock or invoking content operations.
+  - SELECT OSPath, Size, IsDir FROM Artifact.Windows.Search.FileFinder()
+  - |
+    SELECT mock_check(plugin="glob", expected_calls=1) AS Glob,
+      mock_check(function="now", expected_calls=0) AS Clock,
+      mock_check(plugin="yara", expected_calls=0) AS Yara,
+      mock_check(function="hash", expected_calls=0) AS Hash,
+      mock_check(function="upload", expected_calls=0) AS Upload
+    FROM scope()
+
+# Size and relative age boundaries are inclusive. Only accepted files reach
+# YARA, hashing and uploading. The relative cutoff is computed once.
+  - |
+    SELECT OSPath, Size, Keywords, Hash.SHA256 AS SHA256, Upload.Path AS Uploaded
+    FROM Artifact.Windows.Search.FileFinder(
+      MaxFileSize=100, ModifiedWithinDays=7,
+      YaraRule="ascii:match", Calculate_Hash="Y", Upload_File="Y")
+  - |
+    SELECT mock_check(plugin="glob", expected_calls=1) AS Glob,
+      mock_check(function="now", expected_calls=1) AS Clock,
+      mock_check(plugin="yara", expected_calls=3) AS Yara,
+      mock_check(function="hash", expected_calls=3) AS Hash,
+      mock_check(function="upload", expected_calls=3) AS Upload
+    FROM scope()
+
+# Relative and existing absolute filters intersect. MoreRecentThan and
+# ModifiedBefore retain their existing strict boundaries.
+  - |
+    SELECT OSPath, Size FROM Artifact.Windows.Search.FileFinder(
+      MaxFileSize=100, ModifiedWithinDays=7,
+      MoreRecentThan=timestamp(epoch=1699395200),
+      ModifiedBefore=timestamp(epoch=1700000000))
+  - |
+    SELECT mock_check(plugin="glob", expected_calls=1) AS Glob,
+      mock_check(function="now", expected_calls=1) AS Clock
+    FROM scope()
+
+# A disabled relative filter preserves the existing absolute-only behavior.
+  - |
+    SELECT OSPath, Size FROM Artifact.Windows.Search.FileFinder(
+      MoreRecentThan=timestamp(epoch=1699395200),
+      ModifiedBefore=timestamp(epoch=1700000000))
+  - |
+    SELECT mock_check(plugin="glob", expected_calls=1) AS Glob,
+      mock_check(function="now", expected_calls=0) AS Clock
+    FROM scope()
+
+# Invalid limits fail closed before globbing or content access, even when
+# content options are enabled. Each invalid parameter is checked separately.
+  - |
+    SELECT OSPath FROM Artifact.Windows.Search.FileFinder(
+      MaxFileSize=-1, ModifiedWithinDays=7,
+      YaraRule="ascii:match", Calculate_Hash="Y", Upload_File="Y")
+  - |
+    SELECT OSPath FROM Artifact.Windows.Search.FileFinder(
+      ModifiedWithinDays=-1,
+      YaraRule="ascii:match", Calculate_Hash="Y", Upload_File="Y")
+  - |
+    SELECT mock_check(plugin="glob", expected_calls=0) AS Glob,
+      mock_check(function="now", expected_calls=0) AS Clock,
+      mock_check(plugin="yara", expected_calls=0) AS Yara,
+      mock_check(function="hash", expected_calls=0) AS Hash,
+      mock_check(function="upload", expected_calls=0) AS Upload
+    FROM scope()
