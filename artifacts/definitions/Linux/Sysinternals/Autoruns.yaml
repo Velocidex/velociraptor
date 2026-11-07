@@ -1,0 +1,294 @@
+name: Linux.Sysinternals.Autoruns
+author: Matt Green - @mgreen27
+description: |
+  Installs and runs Sysinternals Autoruns for Linux to enumerate
+  autostart and persistence mechanisms.
+
+  Autoruns for Linux statically inventories programs, scripts, services,
+  timers, modules and extensions configured to activate on system,
+  user, browser, device, mount, network and application events. It
+  never executes a discovered command or starts a unit.
+
+  Microsoft publishes Autoruns for Linux only as DEB and RPM packages.
+  This artifact deploys the Rocky Linux 8 RPM, which has the widest
+  compatibility of the release builds, and unpacks the binary in a
+  temporary directory with `xz_decompress()`.
+
+  Requirements:
+
+  - amd64 or arm64.
+  - glibc 2.28 or later (e.g. RHEL 8+, Debian 10+, Ubuntu 20.04+,
+    SLES 15 SP3+, Amazon Linux 2023).
+  - Older clients without `xz_decompress()` need `xz` in the PATH to
+    decompress the RPM payload.
+
+  The bundled Rocky Linux 8 binary does not run on systems with glibc
+  older than 2.28, such as RHEL/CentOS 7, Amazon Linux 2, Ubuntu 18.04
+  and earlier, or Debian 9 and earlier. For those systems, build a
+  static Autoruns for Linux binary and use it as the tool override.
+
+  To use a different build, override the `AutorunsLinux_amd64` or
+  `AutorunsLinux_arm64` tool with an RPM or a raw ELF binary. A raw
+  ELF binary is used as-is.
+
+  `Status` is static registration state derived from precedence, masks
+  and eligibility, not live service state. Rows with a `Status` of
+  `unsupported` record the known coverage boundary of each selected
+  category. Partial scan diagnostics (exit code 3) are logged as
+  warnings.
+
+reference:
+  - https://github.com/microsoft/Autoruns-for-Linux
+  - https://docs.velociraptor.app/artifact_references/pages/windows.sysinternals.autoruns/
+
+tools:
+  - name: AutorunsLinux_amd64
+    url: https://github.com/microsoft/Autoruns-for-Linux/releases/download/1.0.0/autoruns-1.0.0-0.el8.x86_64.rpm
+    expected_hash: 2ccfadbf257a017d8c8eb26595cc09e432615d41f60f8d3ac41ede263e2e7635
+    serve_locally: true
+
+  - name: AutorunsLinux_arm64
+    url: https://github.com/microsoft/Autoruns-for-Linux/releases/download/1.0.0/autoruns-1.0.0-0.el8.aarch64.rpm
+    expected_hash: cccd8da2fdf143c6485e728d05840cbd61676e7cd703f2d333e8d5321ab6459f
+    serve_locally: true
+
+precondition: SELECT OS From info() where OS = 'linux'
+
+implied_permissions:
+  - EXECVE
+  - FILESYSTEM_WRITE
+
+parameters:
+  - name: All
+    description: All implemented Linux categories. Overrides the selections below.
+    type: bool
+    default: Y
+  - name: Logon
+    description: XDG autostart and system/user shell startup files (the tool default).
+    type: bool
+  - name: Services
+    description: systemd system/user services and modules-load configuration.
+    type: bool
+  - name: ScheduledTasks
+    description: "`cron`, `anacron` and `run-parts` jobs, and systemd timers."
+    type: bool
+  - name: Boot
+    description: rc.local and SysV init scripts.
+    type: bool
+  - name: Hijacks
+    description: alternatives command registrations.
+    type: bool
+  - name: Loader
+    description: ld.so.preload and ld.so.conf search configuration.
+    type: bool
+  - name: Network
+    description: NetworkManager dispatcher, `ifupdown` and `dhclient` hooks.
+    type: bool
+  - name: Browser
+    description: Chromium and Firefox extensions, policies and native messaging hosts.
+    type: bool
+  - name: DeviceMount
+    description: "`udev` rules, `fstab` x-systemd options, `autofs` maps, systemd device/mount/path units and autorun media."
+    type: bool
+  - name: Applications
+    description: LibreOffice and OpenOffice extensions, macros and UNO components.
+    type: bool
+  - name: CalculateHashes
+    description: Calculate the SHA256 of each resolved ImagePath.
+    type: bool
+    default: Y
+  - name: Root
+    description: |
+      Optional alternate root to scan, e.g. a mounted image or a container
+      root filesystem. Leave empty to scan the live system.
+
+column_types:
+  - name: Timestamp
+    type: timestamp
+
+sources:
+  - query: |
+      LET Categories = '''Selector,Name
+      logon,Logon
+      services,Services
+      scheduled,ScheduledTasks
+      boot,Boot
+      hijacks,Hijacks
+      loader,Loader
+      network,Network
+      browser,Browser
+      device-mount,DeviceMount
+      applications,Applications
+      '''
+
+      -- The categories actually selected. Named selectors are used
+      -- because device-mount has no single letter selector.
+      LET selected = SELECT Selector
+        FROM parse_csv(accessor="data", filename=Categories)
+        WHERE get(field=Name)
+
+      LET Selection <= if(condition=All, then="*",
+         else=join(array=selected.Selector, sep=",") || "logon")
+
+      LET PackageProfile = '''[
+        ["Magic", 4, [
+          ["Value", 0, "uint32b"]
+        ]],
+        ["RPMHeader", 16, [
+          ["NIndex", 8, "uint32b"],
+          ["HSize", 12, "uint32b"],
+          ["Size", 0, "Value", {"value": "x=>16 + 16 * x.NIndex + x.HSize"}]
+        ]],
+        ["CpioNewc", 110, [
+          ["Magic", 0, "String", {"length": 6, "term": ""}],
+          ["FileSize", 54, "String", {"length": 8, "term": ""}],
+          ["NameSize", 94, "String", {"length": 8, "term": ""}]
+        ]]
+      ]'''
+
+      LET os_info <= SELECT Architecture FROM info()
+
+      // Get the path to the package.
+      LET bin <= SELECT * FROM if(
+        condition=os_info[0].Architecture =~ "^(amd64|arm64)$",
+        then={
+          SELECT * FROM Artifact.Generic.Utils.FetchBinary(
+            ToolName="AutorunsLinux_" + os_info[0].Architecture,
+            IsExecutable=FALSE)
+        },
+        else={
+          SELECT * FROM scope()
+          WHERE log(level="ERROR",
+                    message="Unsupported architecture %v",
+                    args=os_info[0].Architecture) AND FALSE
+        })
+
+      LET ToolPath <= bin[0].OSPath
+      LET TmpDir <= tempdir()
+      LET BinPath <= path_join(components=[TmpDir, "autoruns"])
+      LET JsonPath <= path_join(components=[TmpDir, "autoruns.json"])
+      LET XzPath <= path_join(components=[TmpDir, "payload.cpio.xz"])
+      LET CpioPath <= path_join(components=[TmpDir, "payload.cpio"])
+
+      LET ToolMagic <= if(condition=ToolPath,
+         then=format(format="%08x", args=parse_binary(
+            filename=ToolPath, profile=PackageProfile, struct="Magic").Value))
+      LET IsElf <= ToolMagic = "7f454c46"
+      LET IsRpm <= ToolMagic = "edabeedb"
+
+      LET _ <= ToolPath AND NOT IsElf AND NOT IsRpm AND log(level="ERROR",
+         message="Tool %v is not an RPM or ELF binary (magic %v)",
+         args=[ToolPath, ToolMagic])
+
+      // RPM layout: 96 byte lead, signature header padded to 8
+      // bytes, main header, then the xz compressed cpio payload.
+      LET SigHeader = parse_binary(filename=ToolPath,
+         profile=PackageProfile, struct="RPMHeader", offset=96)
+      LET MainOffset = 96 + 8 * int(int=(SigHeader.Size + 7) / 8)
+      LET MainHeader = parse_binary(filename=ToolPath,
+         profile=PackageProfile, struct="RPMHeader", offset=MainOffset)
+      LET PayloadOffset = MainOffset + MainHeader.Size
+
+      LET Payload = read_file(filename=ToolPath, offset=PayloadOffset,
+         length=stat(filename=ToolPath).Size - PayloadOffset)
+
+      // Clients without xz_decompress() fall back to the xz utility.
+      LET NativeXz <= version(function="xz_decompress") >= 0
+
+      LET Decompress <= SELECT * FROM if(
+        condition=IsRpm AND NOT NativeXz AND copy(
+           accessor="data", dest=XzPath, filename=Payload),
+        then={
+          SELECT * FROM execve(
+            argv=["xz", "--decompress", "--keep", "--force", XzPath])
+        })
+
+      // NOTE: VQL binds OR tighter than AND so parenthesize.
+      LET Decompressed <= IsRpm AND if(condition=NativeXz,
+         then=copy(accessor="data", dest=CpioPath,
+                   filename=xz_decompress(string=Payload)) OR (
+              log(level="ERROR",
+                  message="Unable to decompress the RPM payload") AND FALSE),
+         else=Decompress[-1].ReturnCode = 0 OR (
+              log(level="ERROR",
+                  message="Unable to decompress the RPM payload, is xz installed? %v",
+                  args=Decompress[-1].Stderr) AND FALSE))
+
+      // The binary is the first member of the newc cpio archive.
+      LET CpioEntry = parse_binary(filename=CpioPath,
+         profile=PackageProfile, struct="CpioNewc")
+      LET NameSize = int(int="0x" + CpioEntry.NameSize)
+      LET FileSize = int(int="0x" + CpioEntry.FileSize)
+      LET MemberName = read_file(filename=CpioPath, offset=110,
+         length=NameSize - 1)
+      LET DataOffset = 4 * int(int=(110 + NameSize + 3) / 4)
+
+      LET FromCpio = if(
+         condition=CpioEntry.Magic =~ "^07070[12]$"
+           AND MemberName =~ "^(\\./)?usr/bin/autoruns$",
+         then=copy(accessor="data", dest=BinPath, permissions="x",
+            filename=read_file(filename=CpioPath, offset=DataOffset,
+                               length=FileSize)),
+         else=log(level="ERROR", message="Unexpected RPM payload member %v",
+                  args=MemberName) AND FALSE)
+
+      // A raw ELF binary is used as-is.
+      LET Extracted <= if(condition=IsElf,
+         then=copy(filename=ToolPath, dest=BinPath, permissions="x"),
+         else=Decompressed AND FromCpio)
+
+      LET _ <= Extracted AND log(message="Running %v with SHA256 %v",
+         args=[BinPath, hash(path=BinPath).SHA256])
+
+      LET Argv <= (BinPath, "-nobanner", "-a", Selection, "--json", "-t",
+                   "-o", JsonPath) +
+                  if(condition=CalculateHashes, then=["-h"], else=[]) +
+                  if(condition=Root, then=["--root", Root], else=[])
+
+      // Exit codes: 0 complete, 1 output failure, 2 argument or root
+      // error, 3 partial scan results.
+      LET Execution <= SELECT * FROM if(condition=Extracted,
+      then={
+        SELECT * FROM execve(argv=Argv, length=1000000)
+      })
+
+      LET ReturnCode <= Execution[-1].ReturnCode
+      LET Diagnostics <= filter(condition="x=>x",
+         list=split(sep="\n", string=join(sep="", array=Execution.Stderr)))
+
+      LET _ <= ReturnCode = 3 AND log(level="WARN",
+         message="Partial scan with %v diagnostics, first 20: %v",
+         args=[len(list=Diagnostics), Diagnostics[:20]])
+
+      LET _ <= Execution AND NOT (ReturnCode IN (0, 3)) AND log(level="ERROR",
+         message="Autoruns failed with exit code %v: %v",
+         args=[ReturnCode, Diagnostics[:20]])
+
+      SELECT * FROM if(condition=ReturnCode IN (0, 3) AND stat(filename=JsonPath),
+      then={
+        SELECT category AS Category,
+               status AS Status,
+               name AS Name,
+               description AS Description,
+               publisher AS Publisher,
+               imagePath AS ImagePath,
+               command AS Command,
+               location AS Location,
+               get(field="source") AS Source,
+               if(condition=get(field="timestamp"),
+                  then=timestamp(string=get(field="timestamp"))) AS Timestamp,
+               sha256 AS SHA256,
+               note AS Note,
+               event AS Event,
+               mechanism AS Mechanism,
+               principal AS Principal,
+               get(field="profile") AS Profile,
+               activator AS Activator,
+               target AS Target,
+               completeness AS Completeness,
+               targetState AS TargetState,
+               targetExists AS TargetExists,
+               targetExecutable AS TargetExecutable
+        FROM parse_json_array(data=read_file(filename=JsonPath,
+           length=stat(filename=JsonPath).Size))
+      })
