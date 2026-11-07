@@ -26,6 +26,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/andybalholm/brotli"
 	"github.com/klauspost/compress/zstd"
+	"github.com/ulikunitz/xz"
 	"www.velocidex.com/golang/velociraptor/constants"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -117,7 +118,31 @@ func (self ZstdDecompress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) 
 	}
 }
 
+type XzDecompress struct{}
+
+func (self *XzDecompress) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+	return decompressString(ctx, scope, args, "xz_decompress",
+		func(r io.Reader) (io.Reader, func(), error) {
+			d, err := xz.NewReader(r)
+			if err != nil {
+				return nil, nil, err
+			}
+			return d, func() {}, nil
+		})
+}
+
+func (self XzDecompress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:    "xz_decompress",
+		Doc:     "Decompress an xz-compressed block of data.",
+		ArgType: type_map.AddType(scope, &DecompressArgs{}),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&BrotliDecompress{})
 	vql_subsystem.RegisterFunction(&ZstdDecompress{})
+	vql_subsystem.RegisterFunction(&XzDecompress{})
 }
