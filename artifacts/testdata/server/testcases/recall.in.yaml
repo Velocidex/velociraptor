@@ -1,0 +1,18 @@
+Queries:
+  # Validate database storage files and sidecars
+  - SELECT StorageStatus, OSPath.Basename AS Filename, Size > 0 AS HasSize
+    FROM Artifact.Windows.Forensics.Recall(
+        RecallGlob=srcDir+"/artifacts/testdata/files/recall/ukg.db*",
+        Accessor="file", source="StorageValidation")
+
+  # Query window capture records
+  - SELECT CaptureTime, WindowTitle, ImageToken
+    FROM Artifact.Windows.Forensics.Recall(
+        RecallGlob=srcDir+"/artifacts/testdata/files/recall/ukg.db",
+        Accessor="file", source="WindowCaptures")
+
+  # Query OCR text recognition search
+  - SELECT WindowTitle, OcrText
+    FROM Artifact.Windows.Forensics.Recall(
+        RecallGlob=srcDir+"/artifacts/testdata/files/recall/ukg.db",
+        Accessor="file", source="TextSearch", SearchRegex="Malware")
