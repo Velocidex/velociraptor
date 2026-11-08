@@ -16,7 +16,7 @@ require (
 	github.com/Velocidex/WinPmem/go-winpmem v0.0.0-20261021104259-7ffd418cf78d
 	github.com/Velocidex/amsi v0.0.0-20250418124629-ea341d1aa3f2
 	github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7
-	github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799
+	github.com/Velocidex/etw v0.0.0-20261108143725-14b23aa9dbbf
 	github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11
 	github.com/Velocidex/fileb0x v1.1.2-0.20260924031635-cd9b52cfe09c
 	github.com/Velocidex/go-elasticsearch/v9 v9.0.0-20260310165104-23947f88cc85
@@ -31,7 +31,6 @@ require (
 	github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf
 	github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5
 	github.com/Velocidex/grok v0.0.1
-	github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
 	github.com/Velocidex/ordereddict v0.0.0-20261028034010-6857b08b4dab
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
@@ -75,6 +74,7 @@ require (
 	github.com/go-sql-driver/mysql v1.7.1
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/golang/mock v1.6.0
+	github.com/golang/protobuf v1.5.4
 	github.com/google/btree v1.1.2
 	github.com/google/rpmpack v0.5.0
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
@@ -263,7 +263,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.3.0 // indirect
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
 	github.com/golang/glog v1.2.5 // indirect
-	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/golang/snappy v1.0.0 // indirect
 	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect

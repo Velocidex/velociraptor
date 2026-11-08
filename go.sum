@@ -100,8 +100,8 @@ github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7 h1:0e+y6o+6b+aPv
 github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7/go.mod h1:rnpfGZsQI3I0PZVhZyZMiXaGoRZ/D6zXH9Tl6Sn3c3o=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26 h1:VwbeNpMRuS3bRieg7WLaSYIMaI8RjH/wGxd37oj6H1g=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
-github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799 h1:5g30krg7L88BNfqOrOfSJNXRJfRdJjrLWMxhEAv0k40=
-github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799/go.mod h1:VIXXclFpWN0pisSoz1obVWQvQCwqr60HmNWuYMB95Cs=
+github.com/Velocidex/etw v0.0.0-20261108143725-14b23aa9dbbf h1:dRiO1QhHFm8g/Fej5chLThTgPk5ol60oS/Nf2pTof3A=
+github.com/Velocidex/etw v0.0.0-20261108143725-14b23aa9dbbf/go.mod h1:VIXXclFpWN0pisSoz1obVWQvQCwqr60HmNWuYMB95Cs=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p6hvmbFKXJg8suzGSG9/t8Ij9ece32GUFIdHgqg=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11/go.mod h1:Ya1f4Kowt2GC7gbnu1MbNncvI1Lp3i1plN2xLiETJfg=
 github.com/Velocidex/fileb0x v1.1.2-0.20260924031635-cd9b52cfe09c h1:vdC4apXacrmaauww67aZF7usSCSu+rHhXhcE334maA8=
@@ -130,8 +130,6 @@ github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5 h1:27r8y5q7uV
 github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
 github.com/Velocidex/grok v0.0.1/go.mod h1:tO25ta1WAuru0QA9ajcK0bAsk0gpWiT8so+fR4u3GZE=
-github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f h1:nVc9Y69VrGkBVCDKYbrbf4gQYykRzArO6JUD3MOqKcE=
-github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f/go.mod h1:Rcpbr2QTlawwUkhHKHX0kOKw1nA++gwuyxAwUDgXdZg=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a h1:AeXPUzhU0yhID/v5JJEIkjaE85ASe+Vh4Kuv1RSLL+4=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
