@@ -2,14 +2,14 @@
 Query: SELECT StorageStatus, OSPath.Basename AS Filename, Size > 0 AS HasSize FROM Artifact.Windows.Forensics.Recall( RecallGlob=srcDir+"/artifacts/testdata/files/recall/ukg.db*", Accessor="file", source="StorageValidation")
 Output: [
  {
+  "StorageStatus": "SQLite Header Detected",
   "Filename": "ukg.db",
-  "HasSize": true,
-  "StorageStatus": "SQLite Header Detected"
+  "HasSize": true
  },
  {
+  "StorageStatus": "SQLite Sidecar (WAL/SHM)",
   "Filename": "ukg.db-wal",
-  "HasSize": true,
-  "StorageStatus": "SQLite Sidecar (WAL/SHM)"
+  "HasSize": true
  }
 ]
 
@@ -18,8 +18,8 @@ Query: SELECT CaptureTime, WindowTitle, ImageToken FROM Artifact.Windows.Forensi
 Output: [
  {
   "CaptureTime": "2020-09-13T12:26:40Z",
-  "ImageToken": "{test-token-001}",
-  "WindowTitle": "Incident Triage - Notepad"
+  "WindowTitle": "Incident Triage - Notepad",
+  "ImageToken": "{test-token-001}"
  }
 ]
 
@@ -27,7 +27,7 @@ Output: [
 Query: SELECT WindowTitle, OcrText FROM Artifact.Windows.Forensics.Recall( RecallGlob=srcDir+"/artifacts/testdata/files/recall/ukg.db", Accessor="file", source="TextSearch", SearchRegex="Malware")
 Output: [
  {
-  "OcrText": "Malware sample hash identified in memory",
-  "WindowTitle": "Incident Triage - Notepad"
+  "WindowTitle": "Incident Triage - Notepad",
+  "OcrText": "Malware sample hash identified in memory"
  }
 ]
