@@ -164,11 +164,11 @@ sources:
         })
 
       LET ToolPath <= bin[0].OSPath
-      LET TmpDir <= tempdir()
-      LET BinPath <= path_join(components=[TmpDir, "autoruns"])
-      LET JsonPath <= path_join(components=[TmpDir, "autoruns.json"])
-      LET XzPath <= path_join(components=[TmpDir, "payload.cpio.xz"])
-      LET CpioPath <= path_join(components=[TmpDir, "payload.cpio"])
+      LET TmpDir <= pathspec(parse=tempdir())
+      LET BinPath = TmpDir + "autoruns"
+      LET CsvPath = TmpDir + "autoruns.csv"
+      LET XzPath = TmpDir + "payload.cpio.xz"
+      LET CpioPath = TmpDir + "payload.cpio"
 
       LET ToolMagic <= if(condition=ToolPath,
          then=format(format="%08x", args=parse_binary(
@@ -240,8 +240,8 @@ sources:
       LET _ <= Extracted AND log(message="Running %v with SHA256 %v",
          args=[BinPath, hash(path=BinPath).SHA256])
 
-      LET Argv <= (BinPath, "-nobanner", "-a", Selection, "--json", "-t",
-                   "-o", JsonPath) +
+      LET Argv <= (BinPath, "-nobanner", "-a", Selection, "-c", "-t",
+                   "-o", CsvPath) +
                   if(condition=CalculateHashes, then=["-h"], else=[]) +
                   if(condition=Root, then=["--root", Root], else=[])
 
@@ -264,31 +264,41 @@ sources:
          message="Autoruns failed with exit code %v: %v",
          args=[ReturnCode, Diagnostics[:20]])
 
-      SELECT * FROM if(condition=ReturnCode IN (0, 3) AND stat(filename=JsonPath),
+      // The CSV writer prefixes a quote to values whose first non-space
+      // character is = + - @, tab or CR so spreadsheets do not evaluate
+      // them, e.g. a systemd ExecStart=- command. Strip it again.
+      LET Unquote(x) = regex_replace(source=x,
+         re="^'( *[-=+@\\t\\r])", replace="$1")
+
+      // parse_csv returns true/false as bools and unknown as "".
+      LET Bool(x) = if(condition=typeof(a=x) = "bool", then=x)
+
+      // Stream the rows from the CSV file rather than holding all of
+      // the output in memory.
+      SELECT * FROM if(condition=ReturnCode IN (0, 3) AND stat(filename=CsvPath),
       then={
-        SELECT category AS Category,
-               status AS Status,
-               name AS Name,
-               description AS Description,
-               publisher AS Publisher,
-               imagePath AS ImagePath,
-               command AS Command,
-               location AS Location,
-               get(field="source") AS Source,
-               if(condition=get(field="timestamp"),
-                  then=timestamp(string=get(field="timestamp"))) AS Timestamp,
-               sha256 AS SHA256,
-               note AS Note,
-               event AS Event,
-               mechanism AS Mechanism,
-               principal AS Principal,
-               get(field="profile") AS Profile,
-               activator AS Activator,
-               target AS Target,
-               completeness AS Completeness,
-               targetState AS TargetState,
-               targetExists AS TargetExists,
-               targetExecutable AS TargetExecutable
-        FROM parse_json_array(data=read_file(filename=JsonPath,
-           length=stat(filename=JsonPath).Size))
+        SELECT Category,
+               Status,
+               Unquote(x=Name) AS Name,
+               Unquote(x=Description) AS Description,
+               Unquote(x=Publisher) AS Publisher,
+               Unquote(x=ImagePath) AS ImagePath,
+               Unquote(x=Command) AS Command,
+               Unquote(x=Location) AS Location,
+               Unquote(x=get(field="Source")) AS Source,
+               if(condition=get(field="Timestamp"),
+                  then=timestamp(string=get(field="Timestamp"))) AS Timestamp,
+               SHA256,
+               Unquote(x=Note) AS Note,
+               Unquote(x=Event) AS Event,
+               Unquote(x=Mechanism) AS Mechanism,
+               Unquote(x=Principal) AS Principal,
+               Unquote(x=get(field="Profile")) AS Profile,
+               Unquote(x=Activator) AS Activator,
+               Unquote(x=Target) AS Target,
+               Unquote(x=Completeness) AS Completeness,
+               TargetState,
+               Bool(x=TargetExists) AS TargetExists,
+               Bool(x=TargetExecutable) AS TargetExecutable
+        FROM parse_csv(filename=CsvPath)
       })
