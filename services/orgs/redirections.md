@@ -1,4 +1,4 @@
-# Velociraptor Org arichtecture
+# Velociraptor Org architecture
 
 Velociraptor breaks clients into groups called "Orgs". Each org is
 considered a separate collections of clients.
@@ -12,7 +12,7 @@ deployment. The common use case of orgs are:
 
 1. For consultants that onboard new customers, each org can contain a
    separate deployment. Making all orgs available under the same
-   Velociraptor GUI for the same team simpifies operations.
+   Velociraptor GUI for the same team simplifies operations.
 
 2. Clients within the same deployment can be broken into different
    access level. For example, most sensitive clients can only be
@@ -139,7 +139,7 @@ as well.
 
 ## Benefits of the new architecture
 
-Each remote deployment is completely indepdendent running on a
+Each remote deployment is completely independent running on a
 separate server with its own disk and CPU resources. Users may be
 given full access (including EXECVE level access) to the remote server
 all while restricting access to the same org data.
