@@ -361,6 +361,25 @@ message ClientConfig {
     LoggingConfig Logging = 55;
 }
 
+message OrgRedirection {
+    // The OrgId to be redirected - this should be unique on the
+    // server.
+    string org_id = 1;
+    string org_name = 2;
+
+    // The org id that will be mapped on the remote server.
+    string redirected_org_id = 6;
+
+    // A path to an API config file created by the remote server. The
+    // API user should have the impersonate permission so it can relay
+    // API calls on behalf of the user logged into the current system.
+    string api_config_file = 3;
+
+    // The server will parse the above api_config_file at startup and
+    // fill in the details here.
+    ApiClientConfig api_config = 4;
+}
+
 message APIConfig {
     // Publicly accessible hostname.
     string hostname = 5;
@@ -637,6 +656,12 @@ message GUIConfig {
     repeated GUIUser initial_users = 17;
 
     repeated InitialOrgRecord initial_orgs = 22;
+
+    // Orgs can be redirected by the GUI. When the user selects this org,
+    // the server will re-route requests to the remote endpoint and
+    // incorporate them into the GUI. This allows distributed, isolated
+    // servers to be treated as part of the same deployment.
+    repeated OrgRedirection redirected_orgs = 26;
 
     // The authenticator to use - can not be null.
     Authenticator authenticator = 19;
@@ -1642,6 +1667,8 @@ message Config {
     // does not know or use its own org id.
     string org_id = 36;
     string org_name = 37;
+    bool org_redirected = 43;
+
     bool debug_mode = 41;
 
     // The services that will run at initialization. Note this is not

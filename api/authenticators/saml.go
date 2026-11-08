@@ -9,7 +9,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/crewjam/saml/samlsp"
-	"github.com/gorilla/csrf"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -17,7 +16,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -122,8 +120,6 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("X-CSRF-Token", csrf.Token(r))
-
 			session, err := samlMiddleware.Session.GetSession(r)
 			if session == nil || err != nil {
 				reject_handler.ServeHTTP(w, r)
@@ -199,15 +195,9 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 					http.StatusUnauthorized)
 				return
 			}
-
-			user_info := &api_proto.VelociraptorUser{
-				Name: user_record.Name,
-			}
-
-			serialized, _ := json.Marshal(user_info)
 			ctx := context.WithValue(
 				r.Context(), constants.GRPC_USER_CONTEXT,
-				string(serialized))
+				utils.Quote(user_record.Name))
 			logger.ServeHTTP(w, r.WithContext(ctx))
 		}).AddChild("GetLoggingHandler")
 }

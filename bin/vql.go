@@ -285,7 +285,7 @@ func doVQLExport() error {
 		data, err := utils.ReadAllWithLimit(*vql_info_export_old_file,
 			constants.MAX_MEMORY)
 		if err == nil {
-			err = yaml.Unmarshal(data, &old_data)
+			err = utils.YamlUnmarshalStrict(data, &old_data)
 			if err != nil {
 				return fmt.Errorf("Unmarshal file: %w", err)
 			}

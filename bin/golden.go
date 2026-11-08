@@ -693,7 +693,7 @@ func parseFixture(data []byte) (res testFixture, err error) {
 	}
 
 	var n tmpType
-	err = yaml.Unmarshal(data, &n)
+	err = utils.YamlUnmarshalStrict(data, &n)
 	if err != nil {
 		return res, err
 	}
