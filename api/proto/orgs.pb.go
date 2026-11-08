@@ -23,6 +23,9 @@ type OrgRecord struct {
 	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	Nonce string                 `protobuf:"bytes,2,opt,name=nonce,proto3" json:"nonce,omitempty"`
 	Id    string                 `protobuf:"bytes,3,opt,name=id,proto3" json:"id,omitempty"`
+	// True if this org is redirected.
+	Redirected      bool   `protobuf:"varint,5,opt,name=redirected,proto3" json:"redirected,omitempty"`
+	RedirectedOrgId string `protobuf:"bytes,6,opt,name=redirected_org_id,json=redirectedOrgId,proto3" json:"redirected_org_id,omitempty"`
 	// Deprecated do not use
 	OrgId         string `protobuf:"bytes,4,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -80,6 +83,20 @@ func (x *OrgRecord) GetId() string {
 	return ""
 }
 
+func (x *OrgRecord) GetRedirected() bool {
+	if x != nil {
+		return x.Redirected
+	}
+	return false
+}
+
+func (x *OrgRecord) GetRedirectedOrgId() string {
+	if x != nil {
+		return x.RedirectedOrgId
+	}
+	return ""
+}
+
 func (x *OrgRecord) GetOrgId() string {
 	if x != nil {
 		return x.OrgId
@@ -92,11 +109,15 @@ var File_orgs_proto protoreflect.FileDescriptor
 const file_orgs_proto_rawDesc = "" +
 	"\n" +
 	"\n" +
-	"orgs.proto\x12\x05proto\"\\\n" +
+	"orgs.proto\x12\x05proto\"\xa8\x01\n" +
 	"\tOrgRecord\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05nonce\x18\x02 \x01(\tR\x05nonce\x12\x0e\n" +
-	"\x02id\x18\x03 \x01(\tR\x02id\x12\x15\n" +
+	"\x02id\x18\x03 \x01(\tR\x02id\x12\x1e\n" +
+	"\n" +
+	"redirected\x18\x05 \x01(\bR\n" +
+	"redirected\x12*\n" +
+	"\x11redirected_org_id\x18\x06 \x01(\tR\x0fredirectedOrgId\x12\x15\n" +
 	"\x06org_id\x18\x04 \x01(\tR\x05orgIdB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (

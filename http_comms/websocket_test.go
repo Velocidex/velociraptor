@@ -53,7 +53,6 @@ func (self *TestSuite) TestWebSocketRetry() {
 		conn, pres := ws_connections_factory.GetConn("/reader")
 		assert.True(self.T(), pres)
 
-		fmt.Printf("Closing reader!\n")
 		conn.Close()
 
 		vtesting.WaitUntil(5*time.Second, self.T(), func() bool {

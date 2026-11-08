@@ -7,6 +7,7 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
+	"www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/acls"
 	acl_proto "www.velocidex.com/golang/velociraptor/acls/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -26,7 +27,8 @@ func (self *ApiServer) GetSubject(
 
 	defer Instrument("GetSubject")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
+	filename := getURN(in)
+	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -42,7 +44,7 @@ func (self *ApiServer) GetSubject(
 			"Datastore has no raw access.")
 	}
 
-	data, err := raw_db.GetBuffer(org_config_obj, getURN(in))
+	data, err := raw_db.GetBuffer(org_config_obj, filename)
 	return &api_proto.DataResponse{
 		Data: data,
 	}, Status(self.verbose, err)
@@ -54,7 +56,7 @@ func (self *ApiServer) SetSubject(
 
 	defer Instrument("SetSubject")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
+	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -94,7 +96,7 @@ func (self *ApiServer) ListChildren(
 
 	defer Instrument("ListChildren")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
+	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -128,7 +130,7 @@ func (self *ApiServer) DeleteSubject(
 
 	defer Instrument("DeleteSubject")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
+	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -153,54 +155,73 @@ func getURN(in *api_proto.DataRequest) api.DSPathSpec {
 		SetTag(path_spec.Tag)
 }
 
+// Check that the user is allowed to access the filestore directly.
 func checkDataStorePermissions(
-	ctx context.Context, org_id string,
-	alternative_permissions ...acls.ACL_PERMISSION) (*config_proto.Config, error) {
+	ctx context.Context,
+	org_id string,
+	filename api.FSPathSpec,
+	alternative_permissions ...acls.ACL_PERMISSION) (
+	org_config_obj *config_proto.Config, principal string, err error) {
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// Shortcut for the superuser - this is the most common method to
-	// access the remote datastore.
+	// access the remote datastore. It allows everything.
 	if user_record.UserIsSuperuser {
-		return org_config_obj, nil
+		return org_config_obj, user_record.Name, nil
 	}
 
 	user_name := user_record.Name
 	token, err := services.GetEffectivePolicy(org_config_obj, user_name)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	err = checkToken(token, alternative_permissions)
+	// If the user is allowed to impersonate another user, then we
+	// need to check the other user's permission.
+
+	err = checkToken(token, filename, alternative_permissions)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	// Only the superuser is allowed to switch orgs.
 	if token.SuperUser && org_config_obj.OrgId != org_id {
 		org_manager, err := services.GetOrgManager()
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 
 		org_config_obj, err = org_manager.GetOrgConfig(org_id)
 		if err != nil {
-			return nil, err
+			return nil, "", err
 		}
 	}
 
-	return org_config_obj, nil
+	return org_config_obj, user_record.Name, nil
 }
 
-func checkToken(token *acl_proto.ApiClientACL,
+func checkToken(
+	token *acl_proto.ApiClientACL,
+	filename api.FSPathSpec,
 	alternate_permissions []acls.ACL_PERMISSION) error {
 
+	// Users with the DATASTORE_ACCESS permission can access anywhere
+	// in the datastore.
 	perm, err := services.CheckAccessWithToken(token, acls.DATASTORE_ACCESS)
 	if perm && err == nil {
 		return nil
+	}
+
+	// Other permissions can only access areas which are allowed
+	if filename != nil {
+		err = file_store.IsFileAccessible(filename)
+		if err != nil {
+			return err
+		}
 	}
 
 	// Check any of the alternate_permissions

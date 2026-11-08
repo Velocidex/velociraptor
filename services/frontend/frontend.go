@@ -137,6 +137,11 @@ func calculateOrgConnectionClients(metric *FrontendMetrics) error {
 		return err
 	}
 	for _, org := range org_manager.ListOrgs() {
+		// Do not include redirected orgs for now.
+		if org.Redirected {
+			continue
+		}
+
 		org_config_obj, err := org_manager.GetOrgConfig(org.Id)
 		if err != nil {
 			continue

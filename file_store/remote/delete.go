@@ -3,7 +3,6 @@ package remote
 import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -13,8 +12,7 @@ func (self *RPCFileStore) Delete(filename api.FSPathSpec) error {
 	defer cancel()
 
 	// Make the call as the superuser
-	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx,
-		grpc_client.SuperUser, self.config_obj)
+	conn, closer, err := self.factory()
 	if err != nil {
 		return err
 	}

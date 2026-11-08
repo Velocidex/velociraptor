@@ -76,6 +76,7 @@ func SetPolicy(
 	return acl_manager.SetPolicy(config_obj, principal, acl_obj)
 }
 
+// Check the user against **all** of the permissions
 func CheckAccess(
 	config_obj *config_proto.Config,
 	principal string,

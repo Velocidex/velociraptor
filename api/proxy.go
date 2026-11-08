@@ -149,6 +149,7 @@ func PrepareGUIMux(
 	}
 
 	base_path := api_utils.GetBasePath(config_obj)
+	var grpc_client_factory grpc_client.APIClientFactory = grpc_client.NewDirectConnectionClient()
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/"),
 		ipFilter(config_obj,
@@ -158,29 +159,34 @@ func PrepareGUIMux(
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/DownloadTable"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				downloadTable(config_obj), acls.READ_RESULTS))))
+				downloadTable(config_obj, grpc_client_factory),
+				acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/DownloadVFSFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				vfsFileDownloadHandler(config_obj), acls.READ_RESULTS))))
+				vfsFileDownloadHandler(config_obj, grpc_client_factory),
+				acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/UploadTool"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				toolUploadHandler(config_obj), acls.READ_RESULTS))))
+				toolUploadHandler(config_obj, grpc_client_factory),
+				acls.READ_RESULTS))))
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/v1/UploadFormFile"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
-				formUploadHandler(config_obj), acls.READ_RESULTS))))
+				formUploadHandler(config_obj, grpc_client_factory),
+				acls.READ_RESULTS))))
 
 	// Serve prepared zip files.
 	mux.Handle(api_utils.GetBasePath(config_obj, "/downloads/"),
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore(config_obj, []string{"downloads"})),
+					downloadFileStore(config_obj,
+						grpc_client_factory, []string{"downloads"})),
 				acls.READ_RESULTS))))
 
 	// Serve notebook items
@@ -188,7 +194,8 @@ func PrepareGUIMux(
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore(config_obj, []string{"notebooks"})),
+					downloadFileStore(config_obj,
+						grpc_client_factory, []string{"notebooks"})),
 				acls.READ_RESULTS))))
 
 	// Serve files from hunt notebooks
@@ -196,7 +203,8 @@ func PrepareGUIMux(
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore(config_obj, []string{"hunts"})),
+					downloadFileStore(config_obj,
+						grpc_client_factory, []string{"hunts"})),
 				acls.READ_RESULTS))))
 
 	// Serve files from client notebooks
@@ -204,7 +212,8 @@ func PrepareGUIMux(
 		ipFilter(config_obj, csrfProtect(config_obj,
 			auther.AuthenticateUserHandler(
 				api_utils.StripPrefix(base_path,
-					downloadFileStore(config_obj, []string{"clients"})),
+					downloadFileStore(config_obj,
+						grpc_client_factory, []string{"clients"})),
 				acls.READ_RESULTS))))
 
 	// Enable debug endpoints but only for users with SERVER_ADMIN on
@@ -284,7 +293,7 @@ func GetAPIHandler(
 				if ok {
 					// gRPC metadata can only contain ASCII so we make
 					// sure to escape if needed.
-					md["USER"] = utils.Quote(username)
+					md[constants.GRPC_MD_USER] = username
 				}
 
 				return metadata.New(md)
@@ -294,7 +303,7 @@ func GetAPIHandler(
 		// Allow the http client to specify the orgid in a header.
 		runtime.WithIncomingHeaderMatcher(func(in string) (string, bool) {
 			if strings.ToLower(in) == "grpc-metadata-orgid" {
-				return "OrgId", true
+				return constants.GRPC_MD_ORG_ID, true
 			}
 			return "", false
 		}),

@@ -28,9 +28,9 @@ import (
 	"strings"
 	"time"
 
+	csrf "filippo.io/csrf/gorilla"
 	"github.com/andybalholm/brotli"
 	errors "github.com/go-errors/errors"
-	"github.com/gorilla/csrf"
 	"github.com/lpar/gzipped"
 	"www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"

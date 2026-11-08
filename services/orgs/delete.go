@@ -71,7 +71,8 @@ func (self *OrgManager) DeleteOrg(ctx context.Context, principal, org_id string)
 	self.mu.Unlock()
 
 	if !pres {
-		return fmt.Errorf("Org %v does not exist.", org_id)
+		return fmt.Errorf("%w: Org %v does not exist.",
+			utils.NotFoundError, org_id)
 	}
 
 	// Shut down the org's services

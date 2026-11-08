@@ -5,13 +5,11 @@ import (
 	"net/http"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/gorilla/csrf"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -77,7 +75,6 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("X-CSRF-Token", csrf.Token(r))
 			w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 
 			username, password, ok := r.BasicAuth()
@@ -145,18 +142,12 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 				return
 			}
 
-			// Checking is successful - user authorized. Here we
-			// build a token to pass to the underlying GRPC
-			// service with metadata about the user.
-			user_info := &api_proto.VelociraptorUser{
-				Name: user_record.Name,
-			}
-
 			// Must use json encoding because grpc can not handle
 			// binary data in metadata.
-			serialized, _ := json.Marshal(user_info)
 			ctx := context.WithValue(
-				r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
+				r.Context(),
+				constants.GRPC_USER_CONTEXT,
+				string(user_record.Name))
 
 			_ = users_manager.SetUserStats(r.Context(), self.config_obj, username,
 				&api_proto.UserStats{

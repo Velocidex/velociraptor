@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -286,7 +285,7 @@ func (self *Loader) WithLiteralLoader(serialized []byte) *Loader {
 			loader_func: func(self *Loader) (*config_proto.Config, error) {
 				self.Log("Loading constant config")
 				result := &config_proto.Config{}
-				err := yaml.UnmarshalStrict(serialized, result)
+				err := utils.YamlUnmarshalStrict(serialized, result)
 				if err != nil {
 					return nil, HardError{
 						fmt.Errorf("LiteralLoader: %w", err),
@@ -330,7 +329,7 @@ func (self *Loader) WithEnvLiteralLoader(env_var string) *Loader {
 			if env_config != "" {
 				self.Log("Loading literal config from env %v", env_var)
 				result := &config_proto.Config{}
-				err := yaml.UnmarshalStrict([]byte(env_config), result)
+				err := utils.YamlUnmarshalStrict([]byte(env_config), result)
 				if err != nil {
 					return nil, HardError{
 						fmt.Errorf("EnvLiteralLoader: %w", err),
@@ -566,7 +565,7 @@ func read_config_from_file(filename string) (*config_proto.Config, error) {
 		return nil, errors.Wrap(err, 0)
 	}
 
-	err = yaml.UnmarshalStrict(data, result)
+	err = utils.YamlUnmarshalStrict(data, result)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}
@@ -581,7 +580,7 @@ func read_api_config_from_file(filename string) (*config_proto.Config, error) {
 		return nil, errors.Wrap(err, 0)
 	}
 
-	err = yaml.UnmarshalStrict(data, result.ApiConfig)
+	err = utils.YamlUnmarshalStrict(data, result.ApiConfig)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}

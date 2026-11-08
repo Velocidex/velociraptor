@@ -8,12 +8,11 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"google.golang.org/grpc/peer"
+	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	crypto_utils "www.velocidex.com/golang/velociraptor/crypto/utils"
-	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
@@ -69,13 +68,33 @@ func (self UserManager) GetUserFromHTTPContext(ctx context.Context) (
 	if !ok {
 		return nil, errors.New("Unauthenticated request")
 	}
+	user_info.Name = utils.UnQuote(serialized)
+	return user_info, err
+}
 
-	err = json.Unmarshal([]byte(serialized), user_info)
-	if err != nil {
-		return nil, errors.New("Unauthenticated request")
+// Figure out if the username can impersonate another user in this RPC
+// call. Impersonating users are making an RPC call on behalf of other
+// users:
+//  1. The GRPC gateway carries the HTTP auth from a user to the RPC
+//     endpoint.
+//  2. Redirected orgs carry the originating user identity to the
+//     remote server.
+func canUserImpersonate(
+	config_obj *config_proto.Config,
+	username string) bool {
+	// The gateway can always impersonate
+	if username == utils.GetGatewayName(config_obj) {
+		return true
 	}
 
-	return user_info, err
+	// The user must have all these permissions. This is used for
+	// remote datastore connections such as org redirection.
+	ok, err := services.CheckAccess(config_obj, username,
+		acls.IMPERSONATION,
+		acls.ORG_ADMIN,
+		// Must have API level access
+		acls.ANY_QUERY)
+	return err == nil && ok
 }
 
 // GetGRPCUserInfo: Extracts user information from GRPC context.
@@ -103,33 +122,27 @@ func GetGRPCUserInfo(
 				result.Name = crypto_utils.GetSubjectName(
 					tlsInfo.State.PeerCertificates[0])
 
-				// Calls from the gRPC gateway are allowed to
-				// embed the authenticated web user in the
-				// metadata. This allows the API gateway to
-				// impersonate anyone - it must be trusted to
-				// convert web side authentication to a valid
-				// user name which it may pass in the call
+				// Calls from the gRPC gateway are allowed to embed
+				// the authenticated web user in the metadata. This
+				// allows the API gateway to impersonate anyone - it
+				// must be trusted to convert web side authentication
+				// to a valid user name which it may pass in the call
 				// context.
-				if result.Name == utils.GetGatewayName(config_obj) {
+				if canUserImpersonate(config_obj, result.Name) {
 					md, ok := metadata.FromIncomingContext(ctx)
 					if ok {
-						userinfo := md.Get("USER")
+						userinfo := md.Get(constants.GRPC_MD_USER)
 						if len(userinfo) == 1 {
 							// gRPC metadata can only contain ASCII so
 							// we recover the UTF8 string from there.
-							data := []byte(utils.UnQuote(userinfo[0]))
-							err := json.Unmarshal(data, result)
-							if err != nil {
-								logger := logging.GetLogger(config_obj,
-									&logging.FrontendComponent)
-								logger.Error("GetGRPCUserInfo: %v", err)
-								result.Name = ""
+							result = &api_proto.VelociraptorUser{
+								Name: utils.UnQuote(userinfo[0]),
 							}
 						}
 
 						// Corresponds to the Grpc-Metadata-OrgId
 						// header added by api-service.js
-						org_id := md.Get("OrgId")
+						org_id := md.Get(constants.GRPC_MD_ORG_ID)
 						if len(org_id) == 1 {
 							result.CurrentOrg = org_id[0]
 							if utils.IsRootOrg(result.CurrentOrg) {
@@ -141,6 +154,5 @@ func GetGRPCUserInfo(
 			}
 		}
 	}
-
 	return result
 }

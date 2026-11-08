@@ -3,6 +3,8 @@ package orgs
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"sort"
 	"sync"
 	"time"
@@ -12,6 +14,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/datastore"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -34,6 +37,8 @@ type OrgContext struct {
 
 	// Manages the lifetime of the org's services.
 	sm *services.Service
+
+	redirect *config_proto.OrgRedirection
 }
 
 type OrgManager struct {
@@ -193,6 +198,7 @@ func (self *OrgManager) makeNewConfigObj(
 
 	result.OrgId = utils.NormalizedOrgId(record.Id)
 	result.OrgName = record.Name
+	result.OrgRedirected = record.Redirected
 
 	if result.Client != nil {
 		// Client config does not leak org id! We use the nonce to tie
@@ -215,10 +221,21 @@ func (self *OrgManager) makeNewConfigObj(
 	return result
 }
 
+// Load the orgs from the filestore.
 func (self *OrgManager) Scan() error {
+
+	// This contains all the currently running orgs, minus the ones
+	// that have an org record.
 	existing := make(map[string]bool)
 	for _, o := range self.ListOrgs() {
 		existing[o.Id] = true
+	}
+
+	// Exclude the redirected orgs from the config
+	if self.config_obj.GUI != nil {
+		for _, o := range self.config_obj.GUI.RedirectedOrgs {
+			delete(existing, o.OrgId)
+		}
 	}
 
 	db, err := datastore.GetDB(self.config_obj)
@@ -290,6 +307,84 @@ func (self *OrgManager) Scan() error {
 	}
 
 	return nil
+}
+
+// Install the orgs that are specified in the config.
+func (self *OrgManager) InitFromConfig(config_obj *config_proto.Config) error {
+	if config_obj.GUI == nil {
+		return nil
+	}
+
+	for _, redirected_org := range config_obj.GUI.RedirectedOrgs {
+		if redirected_org.OrgId == "" {
+			return fmt.Errorf("Empty org id in GUI.redirected_orgs")
+		}
+
+		_, err := self.GetOrg(redirected_org.OrgId)
+		if err == nil {
+			return fmt.Errorf("OrgManager: Org ID %v already in use",
+				redirected_org.OrgId)
+		}
+
+		if redirected_org.ApiConfigFile != "" {
+			redirected_org.ApiConfig = &config_proto.ApiClientConfig{}
+
+			fd, err := os.Open(redirected_org.ApiConfigFile)
+			if err != nil {
+				return fmt.Errorf(
+					"OrgManager: Unable to load RedirectedOrg config %v: %w",
+					redirected_org.ApiConfigFile, err)
+			}
+			data, err := utils.ReadAllWithLimit(fd, constants.MAX_MEMORY_MEDIUM)
+			if err != nil {
+				return fmt.Errorf(
+					"OrgManager: %v: %w", redirected_org.ApiConfigFile, err)
+			}
+
+			redirected_org.ApiConfig = &config_proto.ApiClientConfig{}
+			err = utils.YamlUnmarshalStrict(data, &redirected_org.ApiConfig)
+			if err != nil {
+				return fmt.Errorf(
+					"OrgManager: %v: %w", redirected_org.ApiConfigFile, err)
+			}
+		}
+
+		// Install a stub into the org manager
+		org_record := &api_proto.OrgRecord{
+			Id:              redirected_org.OrgId,
+			Name:            redirected_org.OrgName,
+			Redirected:      true,
+			RedirectedOrgId: redirected_org.RedirectedOrgId,
+		}
+
+		org_ctx := &OrgContext{
+			record:     org_record,
+			config_obj: self.makeNewConfigObj(org_record),
+			service:    &NullServiceContainer{},
+			redirect:   redirected_org,
+		}
+		self.orgs[redirected_org.OrgId] = org_ctx
+	}
+	return nil
+}
+
+func (self *OrgManager) GetRedirectedOrgConfig(org_id string) (*config_proto.ApiClientConfig, error) {
+	self.mu.Lock()
+	org_context, pres := self.orgs[org_id]
+	self.mu.Unlock()
+
+	if !pres {
+		return nil, fmt.Errorf("%w: Org %v does not exist.",
+			utils.NotFoundError, org_id)
+	}
+
+	if org_context.redirect == nil ||
+		org_context.redirect.ApiConfig == nil {
+		return nil, fmt.Errorf("%w: Org %v is not redirected.",
+			utils.NotFoundError, org_id)
+	}
+
+	return org_context.redirect.ApiConfig, nil
 }
 
 func (self *OrgManager) Start(
@@ -369,9 +464,14 @@ func NewOrgManager(
 		org_id_by_nonce: make(map[string]string),
 	}
 
+	err := service.InitFromConfig(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
 	// Usually only one org manager exists at one time. However for
 	// the "gui" command this may be invoked multiple times.
-	_, err := services.GetOrgManager()
+	_, err = services.GetOrgManager()
 	if err != nil {
 		services.RegisterOrgManager(service)
 	}

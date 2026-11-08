@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 )
@@ -28,7 +28,7 @@ func init() {
 					return nil
 				}
 
-				err = yaml.Unmarshal(serialized, &info)
+				err = utils.YamlUnmarshalStrict(serialized, &info)
 				if err != nil {
 					scope.Log("help: %v", err)
 					return nil
