@@ -1166,15 +1166,19 @@ func startAPIServer(
 	tls_config.ClientCAs = CA_Pool
 
 	creds := credentials.NewTLS(tls_config)
+	opts := []grpc.ServerOption{grpc.Creds(creds)}
+	if len(config_obj.GUI.RedirectedOrgs) > 0 {
+		opts = append(opts, grpc.UnaryInterceptor(ProxyInterceptor))
+	}
 
-	grpcServer := grpc.NewServer(grpc.Creds(creds))
+	grpcServer := grpc.NewServer(opts...)
 	api_proto.RegisterAPIServer(
 		grpcServer,
 		&ApiServer{
 			server_obj:         server_obj,
 			verbose:            config_obj.Verbose,
 			ca_pool:            CA_Pool,
-			api_client_factory: grpc_client.GRPCAPIClient{},
+			api_client_factory: grpc_client.NewDirectConnectionClient(),
 			wg:                 wg,
 		},
 	)

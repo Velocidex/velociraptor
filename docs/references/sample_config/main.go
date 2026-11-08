@@ -11,7 +11,6 @@ import (
 	"strings"
 	"unicode"
 
-	"github.com/Velocidex/yaml/v2"
 	kingpin "github.com/alecthomas/kingpin/v2"
 	"github.com/davecgh/go-spew/spew"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -302,7 +301,7 @@ func parse_config(filename string) error {
 	if err != nil {
 		return err
 	}
-	err = yaml.Unmarshal(serialized, config)
+	err = utils.YamlUnmarshalStrict(serialized, config)
 	if err != nil {
 		return err
 	}

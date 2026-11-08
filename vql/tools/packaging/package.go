@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file"
@@ -135,7 +134,7 @@ func (self CreatePackagePlugin) Call(ctx context.Context,
 		// Populate the config from the plugin arg.
 		if arg.Config != "" {
 			target_config_obj = &config_proto.Config{}
-			err = yaml.UnmarshalStrict([]byte(arg.Config), target_config_obj)
+			err = utils.YamlUnmarshalStrict([]byte(arg.Config), target_config_obj)
 			if err != nil {
 				scope.Log("ERROR:%v: %v", self.name, err)
 				return

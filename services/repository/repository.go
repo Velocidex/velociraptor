@@ -26,7 +26,6 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Velocidex/yaml/v2"
 	"github.com/go-errors/errors"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -117,7 +116,7 @@ func (self *Repository) LoadYaml(
 	data string,
 	options services.ArtifactOptions) (*artifacts_proto.Artifact, error) {
 	artifact := &artifacts_proto.Artifact{}
-	err := yaml.UnmarshalStrict([]byte(sanitize_artifact_yaml(data)), artifact)
+	err := utils.YamlUnmarshalStrict([]byte(sanitize_artifact_yaml(data)), artifact)
 	if err != nil {
 		return nil, errors.Wrap(err, 0)
 	}

@@ -8,14 +8,12 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	jwt "github.com/golang-jwt/jwt/v4"
-	"github.com/gorilla/csrf"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/gui/velociraptor"
-	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	utils "www.velocidex.com/golang/velociraptor/utils"
@@ -44,8 +42,6 @@ func authenticateUserHandle(
 
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("X-CSRF-Token", csrf.Token(r))
-
 			claims, err := getDetailsFromCookie(config_obj, r)
 			if err != nil {
 				reject_cb(w, r, err, claims.Username)
@@ -69,24 +65,15 @@ func authenticateUserHandle(
 				return
 			}
 
-			// Checking is successful - user authorized. Here we
-			// build a token to pass to the underlying GRPC
-			// service with metadata about the user.
-			user_info := &api_proto.VelociraptorUser{
-				Name: user_record.Name,
-			}
-
 			// NOTE: This context is NOT the same context that is received
 			// by the API handlers. This context sits on the incoming side
 			// of the GRPC gateway. We stuff our data into the
 			// GRPC_USER_CONTEXT of the context and the code will convert
 			// this value into a GRPC metadata.
-
-			// Must use json encoding because grpc can not handle
-			// binary data in metadata.
-			serialized, _ := json.Marshal(user_info)
 			ctx := context.WithValue(
-				r.Context(), constants.GRPC_USER_CONTEXT, string(serialized))
+				r.Context(),
+				constants.GRPC_USER_CONTEXT,
+				utils.Quote(user_record.Name))
 
 			_ = users.SetUserStats(r.Context(), config_obj, username,
 				&api_proto.UserStats{

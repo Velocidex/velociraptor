@@ -40,6 +40,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	errors "github.com/go-errors/errors"
 	"github.com/gorilla/schema"
+	"google.golang.org/grpc/metadata"
 
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -54,6 +55,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
+	"www.velocidex.com/golang/velociraptor/file_store/remote"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -130,7 +133,10 @@ type vfsFileDownloadRequest struct {
 
 // This URL allows the caller to download **any** member of the
 // filestore (providing they have at least read permissions).
-func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
+func vfsFileDownloadHandler(
+	config_obj *config_proto.Config,
+	api_client_factory grpc_client.APIClientFactory,
+) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			request := vfsFileDownloadRequest{}
@@ -169,12 +175,6 @@ func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 				return
 			}
 			principal := user_record.Name
-			permissions := acls.READ_RESULTS
-			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-			if !perm || err != nil {
-				returnError(config_obj, w, 403, utils.PermissionDenied)
-				return
-			}
 
 			// Where to read from the file store
 			var path_spec api.FSPathSpec
@@ -196,33 +196,39 @@ func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 				path_spec, err = client_path_manager.GetUploadsFileFromVFSPath(
 					request.VfsPath)
 				if err != nil {
-					returnError(config_obj, w, 404, err)
+					returnError(org_config_obj, w, 404, err)
 					return
 				}
 				filename = path_spec.Base()
 
 			} else {
 				// Just reject the request
-				returnError(config_obj, w, 404, utils.PermissionDenied)
+				returnError(org_config_obj, w, 403, utils.PermissionDenied)
 				return
 			}
 
-			err = file_store_accessor.IsFileAccessible(path_spec)
+			err = checkUserFilestoreAllowed(org_config_obj, principal, path_spec)
 			if err != nil {
-				returnError(config_obj, w, 404, err)
+				returnError(org_config_obj, w, 403, utils.PermissionDenied)
 				return
 			}
 
-			file, err := file_store.GetFileStore(org_config_obj).
-				ReadFile(path_spec)
+			file_store_factory, err := getFileStore(
+				r.Context(), org_config_obj, principal)
 			if err != nil {
-				returnError(config_obj, w, 404, err)
+				returnError(org_config_obj, w, 404, err)
+				return
+			}
+
+			file, err := file_store_factory.ReadFile(path_spec)
+			if err != nil {
+				returnError(org_config_obj, w, 404, err)
 				return
 			}
 			defer file.Close()
 
 			if r.Method == "HEAD" {
-				returnError(config_obj, w, 200, OkError)
+				returnError(org_config_obj, w, 200, OkError)
 				return
 			}
 
@@ -240,7 +246,7 @@ func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 			// If the file is sparse, we use the sparse reader.
 			if err == nil && request.Padding && len(index.Ranges) > 0 {
 				if !uploads.ShouldPadFile(org_config_obj, index) {
-					returnError(config_obj, w, 400, SparseFileError)
+					returnError(org_config_obj, w, 400, SparseFileError)
 					return
 				}
 
@@ -257,7 +263,7 @@ func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 			if request.TextFilter {
 				output, next_offset, err := filterData(reader_at, request)
 				if err != nil {
-					returnError(config_obj, w, 500, err)
+					returnError(org_config_obj, w, 500, err)
 					return
 				}
 
@@ -343,6 +349,49 @@ func vfsFileDownloadHandler(config_obj *config_proto.Config) http.Handler {
 		})
 }
 
+func checkUserReadPermission(
+	config_obj *config_proto.Config,
+	principal string) error {
+	// If the org is redirected, we leave the permission check for the
+	// remote server.
+	if config_obj.OrgRedirected {
+		return nil
+	}
+
+	permissions := acls.READ_RESULTS
+	perm, err := services.CheckAccess(config_obj, principal, permissions)
+	if !perm || err != nil {
+		return utils.PermissionDenied
+	}
+
+	return nil
+}
+
+func checkUserFilestoreAllowed(
+	config_obj *config_proto.Config,
+	principal string,
+	path_spec api.FSPathSpec) error {
+
+	// If the org is redirected, we leave the permission check for the
+	// remote server.
+	if config_obj.OrgRedirected {
+		return nil
+	}
+
+	permissions := acls.READ_RESULTS
+	perm, err := services.CheckAccess(config_obj, principal, permissions)
+	if !perm || err != nil {
+		return utils.PermissionDenied
+	}
+
+	err = file_store_accessor.IsFileAccessible(path_spec)
+	if err != nil {
+		return utils.NotFoundError
+	}
+
+	return nil
+}
+
 // Read data from offset and filter it until the requested number of
 // lines is found. This produces text only output, aka "strings"
 func filterData(reader_at io.ReaderAt,
@@ -415,7 +464,11 @@ func getRows(
 	principal string) (
 	rows <-chan *ordereddict.Dict, close func(),
 	log_path api.FSPathSpec, err error) {
-	file_store_factory := file_store.GetFileStore(config_obj)
+
+	file_store_factory, err := getFileStore(ctx, config_obj, principal)
+	if err != nil {
+		return nil, nil, nil, err
+	}
 
 	// We want an event table.
 	if request.Type == "CLIENT_EVENT" || request.Type == "SERVER_EVENT" {
@@ -448,7 +501,7 @@ func getRows(
 				"stack_path must be the path to a result set stack")
 		}
 
-		err := file_store_accessor.IsFileAccessible(log_path)
+		err := checkUserFilestoreAllowed(config_obj, principal, log_path)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -533,7 +586,9 @@ func getTransformer(
 }
 
 func downloadFileStore(
-	config_obj *config_proto.Config, prefix []string) http.Handler {
+	config_obj *config_proto.Config,
+	api_client_factory grpc_client.APIClientFactory,
+	prefix []string) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			components := utils.SplitComponents(r.URL.Path)
@@ -555,7 +610,7 @@ func downloadFileStore(
 				return
 			}
 
-			org_config_obj, err := org_manager.GetOrgConfig(org_id)
+			config_obj, err = org_manager.GetOrgConfig(org_id)
 			if err != nil {
 				returnError(config_obj, w, 404, err)
 				return
@@ -575,20 +630,19 @@ func downloadFileStore(
 			}
 
 			principal := user_record.Name
-			permissions := acls.READ_RESULTS
-			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-			if !perm || err != nil {
-				returnError(config_obj, w, 403, errors.New("User is not allowed to read files."))
-				return
-			}
-
-			err = file_store_accessor.IsFileAccessible(path_spec)
+			err = checkUserFilestoreAllowed(config_obj, principal, path_spec)
 			if err != nil {
 				returnError(config_obj, w, 404, err)
 				return
 			}
 
-			file_store_factory := file_store.GetFileStore(org_config_obj)
+			file_store_factory, err := getFileStore(r.Context(),
+				config_obj, principal)
+			if err != nil {
+				returnError(config_obj, w, 500, err)
+				return
+			}
+
 			fd, err := file_store_factory.ReadFile(path_spec)
 			if err != nil {
 				returnError(config_obj, w, 404, err)
@@ -654,7 +708,10 @@ func sanitizeFilenameForAttachment(base_filename string) string {
 }
 
 // Download the table as specified by the v1/GetTable API.
-func downloadTable(config_obj *config_proto.Config) http.Handler {
+func downloadTable(
+	config_obj *config_proto.Config,
+	api_client_factory grpc_client.APIClientFactory,
+) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			request := &api_proto.GetTableRequest{}
@@ -692,7 +749,7 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 			row_chan, closer, log_path, err := getRows(
 				r.Context(), org_config_obj, request, principal)
 			if err != nil {
-				returnError(config_obj, w, 400, InvalidRequestError)
+				returnError(config_obj, w, 403, err)
 				return
 			}
 			defer closer()
@@ -704,10 +761,9 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 				download_name = strings.Replace(log_path.Base(), "\"", "", -1)
 			}
 
-			permissions := acls.READ_RESULTS
-			perm, err := services.CheckAccess(org_config_obj, principal, permissions)
-			if !perm || err != nil {
-				returnError(config_obj, w, 403, UnauthenticatedAccessError)
+			err = checkUserReadPermission(org_config_obj, principal)
+			if err != nil {
+				returnError(config_obj, w, 403, err)
 				return
 			}
 
@@ -785,8 +841,13 @@ func downloadTable(config_obj *config_proto.Config) http.Handler {
 		})
 }
 
-func (self *ApiServer) vfsGetBuffer(config_obj *config_proto.Config, client_id string,
-	vfs_path api.FSPathSpec, offset uint64, length uint32, padding bool) (
+func (self *ApiServer) vfsGetBuffer(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	vfs_path api.FSPathSpec,
+	offset uint64,
+	length uint32, padding bool, principal string) (
 	*api_proto.VFSFileBuffer, error) {
 
 	err := file_store_accessor.IsFileAccessible(vfs_path)
@@ -794,7 +855,12 @@ func (self *ApiServer) vfsGetBuffer(config_obj *config_proto.Config, client_id s
 		return nil, err
 	}
 
-	file, err := file_store.GetFileStore(config_obj).ReadFile(vfs_path)
+	file_store_factory, err := getFileStore(ctx, config_obj, principal)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := file_store_factory.ReadFile(vfs_path)
 	if err != nil {
 		return nil, err
 	}
@@ -970,4 +1036,41 @@ func streamZipFile(
 	}
 
 	return nil
+}
+
+func getFileStore(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	principal string,
+) (api.FileStore, error) {
+	if !config_obj.OrgRedirected {
+		return file_store.GetFileStore(config_obj), nil
+	}
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, err
+	}
+
+	org_record, err := org_manager.GetOrg(config_obj.OrgId)
+	if err != nil {
+		return nil, err
+	}
+
+	md := metadata.New(map[string]string{
+		constants.GRPC_MD_USER:   principal,
+		constants.GRPC_MD_ORG_ID: org_record.RedirectedOrgId,
+	})
+
+	call_ctx := metadata.NewOutgoingContext(ctx, md)
+
+	api_client := grpc_client.NewDirectConnectionClient()
+
+	return remote.NewRemoteFileStore(
+		call_ctx, config_obj, remote.RemoteFileStoreOptions{
+			Factory: func() (api_proto.APIClient, func() error, error) {
+				return api_client.GetAPIClientForOrgRedirect(
+					ctx, config_obj)
+			},
+		})
 }

@@ -8,7 +8,6 @@ import (
 	file_store_accessor "www.velocidex.com/golang/velociraptor/accessors/file_store"
 	"www.velocidex.com/golang/velociraptor/acls"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
-	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -21,13 +20,6 @@ func (self *ApiServer) VFSGetBuffer(
 	*api_proto.VFSFileBuffer, error) {
 
 	defer Instrument("VFSGetBuffer")()
-
-	// Anyone in the org can read the filestore.
-	org_config_obj, err := checkDataStorePermissions(
-		ctx, in.OrgId, acls.READ_RESULTS)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
 
 	// If a client id is specified, the path is relative to the
 	// client's storage directory, otherwise it is relative to the
@@ -54,13 +46,22 @@ func (self *ApiServer) VFSGetBuffer(
 		return nil, Status(self.verbose, utils.InvalidArgError)
 	}
 
+	// Anyone in the org can read the filestore.
+	org_config_obj, principal, err := checkDataStorePermissions(
+		ctx, in.OrgId, pathspec, acls.READ_RESULTS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
 	padding := true
 	if in.Padding != nil {
 		padding = *in.Padding
 	}
 
-	result, err := self.vfsGetBuffer(
-		org_config_obj, in.ClientId, pathspec, in.Offset, in.Length, padding)
+	result, err := self.vfsGetBuffer(ctx,
+		org_config_obj, in.ClientId,
+		pathspec, in.Offset,
+		in.Length, padding, principal)
 
 	return result, Status(self.verbose, err)
 }
@@ -69,24 +70,24 @@ func (self *ApiServer) FSWriteBuffer(
 	ctx context.Context,
 	in *api_proto.VFSFileBuffer) (*api_proto.FSWriteBufferResponse, error) {
 
-	config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
 	path_spec := path_specs.NewUnsafeFilestorePath(in.Components...).SetType(
 		api.PathType(in.PathType))
 
-	err = file_store_accessor.IsFileAccessible(path_spec)
+	config_obj, principal, err := checkDataStorePermissions(
+		ctx, in.OrgId, path_spec, acls.READ_RESULTS)
 	if err != nil {
-		return nil, err
+		return nil, Status(self.verbose, err)
 	}
 
 	if len(path_spec.Components()) == 0 {
 		return nil, Status(self.verbose, utils.InvalidArgError)
 	}
 
-	file, err := file_store.GetFileStore(config_obj).WriteFile(path_spec)
+	file_store_factory, err := getFileStore(ctx, config_obj, principal)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+	file, err := file_store_factory.WriteFile(path_spec)
 	if err != nil {
 		return nil, err
 	}
@@ -117,11 +118,6 @@ func (self *ApiServer) FSStat(
 
 	defer Instrument("FSStat")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
 	path := in.Pathspec
 	if path == nil {
 		return nil, Status(self.verbose, utils.InvalidArgError)
@@ -130,12 +126,22 @@ func (self *ApiServer) FSStat(
 	filename := path_specs.NewUnsafeFilestorePath(
 		path.Components...).SetType(api.PathType(path.PathType))
 
+	org_config_obj, principal, err := checkDataStorePermissions(
+		ctx, in.OrgId, filename, acls.READ_RESULTS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
 	err = file_store_accessor.IsFileAccessible(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	file_store_factory := file_store.GetFileStore(org_config_obj)
+	file_store_factory, err := getFileStore(ctx, org_config_obj, principal)
+	if err != nil {
+		return nil, err
+	}
+
 	stat, err := file_store_factory.StatFile(filename)
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -156,11 +162,6 @@ func (self *ApiServer) FSDelete(
 
 	defer Instrument("FSDelete")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
 	path := in.Pathspec
 	if path == nil {
 		return nil, Status(self.verbose, utils.InvalidArgError)
@@ -169,12 +170,22 @@ func (self *ApiServer) FSDelete(
 	filename := path_specs.NewUnsafeFilestorePath(
 		path.Components...).SetType(api.PathType(path.PathType))
 
+	org_config_obj, principal, err := checkDataStorePermissions(
+		ctx, in.OrgId, filename, acls.READ_RESULTS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
 	err = file_store_accessor.IsFileAccessible(filename)
 	if err != nil {
 		return nil, err
 	}
 
-	file_store_factory := file_store.GetFileStore(org_config_obj)
+	file_store_factory, err := getFileStore(ctx, org_config_obj, principal)
+	if err != nil {
+		return nil, err
+	}
+
 	err = file_store_factory.Delete(filename)
 	if err != nil {
 		return nil, Status(self.verbose, err)
@@ -190,11 +201,6 @@ func (self *ApiServer) FSReadDir(
 
 	defer Instrument("FSReadDir")()
 
-	org_config_obj, err := checkDataStorePermissions(ctx, in.OrgId)
-	if err != nil {
-		return nil, Status(self.verbose, err)
-	}
-
 	path := in.Pathspec
 	if path == nil {
 		return nil, Status(self.verbose, utils.InvalidArgError)
@@ -202,7 +208,18 @@ func (self *ApiServer) FSReadDir(
 
 	filename := path_specs.NewUnsafeFilestorePath(
 		path.Components...).SetType(api.PathType(path.PathType))
-	file_store_factory := file_store.GetFileStore(org_config_obj)
+
+	org_config_obj, principal, err := checkDataStorePermissions(
+		ctx, in.OrgId, filename, acls.READ_RESULTS)
+	if err != nil {
+		return nil, Status(self.verbose, err)
+	}
+
+	file_store_factory, err := getFileStore(ctx, org_config_obj, principal)
+	if path == nil {
+		return nil, Status(self.verbose, utils.InvalidArgError)
+	}
+
 	children, err := file_store_factory.ListDirectory(filename)
 	if err != nil {
 		return nil, Status(self.verbose, err)

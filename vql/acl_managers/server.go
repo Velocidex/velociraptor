@@ -88,7 +88,7 @@ func (self *ServerACLManager) CheckAccess(
 	}
 
 	for _, permission := range permissions {
-		// The ORG_ADMIN permission in only meaningful when evaluated
+		// The ORG_ADMIN permission is only meaningful when evaluated
 		// against the root org.
 		if permission == acls.ORG_ADMIN {
 			root_policy, err := self.GetPolicyInOrg(services.ROOT_ORG_ID)
@@ -98,7 +98,7 @@ func (self *ServerACLManager) CheckAccess(
 
 			ok, err := services.CheckAccessWithToken(root_policy, permission)
 			if !ok || err != nil {
-				return ok, err
+				return false, err
 			}
 			continue
 		}
@@ -106,7 +106,7 @@ func (self *ServerACLManager) CheckAccess(
 		// Other permissions are checked against the calling org.
 		ok, err := services.CheckAccessWithToken(policy, permission)
 		if !ok || err != nil {
-			return ok, err
+			return false, err
 		}
 	}
 

@@ -10,7 +10,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/actions"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
@@ -133,7 +132,7 @@ func parseSingleArtifact(
 
 	case string:
 		result := &artifacts_proto.Artifact{}
-		err := yaml.UnmarshalStrict([]byte(t), result)
+		err := utils.YamlUnmarshalStrict([]byte(t), result)
 		return result, err
 
 	case vfilter.LazyExpr:

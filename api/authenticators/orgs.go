@@ -121,6 +121,13 @@ func _checkOrgAccess(r *http.Request,
 		return err
 	}
 
+	// If the org is redirected, we leave ACLs choices to the remote
+	// server, so we authorize them on this end. This is safe because
+	// there is no functional org service manager for redirected orgs.
+	if org_config_obj.OrgRedirected {
+		return nil
+	}
+
 	perm, err := services.CheckAccess(
 		org_config_obj, user_record.Name, permission)
 	if err != nil {
