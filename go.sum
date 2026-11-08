@@ -28,6 +28,8 @@ cloud.google.com/go/storage v1.58.0 h1:PflFXlmFJjG/nBeR9B7pKddLQWaFaRWx4uUi/LyNx
 cloud.google.com/go/storage v1.58.0/go.mod h1:cMWbtM+anpC74gn6qjLh+exqYcfmB9Hqe5z6adx+CLI=
 cloud.google.com/go/trace v1.11.7 h1:kDNDX8JkaAG3R2nq1lIdkb7FCSi1rCmsEtKVsty7p+U=
 cloud.google.com/go/trace v1.11.7/go.mod h1:TNn9d5V3fQVf6s4SCveVMIBS2LJUqo73GACmq/Tky0s=
+filippo.io/csrf v0.2.1 h1:MdV/y9xOECwJko48lPkH9NaYNpZ6kYfaNlgnZk4k6Uo=
+filippo.io/csrf v0.2.1/go.mod h1:eVfdeENlqr/ErpNx4E5I6a11I1aP0WL/PPkzKD1d960=
 github.com/360EntSecGroup-Skylar/excelize v1.4.1 h1:l55mJb6rkkaUzOpSsgEeKYtS6/0gHwBYyfo5Jcjv/Ks=
 github.com/360EntSecGroup-Skylar/excelize v1.4.1/go.mod h1:vnax29X2usfl7HHkBrX5EvSCJcmH3dT9luvxzu8iGAE=
 github.com/Azure/azure-kusto-go/azkustodata v1.2.2 h1:N0wIf3Yg5hy2ZFoJbQG2oSsZ9SaUkC28UuqdgOMiNEg=
@@ -98,8 +100,8 @@ github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7 h1:0e+y6o+6b+aPv
 github.com/Velocidex/disklru v0.0.0-20260320011440-3c115228b6d7/go.mod h1:rnpfGZsQI3I0PZVhZyZMiXaGoRZ/D6zXH9Tl6Sn3c3o=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26 h1:VwbeNpMRuS3bRieg7WLaSYIMaI8RjH/wGxd37oj6H1g=
 github.com/Velocidex/errors v0.0.0-20221019164655-9ace6bf61e26/go.mod h1:sIVyrIiJhuEF+Pj9Ebtd6P/rEYROXFi3BopGUQ5a5Og=
-github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799 h1:5g30krg7L88BNfqOrOfSJNXRJfRdJjrLWMxhEAv0k40=
-github.com/Velocidex/etw v0.0.0-20260915061434-e8c6e9f7b799/go.mod h1:VIXXclFpWN0pisSoz1obVWQvQCwqr60HmNWuYMB95Cs=
+github.com/Velocidex/etw v0.0.0-20261108143725-14b23aa9dbbf h1:dRiO1QhHFm8g/Fej5chLThTgPk5ol60oS/Nf2pTof3A=
+github.com/Velocidex/etw v0.0.0-20261108143725-14b23aa9dbbf/go.mod h1:VIXXclFpWN0pisSoz1obVWQvQCwqr60HmNWuYMB95Cs=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11 h1:pQY9p6hvmbFKXJg8suzGSG9/t8Ij9ece32GUFIdHgqg=
 github.com/Velocidex/file-rotatelogs v0.0.0-20211221020724-d12e4dae4e11/go.mod h1:Ya1f4Kowt2GC7gbnu1MbNncvI1Lp3i1plN2xLiETJfg=
 github.com/Velocidex/fileb0x v1.1.2-0.20260924031635-cd9b52cfe09c h1:vdC4apXacrmaauww67aZF7usSCSu+rHhXhcE334maA8=
@@ -128,8 +130,6 @@ github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5 h1:27r8y5q7uV
 github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
 github.com/Velocidex/grok v0.0.1/go.mod h1:tO25ta1WAuru0QA9ajcK0bAsk0gpWiT8so+fR4u3GZE=
-github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f h1:nVc9Y69VrGkBVCDKYbrbf4gQYykRzArO6JUD3MOqKcE=
-github.com/Velocidex/grpc-go-pool v1.2.2-0.20260526092838-b4e236b2105f/go.mod h1:Rcpbr2QTlawwUkhHKHX0kOKw1nA++gwuyxAwUDgXdZg=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a h1:AeXPUzhU0yhID/v5JJEIkjaE85ASe+Vh4Kuv1RSLL+4=
 github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a/go.mod h1:ukJBuruT9b24pdgZwWDvOaCYHeS03B7oQPCUWh25bwM=
 github.com/Velocidex/ordereddict v0.0.0-20230909174157-2aa49cc5d11d/go.mod h1:+MqO5UMBemyFSm+yRXslbpFTwPUDhFHUf7HPV92twg4=
@@ -469,8 +469,6 @@ github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNjCkIjxS6bF9zb3elmeN
 github.com/google/go-cmp v0.7.0 h1:wk8382ETsv4JYUZwIsn6YpYiWiBsYLSJiTsyBybVuN8=
 github.com/google/go-cmp v0.7.0/go.mod h1:pXiqmnSA92OHEEa9HXL2W4E7lf9JzCmGVUdgjX3N/iU=
 github.com/google/gofuzz v1.0.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
-github.com/google/gofuzz v1.2.0 h1:xRy4A+RhZaiKjJ1bPfwQ8sedCA+YS2YcCHW6ec7JMi0=
-github.com/google/gofuzz v1.2.0/go.mod h1:dBl0BpW6vV/+mYPU4Po3pmUjxk6FQPldtuIdl/M65Eg=
 github.com/google/gopacket v1.1.19 h1:ves8RnFZPGiFnTS0uPQStjwru6uO6h+nlr9j6fL7kF8=
 github.com/google/gopacket v1.1.19/go.mod h1:iJ8V8n6KS+z2U1A8pUwu8bW5SyEMkXJB8Yo/Vo+TKTo=
 github.com/google/martian/v3 v3.3.3 h1:DIhPTQrbPkgs2yJYdXU/eNACCG5DVQjySNRNlflZ9Fc=
@@ -490,14 +488,10 @@ github.com/googleapis/enterprise-certificate-proxy v0.3.11/go.mod h1:RFV7MUdlb7A
 github.com/googleapis/gax-go v2.0.0+incompatible/go.mod h1:SFVmujtThgffbyetf+mdk2eWhX2bMyUtNHzFKcPA9HY=
 github.com/googleapis/gax-go/v2 v2.17.0 h1:RksgfBpxqff0EZkDWYuz9q/uWsTVz+kf43LsZ1J6SMc=
 github.com/googleapis/gax-go/v2 v2.17.0/go.mod h1:mzaqghpQp4JDh3HvADwrat+6M3MOIDp5YKHhb9PAgDY=
-github.com/gorilla/csrf v1.7.3 h1:BHWt6FTLZAb2HtWT5KDBf6qgpZzvtbp9QWDRKZMXJC0=
-github.com/gorilla/csrf v1.7.3/go.mod h1:F1Fj3KG23WYHE6gozCmBAezKookxbIvUJT+121wTuLk=
 github.com/gorilla/css v1.0.0 h1:BQqNyPTi50JCFMTw/b67hByjMVXZRwGha6wxVGkeihY=
 github.com/gorilla/css v1.0.0/go.mod h1:Dn721qIggHpt4+EFCcTLTU/vk5ySda2ReITrtgBl60c=
 github.com/gorilla/schema v1.4.1 h1:jUg5hUjCSDZpNGLuXQOgIWGdlgrIdYvgQ0wZtdK1M3E=
 github.com/gorilla/schema v1.4.1/go.mod h1:Dg5SSm5PV60mhF2NFaTV1xuYYj8tV8NOPRo4FggUMnM=
-github.com/gorilla/securecookie v1.1.2 h1:YCIWL56dvtr73r6715mJs5ZvhtnY73hBvEF8kXD8ePA=
-github.com/gorilla/securecookie v1.1.2/go.mod h1:NfCASbcHqRSY+3a8tlWJwsQap2VX5pwzwo4h3eOamfo=
 github.com/gorilla/websocket v1.5.3 h1:saDtZ6Pbx/0u+bgYQ3q96pZgCzfhKXGPqt7kZ72aNNg=
 github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gregjones/httpcache v0.0.0-20170920190843-316c5e0ff04e/go.mod h1:FecbI9+v66THATjSRHfNgh1IVFe/9kFxbXtjV0ctIMA=

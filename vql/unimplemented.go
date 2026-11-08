@@ -8,7 +8,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/yaml"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/types"
 )
@@ -180,7 +179,7 @@ func InstallUnimplemented(scope vfilter.Scope) {
 		}
 
 		result := []*api_proto.Completion{}
-		err = yaml.Unmarshal(data, &result)
+		err = utils.YamlUnmarshalStrict(data, &result)
 		if err != nil {
 			scope.Log("InstallUnimplemented: %v", err)
 			return

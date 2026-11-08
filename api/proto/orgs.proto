@@ -9,6 +9,10 @@ message OrgRecord {
     string nonce = 2;
     string id = 3;
 
+    // True if this org is redirected.
+    bool redirected = 5;
+    string redirected_org_id = 6;
+
     // Deprecated do not use
     string org_id = 4;
 }

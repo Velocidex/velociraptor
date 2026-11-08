@@ -69,6 +69,7 @@ func GetFileStore(config_obj *config_proto.Config) api.FileStore {
 
 func getImpl(implementation string,
 	config_obj *config_proto.Config) (api.FileStore, error) {
+
 	switch implementation {
 	case "Test":
 		return memory.NewMemoryFileStore(config_obj), nil

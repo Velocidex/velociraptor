@@ -6,12 +6,14 @@ import (
 	"crypto/x509"
 	"errors"
 	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -24,6 +26,50 @@ func NewDirectConnectionClient() *DirectConnectionClient {
 	return &DirectConnectionClient{
 		clients: make(map[CallerIdentity]*grpc.ClientConn),
 	}
+}
+
+func getCredsForOrg(config_obj *config_proto.Config) (
+	creds credentials.TransportCredentials, address string, err error) {
+	if config_obj.GUI == nil {
+		return nil, "", utils.InvalidConfigError
+	}
+
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		return nil, "", err
+	}
+
+	org_api_config, err := org_manager.GetRedirectedOrgConfig(config_obj.OrgId)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// We use the Frontend's certificate because this connection
+	// represents an internal connection.
+	cert, err := tls.X509KeyPair(
+		[]byte(org_api_config.ClientCert),
+		[]byte(org_api_config.ClientPrivateKey))
+	if err != nil {
+		// This is a critical error - the certs are broken
+		return nil, "", err
+	}
+
+	// The server cert must be signed by our CA.
+	CA_Pool := x509.NewCertPool()
+	CA_Pool.AppendCertsFromPEM([]byte(org_api_config.CaCertificate))
+
+	// Expect the server to present the correct server
+	// certificate. This pins the acceptable server certificate to
+	// ensure we can not connect to the wrong server.
+	server_name := utils.GetSuperuserName(config_obj)
+	address = org_api_config.ApiConnectionString
+
+	return credentials.NewTLS(&tls.Config{
+		Certificates: []tls.Certificate{cert},
+		RootCAs:      CA_Pool,
+		// Only allow connections to this server name
+		ServerName: server_name,
+	}), address, nil
 }
 
 func getCreds(
@@ -125,6 +171,7 @@ func (self *DirectConnectionClient) NewClientConn(
 
 	opts := []grpc.DialOption{
 		grpc.WithTransportCredentials(creds),
+		grpc.WithTimeout(10 * time.Minute),
 	}
 
 	if config_obj.ApiConfig != nil &&
@@ -141,6 +188,32 @@ func (self *DirectConnectionClient) NewClientConn(
 	address := GetAPIConnectionString(config_obj)
 
 	return grpc.DialContext(ctx, address, opts...)
+}
+
+func (self *DirectConnectionClient) NewClientConnForOrg(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+) (*grpc.ClientConn, error) {
+	creds, address, err := getCredsForOrg(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	opts := []grpc.DialOption{
+		grpc.WithTransportCredentials(creds),
+	}
+
+	if config_obj.ApiConfig != nil &&
+		config_obj.ApiConfig.MaxGrpcRecvSize > 0 {
+		opts = append(opts,
+			grpc.WithDefaultCallOptions(grpc.MaxCallRecvMsgSize(
+				int(config_obj.ApiConfig.MaxGrpcRecvSize))))
+
+		logger := logging.GetLogger(config_obj, &logging.GUIComponent)
+		logger.Info("<green>API Client</>: Limiting gRPC message size to %v",
+			config_obj.ApiConfig.MaxGrpcRecvSize)
+	}
+	return grpc.NewClient(address, opts...)
 }
 
 func (self *DirectConnectionClient) Close() error {
@@ -165,6 +238,50 @@ func (self *DirectConnectionClient) getClientForIdentity(
 
 	self.clients[identity] = new_client
 	return new_client, nil
+}
+
+func (self *DirectConnectionClient) getClientForOrg(
+	ctx context.Context, config_obj *config_proto.Config) (*grpc.ClientConn, error) {
+	self.mu.Lock()
+	defer self.mu.Unlock()
+
+	identity := CallerIdentity("Org-" + config_obj.OrgId)
+	client, pres := self.clients[identity]
+	if pres {
+		return client, nil
+	}
+
+	new_client, err := self.NewClientConnForOrg(ctx, config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	self.clients[identity] = new_client
+	return new_client, nil
+}
+
+func (self *DirectConnectionClient) GetAPIClientForOrgRedirect(
+	ctx context.Context, config_obj *config_proto.Config) (
+	api_proto.APIClient, func() error, error) {
+
+	conn, err := self.getClientForOrg(ctx, config_obj)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Total gRPC calls made for the life of the process.
+	grpcCallCounter.Inc()
+
+	// Keep track of how many stubs are currently active.
+	grpcStubs.Inc()
+	api_client := api_proto.NewAPIClient(conn)
+
+	return api_client,
+		// This is called when the stub is done with.
+		func() error {
+			grpcStubs.Dec()
+			return nil
+		}, err
 }
 
 func (self *DirectConnectionClient) GetAPIClient(

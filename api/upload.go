@@ -12,6 +12,7 @@ import (
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/paths"
@@ -24,7 +25,10 @@ var (
 		"User is not allowed to upload tools.")
 )
 
-func toolUploadHandler(config_obj *config_proto.Config) http.Handler {
+func toolUploadHandler(
+	config_obj *config_proto.Config,
+	api_client_factory grpc_client.APIClientFactory,
+) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			org_id := authenticators.GetOrgIdFromRequest(r)
@@ -137,7 +141,10 @@ func toolUploadHandler(config_obj *config_proto.Config) http.Handler {
 		})
 }
 
-func formUploadHandler(config_obj *config_proto.Config) http.Handler {
+func formUploadHandler(
+	config_obj *config_proto.Config,
+	api_client_factory grpc_client.APIClientFactory,
+) http.Handler {
 	return api_utils.HandlerFunc(nil,
 		func(w http.ResponseWriter, r *http.Request) {
 			org_id := authenticators.GetOrgIdFromRequest(r)

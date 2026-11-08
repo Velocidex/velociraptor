@@ -78,6 +78,7 @@ type OrgManager interface {
 	CreateNewOrg(name, id, nonce string) (*api_proto.OrgRecord, error)
 	ListOrgs() []*api_proto.OrgRecord
 	GetOrg(org_id string) (*api_proto.OrgRecord, error)
+	GetRedirectedOrgConfig(org_id string) (*config_proto.ApiClientConfig, error)
 	DeleteOrg(ctx context.Context, principal, org_id string) error
 
 	// The manager is responsible for running multiple services - one

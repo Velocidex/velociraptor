@@ -6,7 +6,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -18,8 +17,7 @@ func (self *RPCFileStore) StatFile(filename api.FSPathSpec) (api.FileInfo, error
 	defer cancel()
 
 	// Make the call as the superuser
-	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx,
-		grpc_client.SuperUser, self.config_obj)
+	conn, closer, err := self.factory()
 	if err != nil {
 		return nil, err
 	}
