@@ -149,7 +149,7 @@ func PrepareGUIMux(
 	}
 
 	base_path := api_utils.GetBasePath(config_obj)
-	var grpc_client_factory grpc_client.APIClientFactory = grpc_client.NewDirectConnectionClient()
+	grpc_client_factory := grpc_client.Factory
 
 	mux.Handle(api_utils.GetBasePath(config_obj, "/api/"),
 		ipFilter(config_obj,

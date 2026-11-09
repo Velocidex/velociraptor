@@ -1050,8 +1050,9 @@ type OrgRedirection struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The OrgId to be redirected - this should be unique on the
 	// server.
-	OrgId           string `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	OrgName         string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	OrgId   string `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgName string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	// The org id that will be mapped on the remote server.
 	RedirectedOrgId string `protobuf:"bytes,6,opt,name=redirected_org_id,json=redirectedOrgId,proto3" json:"redirected_org_id,omitempty"`
 	// A path to an API config file created by the remote server. The
 	// API user should have the impersonate permission so it can relay

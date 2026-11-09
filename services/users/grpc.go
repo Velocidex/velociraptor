@@ -93,7 +93,7 @@ func canUserImpersonate(
 		acls.IMPERSONATION,
 		acls.ORG_ADMIN,
 		// Must have API level access
-		acls.ANY_QUERY)
+		acls.API_QUERY)
 	return err == nil && ok
 }
 

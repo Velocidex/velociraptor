@@ -7,8 +7,11 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
@@ -39,87 +42,116 @@ func (self QueryPlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
+	// This plugin just passes the current scope to the
+	// subquery so there is no permissions check - the
+	// subquery will receive the same privileges as the
+	// calling query.
+	arg := &QueryPluginArgs{}
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	if err != nil {
+		scope.Log("query: %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	// If we are not running on the server, we need to get the
+	// root config from the org manager.
+	org_manager, err := services.GetOrgManager()
+	if err != nil {
+		scope.Log("query: %v", err)
+		close(output_chan)
+		return output_chan
+	}
+
+	config_obj, ok := vql_subsystem.GetServerConfig(scope)
+	if !ok {
+		config_obj, err = org_manager.GetOrgConfig(services.ROOT_ORG_ID)
+		if err != nil {
+			scope.Log("query: %v", err)
+			close(output_chan)
+			return output_chan
+		}
+	}
+	org_config_obj := config_obj
+
+	principal := vql_subsystem.GetPrincipal(scope)
+
+	// Build a completely new scope to evaluate the query
+	// in.
+	builder := services.ScopeBuilderFromScope(scope)
+
+	// Did the user request running in the specified org? Switch
+	// orgs if so.
+	if arg.OrgId != "" {
+		if arg.InheritScope {
+			scope.Log("query: inherit flag is specified at the same time as an org id - these options are not compatible!")
+			close(output_chan)
+			return output_chan
+		}
+
+		org_config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
+		if err != nil {
+			scope.Log("query: %v", err)
+			close(output_chan)
+			return output_chan
+		}
+
+		org_record, err := org_manager.GetOrg(config_obj.OrgId)
+		if err != nil {
+			scope.Log("query: %v", err)
+			close(output_chan)
+			return output_chan
+		}
+
+		// The org is redirected, we need to run the plugin remotely.
+		if org_config_obj.OrgRedirected {
+			args.Update("query", vfilter.FormatToString(scope, arg.Query))
+			args.Update("org_id", org_record.RedirectedOrgId)
+
+			remote_plugin := &frontend.RelayedPlugin{
+				Delegate:  self,
+				ConfigObj: org_config_obj,
+				Factory: func(ctx context.Context) (
+					api_proto.APIClient, func() error, error) {
+					return grpc_client.Factory.GetAPIClientForOrgRedirect(
+						ctx, org_config_obj)
+				}}
+			return remote_plugin.Call(ctx, scope, args)
+		}
+
+		// The subscope will switch to the specified org.
+		builder.Config = org_config_obj
+		builder.ACLManager = acl_managers.NewServerACLManager(
+			org_config_obj, vql_subsystem.GetPrincipal(scope))
+	}
+
+	if arg.Principal != "" && arg.Principal != principal {
+		// Impersonation is only allowed for administrator
+		// users. Check the impersonation permission in the target
+		// org, if the user switched orgs.
+		acl_manager := acl_managers.NewServerACLManager(
+			org_config_obj, principal)
+
+		perm, err := acl_manager.CheckAccess(acls.IMPERSONATION)
+		if !perm {
+			if err == nil {
+				err = utils.PermissionDenied
+			}
+			scope.Log("ERROR:query: User %v (%v) impersonation to %v (%v): %v",
+				principal, config_obj.OrgId, arg.Principal,
+				org_config_obj.OrgId, err)
+			close(output_chan)
+			return output_chan
+		}
+
+		// Run as the specified user.
+		builder.ACLManager = acl_managers.NewServerACLManager(
+			org_config_obj, arg.Principal)
+	}
+
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "query", args)()
-
-		// This plugin just passes the current scope to the
-		// subquery so there is no permissions check - the
-		// subquery will receive the same privileges as the
-		// calling query.
-		arg := &QueryPluginArgs{}
-		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-		if err != nil {
-			scope.Log("query: %v", err)
-			return
-		}
-
-		// If we are not running on the server, we need to get the
-		// root config from the org manager.
-		org_manager, err := services.GetOrgManager()
-		if err != nil {
-			scope.Log("query: %v", err)
-			return
-		}
-
-		config_obj, ok := vql_subsystem.GetServerConfig(scope)
-		if !ok {
-			config_obj, err = org_manager.GetOrgConfig(services.ROOT_ORG_ID)
-			if err != nil {
-				scope.Log("query: %v", err)
-				return
-			}
-		}
-		org_config_obj := config_obj
-
-		principal := vql_subsystem.GetPrincipal(scope)
-
-		// Build a completely new scope to evaluate the query
-		// in.
-		builder := services.ScopeBuilderFromScope(scope)
-
-		// Did the user request running in the specified org? Switch
-		// orgs if so.
-		if arg.OrgId != "" {
-			if arg.InheritScope {
-				scope.Log("query: inherit flag is specified at the same time as an org id - these options are not compatible!")
-				return
-			}
-
-			org_config_obj, err = org_manager.GetOrgConfig(arg.OrgId)
-			if err != nil {
-				scope.Log("query: %v", err)
-				return
-			}
-
-			// The subscope will switch to the specified org.
-			builder.Config = org_config_obj
-			builder.ACLManager = acl_managers.NewServerACLManager(
-				org_config_obj, vql_subsystem.GetPrincipal(scope))
-		}
-
-		if arg.Principal != "" && arg.Principal != principal {
-			// Impersonation is only allowed for administrator
-			// users. Check the impersonation permission in the target
-			// org, if the user switched orgs.
-			acl_manager := acl_managers.NewServerACLManager(
-				org_config_obj, principal)
-
-			perm, err := acl_manager.CheckAccess(acls.IMPERSONATION)
-			if !perm {
-				if err == nil {
-					err = utils.PermissionDenied
-				}
-				scope.Log("ERROR:query: User %v (%v) impersonation to %v (%v): %v",
-					principal, config_obj.OrgId, arg.Principal,
-					org_config_obj.OrgId, err)
-				return
-			}
-
-			// Run as the specified user.
-			builder.ACLManager = acl_managers.NewServerACLManager(
-				org_config_obj, arg.Principal)
-		}
 
 		// Make a new scope for each artifact.
 		manager, err := services.GetRepositoryManager(org_config_obj)

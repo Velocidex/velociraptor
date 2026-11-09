@@ -12,6 +12,7 @@ import (
 	api_utils "www.velocidex.com/golang/velociraptor/api/utils"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/file_store"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/logging"
@@ -213,15 +214,10 @@ func formUploadHandler(
 			path_manager := paths.NewFormUploadPathManager(
 				org_config_obj, form_desc.Filename)
 
-			pathspec, file_store_factory, err := path_manager.Path()
-			if err != nil {
-				returnError(config_obj, w, 403, err)
-				return
-			}
-
-			form_desc.Url = path_manager.URL()
+			pathspec := path_manager.Path()
 			form_desc.VfsPath = pathspec.Components()
 
+			file_store_factory := file_store.GetFileStore(config_obj)
 			writer, err := file_store_factory.WriteFile(pathspec)
 			if err != nil {
 				returnError(config_obj, w, http.StatusInternalServerError, err)

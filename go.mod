@@ -49,7 +49,7 @@ require (
 	github.com/alecthomas/participle/v2 v2.1.4
 	github.com/alexmullins/zip v0.0.0-20180717182244-4affb64b04d0
 	github.com/alitto/pond/v2 v2.7.2
-	github.com/andybalholm/brotli v1.0.5
+	github.com/andybalholm/brotli v1.2.8
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/aws/aws-sdk-go-v2 v1.41.5
 	github.com/aws/aws-sdk-go-v2/config v1.27.6
