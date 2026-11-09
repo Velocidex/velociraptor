@@ -883,9 +883,10 @@ func (self *ApiServer) Query(
 		permissions := acls.API_QUERY
 		ok, err := services.CheckAccess(org_config_obj, principal, permissions)
 		if err != nil || !ok {
+
 			return status.Error(codes.PermissionDenied,
-				fmt.Sprintf("User %v is not allowed to run queries.",
-					principal))
+				fmt.Sprintf("Permission denied: User %v requires permission %v to run queries",
+					principal, permissions))
 		}
 	}
 

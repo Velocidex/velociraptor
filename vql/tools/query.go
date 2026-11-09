@@ -7,14 +7,12 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/actions"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/executor/throttler"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/services"
-	"www.velocidex.com/golang/velociraptor/services/frontend"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+	"www.velocidex.com/golang/velociraptor/vql/orgs"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 	"www.velocidex.com/golang/vfilter/types"
@@ -96,27 +94,14 @@ func (self QueryPlugin) Call(
 			return output_chan
 		}
 
-		org_record, err := org_manager.GetOrg(config_obj.OrgId)
-		if err != nil {
-			scope.Log("query: %v", err)
-			close(output_chan)
-			return output_chan
-		}
-
 		// The org is redirected, we need to run the plugin remotely.
 		if org_config_obj.OrgRedirected {
+			// Materialize the query as a string so it can be safely
+			// transported to the remote end.
 			args.Update("query", vfilter.FormatToString(scope, arg.Query))
-			args.Update("org_id", org_record.RedirectedOrgId)
-
-			remote_plugin := &frontend.RelayedPlugin{
-				Delegate:  self,
-				ConfigObj: org_config_obj,
-				Factory: func(ctx context.Context) (
-					api_proto.APIClient, func() error, error) {
-					return grpc_client.Factory.GetAPIClientForOrgRedirect(
-						ctx, org_config_obj)
-				}}
-			return remote_plugin.Call(ctx, scope, args)
+			args.Delete("org_id")
+			return orgs.RedirectPluginToOrg(
+				ctx, org_config_obj, scope, arg.OrgId, self, args)
 		}
 
 		// The subscope will switch to the specified org.
