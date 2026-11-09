@@ -120,13 +120,13 @@
      "Id": "5-1609497000",
      "ParentId": "1-?",
      "StartTime": "2021-01-01T10:30:00Z",
-     "EndTime": "0001-01-01T00:00:00Z",
+     "EndTime": "2022-04-26TZ",
      "Data": {
       "Name": "Process5",
       "Pid": "5-1609497000",
       "Ppid": "1-?",
       "StartTime": "2021-01-01T10:30:00Z",
-      "EndTime": "0001-01-01T00:00:00Z"
+      "EndTime": "2022-04-26TZ"
      },
      "Children": [
       "2-1609504200"
@@ -147,6 +147,16 @@
      "Children": []
     }
    ]
+  },
+  {
+   "Pid": "2-1609504200",
+   "Name": "Process2",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Pid": "5-1609497000",
+   "Name": "Process5",
+   "EndTime": "2022-04-26TZ"
   }
  ],
  "Pid reuse": [
@@ -189,6 +199,21 @@
      "Children": []
     }
    ]
+  },
+  {
+   "Pid": "2-1609504200",
+   "Name": "Process2",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Pid": "5-1609497000",
+   "Name": "Process5",
+   "EndTime": "2022-04-26TZ"
+  },
+  {
+   "Pid": "5-1610361000",
+   "Name": "NewProcess5",
+   "EndTime": "0001-01-01T00:00:00Z"
   }
  ],
  "Pid reuse with missing parent": [
@@ -231,6 +256,16 @@
      "Children": []
     }
    ]
+  },
+  {
+   "Pid": "2-1609504200",
+   "Name": "NewProcess5",
+   "EndTime": "0001-01-01T00:00:00Z"
+  },
+  {
+   "Pid": "5-1609504200",
+   "Name": "Process2",
+   "EndTime": "0001-01-01T00:00:00Z"
   }
  ],
  "Spoof (update)": [
