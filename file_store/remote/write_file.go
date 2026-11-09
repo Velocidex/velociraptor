@@ -6,7 +6,6 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/utils"
 )
 
@@ -16,6 +15,7 @@ type FileWriter struct {
 	truncate   bool
 	ctx        context.Context
 	config_obj *config_proto.Config
+	factory    func() (api_proto.APIClient, func() error, error)
 
 	completion func()
 }
@@ -62,8 +62,7 @@ func (self *FileWriter) writeMsg(req *api_proto.VFSFileBuffer) (int, error) {
 	defer cancel()
 
 	// Make the call as the superuser
-	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx,
-		grpc_client.SuperUser, self.config_obj)
+	conn, closer, err := self.factory()
 	if err != nil {
 		return 0, err
 	}
@@ -117,5 +116,6 @@ func (self *RPCFileStore) WriteFileWithCompletion(
 		filename:   filename,
 		ctx:        self.ctx,
 		config_obj: self.config_obj,
+		factory:    self.factory,
 	}, nil
 }

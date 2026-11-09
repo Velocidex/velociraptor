@@ -339,6 +339,9 @@ func (self *OrgManager) startOrg(org_record *api_proto.OrgRecord) (err error) {
 
 	orgStartCounter.Inc()
 
+	// This is a real local org mark it as such.
+	org_record.Redirected = false
+
 	org_ctx := &OrgContext{
 		record:     org_record,
 		config_obj: org_config,

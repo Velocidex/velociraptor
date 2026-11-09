@@ -8,6 +8,10 @@ import (
 
 type Node = yaml.Node
 
+const (
+	ScalarNode = yaml.ScalarNode
+)
+
 var (
 	LiteralStyle = yaml.LiteralStyle
 )

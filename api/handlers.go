@@ -23,8 +23,7 @@ import (
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/constants"
-	"www.velocidex.com/golang/velociraptor/json"
-	"www.velocidex.com/golang/velociraptor/logging"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 func GetUserInfo(ctx context.Context,
@@ -33,12 +32,7 @@ func GetUserInfo(ctx context.Context,
 
 	userinfo, ok := ctx.Value(constants.GRPC_USER_CONTEXT).(string)
 	if ok {
-		data := []byte(userinfo)
-		err := json.Unmarshal(data, result)
-		if err != nil {
-			logging.GetLogger(config_obj, &logging.GUIComponent).Error(
-				"Unable to Unmarshal USER Token")
-		}
+		result.Name = utils.UnQuote(userinfo)
 	}
 	return result
 }

@@ -1046,6 +1046,89 @@ func (x *ClientConfig) GetLogging() *LoggingConfig {
 	return nil
 }
 
+type OrgRedirection struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// The OrgId to be redirected - this should be unique on the
+	// server.
+	OrgId           string `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgName         string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	RedirectedOrgId string `protobuf:"bytes,6,opt,name=redirected_org_id,json=redirectedOrgId,proto3" json:"redirected_org_id,omitempty"`
+	// A path to an API config file created by the remote server. The
+	// API user should have the impersonate permission so it can relay
+	// API calls on behalf of the user logged into the current system.
+	ApiConfigFile string `protobuf:"bytes,3,opt,name=api_config_file,json=apiConfigFile,proto3" json:"api_config_file,omitempty"`
+	// The server will parse the above api_config_file at startup and
+	// fill in the details here.
+	ApiConfig     *ApiClientConfig `protobuf:"bytes,4,opt,name=api_config,json=apiConfig,proto3" json:"api_config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OrgRedirection) Reset() {
+	*x = OrgRedirection{}
+	mi := &file_config_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OrgRedirection) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OrgRedirection) ProtoMessage() {}
+
+func (x *OrgRedirection) ProtoReflect() protoreflect.Message {
+	mi := &file_config_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OrgRedirection.ProtoReflect.Descriptor instead.
+func (*OrgRedirection) Descriptor() ([]byte, []int) {
+	return file_config_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *OrgRedirection) GetOrgId() string {
+	if x != nil {
+		return x.OrgId
+	}
+	return ""
+}
+
+func (x *OrgRedirection) GetOrgName() string {
+	if x != nil {
+		return x.OrgName
+	}
+	return ""
+}
+
+func (x *OrgRedirection) GetRedirectedOrgId() string {
+	if x != nil {
+		return x.RedirectedOrgId
+	}
+	return ""
+}
+
+func (x *OrgRedirection) GetApiConfigFile() string {
+	if x != nil {
+		return x.ApiConfigFile
+	}
+	return ""
+}
+
+func (x *OrgRedirection) GetApiConfig() *ApiClientConfig {
+	if x != nil {
+		return x.ApiConfig
+	}
+	return nil
+}
+
 type APIConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Publicly accessible hostname.
@@ -1060,7 +1143,7 @@ type APIConfig struct {
 
 func (x *APIConfig) Reset() {
 	*x = APIConfig{}
-	mi := &file_config_proto_msgTypes[8]
+	mi := &file_config_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1072,7 +1155,7 @@ func (x *APIConfig) String() string {
 func (*APIConfig) ProtoMessage() {}
 
 func (x *APIConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[8]
+	mi := &file_config_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1085,7 +1168,7 @@ func (x *APIConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use APIConfig.ProtoReflect.Descriptor instead.
 func (*APIConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{8}
+	return file_config_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *APIConfig) GetHostname() string {
@@ -1140,7 +1223,7 @@ type ApiClientConfig struct {
 
 func (x *ApiClientConfig) Reset() {
 	*x = ApiClientConfig{}
-	mi := &file_config_proto_msgTypes[9]
+	mi := &file_config_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1152,7 +1235,7 @@ func (x *ApiClientConfig) String() string {
 func (*ApiClientConfig) ProtoMessage() {}
 
 func (x *ApiClientConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[9]
+	mi := &file_config_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1165,7 +1248,7 @@ func (x *ApiClientConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApiClientConfig.ProtoReflect.Descriptor instead.
 func (*ApiClientConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{9}
+	return file_config_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *ApiClientConfig) GetCaCertificate() string {
@@ -1239,7 +1322,7 @@ type ProxyConfig struct {
 
 func (x *ProxyConfig) Reset() {
 	*x = ProxyConfig{}
-	mi := &file_config_proto_msgTypes[10]
+	mi := &file_config_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1251,7 +1334,7 @@ func (x *ProxyConfig) String() string {
 func (*ProxyConfig) ProtoMessage() {}
 
 func (x *ProxyConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[10]
+	mi := &file_config_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1264,7 +1347,7 @@ func (x *ProxyConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ProxyConfig.ProtoReflect.Descriptor instead.
 func (*ProxyConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{10}
+	return file_config_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *ProxyConfig) GetHttps() string {
@@ -1324,7 +1407,7 @@ type GUILink struct {
 
 func (x *GUILink) Reset() {
 	*x = GUILink{}
-	mi := &file_config_proto_msgTypes[11]
+	mi := &file_config_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1336,7 +1419,7 @@ func (x *GUILink) String() string {
 func (*GUILink) ProtoMessage() {}
 
 func (x *GUILink) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[11]
+	mi := &file_config_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1349,7 +1432,7 @@ func (x *GUILink) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GUILink.ProtoReflect.Descriptor instead.
 func (*GUILink) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{11}
+	return file_config_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *GUILink) GetText() string {
@@ -1425,7 +1508,7 @@ type OIDCACL struct {
 
 func (x *OIDCACL) Reset() {
 	*x = OIDCACL{}
-	mi := &file_config_proto_msgTypes[12]
+	mi := &file_config_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1437,7 +1520,7 @@ func (x *OIDCACL) String() string {
 func (*OIDCACL) ProtoMessage() {}
 
 func (x *OIDCACL) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[12]
+	mi := &file_config_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1450,7 +1533,7 @@ func (x *OIDCACL) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OIDCACL.ProtoReflect.Descriptor instead.
 func (*OIDCACL) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{12}
+	return file_config_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *OIDCACL) GetRoles() []string {
@@ -1503,7 +1586,7 @@ type OIDCClaims struct {
 
 func (x *OIDCClaims) Reset() {
 	*x = OIDCClaims{}
-	mi := &file_config_proto_msgTypes[13]
+	mi := &file_config_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1515,7 +1598,7 @@ func (x *OIDCClaims) String() string {
 func (*OIDCClaims) ProtoMessage() {}
 
 func (x *OIDCClaims) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[13]
+	mi := &file_config_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1528,7 +1611,7 @@ func (x *OIDCClaims) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OIDCClaims.ProtoReflect.Descriptor instead.
 func (*OIDCClaims) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{13}
+	return file_config_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *OIDCClaims) GetUsername() string {
@@ -1617,7 +1700,7 @@ type Authenticator struct {
 
 func (x *Authenticator) Reset() {
 	*x = Authenticator{}
-	mi := &file_config_proto_msgTypes[14]
+	mi := &file_config_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1629,7 +1712,7 @@ func (x *Authenticator) String() string {
 func (*Authenticator) ProtoMessage() {}
 
 func (x *Authenticator) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[14]
+	mi := &file_config_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1642,7 +1725,7 @@ func (x *Authenticator) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Authenticator.ProtoReflect.Descriptor instead.
 func (*Authenticator) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{14}
+	return file_config_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *Authenticator) GetType() string {
@@ -1831,6 +1914,11 @@ type GUIConfig struct {
 	// initializing the server with some valid administrators.
 	InitialUsers []*GUIUser          `protobuf:"bytes,17,rep,name=initial_users,json=initialUsers,proto3" json:"initial_users,omitempty"`
 	InitialOrgs  []*InitialOrgRecord `protobuf:"bytes,22,rep,name=initial_orgs,json=initialOrgs,proto3" json:"initial_orgs,omitempty"`
+	// Orgs can be redirected by the GUI. When the user selects this org,
+	// the server will re-route requests to the remote endpoint and
+	// incorporate them into the GUI. This allows distributed, isolated
+	// servers to be treated as part of the same deployment.
+	RedirectedOrgs []*OrgRedirection `protobuf:"bytes,26,rep,name=redirected_orgs,json=redirectedOrgs,proto3" json:"redirected_orgs,omitempty"`
 	// The authenticator to use - can not be null.
 	Authenticator *Authenticator `protobuf:"bytes,19,opt,name=authenticator,proto3" json:"authenticator,omitempty"`
 	// The GUI will filter artifact search results by this regular
@@ -1848,7 +1936,7 @@ type GUIConfig struct {
 
 func (x *GUIConfig) Reset() {
 	*x = GUIConfig{}
-	mi := &file_config_proto_msgTypes[15]
+	mi := &file_config_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1860,7 +1948,7 @@ func (x *GUIConfig) String() string {
 func (*GUIConfig) ProtoMessage() {}
 
 func (x *GUIConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[15]
+	mi := &file_config_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1873,7 +1961,7 @@ func (x *GUIConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GUIConfig.ProtoReflect.Descriptor instead.
 func (*GUIConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{15}
+	return file_config_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *GUIConfig) GetBindAddress() string {
@@ -1967,6 +2055,13 @@ func (x *GUIConfig) GetInitialOrgs() []*InitialOrgRecord {
 	return nil
 }
 
+func (x *GUIConfig) GetRedirectedOrgs() []*OrgRedirection {
+	if x != nil {
+		return x.RedirectedOrgs
+	}
+	return nil
+}
+
 func (x *GUIConfig) GetAuthenticator() *Authenticator {
 	if x != nil {
 		return x.Authenticator
@@ -1999,7 +2094,7 @@ type GUIUser struct {
 
 func (x *GUIUser) Reset() {
 	*x = GUIUser{}
-	mi := &file_config_proto_msgTypes[16]
+	mi := &file_config_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2011,7 +2106,7 @@ func (x *GUIUser) String() string {
 func (*GUIUser) ProtoMessage() {}
 
 func (x *GUIUser) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[16]
+	mi := &file_config_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2024,7 +2119,7 @@ func (x *GUIUser) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GUIUser.ProtoReflect.Descriptor instead.
 func (*GUIUser) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{16}
+	return file_config_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GUIUser) GetName() string {
@@ -2057,7 +2152,7 @@ type CAConfig struct {
 
 func (x *CAConfig) Reset() {
 	*x = CAConfig{}
-	mi := &file_config_proto_msgTypes[17]
+	mi := &file_config_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2069,7 +2164,7 @@ func (x *CAConfig) String() string {
 func (*CAConfig) ProtoMessage() {}
 
 func (x *CAConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[17]
+	mi := &file_config_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2082,7 +2177,7 @@ func (x *CAConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CAConfig.ProtoReflect.Descriptor instead.
 func (*CAConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{17}
+	return file_config_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CAConfig) GetPrivateKey() string {
@@ -2103,7 +2198,7 @@ type ReverseProxyConfig struct {
 
 func (x *ReverseProxyConfig) Reset() {
 	*x = ReverseProxyConfig{}
-	mi := &file_config_proto_msgTypes[18]
+	mi := &file_config_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2115,7 +2210,7 @@ func (x *ReverseProxyConfig) String() string {
 func (*ReverseProxyConfig) ProtoMessage() {}
 
 func (x *ReverseProxyConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[18]
+	mi := &file_config_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2128,7 +2223,7 @@ func (x *ReverseProxyConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReverseProxyConfig.ProtoReflect.Descriptor instead.
 func (*ReverseProxyConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{18}
+	return file_config_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *ReverseProxyConfig) GetRoute() string {
@@ -2182,7 +2277,7 @@ type DynDNSConfig struct {
 
 func (x *DynDNSConfig) Reset() {
 	*x = DynDNSConfig{}
-	mi := &file_config_proto_msgTypes[19]
+	mi := &file_config_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2194,7 +2289,7 @@ func (x *DynDNSConfig) String() string {
 func (*DynDNSConfig) ProtoMessage() {}
 
 func (x *DynDNSConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[19]
+	mi := &file_config_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2207,7 +2302,7 @@ func (x *DynDNSConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DynDNSConfig.ProtoReflect.Descriptor instead.
 func (*DynDNSConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{19}
+	return file_config_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *DynDNSConfig) GetType() string {
@@ -2377,7 +2472,7 @@ type FrontendResourceControl struct {
 
 func (x *FrontendResourceControl) Reset() {
 	*x = FrontendResourceControl{}
-	mi := &file_config_proto_msgTypes[20]
+	mi := &file_config_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2389,7 +2484,7 @@ func (x *FrontendResourceControl) String() string {
 func (*FrontendResourceControl) ProtoMessage() {}
 
 func (x *FrontendResourceControl) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[20]
+	mi := &file_config_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2402,7 +2497,7 @@ func (x *FrontendResourceControl) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FrontendResourceControl.ProtoReflect.Descriptor instead.
 func (*FrontendResourceControl) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{20}
+	return file_config_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *FrontendResourceControl) GetConnectionsPerSecond() uint64 {
@@ -2647,7 +2742,7 @@ type FrontendConfig struct {
 
 func (x *FrontendConfig) Reset() {
 	*x = FrontendConfig{}
-	mi := &file_config_proto_msgTypes[21]
+	mi := &file_config_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2659,7 +2754,7 @@ func (x *FrontendConfig) String() string {
 func (*FrontendConfig) ProtoMessage() {}
 
 func (x *FrontendConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[21]
+	mi := &file_config_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2672,7 +2767,7 @@ func (x *FrontendConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FrontendConfig.ProtoReflect.Descriptor instead.
 func (*FrontendConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{21}
+	return file_config_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *FrontendConfig) GetHostname() string {
@@ -2981,7 +3076,7 @@ type DatastoreConfig struct {
 
 func (x *DatastoreConfig) Reset() {
 	*x = DatastoreConfig{}
-	mi := &file_config_proto_msgTypes[22]
+	mi := &file_config_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2993,7 +3088,7 @@ func (x *DatastoreConfig) String() string {
 func (*DatastoreConfig) ProtoMessage() {}
 
 func (x *DatastoreConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[22]
+	mi := &file_config_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3006,7 +3101,7 @@ func (x *DatastoreConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DatastoreConfig.ProtoReflect.Descriptor instead.
 func (*DatastoreConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{22}
+	return file_config_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *DatastoreConfig) GetImplementation() string {
@@ -3162,7 +3257,7 @@ type MinionConfig struct {
 
 func (x *MinionConfig) Reset() {
 	*x = MinionConfig{}
-	mi := &file_config_proto_msgTypes[23]
+	mi := &file_config_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3174,7 +3269,7 @@ func (x *MinionConfig) String() string {
 func (*MinionConfig) ProtoMessage() {}
 
 func (x *MinionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[23]
+	mi := &file_config_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3187,7 +3282,7 @@ func (x *MinionConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MinionConfig.ProtoReflect.Descriptor instead.
 func (*MinionConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{23}
+	return file_config_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *MinionConfig) GetNotebookNumberOfLocalWorkers() int64 {
@@ -3219,7 +3314,7 @@ type MailConfig struct {
 
 func (x *MailConfig) Reset() {
 	*x = MailConfig{}
-	mi := &file_config_proto_msgTypes[24]
+	mi := &file_config_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3231,7 +3326,7 @@ func (x *MailConfig) String() string {
 func (*MailConfig) ProtoMessage() {}
 
 func (x *MailConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[24]
+	mi := &file_config_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3244,7 +3339,7 @@ func (x *MailConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MailConfig.ProtoReflect.Descriptor instead.
 func (*MailConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{24}
+	return file_config_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *MailConfig) GetFrom() string {
@@ -3303,7 +3398,7 @@ type LoggingRetentionConfig struct {
 
 func (x *LoggingRetentionConfig) Reset() {
 	*x = LoggingRetentionConfig{}
-	mi := &file_config_proto_msgTypes[25]
+	mi := &file_config_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3315,7 +3410,7 @@ func (x *LoggingRetentionConfig) String() string {
 func (*LoggingRetentionConfig) ProtoMessage() {}
 
 func (x *LoggingRetentionConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[25]
+	mi := &file_config_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3328,7 +3423,7 @@ func (x *LoggingRetentionConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoggingRetentionConfig.ProtoReflect.Descriptor instead.
 func (*LoggingRetentionConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{25}
+	return file_config_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *LoggingRetentionConfig) GetRotationTime() uint64 {
@@ -3370,7 +3465,7 @@ type LoggingConfig struct {
 
 func (x *LoggingConfig) Reset() {
 	*x = LoggingConfig{}
-	mi := &file_config_proto_msgTypes[26]
+	mi := &file_config_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3382,7 +3477,7 @@ func (x *LoggingConfig) String() string {
 func (*LoggingConfig) ProtoMessage() {}
 
 func (x *LoggingConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[26]
+	mi := &file_config_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3395,7 +3490,7 @@ func (x *LoggingConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoggingConfig.ProtoReflect.Descriptor instead.
 func (*LoggingConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{26}
+	return file_config_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *LoggingConfig) GetOutputDirectory() string {
@@ -3481,7 +3576,7 @@ type MonitoringConfig struct {
 
 func (x *MonitoringConfig) Reset() {
 	*x = MonitoringConfig{}
-	mi := &file_config_proto_msgTypes[27]
+	mi := &file_config_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3493,7 +3588,7 @@ func (x *MonitoringConfig) String() string {
 func (*MonitoringConfig) ProtoMessage() {}
 
 func (x *MonitoringConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[27]
+	mi := &file_config_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3506,7 +3601,7 @@ func (x *MonitoringConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MonitoringConfig.ProtoReflect.Descriptor instead.
 func (*MonitoringConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{27}
+	return file_config_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *MonitoringConfig) GetBindAddress() string {
@@ -3540,7 +3635,7 @@ type AutoExecConfig struct {
 
 func (x *AutoExecConfig) Reset() {
 	*x = AutoExecConfig{}
-	mi := &file_config_proto_msgTypes[28]
+	mi := &file_config_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3552,7 +3647,7 @@ func (x *AutoExecConfig) String() string {
 func (*AutoExecConfig) ProtoMessage() {}
 
 func (x *AutoExecConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[28]
+	mi := &file_config_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3565,7 +3660,7 @@ func (x *AutoExecConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AutoExecConfig.ProtoReflect.Descriptor instead.
 func (*AutoExecConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{28}
+	return file_config_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AutoExecConfig) GetArgv() []string {
@@ -3622,7 +3717,7 @@ type ServerServicesConfig struct {
 
 func (x *ServerServicesConfig) Reset() {
 	*x = ServerServicesConfig{}
-	mi := &file_config_proto_msgTypes[29]
+	mi := &file_config_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3634,7 +3729,7 @@ func (x *ServerServicesConfig) String() string {
 func (*ServerServicesConfig) ProtoMessage() {}
 
 func (x *ServerServicesConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[29]
+	mi := &file_config_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3647,7 +3742,7 @@ func (x *ServerServicesConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ServerServicesConfig.ProtoReflect.Descriptor instead.
 func (*ServerServicesConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{29}
+	return file_config_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *ServerServicesConfig) GetHuntManager() bool {
@@ -3987,7 +4082,7 @@ type Defaults struct {
 
 func (x *Defaults) Reset() {
 	*x = Defaults{}
-	mi := &file_config_proto_msgTypes[30]
+	mi := &file_config_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3999,7 +4094,7 @@ func (x *Defaults) String() string {
 func (*Defaults) ProtoMessage() {}
 
 func (x *Defaults) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[30]
+	mi := &file_config_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4012,7 +4107,7 @@ func (x *Defaults) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Defaults.ProtoReflect.Descriptor instead.
 func (*Defaults) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{30}
+	return file_config_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *Defaults) GetHuntExpiryHours() int64 {
@@ -4416,7 +4511,7 @@ type CryptoConfig struct {
 
 func (x *CryptoConfig) Reset() {
 	*x = CryptoConfig{}
-	mi := &file_config_proto_msgTypes[31]
+	mi := &file_config_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4428,7 +4523,7 @@ func (x *CryptoConfig) String() string {
 func (*CryptoConfig) ProtoMessage() {}
 
 func (x *CryptoConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[31]
+	mi := &file_config_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4441,7 +4536,7 @@ func (x *CryptoConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CryptoConfig.ProtoReflect.Descriptor instead.
 func (*CryptoConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{31}
+	return file_config_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *CryptoConfig) GetRootCerts() string {
@@ -4497,7 +4592,7 @@ type MountPoint struct {
 
 func (x *MountPoint) Reset() {
 	*x = MountPoint{}
-	mi := &file_config_proto_msgTypes[32]
+	mi := &file_config_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4509,7 +4604,7 @@ func (x *MountPoint) String() string {
 func (*MountPoint) ProtoMessage() {}
 
 func (x *MountPoint) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[32]
+	mi := &file_config_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4522,7 +4617,7 @@ func (x *MountPoint) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MountPoint.ProtoReflect.Descriptor instead.
 func (*MountPoint) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{32}
+	return file_config_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *MountPoint) GetAccessor() string {
@@ -4576,7 +4671,7 @@ type RemappingConfig struct {
 
 func (x *RemappingConfig) Reset() {
 	*x = RemappingConfig{}
-	mi := &file_config_proto_msgTypes[33]
+	mi := &file_config_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4588,7 +4683,7 @@ func (x *RemappingConfig) String() string {
 func (*RemappingConfig) ProtoMessage() {}
 
 func (x *RemappingConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[33]
+	mi := &file_config_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4601,7 +4696,7 @@ func (x *RemappingConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemappingConfig.ProtoReflect.Descriptor instead.
 func (*RemappingConfig) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{33}
+	return file_config_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *RemappingConfig) GetType() string {
@@ -4763,7 +4858,7 @@ type Security struct {
 
 func (x *Security) Reset() {
 	*x = Security{}
-	mi := &file_config_proto_msgTypes[34]
+	mi := &file_config_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4775,7 +4870,7 @@ func (x *Security) String() string {
 func (*Security) ProtoMessage() {}
 
 func (x *Security) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[34]
+	mi := &file_config_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4788,7 +4883,7 @@ func (x *Security) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Security.ProtoReflect.Descriptor instead.
 func (*Security) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{34}
+	return file_config_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *Security) GetAllowedFileAccessorPrefix() []string {
@@ -4955,9 +5050,10 @@ type Config struct {
 	// internally that mark each org's config object. They should
 	// definitely not be set on the client's config because the client
 	// does not know or use its own org id.
-	OrgId     string `protobuf:"bytes,36,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	OrgName   string `protobuf:"bytes,37,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
-	DebugMode bool   `protobuf:"varint,41,opt,name=debug_mode,json=debugMode,proto3" json:"debug_mode,omitempty"`
+	OrgId         string `protobuf:"bytes,36,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgName       string `protobuf:"bytes,37,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	OrgRedirected bool   `protobuf:"varint,43,opt,name=org_redirected,json=orgRedirected,proto3" json:"org_redirected,omitempty"`
+	DebugMode     bool   `protobuf:"varint,41,opt,name=debug_mode,json=debugMode,proto3" json:"debug_mode,omitempty"`
 	// The services that will run at initialization. Note this is not
 	// set in the config file by the user but is propagated from the
 	// startup code.
@@ -4978,7 +5074,7 @@ type Config struct {
 
 func (x *Config) Reset() {
 	*x = Config{}
-	mi := &file_config_proto_msgTypes[35]
+	mi := &file_config_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4990,7 +5086,7 @@ func (x *Config) String() string {
 func (*Config) ProtoMessage() {}
 
 func (x *Config) ProtoReflect() protoreflect.Message {
-	mi := &file_config_proto_msgTypes[35]
+	mi := &file_config_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5003,7 +5099,7 @@ func (x *Config) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Config.ProtoReflect.Descriptor instead.
 func (*Config) Descriptor() ([]byte, []int) {
-	return file_config_proto_rawDescGZIP(), []int{35}
+	return file_config_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *Config) GetVersion() *Version {
@@ -5175,6 +5271,13 @@ func (x *Config) GetOrgName() string {
 	return ""
 }
 
+func (x *Config) GetOrgRedirected() bool {
+	if x != nil {
+		return x.OrgRedirected
+	}
+	return false
+}
+
 func (x *Config) GetDebugMode() bool {
 	if x != nil {
 		return x.DebugMode
@@ -5306,7 +5409,14 @@ const file_config_proto_rawDesc = "" +
 	"\aLogging\x187 \x01(\v2\x14.proto.LoggingConfigR\aLogging\x1aD\n" +
 	"\x16FallbackAddressesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xad\x04\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xcd\x01\n" +
+	"\x0eOrgRedirection\x12\x15\n" +
+	"\x06org_id\x18\x01 \x01(\tR\x05orgId\x12\x19\n" +
+	"\borg_name\x18\x02 \x01(\tR\aorgName\x12*\n" +
+	"\x11redirected_org_id\x18\x06 \x01(\tR\x0fredirectedOrgId\x12&\n" +
+	"\x0fapi_config_file\x18\x03 \x01(\tR\rapiConfigFile\x125\n" +
+	"\n" +
+	"api_config\x18\x04 \x01(\v2\x16.proto.ApiClientConfigR\tapiConfig\"\xad\x04\n" +
 	"\tAPIConfig\x12\x1a\n" +
 	"\bhostname\x18\x05 \x01(\tR\bhostname\x12\x99\x01\n" +
 	"\fbind_address\x18\x01 \x01(\tBv\xe2\xfc\xe3\xc4\x01p\x12nAddress to bind gRPC endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it.R\vbindAddress\x125\n" +
@@ -5382,7 +5492,7 @@ const file_config_proto_rawDesc = "" +
 	"\x1adefault_session_expiry_min\x18\x14 \x01(\x04R\x17defaultSessionExpiryMin\x1aD\n" +
 	"\x16OidcAuthUrlParamsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
-	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xbb\t\n" +
+	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\xfb\t\n" +
 	"\tGUIConfig\x12\x98\x01\n" +
 	"\fbind_address\x18\x01 \x01(\tBu\xe2\xfc\xe3\xc4\x01o\x12mAddress to bind GUI endpoint. This should usually only be 127.0.0.1, otherwise be sure to properly secure it.R\vbindAddress\x125\n" +
 	"\tbind_port\x18\x02 \x01(\rB\x18\xe2\xfc\xe3\xc4\x01\x12\x12\x10Port to bind to.R\bbindPort\x12!\n" +
@@ -5398,7 +5508,8 @@ const file_config_proto_rawDesc = "" +
 	"\rreverse_proxy\x18\b \x03(\v2\x19.proto.ReverseProxyConfigB#\xe2\xfc\xe3\xc4\x01\x1d\x12\x1bRoutes for reverse proxies.R\freverseProxy\x12U\n" +
 	"\x05links\x18\t \x03(\v2\x0e.proto.GUILinkB/\xe2\xfc\xe3\xc4\x01)\x12'Additional links to present in the GUI.R\x05links\x123\n" +
 	"\rinitial_users\x18\x11 \x03(\v2\x0e.proto.GUIUserR\finitialUsers\x12:\n" +
-	"\finitial_orgs\x18\x16 \x03(\v2\x17.proto.InitialOrgRecordR\vinitialOrgs\x12:\n" +
+	"\finitial_orgs\x18\x16 \x03(\v2\x17.proto.InitialOrgRecordR\vinitialOrgs\x12>\n" +
+	"\x0fredirected_orgs\x18\x1a \x03(\v2\x15.proto.OrgRedirectionR\x0eredirectedOrgs\x12:\n" +
 	"\rauthenticator\x18\x13 \x01(\v2\x14.proto.AuthenticatorR\rauthenticator\x124\n" +
 	"\x16artifact_search_filter\x18\x12 \x01(\tR\x14artifactSearchFilter\x12'\n" +
 	"\x0ftrusted_origins\x18\x19 \x03(\tR\x0etrustedOrigins\"g\n" +
@@ -5683,7 +5794,7 @@ const file_config_proto_rawDesc = "" +
 	"secretsDek\x12/\n" +
 	"\x14vql_must_use_secrets\x18\x05 \x01(\bR\x11vqlMustUseSecrets\x12*\n" +
 	"\x11shadowed_env_vars\x18\x04 \x03(\tR\x0fshadowedEnvVars\x127\n" +
-	"\x18client_self_labels_regex\x18> \x01(\tR\x15clientSelfLabelsRegex\"\x96\r\n" +
+	"\x18client_self_labels_regex\x18> \x01(\tR\x15clientSelfLabelsRegex\"\xbd\r\n" +
 	"\x06Config\x12F\n" +
 	"\aversion\x18\b \x01(\v2\x0e.proto.VersionB\x1c\xe2\xfc\xe3\xc4\x01\x16\x12\x14Version information.R\aversion\x12J\n" +
 	"\x06Client\x18\x01 \x01(\v2\x13.proto.ClientConfigB\x1d\xe2\xfc\xe3\xc4\x01\x17\x12\x15Client configuration.R\x06Client\x12P\n" +
@@ -5714,7 +5825,8 @@ const file_config_proto_rawDesc = "" +
 	"remappings\x18# \x03(\v2\x16.proto.RemappingConfigR\n" +
 	"remappings\x12\x15\n" +
 	"\x06org_id\x18$ \x01(\tR\x05orgId\x12\x19\n" +
-	"\borg_name\x18% \x01(\tR\aorgName\x12\x1d\n" +
+	"\borg_name\x18% \x01(\tR\aorgName\x12%\n" +
+	"\x0eorg_redirected\x18+ \x01(\bR\rorgRedirected\x12\x1d\n" +
 	"\n" +
 	"debug_mode\x18) \x01(\bR\tdebugMode\x127\n" +
 	"\bservices\x18& \x01(\v2\x1b.proto.ServerServicesConfigR\bservices\x12+\n" +
@@ -5733,7 +5845,7 @@ func file_config_proto_rawDescGZIP() []byte {
 	return file_config_proto_rawDescData
 }
 
-var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_config_proto_msgTypes = make([]protoimpl.MessageInfo, 41)
 var file_config_proto_goTypes = []any{
 	(*Version)(nil),                 // 0: proto.Version
 	(*FlowCheckPoint)(nil),          // 1: proto.FlowCheckPoint
@@ -5743,99 +5855,102 @@ var file_config_proto_goTypes = []any{
 	(*DarwinInstallerConfig)(nil),   // 5: proto.DarwinInstallerConfig
 	(*RingBufferConfig)(nil),        // 6: proto.RingBufferConfig
 	(*ClientConfig)(nil),            // 7: proto.ClientConfig
-	(*APIConfig)(nil),               // 8: proto.APIConfig
-	(*ApiClientConfig)(nil),         // 9: proto.ApiClientConfig
-	(*ProxyConfig)(nil),             // 10: proto.ProxyConfig
-	(*GUILink)(nil),                 // 11: proto.GUILink
-	(*OIDCACL)(nil),                 // 12: proto.OIDCACL
-	(*OIDCClaims)(nil),              // 13: proto.OIDCClaims
-	(*Authenticator)(nil),           // 14: proto.Authenticator
-	(*GUIConfig)(nil),               // 15: proto.GUIConfig
-	(*GUIUser)(nil),                 // 16: proto.GUIUser
-	(*CAConfig)(nil),                // 17: proto.CAConfig
-	(*ReverseProxyConfig)(nil),      // 18: proto.ReverseProxyConfig
-	(*DynDNSConfig)(nil),            // 19: proto.DynDNSConfig
-	(*FrontendResourceControl)(nil), // 20: proto.FrontendResourceControl
-	(*FrontendConfig)(nil),          // 21: proto.FrontendConfig
-	(*DatastoreConfig)(nil),         // 22: proto.DatastoreConfig
-	(*MinionConfig)(nil),            // 23: proto.MinionConfig
-	(*MailConfig)(nil),              // 24: proto.MailConfig
-	(*LoggingRetentionConfig)(nil),  // 25: proto.LoggingRetentionConfig
-	(*LoggingConfig)(nil),           // 26: proto.LoggingConfig
-	(*MonitoringConfig)(nil),        // 27: proto.MonitoringConfig
-	(*AutoExecConfig)(nil),          // 28: proto.AutoExecConfig
-	(*ServerServicesConfig)(nil),    // 29: proto.ServerServicesConfig
-	(*Defaults)(nil),                // 30: proto.Defaults
-	(*CryptoConfig)(nil),            // 31: proto.CryptoConfig
-	(*MountPoint)(nil),              // 32: proto.MountPoint
-	(*RemappingConfig)(nil),         // 33: proto.RemappingConfig
-	(*Security)(nil),                // 34: proto.Security
-	(*Config)(nil),                  // 35: proto.Config
-	nil,                             // 36: proto.ClientConfig.FallbackAddressesEntry
-	nil,                             // 37: proto.ProxyConfig.ProxyUrlRegexpEntry
-	nil,                             // 38: proto.OIDCClaims.RoleMapEntry
-	nil,                             // 39: proto.Authenticator.OidcAuthUrlParamsEntry
-	(*proto.VQLEventTable)(nil),     // 40: proto.VQLEventTable
-	(*proto1.Artifact)(nil),         // 41: proto.Artifact
-	(*proto.VQLEnv)(nil),            // 42: proto.VQLEnv
+	(*OrgRedirection)(nil),          // 8: proto.OrgRedirection
+	(*APIConfig)(nil),               // 9: proto.APIConfig
+	(*ApiClientConfig)(nil),         // 10: proto.ApiClientConfig
+	(*ProxyConfig)(nil),             // 11: proto.ProxyConfig
+	(*GUILink)(nil),                 // 12: proto.GUILink
+	(*OIDCACL)(nil),                 // 13: proto.OIDCACL
+	(*OIDCClaims)(nil),              // 14: proto.OIDCClaims
+	(*Authenticator)(nil),           // 15: proto.Authenticator
+	(*GUIConfig)(nil),               // 16: proto.GUIConfig
+	(*GUIUser)(nil),                 // 17: proto.GUIUser
+	(*CAConfig)(nil),                // 18: proto.CAConfig
+	(*ReverseProxyConfig)(nil),      // 19: proto.ReverseProxyConfig
+	(*DynDNSConfig)(nil),            // 20: proto.DynDNSConfig
+	(*FrontendResourceControl)(nil), // 21: proto.FrontendResourceControl
+	(*FrontendConfig)(nil),          // 22: proto.FrontendConfig
+	(*DatastoreConfig)(nil),         // 23: proto.DatastoreConfig
+	(*MinionConfig)(nil),            // 24: proto.MinionConfig
+	(*MailConfig)(nil),              // 25: proto.MailConfig
+	(*LoggingRetentionConfig)(nil),  // 26: proto.LoggingRetentionConfig
+	(*LoggingConfig)(nil),           // 27: proto.LoggingConfig
+	(*MonitoringConfig)(nil),        // 28: proto.MonitoringConfig
+	(*AutoExecConfig)(nil),          // 29: proto.AutoExecConfig
+	(*ServerServicesConfig)(nil),    // 30: proto.ServerServicesConfig
+	(*Defaults)(nil),                // 31: proto.Defaults
+	(*CryptoConfig)(nil),            // 32: proto.CryptoConfig
+	(*MountPoint)(nil),              // 33: proto.MountPoint
+	(*RemappingConfig)(nil),         // 34: proto.RemappingConfig
+	(*Security)(nil),                // 35: proto.Security
+	(*Config)(nil),                  // 36: proto.Config
+	nil,                             // 37: proto.ClientConfig.FallbackAddressesEntry
+	nil,                             // 38: proto.ProxyConfig.ProxyUrlRegexpEntry
+	nil,                             // 39: proto.OIDCClaims.RoleMapEntry
+	nil,                             // 40: proto.Authenticator.OidcAuthUrlParamsEntry
+	(*proto.VQLEventTable)(nil),     // 41: proto.VQLEventTable
+	(*proto1.Artifact)(nil),         // 42: proto.Artifact
+	(*proto.VQLEnv)(nil),            // 43: proto.VQLEnv
 }
 var file_config_proto_depIdxs = []int32{
-	40, // 0: proto.Writeback.event_queries:type_name -> proto.VQLEventTable
+	41, // 0: proto.Writeback.event_queries:type_name -> proto.VQLEventTable
 	1,  // 1: proto.Writeback.checkpoints:type_name -> proto.FlowCheckPoint
-	10, // 2: proto.ClientConfig.proxy_config:type_name -> proto.ProxyConfig
+	11, // 2: proto.ClientConfig.proxy_config:type_name -> proto.ProxyConfig
 	4,  // 3: proto.ClientConfig.windows_installer:type_name -> proto.WindowsInstallerConfig
 	5,  // 4: proto.ClientConfig.darwin_installer:type_name -> proto.DarwinInstallerConfig
 	0,  // 5: proto.ClientConfig.version:type_name -> proto.Version
 	0,  // 6: proto.ClientConfig.server_version:type_name -> proto.Version
 	6,  // 7: proto.ClientConfig.local_buffer:type_name -> proto.RingBufferConfig
-	31, // 8: proto.ClientConfig.Crypto:type_name -> proto.CryptoConfig
-	36, // 9: proto.ClientConfig.fallback_addresses:type_name -> proto.ClientConfig.FallbackAddressesEntry
-	26, // 10: proto.ClientConfig.Logging:type_name -> proto.LoggingConfig
-	37, // 11: proto.ProxyConfig.proxy_url_regexp:type_name -> proto.ProxyConfig.ProxyUrlRegexpEntry
-	38, // 12: proto.OIDCClaims.role_map:type_name -> proto.OIDCClaims.RoleMapEntry
-	39, // 13: proto.Authenticator.oidc_auth_url_params:type_name -> proto.Authenticator.OidcAuthUrlParamsEntry
-	13, // 14: proto.Authenticator.claims:type_name -> proto.OIDCClaims
-	14, // 15: proto.Authenticator.sub_authenticators:type_name -> proto.Authenticator
-	18, // 16: proto.GUIConfig.reverse_proxy:type_name -> proto.ReverseProxyConfig
-	11, // 17: proto.GUIConfig.links:type_name -> proto.GUILink
-	16, // 18: proto.GUIConfig.initial_users:type_name -> proto.GUIUser
-	3,  // 19: proto.GUIConfig.initial_orgs:type_name -> proto.InitialOrgRecord
-	14, // 20: proto.GUIConfig.authenticator:type_name -> proto.Authenticator
-	10, // 21: proto.FrontendConfig.proxy_config:type_name -> proto.ProxyConfig
-	19, // 22: proto.FrontendConfig.dyn_dns:type_name -> proto.DynDNSConfig
-	20, // 23: proto.FrontendConfig.resources:type_name -> proto.FrontendResourceControl
-	25, // 24: proto.LoggingConfig.debug:type_name -> proto.LoggingRetentionConfig
-	25, // 25: proto.LoggingConfig.info:type_name -> proto.LoggingRetentionConfig
-	25, // 26: proto.LoggingConfig.error:type_name -> proto.LoggingRetentionConfig
-	41, // 27: proto.AutoExecConfig.artifact_definitions:type_name -> proto.Artifact
-	32, // 28: proto.RemappingConfig.from:type_name -> proto.MountPoint
-	32, // 29: proto.RemappingConfig.on:type_name -> proto.MountPoint
-	42, // 30: proto.RemappingConfig.env:type_name -> proto.VQLEnv
-	0,  // 31: proto.Config.version:type_name -> proto.Version
-	7,  // 32: proto.Config.Client:type_name -> proto.ClientConfig
-	8,  // 33: proto.Config.API:type_name -> proto.APIConfig
-	15, // 34: proto.Config.GUI:type_name -> proto.GUIConfig
-	17, // 35: proto.Config.CA:type_name -> proto.CAConfig
-	21, // 36: proto.Config.Frontend:type_name -> proto.FrontendConfig
-	21, // 37: proto.Config.ExtraFrontends:type_name -> proto.FrontendConfig
-	22, // 38: proto.Config.Datastore:type_name -> proto.DatastoreConfig
-	2,  // 39: proto.Config.Writeback:type_name -> proto.Writeback
-	24, // 40: proto.Config.Mail:type_name -> proto.MailConfig
-	26, // 41: proto.Config.Logging:type_name -> proto.LoggingConfig
-	23, // 42: proto.Config.Minion:type_name -> proto.MinionConfig
-	27, // 43: proto.Config.Monitoring:type_name -> proto.MonitoringConfig
-	9,  // 44: proto.Config.api_config:type_name -> proto.ApiClientConfig
-	28, // 45: proto.Config.autoexec:type_name -> proto.AutoExecConfig
-	30, // 46: proto.Config.defaults:type_name -> proto.Defaults
-	33, // 47: proto.Config.remappings:type_name -> proto.RemappingConfig
-	29, // 48: proto.Config.services:type_name -> proto.ServerServicesConfig
-	34, // 49: proto.Config.security:type_name -> proto.Security
-	12, // 50: proto.OIDCClaims.RoleMapEntry.value:type_name -> proto.OIDCACL
-	51, // [51:51] is the sub-list for method output_type
-	51, // [51:51] is the sub-list for method input_type
-	51, // [51:51] is the sub-list for extension type_name
-	51, // [51:51] is the sub-list for extension extendee
-	0,  // [0:51] is the sub-list for field type_name
+	32, // 8: proto.ClientConfig.Crypto:type_name -> proto.CryptoConfig
+	37, // 9: proto.ClientConfig.fallback_addresses:type_name -> proto.ClientConfig.FallbackAddressesEntry
+	27, // 10: proto.ClientConfig.Logging:type_name -> proto.LoggingConfig
+	10, // 11: proto.OrgRedirection.api_config:type_name -> proto.ApiClientConfig
+	38, // 12: proto.ProxyConfig.proxy_url_regexp:type_name -> proto.ProxyConfig.ProxyUrlRegexpEntry
+	39, // 13: proto.OIDCClaims.role_map:type_name -> proto.OIDCClaims.RoleMapEntry
+	40, // 14: proto.Authenticator.oidc_auth_url_params:type_name -> proto.Authenticator.OidcAuthUrlParamsEntry
+	14, // 15: proto.Authenticator.claims:type_name -> proto.OIDCClaims
+	15, // 16: proto.Authenticator.sub_authenticators:type_name -> proto.Authenticator
+	19, // 17: proto.GUIConfig.reverse_proxy:type_name -> proto.ReverseProxyConfig
+	12, // 18: proto.GUIConfig.links:type_name -> proto.GUILink
+	17, // 19: proto.GUIConfig.initial_users:type_name -> proto.GUIUser
+	3,  // 20: proto.GUIConfig.initial_orgs:type_name -> proto.InitialOrgRecord
+	8,  // 21: proto.GUIConfig.redirected_orgs:type_name -> proto.OrgRedirection
+	15, // 22: proto.GUIConfig.authenticator:type_name -> proto.Authenticator
+	11, // 23: proto.FrontendConfig.proxy_config:type_name -> proto.ProxyConfig
+	20, // 24: proto.FrontendConfig.dyn_dns:type_name -> proto.DynDNSConfig
+	21, // 25: proto.FrontendConfig.resources:type_name -> proto.FrontendResourceControl
+	26, // 26: proto.LoggingConfig.debug:type_name -> proto.LoggingRetentionConfig
+	26, // 27: proto.LoggingConfig.info:type_name -> proto.LoggingRetentionConfig
+	26, // 28: proto.LoggingConfig.error:type_name -> proto.LoggingRetentionConfig
+	42, // 29: proto.AutoExecConfig.artifact_definitions:type_name -> proto.Artifact
+	33, // 30: proto.RemappingConfig.from:type_name -> proto.MountPoint
+	33, // 31: proto.RemappingConfig.on:type_name -> proto.MountPoint
+	43, // 32: proto.RemappingConfig.env:type_name -> proto.VQLEnv
+	0,  // 33: proto.Config.version:type_name -> proto.Version
+	7,  // 34: proto.Config.Client:type_name -> proto.ClientConfig
+	9,  // 35: proto.Config.API:type_name -> proto.APIConfig
+	16, // 36: proto.Config.GUI:type_name -> proto.GUIConfig
+	18, // 37: proto.Config.CA:type_name -> proto.CAConfig
+	22, // 38: proto.Config.Frontend:type_name -> proto.FrontendConfig
+	22, // 39: proto.Config.ExtraFrontends:type_name -> proto.FrontendConfig
+	23, // 40: proto.Config.Datastore:type_name -> proto.DatastoreConfig
+	2,  // 41: proto.Config.Writeback:type_name -> proto.Writeback
+	25, // 42: proto.Config.Mail:type_name -> proto.MailConfig
+	27, // 43: proto.Config.Logging:type_name -> proto.LoggingConfig
+	24, // 44: proto.Config.Minion:type_name -> proto.MinionConfig
+	28, // 45: proto.Config.Monitoring:type_name -> proto.MonitoringConfig
+	10, // 46: proto.Config.api_config:type_name -> proto.ApiClientConfig
+	29, // 47: proto.Config.autoexec:type_name -> proto.AutoExecConfig
+	31, // 48: proto.Config.defaults:type_name -> proto.Defaults
+	34, // 49: proto.Config.remappings:type_name -> proto.RemappingConfig
+	30, // 50: proto.Config.services:type_name -> proto.ServerServicesConfig
+	35, // 51: proto.Config.security:type_name -> proto.Security
+	13, // 52: proto.OIDCClaims.RoleMapEntry.value:type_name -> proto.OIDCACL
+	53, // [53:53] is the sub-list for method output_type
+	53, // [53:53] is the sub-list for method input_type
+	53, // [53:53] is the sub-list for extension type_name
+	53, // [53:53] is the sub-list for extension extendee
+	0,  // [0:53] is the sub-list for field type_name
 }
 
 func init() { file_config_proto_init() }
@@ -5849,7 +5964,7 @@ func file_config_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_config_proto_rawDesc), len(file_config_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   40,
+			NumMessages:   41,
 			NumExtensions: 0,
 			NumServices:   0,
 		},

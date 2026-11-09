@@ -2,7 +2,6 @@ package remote
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 
@@ -10,7 +9,6 @@ import (
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 )
@@ -20,6 +18,8 @@ type FileReader struct {
 	offset     int64
 	ctx        context.Context
 	config_obj *config_proto.Config
+
+	factory func() (api_proto.APIClient, func() error, error)
 }
 
 func (self *FileReader) Read(buff []byte) (int, error) {
@@ -28,8 +28,7 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 	defer cancel()
 
 	// Make the call as the superuser
-	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx,
-		grpc_client.SuperUser, self.config_obj)
+	conn, closer, err := self.factory()
 	if err != nil {
 		return 0, err
 	}
@@ -39,8 +38,6 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 			err = err1
 		}
 	}()
-
-	fmt.Printf("Read %v from %v\n", len(buff), self.offset)
 
 	grpc_result, err := conn.VFSGetBuffer(ctx,
 		&api_proto.VFSFileBuffer{
@@ -89,8 +86,11 @@ func (self *FileReader) Seek(offset int64, whence int) (int64, error) {
 			return 0, err
 		}
 		self.offset = s.Size() + offset
+	default:
+		return 0, utils.InvalidArgError
 	}
-	return 0, utils.InvalidArgError
+
+	return self.offset, nil
 }
 
 func (self *FileReader) Stat() (api.FileInfo, error) {
@@ -99,8 +99,7 @@ func (self *FileReader) Stat() (api.FileInfo, error) {
 	defer cancel()
 
 	// Make the call as the superuser
-	conn, closer, err := grpc_client.Factory.GetAPIClient(ctx,
-		grpc_client.SuperUser, self.config_obj)
+	conn, closer, err := self.factory()
 	if err != nil {
 		return nil, err
 	}
@@ -144,5 +143,6 @@ func (self *RPCFileStore) ReadFile(filename api.FSPathSpec) (api.FileReader, err
 		filename:   filename,
 		ctx:        self.ctx,
 		config_obj: self.config_obj,
+		factory:    self.factory,
 	}, nil
 }

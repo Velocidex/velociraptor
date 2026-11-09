@@ -226,7 +226,8 @@ func doThirdPartyUpload() error {
 		return fmt.Errorf("Adding tool %s: %w", tool.Name, err)
 	}
 
-	if *third_party_upload_binary_path != "" {
+	// If the user specifies a local filepath and not a URL
+	if *third_party_upload_binary_path != "" && !url_regexp.MatchString(*third_party_upload_binary_path) {
 		reader, err := os.Open(*third_party_upload_binary_path)
 		if err != nil {
 			return fmt.Errorf("Unable to read file: %w ", err)
