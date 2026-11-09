@@ -40,7 +40,7 @@ func (self *Launcher) CompileSingleArtifact(
 	result.EffectivePrincipal = artifact.Impersonate
 
 	queries, envs := compileParametersToVQLPreamble(
-		ctx, config_obj, artifact)
+		ctx, config_obj, artifact, false)
 
 	for _, q := range queries {
 		result.Query = append(result.Query, &actions_proto.VQLRequest{
@@ -137,7 +137,8 @@ func mergeSources(
 	// Add compiled VQL statements to convert parameters to correct
 	// types.
 	if precondition != "" {
-		queries, _ := compileParametersToVQLPreamble(ctx, config_obj, artifact)
+		queries, _ := compileParametersToVQLPreamble(
+			ctx, config_obj, artifact, true)
 		precondition = strings.Join(queries, "\n\n") + precondition
 	}
 

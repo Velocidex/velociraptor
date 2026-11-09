@@ -11,9 +11,17 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
+// When for_precondition is set, the preamble is being prepended to
+// the precondition. The client evaluates the precondition and then
+// the main queries in the same scope, so the preamble runs twice and
+// every conversion must be safe to repeat. The upload conversions are
+// not: the first run replaces the URL with the downloaded content and
+// the second run would then fetch that content as a URL. Leave them
+// out of the precondition so the parameter is fetched exactly once,
+// by the main queries.
 func compileParametersToVQLPreamble(
 	ctx context.Context, config_obj *config_proto.Config,
-	artifact *artifacts_proto.Artifact) (
+	artifact *artifacts_proto.Artifact, for_precondition bool) (
 	res []string, res_env []*actions_proto.VQLEnv) {
 
 	for _, parameter := range artifact.Parameters {
@@ -43,6 +51,9 @@ func compileParametersToVQLPreamble(
 			env.Comment = "redacted"
 
 		case "upload":
+			if for_precondition {
+				break
+			}
 			res = append(res, fmt.Sprintf(
 				`LET %v <= if(condition=%v, then={
    SELECT Content FROM http_client(url=%v)
@@ -52,6 +63,9 @@ func compileParametersToVQLPreamble(
 				escaped_name, maybeEscape(name+"_")))
 
 		case "upload_file":
+			if for_precondition {
+				break
+			}
 			res = append(res, fmt.Sprintf(
 				`LET %v <= if(condition=%v, then={
    SELECT Content FROM http_client(url=%v, tempfile_extension='.tmp')

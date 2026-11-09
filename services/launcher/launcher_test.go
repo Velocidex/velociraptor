@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -44,6 +45,7 @@ import (
 	launcher_mod "www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
+	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
@@ -1165,6 +1167,75 @@ sources:
 	fixture := ordereddict.NewDict().Set("CompiledRequest", compiled)
 	goldie.Assert(self.T(), "TestPreconditionRecursive",
 		json.MustMarshalIndent(fixture))
+}
+
+// The parameter preamble is prepended to the precondition, and the
+// client evaluates the precondition and then the sources in the same
+// scope. An upload parameter must still be fetched exactly once and
+// reach the sources as the downloaded content.
+func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
+	var hits int64
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt64(&hits, 1)
+			_, _ = w.Write([]byte("uploaded content"))
+		}))
+	defer server.Close()
+
+	repository := self.LoadArtifacts(`
+name: Test.Artifact.UploadPrecondition
+precondition: SELECT * FROM scope()
+parameters:
+- name: UploadValue
+  type: upload
+sources:
+- query: |
+    SELECT UploadValue FROM scope()
+`)
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{"Test.Artifact.UploadPrecondition"},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: "Test.Artifact.UploadPrecondition",
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: "UploadValue", Value: server.URL},
+					},
+				},
+			},
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	acl_manager := acl_managers.NullACLManager{}
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), 1, len(compiled))
+	assert.NotEqual(self.T(), "", compiled[0].Precondition)
+
+	test_responder := responder.TestResponderWithFlowId(
+		self.ConfigObj, "F.TestUploadParameterWithPrecondition")
+	actions.VQLClientAction{}.StartQuery(
+		self.ConfigObj, ctx, test_responder, compiled[0])
+
+	var messages []*ordereddict.Dict
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		messages = getResponses(test_responder.Drain.Messages())
+		return len(messages) > 0
+	})
+
+	value, _ := messages[0].GetString("UploadValue")
+	assert.Equal(self.T(), "uploaded content", value)
+	assert.Equal(self.T(), int64(1), atomic.LoadInt64(&hits))
 }
 
 // Test that compiler rejects invalid artifacts
