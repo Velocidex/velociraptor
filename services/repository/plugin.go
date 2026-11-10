@@ -173,7 +173,8 @@ func (self *ArtifactRepositoryPlugin) Call(
 		requests, err := launcher.CompileCollectorArgs(
 			ctx, self.config_obj, acl_manager, self.repository,
 			services.CompilerOptions{
-				DisablePrecondition: !precondition,
+				DisablePrecondition:  !precondition,
+				SkipUploadConversion: true,
 			},
 			&flows_proto.ArtifactCollectorArgs{
 				Artifacts: []string{artifact_name},

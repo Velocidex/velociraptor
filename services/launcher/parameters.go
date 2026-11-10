@@ -13,6 +13,7 @@ import (
 
 func compileParametersToVQLPreamble(
 	ctx context.Context, config_obj *config_proto.Config,
+	options services.CompilerOptions,
 	artifact *artifacts_proto.Artifact) (
 	res []string, res_env []*actions_proto.VQLEnv) {
 
@@ -43,22 +44,15 @@ func compileParametersToVQLPreamble(
 			env.Comment = "redacted"
 
 		case "upload":
-			res = append(res, fmt.Sprintf(
-				`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v)
-})`, maybeEscape(name+"_"), escaped_name, escaped_name))
-
-			res = append(res, fmt.Sprintf("LET %v <= %v.Content[0]",
-				escaped_name, maybeEscape(name+"_")))
+			if !options.SkipUploadConversion {
+				res = append(res, uploadPreamble(name, "")...)
+			}
 
 		case "upload_file":
-			res = append(res, fmt.Sprintf(
-				`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v, tempfile_extension='.tmp')
-})`, maybeEscape(name+"_"), escaped_name, escaped_name))
-
-			res = append(res, fmt.Sprintf("LET %v <= %v.Content[0]",
-				escaped_name, maybeEscape(name+"_")))
+			if !options.SkipUploadConversion {
+				res = append(res, uploadPreamble(name,
+					", tempfile_extension='.tmp'")...)
+			}
 
 		case "server_metadata":
 			client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -146,4 +140,34 @@ LET %v <= if(
 	}
 
 	return res, res_env
+}
+
+// The preamble can run more than once in the same scope: when the
+// artifact has a precondition, the preamble is prepended to it and
+// the client then runs the main queries in that same scope. Most
+// conversions are safe to repeat, but an upload replaces the URL
+// with the downloaded content, so a second run would fetch the
+// content as if it were a URL. Remember the value we produced and
+// skip the fetch if the parameter still holds it.
+//
+// The marker is compared by value rather than used as a flag so a
+// marker inherited from a calling artifact that has a parameter of
+// the same name does not stop this artifact fetching its own URL.
+func uploadPreamble(name, http_args string) []string {
+	escaped_name := maybeEscape(name)
+	result_name := maybeEscape(name + "_")
+	marker := name + "_fetched"
+
+	should_fetch := fmt.Sprintf("%v AND %v != get(field='''%v''')",
+		escaped_name, escaped_name, marker)
+
+	return []string{
+		fmt.Sprintf(`LET %v = SELECT Content FROM http_client(url=%v%v)`,
+			result_name, escaped_name, http_args),
+
+		fmt.Sprintf(`LET %v <= if(condition=%v, then=%v.Content[0], else=%v)`,
+			escaped_name, should_fetch, result_name, escaped_name),
+
+		fmt.Sprintf("LET %v <= %v", maybeEscape(marker), escaped_name),
+	}
 }
