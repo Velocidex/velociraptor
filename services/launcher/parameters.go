@@ -13,6 +13,7 @@ import (
 
 func compileParametersToVQLPreamble(
 	ctx context.Context, config_obj *config_proto.Config,
+	options services.CompilerOptions,
 	artifact *artifacts_proto.Artifact) (
 	res []string, res_env []*actions_proto.VQLEnv) {
 
@@ -43,11 +44,15 @@ func compileParametersToVQLPreamble(
 			env.Comment = "redacted"
 
 		case "upload":
-			res = append(res, uploadPreamble(name, "")...)
+			if !options.SkipUploadConversion {
+				res = append(res, uploadPreamble(name, "")...)
+			}
 
 		case "upload_file":
-			res = append(res, uploadPreamble(name,
-				", tempfile_extension='.tmp'")...)
+			if !options.SkipUploadConversion {
+				res = append(res, uploadPreamble(name,
+					", tempfile_extension='.tmp'")...)
+			}
 
 		case "server_metadata":
 			client_info_manager, err := services.GetClientInfoManager(config_obj)

@@ -1205,29 +1205,40 @@ sources:
     SELECT UploadValue AS Inner
     FROM Artifact.Test.Artifact.UploadPrecondition(
       UploadValue=UploadValue, preconditions=FALSE)
+`, `
+name: Test.Artifact.UploadNestedRenamed
+parameters:
+- name: Rules
+  type: upload
+sources:
+- query: |
+    SELECT UploadValue AS Inner
+    FROM Artifact.Test.Artifact.UploadPrecondition(
+      UploadValue=Rules, preconditions=TRUE)
+
+- query: |
+    SELECT UploadValue AS Inner
+    FROM Artifact.Test.Artifact.UploadPrecondition(
+      UploadValue=Rules, preconditions=FALSE)
 `}
 
-// The parameter preamble is prepended to the precondition, and the
-// client evaluates the precondition and then the sources in the same
-// scope, so the preamble runs twice. An upload parameter must still
-// be fetched exactly once and both the precondition and the sources
-// must see the downloaded content.
-func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
-	server, hits := newUploadServer()
-	defer server.Close()
-
-	repository := self.LoadArtifacts(testUploadArtifacts...)
+// Collect the artifact through the client code path with the upload
+// parameter set to the URL, and wait for the expected number of rows.
+func (self *LauncherTestSuite) collectWithUpload(
+	repository services.Repository,
+	artifact, parameter, url string, expected_rows int) (
+	*actions_proto.VQLCollectorArgs, []*ordereddict.Dict) {
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		Creator:   "UserX",
 		ClientId:  "C.1234",
-		Artifacts: []string{"Test.Artifact.UploadPrecondition"},
+		Artifacts: []string{artifact},
 		Specs: []*flows_proto.ArtifactSpec{
 			{
-				Artifact: "Test.Artifact.UploadPrecondition",
+				Artifact: artifact,
 				Parameters: &flows_proto.ArtifactParameters{
 					Env: []*actions_proto.VQLEnv{
-						{Key: "UploadValue", Value: server.URL + "/inner"},
+						{Key: parameter, Value: url},
 					},
 				},
 			},
@@ -1245,22 +1256,70 @@ func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
 		services.CompilerOptions{}, request)
 	assert.NoError(self.T(), err)
 	assert.Equal(self.T(), 1, len(compiled))
-	assert.NotEqual(self.T(), "", compiled[0].Precondition)
 
 	test_responder := responder.TestResponderWithFlowId(
-		self.ConfigObj, "F.TestUploadParameterWithPrecondition")
+		self.ConfigObj, "F.TestUpload")
 	actions.VQLClientAction{}.StartQuery(
 		self.ConfigObj, ctx, test_responder, compiled[0])
 
 	var messages []*ordereddict.Dict
 	vtesting.WaitUntil(time.Second, self.T(), func() bool {
 		messages = getResponses(test_responder.Drain.Messages())
-		return len(messages) > 0
+		return len(messages) >= expected_rows
 	})
+	return compiled[0], messages
+}
 
-	value, _ := messages[0].GetString("UploadValue")
+// The parameter preamble is prepended to the precondition, and the
+// client evaluates the precondition and then the sources in the same
+// scope, so the preamble runs twice. An upload parameter must still
+// be fetched exactly once and both the precondition and the sources
+// must see the downloaded content.
+func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
+	server, hits := newUploadServer()
+	defer server.Close()
+
+	repository := self.LoadArtifacts(testUploadArtifacts...)
+	compiled, rows := self.collectWithUpload(repository,
+		"Test.Artifact.UploadPrecondition", "UploadValue",
+		server.URL+"/inner", 1)
+
+	assert.NotEqual(self.T(), "", compiled.Precondition)
+	assert.Equal(self.T(), 1, len(rows))
+	value, _ := rows[0].GetString("UploadValue")
 	assert.Equal(self.T(), "content of /inner", value)
 	assert.Equal(self.T(), int64(1), atomic.LoadInt64(hits))
+}
+
+// A wrapping artifact passes its upload parameter on to the wrapped
+// artifact through the Artifact() plugin. By then it holds the
+// content, so the wrapped artifact uses it as is and does not fetch
+// it again, whether or not its precondition runs and whatever the
+// caller named the parameter.
+func (self *LauncherTestSuite) TestUploadParameterArtifactPlugin() {
+	server, hits := newUploadServer()
+	defer server.Close()
+
+	repository := self.LoadArtifacts(testUploadArtifacts...)
+
+	for _, test_case := range []struct{ artifact, parameter string }{
+		{"Test.Artifact.UploadNested", "UploadValue"},
+		{"Test.Artifact.UploadNestedRenamed", "Rules"},
+	} {
+		atomic.StoreInt64(hits, 0)
+		_, rows := self.collectWithUpload(repository,
+			test_case.artifact, test_case.parameter,
+			server.URL+"/inner", 2)
+
+		assert.Equal(self.T(), 2, len(rows), test_case.artifact)
+		for _, row := range rows {
+			value, _ := row.GetString("Inner")
+			assert.Equal(self.T(), "content of /inner", value,
+				test_case.artifact)
+		}
+		assert.Equal(self.T(), int64(1), atomic.LoadInt64(hits),
+			test_case.artifact)
+	}
 }
 
 // Test that compiler rejects invalid artifacts
