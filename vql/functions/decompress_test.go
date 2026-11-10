@@ -12,6 +12,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/andybalholm/brotli"
 	"github.com/klauspost/compress/zstd"
+	"github.com/ulikunitz/xz"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 	"www.velocidex.com/golang/vfilter"
@@ -40,6 +41,11 @@ func TestDecompressFunctions(t *testing.T) {
 	assert.NoError(t, err)
 	compressWith(t, enc, plain)
 
+	xzb := &bytes.Buffer{}
+	xw, err := xz.NewWriter(xzb)
+	assert.NoError(t, err)
+	compressWith(t, xw, plain)
+
 	for _, tc := range []struct {
 		name       string
 		fn         types.FunctionInterface
@@ -47,6 +53,7 @@ func TestDecompressFunctions(t *testing.T) {
 	}{
 		{"brotli", &BrotliDecompress{}, br.String()},
 		{"zstd", &ZstdDecompress{}, zs.String()},
+		{"xz", &XzDecompress{}, xzb.String()},
 	} {
 		call := func(data string, max_bytes int64) vfilter.Any {
 			args := ordereddict.NewDict().Set("string", data)
