@@ -1,0 +1,33 @@
+Queries:
+  # Job still listed in the Jobs table, with its file ID resolved
+  # against the Files table.
+  - SELECT JobId, InJobsTable, JobName, Description, Type, State, Priority,
+           NotifyCommand, NotifyArguments, NotifyFlags, OwnerSID,
+           CreationTime, ModificationTime, ExpirationTime, FileIds,
+           FileIdsInFilesTable, ErrorCount, TransientErrorCount,
+           RetryDelay, NoProgressTimeout
+    FROM Artifact.Windows.Forensics.BITS(
+      source="Jobs", Accessor="file", OnlyInJobsTable=TRUE,
+      QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db")
+
+  # Deleted jobs and older copies of jobs are recovered as well.
+  - SELECT JobName + " / " + State AS JobState, count() AS Records
+    FROM Artifact.Windows.Forensics.BITS(
+      source="Jobs", Accessor="file",
+      QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db")
+    GROUP BY JobState
+    ORDER BY JobState
+
+  - SELECT SourceURL, DestFile, TmpFile, DownloadByteSize,
+           TransferByteSize, Drive, VolumeGUID, CreationTime
+    FROM Artifact.Windows.Forensics.BITS(
+      source="Files", Accessor="file",
+      URLRegex="cdn.office.net",
+      QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db")
+    ORDER BY DestFile
+
+  - SELECT count() AS Files
+    FROM Artifact.Windows.Forensics.BITS(
+      source="Files", Accessor="file",
+      QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db")
+    GROUP BY 1

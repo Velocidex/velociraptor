@@ -1,0 +1,131 @@
+# Job still listed in the Jobs table, with its file ID resolved
+# against the Files table.
+Query: SELECT JobId, InJobsTable, JobName, Description, Type, State, Priority, NotifyCommand, NotifyArguments, NotifyFlags, OwnerSID, CreationTime, ModificationTime, ExpirationTime, FileIds, FileIdsInFilesTable, ErrorCount, TransientErrorCount, RetryDelay, NoProgressTimeout FROM Artifact.Windows.Forensics.BITS( source="Jobs", Accessor="file", OnlyInJobsTable=TRUE, QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db")
+Output: [
+ {
+  "JobId": "{d387e452-e2b3-472d-b3b3-85c2be33cbb3}",
+  "InJobsTable": true,
+  "JobName": "Edge Component Updater",
+  "Description": "2132f61f-f790-4ae6-a355-8cf9a1533800",
+  "Type": "Download",
+  "State": "Transferred",
+  "Priority": "Normal",
+  "NotifyCommand": "",
+  "NotifyArguments": "",
+  "NotifyFlags": [
+   "JobError",
+   "JobTransferred"
+  ],
+  "OwnerSID": "S-1-5-21-549467458-3727351111-1684278619-1001",
+  "CreationTime": "2024-07-29T04:34:53Z",
+  "ModificationTime": "2024-07-30T07:19:08Z",
+  "ExpirationTime": "2024-10-28T07:19:08Z",
+  "FileIds": [
+   "{3f4a8b1a-98e5-4aa8-a2e7-c0bf1bc6f48d}"
+  ],
+  "FileIdsInFilesTable": [
+   "{3f4a8b1a-98e5-4aa8-a2e7-c0bf1bc6f48d}"
+  ],
+  "ErrorCount": 0,
+  "TransientErrorCount": 0,
+  "RetryDelay": 60,
+  "NoProgressTimeout": 86400
+ }
+]
+
+# Deleted jobs and older copies of jobs are recovered as well.
+Query: SELECT JobName + " / " + State AS JobState, count() AS Records FROM Artifact.Windows.Forensics.BITS( source="Jobs", Accessor="file", QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db") GROUP BY JobState ORDER BY JobState
+Output: [
+ {
+  "JobState": "Chrome Component Updater / Queued",
+  "Records": 1
+ },
+ {
+  "JobState": "Chrome Component Updater / Suspended",
+  "Records": 2
+ },
+ {
+  "JobState": "Edge Component Updater / Queued",
+  "Records": 3
+ },
+ {
+  "JobState": "Edge Component Updater / Suspended",
+  "Records": 3
+ },
+ {
+  "JobState": "Edge Component Updater / Transferred",
+  "Records": 2
+ },
+ {
+  "JobState": "Microsoft Office Click-to-Run / Queued",
+  "Records": 7
+ },
+ {
+  "JobState": "Microsoft Office Click-to-Run / Suspended",
+  "Records": 8
+ },
+ {
+  "JobState": "Microsoft Office Click-to-Run / Transferred",
+  "Records": 5
+ },
+ {
+  "JobState": "NucleusUpdateRingConfigJSON / Queued",
+  "Records": 3
+ },
+ {
+  "JobState": "NucleusUpdateRingConfigJSON / Suspended",
+  "Records": 2
+ },
+ {
+  "JobState": "PreSignInSettingsConfigJSON / Queued",
+  "Records": 3
+ },
+ {
+  "JobState": "PreSignInSettingsConfigJSON / Suspended",
+  "Records": 2
+ },
+ {
+  "JobState": "UpdateDescriptionXml / Queued",
+  "Records": 3
+ },
+ {
+  "JobState": "UpdateDescriptionXml / Suspended",
+  "Records": 3
+ },
+ {
+  "JobState": "UpdateXml / Queued",
+  "Records": 1
+ }
+]
+
+Query: SELECT SourceURL, DestFile, TmpFile, DownloadByteSize, TransferByteSize, Drive, VolumeGUID, CreationTime FROM Artifact.Windows.Forensics.BITS( source="Files", Accessor="file", URLRegex="cdn.office.net", QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db") ORDER BY DestFile
+Output: [
+ {
+  "SourceURL": "http://f.c2r.ts.cdn.office.net/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data/v64_16.0.18025.20160.cab",
+  "DestFile": "C:\\WINDOWS\\TEMP\\OfficeC2RE1FC9093-45C4-4E34-AD26-1F75681DED73\\v64_16.0.18025.20160.cab",
+  "TmpFile": "C:\\WINDOWS\\TEMP\\OfficeC2RE1FC9093-45C4-4E34-AD26-1F75681DED73\\BITE957.tmp",
+  "DownloadByteSize": 11493,
+  "TransferByteSize": 11493,
+  "Drive": "C:\\",
+  "VolumeGUID": "\\\\?\\Volume{537fb036-a3cd-47ab-9a2c-4ba87cc2c588}\\",
+  "CreationTime": "2024-10-15T18:10:00Z"
+ },
+ {
+  "SourceURL": "http://f.c2r.ts.cdn.office.net/pr/492350f6-3a01-4f97-b9c0-c7c6ddf67d60/Office/Data/v64_16.0.18025.20160.cab",
+  "DestFile": "C:\\WINDOWS\\TEMP\\v64_16.0.18025.20160CheckReachable98026A58-9C8C-460E-BEA5-442FF352E815",
+  "TmpFile": "C:\\WINDOWS\\TEMP\\BITE55E.tmp",
+  "DownloadByteSize": 1,
+  "TransferByteSize": 1,
+  "Drive": "C:\\",
+  "VolumeGUID": "\\\\?\\Volume{537fb036-a3cd-47ab-9a2c-4ba87cc2c588}\\",
+  "CreationTime": null
+ }
+]
+
+Query: SELECT count() AS Files FROM Artifact.Windows.Forensics.BITS( source="Files", Accessor="file", QmgrGlob=srcDir+"/artifacts/testdata/files/qmgr.db") GROUP BY 1
+Output: [
+ {
+  "Files": 84
+ }
+]
+
