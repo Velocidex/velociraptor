@@ -119,6 +119,12 @@ type CompilerOptions struct {
 	// Generate precondition queries.
 	DisablePrecondition bool
 
+	// Leave upload and upload_file parameters as they are instead of
+	// fetching them. The Artifact() plugin sets this because its
+	// caller passes values that were already converted, so an upload
+	// parameter holds the content and not the URL.
+	SkipUploadConversion bool
+
 	// Ignore Missing Artifacts without raising an error.
 	IgnoreMissingArtifacts bool
 

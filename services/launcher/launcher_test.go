@@ -9,6 +9,7 @@ import (
 	"net/http/httptest"
 	"sort"
 	"strings"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -44,6 +45,7 @@ import (
 	launcher_mod "www.velocidex.com/golang/velociraptor/services/launcher"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
+	_ "www.velocidex.com/golang/velociraptor/vql/networking"
 	_ "www.velocidex.com/golang/velociraptor/vql/parsers/csv"
 	_ "www.velocidex.com/golang/velociraptor/vql/protocols"
 )
@@ -1165,6 +1167,159 @@ sources:
 	fixture := ordereddict.NewDict().Set("CompiledRequest", compiled)
 	goldie.Assert(self.T(), "TestPreconditionRecursive",
 		json.MustMarshalIndent(fixture))
+}
+
+// Serves the request path back as the content and counts the hits.
+func newUploadServer() (*httptest.Server, *int64) {
+	var hits int64
+	server := httptest.NewServer(http.HandlerFunc(
+		func(w http.ResponseWriter, r *http.Request) {
+			atomic.AddInt64(&hits, 1)
+			_, _ = w.Write([]byte("content of " + r.URL.Path))
+		}))
+	return server, &hits
+}
+
+var testUploadArtifacts = []string{`
+name: Test.Artifact.UploadPrecondition
+precondition: |
+  SELECT * FROM scope() WHERE UploadValue = 'content of /inner'
+parameters:
+- name: UploadValue
+  type: upload
+sources:
+- query: |
+    SELECT UploadValue FROM scope()
+`, `
+name: Test.Artifact.UploadNested
+parameters:
+- name: UploadValue
+  type: upload
+sources:
+- query: |
+    SELECT UploadValue AS Inner
+    FROM Artifact.Test.Artifact.UploadPrecondition(
+      UploadValue=UploadValue, preconditions=TRUE)
+
+- query: |
+    SELECT UploadValue AS Inner
+    FROM Artifact.Test.Artifact.UploadPrecondition(
+      UploadValue=UploadValue, preconditions=FALSE)
+`, `
+name: Test.Artifact.UploadNestedRenamed
+parameters:
+- name: Rules
+  type: upload
+sources:
+- query: |
+    SELECT UploadValue AS Inner
+    FROM Artifact.Test.Artifact.UploadPrecondition(
+      UploadValue=Rules, preconditions=TRUE)
+
+- query: |
+    SELECT UploadValue AS Inner
+    FROM Artifact.Test.Artifact.UploadPrecondition(
+      UploadValue=Rules, preconditions=FALSE)
+`}
+
+// Collect the artifact through the client code path with the upload
+// parameter set to the URL, and wait for the expected number of rows.
+func (self *LauncherTestSuite) collectWithUpload(
+	repository services.Repository,
+	artifact, parameter, url string, expected_rows int) (
+	*actions_proto.VQLCollectorArgs, []*ordereddict.Dict) {
+
+	request := &flows_proto.ArtifactCollectorArgs{
+		Creator:   "UserX",
+		ClientId:  "C.1234",
+		Artifacts: []string{artifact},
+		Specs: []*flows_proto.ArtifactSpec{
+			{
+				Artifact: artifact,
+				Parameters: &flows_proto.ArtifactParameters{
+					Env: []*actions_proto.VQLEnv{
+						{Key: parameter, Value: url},
+					},
+				},
+			},
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	acl_manager := acl_managers.NullACLManager{}
+	launcher, err := services.GetLauncher(self.ConfigObj)
+	assert.NoError(self.T(), err)
+
+	compiled, err := launcher.CompileCollectorArgs(
+		ctx, self.ConfigObj, acl_manager, repository,
+		services.CompilerOptions{}, request)
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), 1, len(compiled))
+
+	test_responder := responder.TestResponderWithFlowId(
+		self.ConfigObj, "F.TestUpload")
+	actions.VQLClientAction{}.StartQuery(
+		self.ConfigObj, ctx, test_responder, compiled[0])
+
+	var messages []*ordereddict.Dict
+	vtesting.WaitUntil(time.Second, self.T(), func() bool {
+		messages = getResponses(test_responder.Drain.Messages())
+		return len(messages) >= expected_rows
+	})
+	return compiled[0], messages
+}
+
+// The parameter preamble is prepended to the precondition, and the
+// client evaluates the precondition and then the sources in the same
+// scope, so the preamble runs twice. An upload parameter must still
+// be fetched exactly once and both the precondition and the sources
+// must see the downloaded content.
+func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
+	server, hits := newUploadServer()
+	defer server.Close()
+
+	repository := self.LoadArtifacts(testUploadArtifacts...)
+	compiled, rows := self.collectWithUpload(repository,
+		"Test.Artifact.UploadPrecondition", "UploadValue",
+		server.URL+"/inner", 1)
+
+	assert.NotEqual(self.T(), "", compiled.Precondition)
+	assert.Equal(self.T(), 1, len(rows))
+	value, _ := rows[0].GetString("UploadValue")
+	assert.Equal(self.T(), "content of /inner", value)
+	assert.Equal(self.T(), int64(1), atomic.LoadInt64(hits))
+}
+
+// A wrapping artifact passes its upload parameter on to the wrapped
+// artifact through the Artifact() plugin. By then it holds the
+// content, so the wrapped artifact uses it as is and does not fetch
+// it again, whether or not its precondition runs and whatever the
+// caller named the parameter.
+func (self *LauncherTestSuite) TestUploadParameterArtifactPlugin() {
+	server, hits := newUploadServer()
+	defer server.Close()
+
+	repository := self.LoadArtifacts(testUploadArtifacts...)
+
+	for _, test_case := range []struct{ artifact, parameter string }{
+		{"Test.Artifact.UploadNested", "UploadValue"},
+		{"Test.Artifact.UploadNestedRenamed", "Rules"},
+	} {
+		atomic.StoreInt64(hits, 0)
+		_, rows := self.collectWithUpload(repository,
+			test_case.artifact, test_case.parameter,
+			server.URL+"/inner", 2)
+
+		assert.Equal(self.T(), 2, len(rows), test_case.artifact)
+		for _, row := range rows {
+			value, _ := row.GetString("Inner")
+			assert.Equal(self.T(), "content of /inner", value,
+				test_case.artifact)
+		}
+		assert.Equal(self.T(), int64(1), atomic.LoadInt64(hits),
+			test_case.artifact)
+	}
 }
 
 // Test that compiler rejects invalid artifacts
