@@ -1,11 +1,14 @@
 package frontend
 
 import (
+	"context"
 	"errors"
 	"strings"
 
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/logging"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 )
@@ -44,8 +47,13 @@ func InitializeMinionVQL(config_obj *config_proto.Config) error {
 			}
 			// Override the function with a related delegate.
 			vql_subsystem.OverrideFunction(&RelayedFunction{
-				Delegate:   fn,
-				config_obj: config_obj,
+				Delegate:  fn,
+				ConfigObj: config_obj,
+				Factory: func(ctx context.Context) (
+					api_proto.APIClient, func() error, error) {
+					return grpc_client.Factory.GetAPIClient(
+						ctx, grpc_client.SuperUser, config_obj)
+				},
 			})
 
 		} else if strings.EqualFold(completion.Type, "plugin") {
@@ -55,8 +63,13 @@ func InitializeMinionVQL(config_obj *config_proto.Config) error {
 			}
 			// Override the function with a related delegate.
 			vql_subsystem.OverridePlugin(&RelayedPlugin{
-				Delegate:   pn,
-				config_obj: config_obj,
+				Delegate:  pn,
+				ConfigObj: config_obj,
+				Factory: func(ctx context.Context) (
+					api_proto.APIClient, func() error, error) {
+					return grpc_client.Factory.GetAPIClient(
+						ctx, grpc_client.SuperUser, config_obj)
+				},
 			})
 		}
 	}

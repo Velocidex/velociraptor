@@ -23,8 +23,8 @@ type ApiClientACL struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// if this is set we allow everything - normally only set by
 	// server-server comms.
-	SuperUser            bool     `protobuf:"varint,21,opt,name=super_user,json=superUser,proto3" json:"super_user,omitempty"`
-	AllQuery             bool     `protobuf:"varint,1,opt,name=all_query,json=allQuery,proto3" json:"all_query,omitempty"`
+	SuperUser bool `protobuf:"varint,21,opt,name=super_user,json=superUser,proto3" json:"super_user,omitempty"`
+	// User is allowed to issue API queries.
 	AnyQuery             bool     `protobuf:"varint,10,opt,name=any_query,json=anyQuery,proto3" json:"any_query,omitempty"`
 	PublishQueues        []string `protobuf:"bytes,2,rep,name=publish_queues,json=publishQueues,proto3" json:"publish_queues,omitempty"`
 	ReadResults          bool     `protobuf:"varint,3,opt,name=read_results,json=readResults,proto3" json:"read_results,omitempty"`
@@ -90,13 +90,6 @@ func (*ApiClientACL) Descriptor() ([]byte, []int) {
 func (x *ApiClientACL) GetSuperUser() bool {
 	if x != nil {
 		return x.SuperUser
-	}
-	return false
-}
-
-func (x *ApiClientACL) GetAllQuery() bool {
-	if x != nil {
-		return x.AllQuery
 	}
 	return false
 }
@@ -320,11 +313,10 @@ var File_acl_proto protoreflect.FileDescriptor
 
 const file_acl_proto_rawDesc = "" +
 	"\n" +
-	"\tacl.proto\x12\x05proto\x1a\x14proto/semantic.proto\"\xf5\a\n" +
+	"\tacl.proto\x12\x05proto\x1a\x14proto/semantic.proto\"\xa8\a\n" +
 	"\fApiClientACL\x12\x1d\n" +
 	"\n" +
-	"super_user\x18\x15 \x01(\bR\tsuperUser\x12K\n" +
-	"\tall_query\x18\x01 \x01(\bB.\xe2\xfc\xe3\xc4\x01(\x12&Provides arbitrary query level access.R\ballQuery\x12\x1b\n" +
+	"super_user\x18\x15 \x01(\bR\tsuperUser\x12\x1b\n" +
 	"\tany_query\x18\n" +
 	" \x01(\bR\banyQuery\x12X\n" +
 	"\x0epublish_queues\x18\x02 \x03(\tB1\xe2\xfc\xe3\xc4\x01+\x12)List of queues the client can publish to.R\rpublishQueues\x12!\n" +

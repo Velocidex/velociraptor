@@ -57,8 +57,8 @@ type ACL_PERMISSION int
 const (
 	NO_PERMISSIONS ACL_PERMISSION = iota
 
-	// Issue any query at all.
-	ANY_QUERY
+	// Issue API queries.
+	API_QUERY
 
 	// Publish events to server side queues
 	PUBLISH
@@ -141,7 +141,7 @@ func (self ACL_PERMISSION) String() string {
 	switch self {
 	case NO_PERMISSIONS:
 		return "NO_PERMISSIONS"
-	case ANY_QUERY:
+	case API_QUERY:
 		return "ANY_QUERY"
 	case PUBLISH:
 		return "PUBLISH"
@@ -195,7 +195,7 @@ func GetPermission(name string) ACL_PERMISSION {
 	case "NO_PERMISSIONS":
 		return NO_PERMISSIONS
 	case "ANY_QUERY":
-		return ANY_QUERY
+		return API_QUERY
 	case "PUBLISH":
 		return PUBLISH
 	case "READ_RESULTS":
