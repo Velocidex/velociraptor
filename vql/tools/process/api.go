@@ -80,16 +80,16 @@ func (self *ProcessEntry) AddChild(child_id string, max_items int) bool {
 }
 
 func (self *ProcessEntry) Data() *ordereddict.Dict {
-	if self.data != nil {
-		return self.data
+	if self.data == nil {
+		self.data = ordereddict.NewDict()
+		err := json.Unmarshal([]byte(self.JSONData), self.data)
+		if err != nil {
+			self.data.Set("Error", err.Error())
+		}
 	}
 
-	self.data = ordereddict.NewDict()
-	err := json.Unmarshal([]byte(self.JSONData), self.data)
-	if err != nil {
-		self.data.Set("Error", err.Error())
-	}
-
+	// Always refresh the tracker fields: the cached data may predate
+	// a later EndTime update (e.g. in the memory based LRU).
 	self.data.Update("Pid", self.Id).
 		Update("Ppid", self.ParentId).
 		Update("StartTime", self.StartTime).
