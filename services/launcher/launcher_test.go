@@ -1169,29 +1169,53 @@ sources:
 		json.MustMarshalIndent(fixture))
 }
 
-// The parameter preamble is prepended to the precondition, and the
-// client evaluates the precondition and then the sources in the same
-// scope. An upload parameter must still be fetched exactly once and
-// reach the sources as the downloaded content.
-func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
+// Serves the request path back as the content and counts the hits.
+func newUploadServer() (*httptest.Server, *int64) {
 	var hits int64
 	server := httptest.NewServer(http.HandlerFunc(
 		func(w http.ResponseWriter, r *http.Request) {
 			atomic.AddInt64(&hits, 1)
-			_, _ = w.Write([]byte("uploaded content"))
+			_, _ = w.Write([]byte("content of " + r.URL.Path))
 		}))
-	defer server.Close()
+	return server, &hits
+}
 
-	repository := self.LoadArtifacts(`
+var testUploadArtifacts = []string{`
 name: Test.Artifact.UploadPrecondition
-precondition: SELECT * FROM scope()
+precondition: |
+  SELECT * FROM scope() WHERE UploadValue = 'content of /inner'
 parameters:
 - name: UploadValue
   type: upload
 sources:
 - query: |
     SELECT UploadValue FROM scope()
-`)
+`, `
+name: Test.Artifact.UploadNested
+parameters:
+- name: UploadValue
+  type: upload
+- name: InnerURL
+sources:
+- query: |
+    SELECT UploadValue AS Outer, Inner FROM foreach(
+      row={
+        SELECT UploadValue AS Inner
+        FROM Artifact.Test.Artifact.UploadPrecondition(
+          UploadValue=InnerURL, preconditions=TRUE)
+      })
+`}
+
+// The parameter preamble is prepended to the precondition, and the
+// client evaluates the precondition and then the sources in the same
+// scope, so the preamble runs twice. An upload parameter must still
+// be fetched exactly once and both the precondition and the sources
+// must see the downloaded content.
+func (self *LauncherTestSuite) TestUploadParameterWithPrecondition() {
+	server, hits := newUploadServer()
+	defer server.Close()
+
+	repository := self.LoadArtifacts(testUploadArtifacts...)
 
 	request := &flows_proto.ArtifactCollectorArgs{
 		Creator:   "UserX",
@@ -1202,7 +1226,7 @@ sources:
 				Artifact: "Test.Artifact.UploadPrecondition",
 				Parameters: &flows_proto.ArtifactParameters{
 					Env: []*actions_proto.VQLEnv{
-						{Key: "UploadValue", Value: server.URL},
+						{Key: "UploadValue", Value: server.URL + "/inner"},
 					},
 				},
 			},
@@ -1234,8 +1258,72 @@ sources:
 	})
 
 	value, _ := messages[0].GetString("UploadValue")
-	assert.Equal(self.T(), "uploaded content", value)
-	assert.Equal(self.T(), int64(1), atomic.LoadInt64(&hits))
+	assert.Equal(self.T(), "content of /inner", value)
+	assert.Equal(self.T(), int64(1), atomic.LoadInt64(hits))
+}
+
+// The Artifact() plugin skips the precondition unless asked, so the
+// preamble may run once or twice. Either way the URL is fetched once.
+// A calling artifact with an upload parameter of the same name must
+// not stop the called artifact from fetching its own URL.
+func (self *LauncherTestSuite) TestUploadParameterArtifactPlugin() {
+	server, hits := newUploadServer()
+	defer server.Close()
+
+	repository := self.LoadArtifacts(testUploadArtifacts...)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	builder := services.ScopeBuilder{
+		Config:     self.ConfigObj,
+		ACLManager: acl_managers.NullACLManager{},
+		Repository: repository,
+		Logger: logging.NewPlainLogger(
+			self.ConfigObj, &logging.FrontendComponent),
+		Env: ordereddict.NewDict().
+			Set("InnerURL", server.URL+"/inner").
+			Set("OuterURL", server.URL+"/outer"),
+	}
+
+	manager, err := services.GetRepositoryManager(self.ConfigObj)
+	assert.NoError(self.T(), err)
+	scope := manager.BuildScope(builder)
+	defer scope.Close()
+
+	run := func(query string) []vfilter.Row {
+		vql, err := vfilter.Parse(query)
+		assert.NoError(self.T(), err)
+
+		var rows []vfilter.Row
+		for row := range vql.Eval(ctx, scope) {
+			rows = append(rows, row)
+		}
+		return rows
+	}
+
+	for _, preconditions := range []string{"FALSE", "TRUE"} {
+		atomic.StoreInt64(hits, 0)
+		rows := run(fmt.Sprintf(`
+SELECT UploadValue FROM Artifact.Test.Artifact.UploadPrecondition(
+   UploadValue=InnerURL, preconditions=%s)`, preconditions))
+
+		assert.Equal(self.T(), 1, len(rows), preconditions)
+		value, _ := scope.Associative(rows[0], "UploadValue")
+		assert.Equal(self.T(), "content of /inner", value, preconditions)
+		assert.Equal(self.T(), int64(1), atomic.LoadInt64(hits), preconditions)
+	}
+
+	atomic.StoreInt64(hits, 0)
+	rows := run(`
+SELECT Outer, Inner FROM Artifact.Test.Artifact.UploadNested(
+   UploadValue=OuterURL, InnerURL=InnerURL)`)
+
+	assert.Equal(self.T(), 1, len(rows))
+	outer, _ := scope.Associative(rows[0], "Outer")
+	inner, _ := scope.Associative(rows[0], "Inner")
+	assert.Equal(self.T(), "content of /outer", outer)
+	assert.Equal(self.T(), "content of /inner", inner)
+	assert.Equal(self.T(), int64(2), atomic.LoadInt64(hits))
 }
 
 // Test that compiler rejects invalid artifacts

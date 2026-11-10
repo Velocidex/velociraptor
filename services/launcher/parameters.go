@@ -11,17 +11,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/services"
 )
 
-// When for_precondition is set, the preamble is being prepended to
-// the precondition. The client evaluates the precondition and then
-// the main queries in the same scope, so the preamble runs twice and
-// every conversion must be safe to repeat. The upload conversions are
-// not: the first run replaces the URL with the downloaded content and
-// the second run would then fetch that content as a URL. Leave them
-// out of the precondition so the parameter is fetched exactly once,
-// by the main queries.
 func compileParametersToVQLPreamble(
 	ctx context.Context, config_obj *config_proto.Config,
-	artifact *artifacts_proto.Artifact, for_precondition bool) (
+	artifact *artifacts_proto.Artifact) (
 	res []string, res_env []*actions_proto.VQLEnv) {
 
 	for _, parameter := range artifact.Parameters {
@@ -51,28 +43,11 @@ func compileParametersToVQLPreamble(
 			env.Comment = "redacted"
 
 		case "upload":
-			if for_precondition {
-				break
-			}
-			res = append(res, fmt.Sprintf(
-				`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v)
-})`, maybeEscape(name+"_"), escaped_name, escaped_name))
-
-			res = append(res, fmt.Sprintf("LET %v <= %v.Content[0]",
-				escaped_name, maybeEscape(name+"_")))
+			res = append(res, uploadPreamble(name, "")...)
 
 		case "upload_file":
-			if for_precondition {
-				break
-			}
-			res = append(res, fmt.Sprintf(
-				`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v, tempfile_extension='.tmp')
-})`, maybeEscape(name+"_"), escaped_name, escaped_name))
-
-			res = append(res, fmt.Sprintf("LET %v <= %v.Content[0]",
-				escaped_name, maybeEscape(name+"_")))
+			res = append(res, uploadPreamble(name,
+				", tempfile_extension='.tmp'")...)
 
 		case "server_metadata":
 			client_info_manager, err := services.GetClientInfoManager(config_obj)
@@ -160,4 +135,38 @@ LET %v <= if(
 	}
 
 	return res, res_env
+}
+
+// The preamble can run more than once in the same scope: when the
+// artifact has a precondition, the preamble is prepended to it and
+// the client then runs the main queries in that same scope. Most
+// conversions are safe to repeat, but an upload replaces the URL
+// with the downloaded content, so a second run would fetch the
+// content as if it were a URL. Remember the value we produced and
+// skip the fetch if the parameter still holds it.
+//
+// The marker is compared by value rather than used as a flag so a
+// marker inherited from a calling artifact that has a parameter of
+// the same name does not stop this artifact fetching its own URL.
+func uploadPreamble(name, http_args string) []string {
+	escaped_name := maybeEscape(name)
+	result_name := maybeEscape(name + "_")
+	marker := name + "_fetched"
+
+	should_fetch := fmt.Sprintf("%v AND %v != get(field='''%v''')",
+		escaped_name, escaped_name, marker)
+
+	return []string{
+		fmt.Sprintf(`LET %v <= if(condition=%v, then={
+   SELECT Content FROM http_client(url=%v%v)
+})`, result_name, should_fetch, escaped_name, http_args),
+
+		fmt.Sprintf(`LET %v <= if(condition=%v,
+   then=%v.Content[0],
+   else=if(condition=%v, then=%v))`,
+			escaped_name, should_fetch, result_name,
+			escaped_name, escaped_name),
+
+		fmt.Sprintf("LET %v <= %v", maybeEscape(marker), escaped_name),
+	}
 }
