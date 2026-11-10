@@ -80,6 +80,11 @@ LET _ <= mock_pslist_next()
 -- Second call Pid 5 is exited - should mark Pid 5 as exited.
 SELECT process_tracker_callchain(id=2)
 FROM scope()
+
+-- process_tracker_pslist() should also show the exit time.
+SELECT Pid, Name, EndTime
+FROM process_tracker_pslist()
+ORDER BY Pid
 `
 
 	overflowTest = `
