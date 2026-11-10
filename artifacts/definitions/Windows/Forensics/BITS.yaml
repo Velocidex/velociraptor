@@ -108,6 +108,7 @@ export: |
       ["Length", 0, "uint32"],
       ["Value", 4, "String", {
          "encoding": "utf16", "length": "x=>x.Length * 2",
+         "term_hex": "00",
          "max_length": 65536}]
     ]],
     ["GUID", 16, [
@@ -199,9 +200,6 @@ export: |
   -- BITS stores -1 (BG_SIZE_UNKNOWN) when a size is not known yet.
   LET Size(N) = if(condition=N >= 0, then=N)
 
-  -- Strings may carry trailing NUL characters.
-  LET Clean(S) = regex_replace(source=S || "", re='\x00+$', replace="")
-
   LET Parse(Hex, Struct) = parse_binary(accessor="data",
      filename=unhex(string=Hex), profile=BITSProfile, struct=Struct)
 
@@ -247,13 +245,13 @@ export: |
       FROM Pieces(Hex=Hex, Sep=FileSignature)
     },
     query={
-      SELECT Clean(S=File.SourceURL) AS SourceURL,
-             Clean(S=File.DestFile) AS DestFile,
-             Clean(S=File.TmpFile) AS TmpFile,
+      SELECT File.SourceURL AS SourceURL,
+             File.DestFile AS DestFile,
+             File.TmpFile AS TmpFile,
              Size(N=File.DownloadByteSize) AS DownloadByteSize,
              Size(N=File.TransferByteSize) AS TransferByteSize,
-             Clean(S=File.Drive) AS Drive,
-             Clean(S=File.VolumeGUID) AS VolumeGUID,
+             File.Drive AS Drive,
+             File.VolumeGUID AS VolumeGUID,
              FileTime(T=File.CreationTime) AS CreationTime
       FROM scope()
       WHERE File.DestLength > 0 AND File.DestLength < 4096
@@ -279,15 +277,15 @@ sources:
           query={
             SELECT Job.JobId AS JobId,
                    Job.JobId IN ActiveJobs AS InJobsTable,
-                   Clean(S=Job.Name) AS JobName,
-                   Clean(S=Job.Description) AS Description,
+                   Job.Name AS JobName,
+                   Job.Description AS Description,
                    Job.TypeName AS Type,
                    Job.StateName AS State,
                    Job.PriorityName AS Priority,
-                   Clean(S=Job.Command) AS NotifyCommand,
-                   Clean(S=Job.Arguments) AS NotifyArguments,
+                   Job.Command AS NotifyCommand,
+                   Job.Arguments AS NotifyArguments,
                    Job.NotifyFlags AS NotifyFlags,
-                   Clean(S=Job.OwnerSID) AS OwnerSID,
+                   Job.OwnerSID AS OwnerSID,
                    FileTime(T=Meta.CreationTime) AS CreationTime,
                    FileTime(T=Meta.ModificationTime) AS ModificationTime,
                    FileTime(T=Meta.ExpirationTime) AS ExpirationTime,
