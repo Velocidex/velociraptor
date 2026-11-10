@@ -761,8 +761,21 @@ func downloadPublic(
 				return
 			}
 
+			org_manager, err := services.GetOrgManager()
+			if err != nil {
+				returnError(config_obj, w, 404, err)
+				return
+			}
+
+			org_config_obj, err := org_manager.GetOrgConfig(
+				r.URL.Query().Get("org_id"))
+			if err != nil {
+				returnError(config_obj, w, 404, err)
+				return
+			}
+
 			path_spec := path_specs.FromGenericComponentList(components)
-			file_store_factory := file_store.GetFileStore(config_obj)
+			file_store_factory := file_store.GetFileStore(org_config_obj)
 			fd, err := file_store_factory.ReadFile(path_spec)
 			if err != nil {
 				returnError(config_obj, w, 404, err)
