@@ -114,7 +114,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "any_query": true,
    "read_results": true,
    "label_clients": true,
    "collect_client": true,
@@ -187,7 +186,6 @@ Output: [
    ]
   },
   "effective_policy": {
-   "any_query": true,
    "read_results": true,
    "label_clients": true,
    "collect_client": true,

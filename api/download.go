@@ -1064,12 +1064,10 @@ func getFileStore(
 
 	call_ctx := metadata.NewOutgoingContext(ctx, md)
 
-	api_client := grpc_client.NewDirectConnectionClient()
-
 	return remote.NewRemoteFileStore(
 		call_ctx, config_obj, remote.RemoteFileStoreOptions{
 			Factory: func() (api_proto.APIClient, func() error, error) {
-				return api_client.GetAPIClientForOrgRedirect(
+				return grpc_client.Factory.GetAPIClientForOrgRedirect(
 					ctx, config_obj)
 			},
 		})

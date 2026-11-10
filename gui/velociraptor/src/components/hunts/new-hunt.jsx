@@ -386,7 +386,8 @@ export default class NewHuntWizard extends React.Component {
                         let parameters = {};
                         _.each(request.specs, spec=>{
                             let artifact_parameters = {};
-                            _.each(spec.parameters.env, param=>{
+                            let env = spec.parameters && spec.parameters.env;
+                            _.each(env, param=>{
                                 artifact_parameters[param.key] = param.value;
                             });
                             parameters[spec.artifact] = artifact_parameters;
@@ -397,7 +398,8 @@ export default class NewHuntWizard extends React.Component {
                         let parameters = {};
                         if (!_.isEmpty(request.parameters)) {
                             _.each(request.artifacts, name=>{
-                                _.each(request.parameters.env, param=>{
+                                let env = request.parameters && request.parameters.env;
+                                _.each(env, param=>{
                                     if(_.isUndefined(parameters[name])) {
                                         parameters[name] = {};
                                     };

@@ -163,7 +163,7 @@ func (self *ApiServer) WatchEvent(
 	user_name := user_record.Name
 	if user_name != utils.GetSuperuserName(config_obj) {
 		// Check that the principal is allowed to issue queries.
-		permissions := acls.ANY_QUERY
+		permissions := acls.API_QUERY
 		ok, err := services.CheckAccess(
 			config_obj, user_name, permissions, acls.READ_RESULTS)
 		if err != nil {

@@ -105,6 +105,8 @@ func (self *MockClock) Sleep(d time.Duration) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	// Add a real sleep because otherwise we will be racing too fast.
+	time.Sleep(d)
 	self.mockNow = self.mockNow.Add(d)
 }
 
