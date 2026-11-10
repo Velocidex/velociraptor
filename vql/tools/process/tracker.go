@@ -99,11 +99,15 @@ func (self *ProcessTracker) Get(
 }
 
 func (self *ProcessTracker) maybeUpdateEndTime(entry *ProcessEntry) {
+	self.mu.Lock()
+	last_full_sync := self.last_full_sync
+	self.mu.Unlock()
+
 	// If the end time is not set and we have done a full sync since
 	// we saw this entry previously, it must have exited. We do not
 	// know exactly when so we just estimate the last sync time for
 	// the exit time.
-	if entry.EndTime.IsZero() && self.last_full_sync.After(entry.LastSyncTime) {
+	if entry.EndTime.IsZero() && last_full_sync.After(entry.LastSyncTime) {
 		entry.EndTime = entry.LastSyncTime
 	}
 }
@@ -182,6 +186,7 @@ func (self *ProcessTracker) Processes(
 		pe, ok := item.Value.(*ProcessEntry)
 		// Real entries contain a data blob.
 		if ok && pe.JSONData != "" {
+			self.maybeUpdateEndTime(pe)
 			res = append(res, pe)
 		}
 	}
@@ -308,6 +313,12 @@ func (self *ProcessTracker) doFullSync(
 	subctx, cancel := context.WithTimeout(ctx, sync_period)
 	defer cancel()
 
+	// Every record built in this sync gets a LastSyncTime at or
+	// after this time. Once the sync completes, records with an
+	// earlier LastSyncTime were not seen, so they have exited (see
+	// maybeUpdateEndTime()).
+	sync_start := utils.GetTime().Now().UTC()
+
 	all_updates := make(map[string]*ProcessEntry)
 	all_updates_dict := ordereddict.NewDict()
 	all_links := make(map[string]string)
@@ -397,6 +408,15 @@ func (self *ProcessTracker) doFullSync(
 		})
 
 		all_updates_dict.Set(real_id, record)
+	}
+
+	// Only a complete sync proves that missing processes have
+	// exited. If the sync query timed out the listing may be
+	// partial.
+	if subctx.Err() == nil {
+		self.mu.Lock()
+		self.last_full_sync = sync_start
+		self.mu.Unlock()
 	}
 
 	self.maybeSendUpdate(&UpdateProcessEntry{
