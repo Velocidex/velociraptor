@@ -43,6 +43,9 @@ func (self *SamlAuthenticator) AuthRedirectTemplate() string {
 }
 
 func (self *SamlAuthenticator) AddHandlers(mux *api_utils.ServeMux) error {
+	// Address potential panic https://pkg.go.dev/vuln/GO-2026-6909
+	defer utils.CheckForPanic("SamlAuthenticator")
+
 	logger := logging.GetLogger(self.config_obj, &logging.GUIComponent)
 	key, err := crypto_utils.ParseRsaPrivateKeyFromPemStr([]byte(
 		self.authenticator.SamlPrivateKey))
@@ -121,6 +124,9 @@ func (self *SamlAuthenticator) AuthenticateUserHandler(
 	return api_utils.HandlerFunc(parent,
 		func(w http.ResponseWriter, r *http.Request) {
 			session, err := samlMiddleware.Session.GetSession(r)
+			// Address potential panic https://pkg.go.dev/vuln/GO-2026-6909
+			defer utils.CheckForPanic("SamlAuthenticator")
+
 			if session == nil || err != nil {
 				reject_handler.ServeHTTP(w, r)
 				return

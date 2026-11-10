@@ -101,7 +101,7 @@ func CheckAccessWithToken(
 	// Requested permission
 	switch permission {
 
-	case acls.ANY_QUERY:
+	case acls.API_QUERY:
 		return token.AnyQuery, nil
 
 	case acls.PUBLISH:

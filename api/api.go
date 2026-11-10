@@ -863,19 +863,31 @@ func (self *ApiServer) Query(
 		}
 	}
 
-	// Check that the principal is allowed to issue queries.
-	permissions := acls.ANY_QUERY
-	ok, err := services.CheckAccess(org_config_obj, principal, permissions)
-	if err != nil {
-		return status.Error(codes.PermissionDenied,
-			fmt.Sprintf("User %v is not allowed to run queries.",
-				principal))
-	}
+	// Check if the caller can impersonate another user
+	if in.Principal != "" && in.Principal != principal {
+		ok, err := services.CheckAccess(
+			org_config_obj, principal, acls.IMPERSONATION, acls.API_QUERY)
+		if !ok || err != nil {
+			return status.Error(codes.PermissionDenied,
+				fmt.Sprintf("User %v is not allowed to impersonate %v.",
+					principal, in.Principal))
+		}
 
-	if !ok {
-		return status.Error(codes.PermissionDenied, fmt.Sprintf(
-			"Permission denied: User %v requires permission %v to run queries",
-			principal, permissions))
+		// Allow the impersonation
+		principal = in.Principal
+		in.Principal = ""
+
+	} else {
+
+		// Check that the principal is allowed to issue queries.
+		permissions := acls.API_QUERY
+		ok, err := services.CheckAccess(org_config_obj, principal, permissions)
+		if err != nil || !ok {
+
+			return status.Error(codes.PermissionDenied,
+				fmt.Sprintf("Permission denied: User %v requires permission %v to run queries",
+					principal, permissions))
+		}
 	}
 
 	peer, ok := peer.FromContext(stream.Context())
@@ -1178,7 +1190,7 @@ func startAPIServer(
 			server_obj:         server_obj,
 			verbose:            config_obj.Verbose,
 			ca_pool:            CA_Pool,
-			api_client_factory: grpc_client.NewDirectConnectionClient(),
+			api_client_factory: grpc_client.Factory,
 			wg:                 wg,
 		},
 	)

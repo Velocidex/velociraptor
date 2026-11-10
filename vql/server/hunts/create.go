@@ -35,6 +35,7 @@ import (
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	"www.velocidex.com/golang/velociraptor/vql/functions"
+	"www.velocidex.com/golang/velociraptor/vql/orgs"
 	"www.velocidex.com/golang/velociraptor/vql/tools/collector"
 	vql_utils "www.velocidex.com/golang/velociraptor/vql/utils"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -241,6 +242,15 @@ func (self *ScheduleHuntFunction) Call(ctx context.Context,
 		org_config_obj, err := org_manager.GetOrgConfig(org_id)
 		if err != nil {
 			scope.Log("hunt: %v", err)
+			continue
+		}
+
+		// Handle redirected orgs
+		if org_config_obj.OrgRedirected {
+			args.Delete("org_id")
+			_ = orgs.RedirectFunctionToOrg(
+				ctx, org_config_obj, scope,
+				org_id, self, args)
 			continue
 		}
 

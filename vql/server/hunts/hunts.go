@@ -37,6 +37,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/services/hunt_dispatcher"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
+	"www.velocidex.com/golang/velociraptor/vql/orgs"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
 )
@@ -185,32 +186,6 @@ func (self HuntResultsPlugin) Call(
 			return
 		}
 
-		available_artifacts, err := self.GetAvailableArtifacts(ctx, config_obj, arg.HuntId)
-		if err != nil {
-			scope.Log("hunt_results: %v", err)
-			return
-		}
-
-		if len(available_artifacts) == 0 {
-			scope.Log("hunt_results: not artifacts available")
-			return
-		}
-
-		// If no artifact is specified, get the first one from
-		// the hunt.
-		if arg.Artifact == "" {
-			arg.Artifact = available_artifacts[0]
-		} else if arg.Source != "" {
-			arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
-		}
-
-		if !utils.InString(available_artifacts, arg.Artifact) {
-			scope.Log("hunt_results: artifact %v not available in hunt. "+
-				"Available artifacts are %v",
-				arg.Artifact, strings.Join(available_artifacts, ", "))
-			return
-		}
-
 		if len(arg.Orgs) == 0 {
 			arg.Orgs = append(arg.Orgs, config_obj.OrgId)
 		}
@@ -228,12 +203,53 @@ func (self HuntResultsPlugin) Call(
 				continue
 			}
 
+			// Handle redirected orgs
+			if org_config_obj.OrgRedirected {
+				args.Delete("orgs")
+				for row := range orgs.RedirectPluginToOrg(
+					ctx, org_config_obj, scope,
+					org_id, self, args) {
+					select {
+					case <-ctx.Done():
+						return
+					case output_chan <- row:
+					}
+				}
+				continue
+			}
+
 			// Make sure the principal has read access in this org.
 			permissions := acls.READ_RESULTS
 			perm, err := services.CheckAccess(
 				org_config_obj, principal, permissions)
 			if !perm || err != nil {
 				continue
+			}
+
+			available_artifacts, err := self.GetAvailableArtifacts(ctx, org_config_obj, arg.HuntId)
+			if err != nil {
+				scope.Log("hunt_results: %v", err)
+				continue
+			}
+
+			if len(available_artifacts) == 0 {
+				scope.Log("hunt_results: no artifacts available")
+				continue
+			}
+
+			// If no artifact is specified, get the first one from
+			// the hunt.
+			if arg.Artifact == "" {
+				arg.Artifact = available_artifacts[0]
+			} else if arg.Source != "" {
+				arg.Artifact = paths.FullArtifactName(arg.Artifact, arg.Source)
+			}
+
+			if !utils.InString(available_artifacts, arg.Artifact) {
+				scope.Log("hunt_results: artifact %v not available in hunt. "+
+					"Available artifacts are %v",
+					arg.Artifact, strings.Join(available_artifacts, ", "))
+				return
 			}
 
 			indexer, err := services.GetIndexer(org_config_obj)

@@ -12,7 +12,8 @@ const requestToParameters = (request) => {
         let parameters = {};
         _.each(request.specs, spec=>{
             let artifact_parameters = {};
-            _.each(spec.parameters.env, param=>{
+            let env = spec.parameters && spec.parameters.env;
+            _.each(env, param=>{
                 artifact_parameters[param.key] = param.value;
             });
             if (spec.max_batch_wait) {

@@ -7,8 +7,8 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
-	"www.velocidex.com/golang/velociraptor/grpc_client"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
@@ -17,22 +17,26 @@ import (
 )
 
 /*
-   Minion install notebook workers to evaluate notebook
-   queries. However, some functions can not run on the minion since
-   they require the master's state. The minion therefore installs
-   stubs for these VQL functions that relay to the master node.
+
+  Minions install notebook workers to evaluate notebook
+  queries. However, some functions can not run on the minion since
+  they require the master's state. The minion therefore installs stubs
+  for these VQL functions that relay to the master node.
+
 */
 
 type RelayedFunction struct {
 	Delegate types.FunctionInterface
 
-	config_obj *config_proto.Config
+	ConfigObj *config_proto.Config
+	Factory   func(ctx context.Context) (api_proto.APIClient, func() error, error)
 }
 
 func (self RelayedFunction) Copy() types.FunctionInterface {
 	return RelayedFunction{
-		Delegate:   self.Delegate,
-		config_obj: self.config_obj,
+		Delegate:  self.Delegate,
+		ConfigObj: self.ConfigObj,
+		Factory:   self.Factory,
 	}
 }
 
@@ -62,39 +66,34 @@ func (self RelayedFunction) Call(
 	// Relay the call to the API server. We make the call as the
 	// superuser because we do not have credentials for the user. The
 	// server will switch user context on our behalf later.
-	client, closer, err := grpc_client.Factory.GetAPIClient(
-		ctx, grpc_client.SuperUser, self.config_obj)
+	client, closer, err := self.Factory(ctx)
 	if err != nil {
 		scope.Log("%v: %v", name, err)
 		return vfilter.Null{}
 	}
 	defer func() { _ = closer() }()
 
-	org_id := utils.GetOrgId(self.config_obj)
+	org_id := utils.GetOrgId(self.ConfigObj)
 	query_config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if ok {
 		org_id = utils.GetOrgId(query_config_obj)
 	}
 
 	request := &actions_proto.VQLCollectorArgs{
-		OrgId:   org_id,
-		MaxRow:  1000,
-		MaxWait: 1,
+		OrgId:     org_id,
+		Principal: principal,
+		MaxRow:    1000,
+		MaxWait:   1,
 		Env: []*actions_proto.VQLEnv{{
 			Key:   "FuncArgs",
 			Value: string(serialized),
-		}, {
-			Key:   "Principal",
-			Value: principal,
 		}},
 
 		// Use the query plugin to switch user contexts
 		Query: []*actions_proto.VQLRequest{{
 			VQL: fmt.Sprintf(`
-SELECT * FROM query(runas=Principal, query={
  SELECT %v(%v=parse_json(data=FuncArgs)) AS Result
  FROM scope()
-}, env=dict(FuncArgs=FuncArgs))
 `, name, "`**`"),
 		}},
 	}
@@ -155,13 +154,15 @@ func (self RelayedFunction) Info(
 type RelayedPlugin struct {
 	Delegate types.PluginGeneratorInterface
 
-	config_obj *config_proto.Config
+	ConfigObj *config_proto.Config
+	Factory   func(ctx context.Context) (api_proto.APIClient, func() error, error)
 }
 
 func (self RelayedPlugin) Copy() types.PluginGeneratorInterface {
 	return RelayedPlugin{
-		Delegate:   self.Delegate,
-		config_obj: self.config_obj,
+		Delegate:  self.Delegate,
+		ConfigObj: self.ConfigObj,
+		Factory:   self.Factory,
 	}
 }
 
@@ -195,8 +196,7 @@ func (self RelayedPlugin) Call(
 		// Relay the call to the API server. We make the call as the
 		// superuser because we do not have credentials for the user. The
 		// server will switch user context on our behalf later.
-		client, closer, err := grpc_client.Factory.GetAPIClient(
-			ctx, grpc_client.SuperUser, self.config_obj)
+		client, closer, err := self.Factory(ctx)
 		if err != nil {
 			scope.Log("%v: %v", name, err)
 			return
@@ -204,30 +204,26 @@ func (self RelayedPlugin) Call(
 
 		defer func() { _ = closer() }()
 
-		org_id := utils.GetOrgId(self.config_obj)
+		org_id := utils.GetOrgId(self.ConfigObj)
 		query_config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if ok {
 			org_id = utils.GetOrgId(query_config_obj)
 		}
 
 		request := &actions_proto.VQLCollectorArgs{
-			OrgId:   org_id,
-			MaxRow:  1000,
-			MaxWait: 1,
+			OrgId:     org_id,
+			Principal: principal,
+			MaxRow:    1000,
+			MaxWait:   1,
 			Env: []*actions_proto.VQLEnv{{
 				Key:   "PluginArgs",
 				Value: string(serialized),
-			}, {
-				Key:   "Principal",
-				Value: principal,
 			}},
 
 			// Use the query plugin to switch user contexts
 			Query: []*actions_proto.VQLRequest{{
 				VQL: fmt.Sprintf(`
-SELECT * FROM query(runas=Principal, query={
  SELECT * FROM %v(%v=parse_json(data=PluginArgs))
-}, env=dict(PluginArgs=PluginArgs))
 `, name, "`**`"),
 			}},
 		}

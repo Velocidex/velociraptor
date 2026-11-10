@@ -185,7 +185,6 @@ func GetRolePermissions(
 
 		// Admins get all query access
 		case "administrator":
-			result.AnyQuery = true
 			result.ReadResults = true
 			result.Impersonation = true
 			result.LabelClients = true
