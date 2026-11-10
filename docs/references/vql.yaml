@@ -13581,6 +13581,30 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: xz_decompress
+  description: |
+    Decompress an xz compressed block of data.
+
+    For example, the payload of an RPM package is usually an xz
+    compressed cpio archive.
+
+    Returns NULL if the data can not be decompressed.
+  type: Function
+  args:
+  - name: string
+    type: string
+    description: Data to decompress
+    required: true
+  - name: max_bytes
+    type: int64
+    description: Maximum length of bytes to read into memory
+  category: encode
+  platforms:
+  - darwin_amd64_cgo
+  - darwin_arm64_cgo
+  - linux_amd64_cgo
+  - windows_386_cgo
+  - windows_amd64_cgo
 - name: yara
   description: |
     Scan files using yara rules.

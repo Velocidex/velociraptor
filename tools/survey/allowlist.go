@@ -178,6 +178,7 @@ var (
 		"version",
 		"whoami",
 		"xor",
+		"xz_decompress",
 		"zstd_decompress",
 	}
 
