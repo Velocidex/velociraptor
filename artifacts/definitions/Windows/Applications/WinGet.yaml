@@ -14,13 +14,14 @@ description: |
   T1072, T1105, T1219). The logs are kept for a while after the
   package itself has been removed.
 
-  Sources:
+  The **Events** source returns one row per interesting log line, with
+  its type. Use `EventTypeRegex` to select the types to return. The
+  rows are streamed and not grouped on the client.
 
-  * **Sessions**: one row per log file, with the command line, the
-    caller, the packages, download URLs, installers started, files
-    written and the result.
-  * **Events**: one row per interesting log line, with its type.
-    Use `EventTypeRegex` to select the types to return.
+  The collection notebook has a **WinGet Sessions** cell that groups
+  the events on the server into one row per WinGet run, with the
+  command line, the caller, the packages, download URLs, installers
+  started, files written and the result.
 
   Log locations:
 
@@ -60,23 +61,19 @@ parameters:
   - name: Accessor
     description: Accessor used to read the logs.
     default: auto
-  - name: CommandLineRegex
-    type: regex
-    default: .
-    description: Only return sessions whose command line or caller matches this regex.
   - name: PackageRegex
     type: regex
     default: .
     description: |
-      Only return sessions or events that mention a package, URL or
-      file matching this regex.
+      Only return events that mention a package, URL or file matching
+      this regex.
   - name: EventTypeRegex
     type: regex
     default: .
     description: |
-      Only return events whose type matches this regex (Events
-      source). Types are CommandLine, Arguments, Caller, Process,
-      Command, Package, PackageVersion, PackageQueried, DownloadURL,
+      Only return events whose type matches this regex. Types are
+      CommandLine, Arguments, Caller, Process, Version, Command,
+      Package, PackageVersion, PackageQueried, DownloadURL,
       DownloadPath, DownloadHash, HashVerified, InstallerStarted,
       InstallerArgs, FileWritten, PathModified, FileDeleted, Removed,
       Result, InstallerFailed and Error.
@@ -127,19 +124,16 @@ export: |
   -- Some log entries are written without a line break, so one line
   -- can hold more than one entry. Only the first entry of such a line
   -- is parsed.
-  LET WinGetLines(OSPath) = SELECT * FROM foreach(
-    row={
-      SELECT parse_string_with_regex(string=Line, regex=WinGetLineRegex) AS L
-      FROM parse_lines(filename=OSPath, accessor=Accessor)
-    },
-    query={
-      SELECT L.Time AS LocalTime, L.Level AS Level,
-             L.Message AS Message
-      FROM scope()
-      WHERE L.Time
-    })
+  LET _WinGetLines(OSPath) = SELECT parse_string_with_regex(
+        string=Line, regex=WinGetLineRegex) AS L
+    FROM parse_lines(filename=OSPath, accessor=Accessor)
+    WHERE L.Time
 
-  LET WinGetEvents(OSPath, User) = SELECT * FROM foreach(
+  LET WinGetLines(OSPath) = SELECT L.Time AS LocalTime, L.Level AS Level,
+        L.Message AS Message
+    FROM _WinGetLines(OSPath=OSPath)
+
+  LET WinGetEvents(OSPath) = SELECT * FROM foreach(
     row=WinGetLines(OSPath=OSPath),
     query={
       SELECT * FROM chain(
@@ -159,87 +153,85 @@ export: |
         })
     })
 
-  LET AllEvents = SELECT * FROM foreach(row=WinGetFiles, query={
-    SELECT timestamp(string=LocalTime) AS Time, User, Type,
-           M.Value AS Value, M.Detail AS Detail,
-           OSPath AS LogFile
-    FROM WinGetEvents(OSPath=OSPath, User=User)
-  })
-
-  LET Values(List) = filter(list=List, condition="x=>x")
-
-  -- Distinct values in the order they were first seen.
-  LET Distinct(List) = SELECT _value AS Value
-    FROM foreach(row=Values(List=List))
-    GROUP BY Value
-
 sources:
-  - name: Sessions
-    query: |
-      LET PARSE_TZ <= LogTimezone
-
-      LET Grouped = SELECT LogFile, User,
-          min(item=Time) AS StartTime,
-          max(item=Time) AS EndTime,
-          enumerate(items=if(condition=Type = "Process", then=Value)) AS _Process,
-          enumerate(items=if(condition=Type = "Process", then=Detail)) AS _Pid,
-          enumerate(items=if(condition=Type = "Caller", then=Value)) AS _Caller,
-          enumerate(items=if(condition=Type = "Version", then=Value)) AS _Version,
-          enumerate(items=if(condition=Type = "CommandLine", then=Value)) AS _CommandLine,
-          enumerate(items=if(condition=Type = "Command", then=Value)) AS _Command,
-          enumerate(items=if(condition=Type = "Package", then=Value)) AS _Packages,
-          enumerate(items=if(condition=Type = "PackageVersion", then=Value)) AS _Versions,
-          enumerate(items=if(condition=Type = "PackageQueried", then=Value)) AS _Queried,
-          enumerate(items=if(condition=Type = "DownloadURL", then=Value)) AS _URLs,
-          enumerate(items=if(condition=Type = "DownloadHash", then=Value)) AS _Hashes,
-          enumerate(items=if(condition=Type = "InstallerStarted",
-                             then=Value + " " + Detail)) AS _Installers,
-          enumerate(items=if(condition=Type = "FileWritten", then=Value)) AS _FilesWritten,
-          enumerate(items=if(condition=Type = "FileDeleted", then=Value)) AS _FilesDeleted,
-          enumerate(items=if(condition=Type = "Result", then=Value)) AS _Results,
-          enumerate(items=if(condition=Type =~ "InstallerFailed|Error",
-                             then=Value)) AS _Errors
-        FROM AllEvents
-        GROUP BY LogFile
-
-      SELECT StartTime, EndTime, User,
-             Values(List=_Process)[0] AS Process,
-             Values(List=_Pid)[0] AS Pid,
-             Values(List=_Caller)[0] AS Caller,
-             Values(List=_CommandLine)[0] AS CommandLine,
-             Values(List=_Command)[-1] AS Command,
-             Distinct(List=_Packages).Value AS Packages,
-             Distinct(List=_Versions).Value AS PackageVersions,
-             Distinct(List=_Queried).Value AS PackagesQueried,
-             Distinct(List=_URLs).Value AS DownloadURLs,
-             Distinct(List=_Hashes).Value AS DownloadHashes,
-             Distinct(List=_Installers).Value AS InstallersStarted,
-             Distinct(List=_FilesWritten).Value AS FilesWritten,
-             Distinct(List=_FilesDeleted).Value AS FilesDeleted,
-             Values(List=_Results)[-1] AS Result,
-             Distinct(List=_Errors).Value AS Errors,
-             Values(List=_Version)[0] AS WinGetVersion,
-             LogFile
-      FROM Grouped
-      WHERE ( CommandLine =~ CommandLineRegex OR Caller =~ CommandLineRegex )
-        AND ( PackageRegex = "." OR
-              serialize(item=[Packages, PackagesQueried, DownloadURLs,
-                              InstallersStarted, FilesWritten]) =~ PackageRegex )
-      ORDER BY StartTime
-
   - name: Events
     query: |
       LET PARSE_TZ <= LogTimezone
 
-      SELECT * FROM AllEvents
-      WHERE Type =~ EventTypeRegex
-        AND ( PackageRegex = "." OR Value =~ PackageRegex OR Detail =~ PackageRegex )
-      ORDER BY Time
+      SELECT * FROM foreach(row=WinGetFiles, query={
+        SELECT timestamp(string=LocalTime) AS Time, User, Type,
+               M.Value AS Value, M.Detail AS Detail,
+               OSPath AS LogFile
+        FROM WinGetEvents(OSPath=OSPath)
+        WHERE Type =~ EventTypeRegex
+          AND ( PackageRegex = "."
+                OR M.Value =~ PackageRegex OR M.Detail =~ PackageRegex )
+      })
+
+    notebook:
+      - type: vql
+        name: WinGet Events
+        template: |
+          /*
+          # WinGet Events
+          */
+          SELECT * FROM source(artifact="Windows.Applications.WinGet/Events")
+          LIMIT 50
+
+      - type: vql
+        name: WinGet Sessions
+        template: |
+          /*
+          # WinGet Sessions
+
+          One row per WinGet run (log file), built on the server from the
+          collected events: the command line, the caller, the packages,
+          download URLs, installers started, files written or deleted and
+          the result.
+
+          reduce() keeps the first (or last) value of each field and at most
+          MaxItems distinct values of each list, so every row uses a bounded
+          amount of memory.
+          */
+          LET MaxItems = 20
+
+          LET EmptyList <= parse_json_array(data="[]")
+
+          -- Keep up to MaxItems distinct values.
+          LET Collect = "acc, x=>if(condition=x AND NOT x IN acc AND len(list=acc) < MaxItems, then=acc + x, else=acc)"
+
+          SELECT min(item=Time) AS StartTime,
+                 max(item=Time) AS EndTime,
+                 reduce(items=User, lambda="acc, x=>acc || x") AS User,
+                 reduce(items=if(condition=Type = "Process", then=Value),
+                        lambda="acc, x=>acc || x") AS Process,
+                 reduce(items=if(condition=Type = "Process", then=Detail),
+                        lambda="acc, x=>acc || x") AS Pid,
+                 reduce(items=if(condition=Type = "Caller", then=Value),
+                        lambda="acc, x=>acc || x") AS Caller,
+                 reduce(items=if(condition=Type = "CommandLine", then=Value),
+                        lambda="acc, x=>acc || x") AS CommandLine,
+                 reduce(items=if(condition=Type = "Command", then=Value),
+                        lambda="acc, x=>x || acc") AS Command,
+                 reduce(items=if(condition=Type = "Package", then=Value),
+                        accum=EmptyList, lambda=Collect) AS Packages,
+                 reduce(items=if(condition=Type = "DownloadURL", then=Value),
+                        accum=EmptyList, lambda=Collect) AS DownloadURLs,
+                 reduce(items=if(condition=Type = "InstallerStarted",
+                                 then=Value + " " + Detail),
+                        accum=EmptyList, lambda=Collect) AS InstallersStarted,
+                 reduce(items=if(condition=Type = "FileWritten", then=Value),
+                        accum=EmptyList, lambda=Collect) AS FilesWritten,
+                 reduce(items=if(condition=Type = "FileDeleted", then=Value),
+                        accum=EmptyList, lambda=Collect) AS FilesDeleted,
+                 reduce(items=if(condition=Type = "Result", then=Value),
+                        lambda="acc, x=>x || acc") AS Result,
+                 reduce(items=if(condition=Type =~ "InstallerFailed|Error", then=Value),
+                        accum=EmptyList, lambda=Collect) AS Errors,
+                 LogFile
+          FROM source(artifact="Windows.Applications.WinGet/Events")
+          GROUP BY LogFile
 
 column_types:
-  - name: StartTime
-    type: timestamp
-  - name: EndTime
-    type: timestamp
   - name: Time
     type: timestamp

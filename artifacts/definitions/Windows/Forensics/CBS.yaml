@@ -204,39 +204,38 @@ export: |
           SELECT DISMParents(Lines=Lines) AS Parents FROM scope()
         },
         query={
+          -- One pass over the lines keeps the rows in log order.
           SELECT * FROM foreach(
             row={
-              SELECT * FROM chain(
-                exe={
-                  SELECT LineNo AS LineNo_, L.Time AS LocalTime,
-                         "dism.exe" AS Pid_, "dism.exe" AS Tool,
-                         parse_string_with_regex(string=L.Message,
-                           regex='Executing command line: (?P<CommandLine>.*)$').CommandLine AS CommandLine,
-                         "" AS Operation, "" AS Parameters
-                  FROM foreach(row=Lines)
-                  WHERE L.Message =~ '^DISM\\.EXE: Executing command line'
-                },
-                api={
-                  SELECT LineNo AS LineNo_, L.Time AS LocalTime,
-                         A.Pid AS Pid_, "DISM API" AS Tool, "" AS CommandLine,
-                         regex_replace(source=A.Function, re='Internal$', replace="") AS Operation,
-                         A.Parameters AS Parameters
-                  FROM foreach(row={
-                    SELECT LineNo, L,
-                      parse_string_with_regex(string=L.Message,
-                        regex='^API: PID=(?P<Pid>\\d+) TID=\\d+ Input parameters: (?P<Parameters>.*) - (?P<Function>Dism[A-Za-z]+)$') AS A
-                    FROM foreach(row=Lines)
-                    WHERE L.Message =~ 'Input parameters: '
-                  })
-                  WHERE A.Function
-                    AND ( IncludeQueries OR NOT A.Function =~ DISMQueryCalls )
-                })
+              SELECT LineNo AS LineNo_, L.Time AS LocalTime,
+                     parse_string_with_regex(string=L.Message,
+                       regex='Executing command line: (?P<CommandLine>.*)$').CommandLine AS ExeCommandLine,
+                     parse_string_with_regex(string=L.Message,
+                       regex='^API: PID=(?P<Pid>\\d+) TID=\\d+ Input parameters: (?P<Parameters>.*) - (?P<Function>Dism[A-Za-z]+)$') AS A
+              FROM foreach(row=Lines)
+              WHERE L.Message =~ '^DISM\\.EXE: Executing command line|Input parameters: '
             },
             query={
-              SELECT LocalTime, Tool, Pid_ AS Pid, CommandLine,
-                     Operation, Parameters,
-                     LastParent(Parents=Parents, ForPid=Pid_, Before=LineNo_)[0].P AS Parent
-              FROM scope()
+              SELECT * FROM foreach(
+                row={
+                  SELECT LineNo_, LocalTime,
+                         if(condition=ExeCommandLine, then="dism.exe", else=A.Pid) AS Pid_,
+                         if(condition=ExeCommandLine, then="dism.exe", else="DISM API") AS Tool,
+                         ExeCommandLine || "" AS CommandLine,
+                         if(condition=ExeCommandLine, then="",
+                            else=regex_replace(source=A.Function, re='Internal$', replace="")) AS Operation,
+                         if(condition=ExeCommandLine, then="", else=A.Parameters) AS Parameters
+                  FROM scope()
+                  WHERE ExeCommandLine
+                     OR ( A.Function
+                          AND ( IncludeQueries OR NOT A.Function =~ DISMQueryCalls ) )
+                },
+                query={
+                  SELECT LocalTime, Tool, Pid_ AS Pid, CommandLine,
+                         Operation, Parameters,
+                         LastParent(Parents=Parents, ForPid=Pid_, Before=LineNo_)[0].P AS Parent
+                  FROM scope()
+                })
             })
         })
     })
@@ -262,7 +261,6 @@ sources:
         FROM FeatureRows(OSPath=OSPath)
         WHERE ( F.Feature =~ NameRegex OR F.Package =~ NameRegex )
       })
-      ORDER BY Time
 
   - name: PackageChanges
     query: |
@@ -289,7 +287,6 @@ sources:
         })
         WHERE P.Package =~ NameRegex
       })
-      ORDER BY Time
 
   - name: DismOperations
     query: |
@@ -306,7 +303,6 @@ sources:
         FROM DISMOperationRows(OSPath=OSPath)
         WHERE ( Operation + " " + CommandLine + " " + Parameters ) =~ NameRegex
       })
-      ORDER BY Time
 
 column_types:
   - name: Time
