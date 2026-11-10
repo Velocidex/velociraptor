@@ -157,15 +157,11 @@ func uploadPreamble(name, http_args string) []string {
 		escaped_name, escaped_name, marker)
 
 	return []string{
-		fmt.Sprintf(`LET %v <= if(condition=%v, then={
-   SELECT Content FROM http_client(url=%v%v)
-})`, result_name, should_fetch, escaped_name, http_args),
+		fmt.Sprintf(`LET %v = SELECT Content FROM http_client(url=%v%v)`,
+			result_name, escaped_name, http_args),
 
-		fmt.Sprintf(`LET %v <= if(condition=%v,
-   then=%v.Content[0],
-   else=if(condition=%v, then=%v))`,
-			escaped_name, should_fetch, result_name,
-			escaped_name, escaped_name),
+		fmt.Sprintf(`LET %v <= if(condition=%v, then=%v.Content[0], else=%v)`,
+			escaped_name, should_fetch, result_name, escaped_name),
 
 		fmt.Sprintf("LET %v <= %v", maybeEscape(marker), escaped_name),
 	}
