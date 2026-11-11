@@ -32,8 +32,9 @@ func (self FormUploadPathManager) path() api.FSPathSpec {
 }
 
 // Calculate the URL by which the upload will be exported. Uploads
-// outside the root org carry the org id so the public handler reads
-// them from that org's filestore.
+// outside the root org carry the org's client nonce as the second
+// path component so the public handler reads them from that org's
+// filestore without exposing the org id.
 func (self FormUploadPathManager) URL() string {
 	if self.org_config_obj.Client == nil || len(self.org_config_obj.Client.ServerUrls) == 0 {
 		return ""
@@ -44,16 +45,17 @@ func (self FormUploadPathManager) URL() string {
 		return ""
 	}
 
-	// Force https scheme instead of wss.
-	dest_url.Path = self.path().AsClientPath()
-	if dest_url.Scheme == "wss" {
-		dest_url.Scheme = "https"
+	path := self.path()
+	if !utils.IsRootOrg(self.org_config_obj.OrgId) &&
+		self.org_config_obj.Client.Nonce != "" {
+		path = PUBLIC_ROOT.AddChild(self.org_config_obj.Client.Nonce,
+			"temp", self.hash, self.filename)
 	}
 
-	if !utils.IsRootOrg(self.org_config_obj.OrgId) {
-		dest_url.RawQuery = url.Values{
-			"org_id": []string{self.org_config_obj.OrgId},
-		}.Encode()
+	// Force https scheme instead of wss.
+	dest_url.Path = path.AsClientPath()
+	if dest_url.Scheme == "wss" {
+		dest_url.Scheme = "https"
 	}
 
 	return dest_url.String()
