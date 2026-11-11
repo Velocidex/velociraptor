@@ -1,0 +1,51 @@
+2026-11-05 00:15:30.453 <I> [CORE] WinGet, version [1.29.380], activity [{EADAC58E-E2D1-4262-80B7-99D90528BA57}]
+2026-11-05 00:15:30.453 <I> [CORE] Process: winget.exe[8724], Level[0], Offset: 00007FFB5D400000
+2026-11-05 00:15:30.453 <I> [CORE] OS: Windows.Desktop v10.0.26200.9711
+2026-11-05 00:15:30.453 <I> [CORE] Command line Args: C:\Users\alice\AppData\Local\Microsoft\WindowsApps\winget.exe uninstall --id Microsoft.Sysinternals.Strings --exact --disable-interactivity
+2026-11-05 00:15:30.453 <I> [CORE] Package: Microsoft.DesktopAppInstaller v1.29.379.0
+2026-11-05 00:15:30.453 <I> [CORE] IsCOMCall:0; Caller: winget-cli
+2026-11-05 00:15:30.458 <I> [CLI ] WinGet invoked with arguments: 'uninstall' '--id' 'Microsoft.Sysinternals.Strings' '--exact' '--disable-interactivity'
+2026-11-05 00:15:30.458 <I> [CLI ] Found subcommand: uninstall
+2026-11-05 00:15:30.458 <I> [CLI ] Leaf command to execute: root:uninstall
+2026-11-05 00:15:30.459 <I> [CLI ] Executing command: uninstall
+2026-11-05 00:15:30.467 <I> [REPO] Default source requested, multiple sources available, adding all to source references.
+2026-11-05 00:15:30.467 <I> [REPO] Adding to source references msstore
+2026-11-05 00:15:30.467 <I> [CORE] Default proxy is not set
+2026-11-05 00:15:30.468 <I> [REPO] REST HTTP Client helper does not use proxy
+2026-11-05 00:15:30.468 <I> [REPO] Adding to source references winget
+2026-11-05 00:15:30.468 <I> [REPO] Skipping explicit source reference winget-font
+2026-11-05 00:15:30.468 <I> [CLI ] Created authentication arguments. Mode: silent, Account: 
+2026-11-05 00:15:30.480 <I> [CORE] Examining extension: PFN = Microsoft.Winget.Source_8wekyb3d8bbwe, ID = IndexDB
+2026-11-05 00:15:30.480 <I> [CORE] Found matching extension.
+2026-11-05 00:15:30.483 <I> [REPO] Multiple sources available, creating aggregated source.
+2026-11-05 00:15:30.483 <I> [REPO] Adding to aggregated source: msstore
+2026-11-05 00:15:30.486 <I> [REPO] Authentication node not found. Assuming authentication type none.
+2026-11-05 00:15:30.487 <I> [REPO] Adding to aggregated source: winget
+2026-11-05 00:15:30.491 <I> [CORE] Examining extension: PFN = Microsoft.Winget.Source_8wekyb3d8bbwe, ID = IndexDB
+2026-11-05 00:15:30.491 <I> [CORE] Found matching extension.
+2026-11-05 00:15:30.526 <I> [REPO] Opening database for ImmutableRead at 'C:\Program Files\WindowsApps\Microsoft.Winget.Source_2026.1104.2146.55_neutral__8wekyb3d8bbwe\Public\index.db'
+2026-11-05 00:15:30.527 <I> [REPO] Opened SQLite Index with version [2.0], last write [2026-11-04 20:45:25.000]
+2026-11-05 00:15:30.556 <I> [REPO] Packaged source open for 'winget' succeeded in 69 ms [extensionLookup=4 ms, verifyContentIntegrity=5 ms, sqliteOpen=28 ms, mode=optimistic]
+2026-11-05 00:15:30.560 <I> [REPO] Creating new SQLite Index with version [Latest] at ':memory:'
+2026-11-05 00:15:30.563 <I> [REPO] Reading MSI UpgradeCodes
+2026-11-05 00:15:30.578 <I> [REPO] Reading MSI UpgradeCodes
+2026-11-05 00:15:30.822 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\StoreEdgeFD\installed.db'
+2026-11-05 00:15:30.823 <I> [REPO] Opened SQLite Index with version [1.7], last write [2026-06-18 23:14:39.000]
+2026-11-05 00:15:30.824 <I> [REPO] Sending http GET request to: https://storeedgefd.dsx.mp.microsoft.com/v9.0/packageManifests/Microsoft.Sysinternals.Strings?Market=US
+2026-11-05 00:15:31.153 <I> [REPO] Response status: 200
+2026-11-05 00:15:31.156 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\Microsoft.Winget.Source_8wekyb3d8bbwe\installed.db'
+2026-11-05 00:15:31.158 <I> [REPO] Opened SQLite Index with version [1.7], last write [2026-11-05 00:15:26.000]
+2026-11-05 00:15:31.177 <I> [CLI ] Found one app. App id: Microsoft.Sysinternals.Strings App name: Strings
+2026-11-05 00:15:31.186 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\microsoft.sysinternals.strings_microsoft.winget.source_8wekyb3d8bbwe.db'
+2026-11-05 00:15:31.188 <I> [REPO] Opened Portable Index with version [1.0], last write [2026-11-05 00:15:26.000]
+2026-11-05 00:15:31.191 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\microsoft.sysinternals.strings_microsoft.winget.source_8wekyb3d8bbwe.db'
+2026-11-05 00:15:31.191 <I> [REPO] Opened Portable Index with version [1.0], last write [2026-11-05 00:15:26.000]
+2026-11-05 00:15:31.192 <I> [CLI ] Deleting portable exe at: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\Eula.txt
+2026-11-05 00:15:31.195 <I> [CLI ] Deleting portable exe at: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\strings.exe
+2026-11-05 00:15:31.197 <I> [CLI ] Deleting portable exe at: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\strings64.exe
+2026-11-05 00:15:31.199 <I> [CLI ] Deleting portable exe at: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\strings64a.exe
+2026-11-05 00:15:31.202 <I> [CORE] Install directory is not empty: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe
+2026-11-05 00:15:31.204 <I> [CLI ] Portable index deleted: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe\microsoft.sysinternals.strings_microsoft.winget.source_8wekyb3d8bbwe.db
+2026-11-05 00:15:31.204 <I> [CLI ] Removing empty install directory: C:\Users\alice\AppData\Local\Microsoft\WinGet\Packages\Microsoft.Sysinternals.Strings_Microsoft.Winget.Source_8wekyb3d8bbwe
+2026-11-05 00:15:31.204 <I> [CLI ] PortableARPEntry deleted.
+2026-11-05 00:15:31.205 <I> [CLI ] Leaf command succeeded: root:uninstall
