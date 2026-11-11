@@ -53,6 +53,12 @@ func (self *SanityChecks) CheckFrontendSettings(
 			logger.Info("GUI Will only accept conections from <green>%v</>", cidr_net)
 		}
 
+		if config_obj.Frontend.BasePath != "" {
+			if !basePathRegEx.MatchString(config_obj.Frontend.BasePath) {
+				return fmt.Errorf("Invalid Frontend.base_path. This must start with a / and end without a /. For example '/velociraptor' . Only a-z0-9 characters are allowed in the path name.")
+			}
+		}
+
 		if config_obj.GUI.BasePath != "" {
 			if !basePathRegEx.MatchString(config_obj.GUI.BasePath) {
 				return fmt.Errorf("Invalid GUI.base_path. This must start with a / and end without a /. For example '/velociraptor' . Only a-z0-9 characters are allowed in the path name.")

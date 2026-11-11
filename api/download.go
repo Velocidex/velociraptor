@@ -610,7 +610,7 @@ func downloadFileStore(
 				return
 			}
 
-			config_obj, err = org_manager.GetOrgConfig(org_id)
+			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
 				returnError(config_obj, w, 404, err)
 				return
@@ -625,27 +625,27 @@ func downloadFileStore(
 			users := services.GetUserManager()
 			user_record, err := users.GetUserFromHTTPContext(r.Context())
 			if err != nil {
-				returnError(config_obj, w, 404, err)
+				returnError(org_config_obj, w, 404, err)
 				return
 			}
 
 			principal := user_record.Name
-			err = checkUserFilestoreAllowed(config_obj, principal, path_spec)
+			err = checkUserFilestoreAllowed(org_config_obj, principal, path_spec)
 			if err != nil {
 				returnError(config_obj, w, 404, err)
 				return
 			}
 
 			file_store_factory, err := getFileStore(r.Context(),
-				config_obj, principal)
+				org_config_obj, principal)
 			if err != nil {
-				returnError(config_obj, w, 500, err)
+				returnError(org_config_obj, w, 500, err)
 				return
 			}
 
 			fd, err := file_store_factory.ReadFile(path_spec)
 			if err != nil {
-				returnError(config_obj, w, 404, err)
+				returnError(org_config_obj, w, 404, err)
 				return
 			}
 

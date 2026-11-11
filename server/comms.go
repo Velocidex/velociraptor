@@ -764,11 +764,41 @@ func downloadPublic(
 				return
 			}
 
+			org_config_obj := config_obj
+
+			// NOTE: It would be nice to pass the nonce as a query
+			// parameter but the http_client() plugin had a bug where
+			// query parameters were stripped. This is a workaround to
+			// support older clients.
+
+			// The second component may be the nonce.
+			if len(components) >= 3 {
+				nonce := components[1]
+				org_manager, err := services.GetOrgManager()
+				if err != nil {
+					returnError(config_obj, w, http.StatusUnauthorized, err)
+					return
+				}
+
+				// If a nonce is specified deal with an org directory.
+
+				org_id, err := org_manager.OrgIdByNonce(nonce)
+				if err == nil {
+					// Strip the nonce from the components list.
+					components = append([]string{components[0]}, components[2:]...)
+					org_config_obj, err = org_manager.GetOrgConfig(org_id)
+					if err != nil {
+						returnError(config_obj, w, http.StatusUnauthorized, err)
+						return
+					}
+				}
+			}
+
 			path_spec := path_specs.FromGenericComponentList(components)
-			file_store_factory := file_store.GetFileStore(config_obj)
+			file_store_factory := file_store.GetFileStore(org_config_obj)
 			fd, err := file_store_factory.ReadFile(path_spec)
 			if err != nil {
-				returnError(config_obj, w, 404, err)
+				returnError(org_config_obj, w, 404, err)
 				return
 			}
 

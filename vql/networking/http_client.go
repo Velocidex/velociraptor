@@ -364,8 +364,12 @@ func (self *_HttpPlugin) Call(
 			}
 
 			var req *http.Request
-			var params url.Values
+			// Maybe the url already contains some query params.
+			params := url_obj.Query()
 			if arg.Params != nil {
+				// If the arg.Params is specified, we completely
+				// overwrite the url's params because it is not clear
+				// how to safely merge them.
 				params = functions.EncodeParams(arg.Params, scope)
 			}
 			method := strings.ToUpper(arg.Method)
