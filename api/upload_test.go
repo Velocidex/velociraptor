@@ -21,6 +21,8 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
+	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -49,6 +51,7 @@ func (self *FormUploadTestSuite) SetupTest() {
 func (self *FormUploadTestSuite) TearDownTest() {
 	self.TestSuite.TearDownTest()
 	file_store.ClearGlobalFilestore()
+	orgs.NonceForTest = ""
 
 	_ = os.RemoveAll(self.dir)
 }
@@ -57,6 +60,7 @@ func (self *FormUploadTestSuite) TestFormUploadToOrgFilestore() {
 	org_manager, err := services.GetOrgManager()
 	assert.NoError(self.T(), err)
 
+	orgs.NonceForTest = "ab/cd+ef="
 	_, err = org_manager.CreateNewOrg("Test Org", "O123", services.RandomNonce)
 	assert.NoError(self.T(), err)
 
@@ -87,11 +91,16 @@ func (self *FormUploadTestSuite) TestFormUploadToOrgFilestore() {
 	_, err = file_store.GetFileStore(self.ConfigObj).ReadFile(pathspec)
 	assert.True(self.T(), errors.Is(err, os.ErrNotExist))
 
-	// The URL selects the org so the public handler can serve it.
+	// The URL selects the org by its client nonce in the path, so it
+	// survives clients that drop query strings and does not expose the
+	// org id.
 	upload_url, err := url.Parse(response.Url)
 	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), "O123", upload_url.Query().Get("org_id"))
-	assert.Equal(self.T(), pathspec.AsClientPath(), upload_url.Path)
+	assert.Equal(self.T(), "", upload_url.RawQuery)
+	assert.NotContains(self.T(), response.Url, "O123")
+	assert.Equal(self.T(), []string{"public", "ab/cd+ef=", "temp",
+		response.VfsPath[2], "pack.zip"},
+		utils.SplitComponents(upload_url.Path))
 }
 
 func (self *FormUploadTestSuite) TestFormUploadToRootFilestore() {

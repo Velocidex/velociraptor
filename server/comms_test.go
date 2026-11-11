@@ -3,6 +3,7 @@ package server
 import (
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/test_utils"
 	"www.velocidex.com/golang/velociraptor/paths"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/services/orgs"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
 )
@@ -39,6 +41,7 @@ func (self *DownloadPublicTestSuite) SetupTest() {
 func (self *DownloadPublicTestSuite) TearDownTest() {
 	self.TestSuite.TearDownTest()
 	file_store.ClearGlobalFilestore()
+	orgs.NonceForTest = ""
 
 	_ = os.RemoveAll(self.dir)
 }
@@ -47,6 +50,7 @@ func (self *DownloadPublicTestSuite) TestDownloadOrgFormUpload() {
 	org_manager, err := services.GetOrgManager()
 	assert.NoError(self.T(), err)
 
+	orgs.NonceForTest = "ab/cd+ef="
 	_, err = org_manager.CreateNewOrg("Test Org", "O123", services.RandomNonce)
 	assert.NoError(self.T(), err)
 
@@ -66,23 +70,30 @@ func (self *DownloadPublicTestSuite) TestDownloadOrgFormUpload() {
 
 	handler := downloadPublic(self.ConfigObj, [][]string{{"public"}})
 
-	// The URL handed out for the upload resolves to the org's file.
+	// The URL handed out for the upload resolves to the org's file,
+	// even with any query string removed as the http_client() plugin
+	// does.
+	upload_url, err := url.Parse(path_manager.URL())
+	assert.NoError(self.T(), err)
+	upload_url.RawQuery = ""
+	assert.NotContains(self.T(), upload_url.String(), "O123")
+
 	recorder := httptest.NewRecorder()
 	handler.ServeHTTP(recorder, httptest.NewRequest("GET",
-		path_manager.URL(), nil))
+		upload_url.String(), nil))
 	assert.Equal(self.T(), http.StatusOK, recorder.Code)
 	assert.Equal(self.T(), "rule X { condition: true }", recorder.Body.String())
 
-	// Without the org id the root org's filestore is used.
+	// Without the nonce the root org's filestore is used.
 	recorder = httptest.NewRecorder()
 	handler.ServeHTTP(recorder, httptest.NewRequest("GET",
 		pathspec.AsClientPath(), nil))
 	assert.Equal(self.T(), http.StatusNotFound, recorder.Code)
 
-	// Unknown orgs are not found.
+	// An unknown nonce is not found.
 	recorder = httptest.NewRecorder()
 	handler.ServeHTTP(recorder, httptest.NewRequest("GET",
-		pathspec.AsClientPath()+"?org_id=O999", nil))
+		"/public/not-a-nonce/temp/"+pathspec.Components()[2]+"/rules.yar", nil))
 	assert.Equal(self.T(), http.StatusNotFound, recorder.Code)
 }
 

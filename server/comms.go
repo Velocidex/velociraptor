@@ -761,17 +761,26 @@ func downloadPublic(
 				return
 			}
 
-			org_manager, err := services.GetOrgManager()
-			if err != nil {
-				returnError(config_obj, w, 404, err)
-				return
-			}
+			org_config_obj := config_obj
 
-			org_config_obj, err := org_manager.GetOrgConfig(
-				r.URL.Query().Get("org_id"))
-			if err != nil {
-				returnError(config_obj, w, 404, err)
-				return
+			// The second component may be an org's client nonce, in
+			// which case the file is read from that org's filestore.
+			if len(components) >= 3 {
+				org_manager, err := services.GetOrgManager()
+				if err != nil {
+					returnError(config_obj, w, 404, err)
+					return
+				}
+
+				org_id, err := org_manager.OrgIdByNonce(components[1])
+				if err == nil {
+					org_config_obj, err = org_manager.GetOrgConfig(org_id)
+					if err != nil {
+						returnError(config_obj, w, 404, err)
+						return
+					}
+					components = append([]string{components[0]}, components[2:]...)
+				}
 			}
 
 			path_spec := path_specs.FromGenericComponentList(components)
