@@ -183,11 +183,6 @@ const get_headers = ()=>{
         "Grpc-Metadata-OrgId": org_id || "root",
     };
 
-    let csrf = window.CsrfToken;
-    if (csrf.substring(0,2) !== "{{") {
-        headers["X-CSRF-Token"] = csrf;
-    };
-
     return headers;
 };
 
@@ -200,11 +195,6 @@ const get = function(url, params, cancel_token) {
         headers: get_headers(),
         cancelToken: cancel_token,
     }).then(response=>{
-        // Update the csrf token.
-        let token = response.headers["x-csrf-token"];
-        if (token && token.length > 0) {
-            window.CsrfToken = token;
-        }
         return response;
     }).catch(handle_error);
 };
@@ -256,11 +246,6 @@ const post = function(url, params, cancel_token) {
         cancelToken: cancel_token,
         headers: get_headers(),
     }).then(response=>{
-        // Update the csrf token.
-        let token = response.headers["x-csrf-token"];
-        if (token && token.length > 0) {
-            window.CsrfToken = token;
-        }
         return response;
     }).catch(handle_error);
 };
@@ -373,11 +358,6 @@ const delete_req = function(url, params, cancel_token) {
         cancelToken: cancel_token,
         headers: get_headers(),
     }).then(response=>{
-        // Update the csrf token.
-        let token = response.headers["x-csrf-token"];
-        if (token && token.length > 0) {
-            window.CsrfToken = token;
-        }
         return response;
     }).catch(handle_error);
 };

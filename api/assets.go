@@ -28,7 +28,6 @@ import (
 	"strings"
 	"time"
 
-	csrf "filippo.io/csrf/gorilla"
 	"github.com/andybalholm/brotli"
 	errors "github.com/go-errors/errors"
 	"github.com/lpar/gzipped"
@@ -96,7 +95,6 @@ func GetTemplateHandler(
 
 			args := gui_assets.HTMLtemplateArgs{
 				Timestamp: time.Now().UTC().UnixNano() / 1000,
-				CsrfToken: csrf.Token(r),
 				BasePath:  api_utils.GetBasePath(config_obj),
 				Heading:   "Heading",
 				UserTheme: user_options.Theme,
