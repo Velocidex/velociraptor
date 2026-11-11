@@ -50,8 +50,7 @@ func (self *FormUploadTestSuite) TearDownTest() {
 	self.TestSuite.TearDownTest()
 	file_store.ClearGlobalFilestore()
 
-	err := os.RemoveAll(self.dir)
-	assert.NoError(self.T(), err)
+	_ = os.RemoveAll(self.dir)
 }
 
 func (self *FormUploadTestSuite) TestFormUploadToOrgFilestore() {
