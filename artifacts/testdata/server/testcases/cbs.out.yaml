@@ -1,0 +1,120 @@
+# TelnetClient turned on and off again with dism.exe.
+Query: SELECT Time, Feature, PreviousState, NewState, RemovePayload, Package, Client, Session, SessionResult, RebootRequired FROM Artifact.Windows.Forensics.CBS( source="FeatureChanges", Accessor="file", LogTimezone="UTC", CBSLogGlob=srcDir+"/artifacts/testdata/files/servicing/CBS.log")
+Output: [
+ {
+  "Time": "2026-11-05T00:16:25Z",
+  "Feature": "TelnetClient",
+  "PreviousState": "Default",
+  "NewState": "On",
+  "RemovePayload": false,
+  "Package": "Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1",
+  "Client": "DISM Package Manager Provider",
+  "Session": "31288506_3844093720",
+  "SessionResult": "0x00000000 - S_OK",
+  "RebootRequired": "no"
+ },
+ {
+  "Time": "2026-11-05T00:16:45Z",
+  "Feature": "TelnetClient",
+  "PreviousState": "On",
+  "NewState": "Off",
+  "RemovePayload": false,
+  "Package": "Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1",
+  "Client": "DISM Package Manager Provider",
+  "Session": "31288506_4038741005",
+  "SessionResult": "0x00000000 - S_OK",
+  "RebootRequired": "no"
+ }
+]
+
+Query: SELECT Time, Package, StartState, TargetState, CurrentState, Status, FailureSource, RebootRequired, Client, ReleaseType, ExecutionSequence FROM Artifact.Windows.Forensics.CBS( source="PackageChanges", Accessor="file", LogTimezone="UTC", CBSLogGlob=srcDir+"/artifacts/testdata/files/servicing/CBS.log")
+Output: [
+ {
+  "Time": "2026-11-02T17:06:27Z",
+  "Package": "Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.8655.1.20",
+  "StartState": "Superseded",
+  "TargetState": "Absent",
+  "CurrentState": "Superseded",
+  "Status": "0x0",
+  "FailureSource": "Execute",
+  "RebootRequired": "False",
+  "Client": "CbsTask",
+  "ReleaseType": "Security Update",
+  "ExecutionSequence": 63
+ },
+ {
+  "Time": "2026-11-02T17:07:06Z",
+  "Package": "Package_for_RollupFix~31bf3856ad364e35~amd64~~26100.9168.1.19",
+  "StartState": "Superseded",
+  "TargetState": "Absent",
+  "CurrentState": "Superseded",
+  "Status": "0x0",
+  "FailureSource": "Execute",
+  "RebootRequired": "False",
+  "Client": "CbsTask",
+  "ReleaseType": "Security Update",
+  "ExecutionSequence": 64
+ },
+ {
+  "Time": "2026-11-05T00:16:37Z",
+  "Package": "Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1",
+  "StartState": "Installed",
+  "TargetState": "Installed",
+  "CurrentState": "Installed",
+  "Status": "0x0",
+  "FailureSource": "Execute",
+  "RebootRequired": "False",
+  "Client": "DISM Package Manager Provider",
+  "ReleaseType": "Feature Pack",
+  "ExecutionSequence": 65
+ },
+ {
+  "Time": "2026-11-05T00:16:57Z",
+  "Package": "Microsoft-Windows-Telnet-Client-Package~31bf3856ad364e35~amd64~~10.0.26100.1",
+  "StartState": "Installed",
+  "TargetState": "Installed",
+  "CurrentState": "Installed",
+  "Status": "0x0",
+  "FailureSource": "Execute",
+  "RebootRequired": "False",
+  "Client": "DISM Package Manager Provider",
+  "ReleaseType": "Feature Pack",
+  "ExecutionSequence": 66
+ }
+]
+
+# dism.exe command lines and DISM API calls with their parent process.
+Query: SELECT Time, Tool, Operation, CommandLine, Parameters, ParentProcess, ParentPid, Pid FROM Artifact.Windows.Forensics.CBS( source="DismOperations", Accessor="file", LogTimezone="UTC", DISMLogGlob=srcDir+"/artifacts/testdata/files/servicing/dism.log")
+Output: [
+ {
+  "Time": "2026-06-18T15:07:14Z",
+  "Tool": "DISM API",
+  "Operation": "DismDisableFeature",
+  "CommandLine": "",
+  "Parameters": "Session: 2, FeatureName: Recall, PackageName: (null), RemovePayload: 1, CancelEvent: 0x0000000000000000, Progress: 0x0000000000000000, UserData: 0x0000000000000000",
+  "ParentProcess": "taskhostw.exe ExploitGuardPolicy",
+  "ParentPid": null,
+  "Pid": 1956
+ },
+ {
+  "Time": "2026-11-05T00:16:25Z",
+  "Tool": "dism.exe",
+  "Operation": "",
+  "CommandLine": "\"C:\\WINDOWS\\system32\\Dism.exe\" /online /enable-feature /featurename:TelnetClient /norestart",
+  "Parameters": "",
+  "ParentProcess": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  "ParentPid": 7688,
+  "Pid": null
+ },
+ {
+  "Time": "2026-11-05T00:16:44Z",
+  "Tool": "dism.exe",
+  "Operation": "",
+  "CommandLine": "\"C:\\WINDOWS\\system32\\Dism.exe\" /online /disable-feature /featurename:TelnetClient /norestart",
+  "Parameters": "",
+  "ParentProcess": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+  "ParentPid": 7688,
+  "Pid": null
+ }
+]
+

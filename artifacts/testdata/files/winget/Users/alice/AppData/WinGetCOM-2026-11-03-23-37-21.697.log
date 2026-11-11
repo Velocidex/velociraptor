@@ -1,0 +1,39 @@
+2026-11-03 23:37:21.832 <I> [CORE] WinGet, version [1.29.380], activity [{6DBCA77C-D0CB-42AC-9D4D-DFEC97584714}]
+2026-11-03 23:37:21.833 <I> [CORE] Process: WindowsPackageManagerServer.exe[960], Level[0], Offset: 00007FFFFD0B0000
+2026-11-03 23:37:21.833 <I> [CORE] OS: Windows.Desktop v10.0.26200.9711
+2026-11-03 23:37:21.833 <I> [CORE] Command line Args: "C:\Program Files\WindowsApps\Microsoft.DesktopAppInstaller_1.29.379.0_x64__8wekyb3d8bbwe\WindowsPackageManagerServer.exe" -Embedding
+2026-11-03 23:37:21.833 <I> [CORE] Package: Microsoft.DesktopAppInstaller v1.29.379.0
+2026-11-03 23:37:21.833 <I> [CORE] IsCOMCall:1; Caller: Microsoft.WindowsStore_8wekyb3d8bbwe
+2026-11-03 23:37:21.860 <I> [CORE] Default proxy is not set
+2026-11-03 23:37:21.860 <I> [REPO] REST HTTP Client helper does not use proxy
+2026-11-03 23:37:21.860 <I> [REPO] REST HTTP Client helper does not use proxy
+2026-11-03 23:37:21.928 <I> [REPO] Authentication node not found. Assuming authentication type none.
+2026-11-03 23:37:21.928 <I> [REPO] Authentication node not found. Assuming authentication type none.
+2026-11-03 23:37:21.975 <I> [REPO] Sending http GET request to: https://storeedgefd.dsx.mp.microsoft.com/v9.0/packageManifests/XPDP273C0XHQH2?Market=US
+2026-11-03 23:37:21.975 <I> [REPO] Sending http GET request to: https://storeedgefd.dsx.mp.microsoft.com/v9.0/packageManifests/XP8BT8DW290MPQ?Market=US
+2026-11-03 23:37:22.229 <I> [REPO] REST HTTP Client helper does not use proxy
+2026-11-03 23:37:22.229 <I> [REPO] REST HTTP Client helper does not use proxy
+2026-11-03 23:37:22.260 <I> [REPO] Authentication node not found. Assuming authentication type none.
+2026-11-03 23:37:22.261 <I> [REPO] Authentication node not found. Assuming authentication type none.
+2026-11-03 23:37:22.291 <I> [REPO] Creating new SQLite Index with version [Latest] at ':memory:'
+2026-11-03 23:37:22.323 <I> [REPO] Reading MSI UpgradeCodes
+2026-11-03 23:37:22.337 <I> [REPO] Reading MSI UpgradeCodes
+2026-11-03 23:37:22.355 <I> [REPO] Response status: 2002026-11-03 23:37:22.355 <I> [REPO] Response status: 200
+
+2026-11-03 23:37:22.561 <I> [CLI ] VT not enabled due to null handle [4294967285]
+2026-11-03 23:37:22.565 <I> [REPO] Attempting to open pinning database: C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\pinning.db
+2026-11-03 23:37:22.569 <I> [REPO] Creating new SQLite Index with version [Latest] at ':memory:'
+2026-11-03 23:37:22.679 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\StoreEdgeFD\installed.db'
+2026-11-03 23:37:22.682 <I> [REPO] Opened SQLite Index with version [1.7], last write [2026-06-18 23:14:39.000]
+2026-11-03 23:37:22.683 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\StoreEdgeFD\installed.db'
+2026-11-03 23:37:22.683 <I> [REPO] Sending http GET request to: https://storeedgefd.dsx.mp.microsoft.com/v9.0/packageManifests/XP8BT8DW290MPQ?Market=US
+2026-11-03 23:37:22.684 <I> [REPO] Opened SQLite Index with version [1.7], last write [2026-06-18 23:14:39.000]
+2026-11-03 23:37:22.685 <I> [REPO] Sending http GET request to: https://storeedgefd.dsx.mp.microsoft.com/v9.0/packageManifests/XPDP273C0XHQH2?Market=US
+2026-11-03 23:37:22.768 <I> [REPO] Response status: 200
+2026-11-03 23:37:22.998 <I> [REPO] Response status: 200
+2026-11-03 23:37:23.010 <I> [REPO] Attempting to open pinning database: C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\pinning.db
+2026-11-03 23:37:30.751 <I> [REPO] REST HTTP Client helper does not use proxy
+2026-11-03 23:37:30.781 <I> [REPO] Authentication node not found. Assuming authentication type none.
+2026-11-03 23:37:30.787 <I> [REPO] Opening database for ReadWrite at 'C:\Users\alice\AppData\Local\Packages\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\LocalState\StoreEdgeFD\installed.db'
+2026-11-03 23:37:30.788 <I> [REPO] Opened SQLite Index with version [1.7], last write [2026-06-18 23:14:39.000]
+2026-11-03 23:37:42.641 <I> [CORE] Server shutting down after exit event signaled.
