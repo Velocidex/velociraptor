@@ -155,19 +155,19 @@ LET %v <= if(
 // the same name does not stop this artifact fetching its own URL.
 func uploadPreamble(name, http_args string) []string {
 	escaped_name := maybeEscape(name)
-	result_name := maybeEscape(name + "_")
-	marker := name + "_fetched"
-
-	should_fetch := fmt.Sprintf("%v AND %v != get(field='''%v''')",
-		escaped_name, escaped_name, marker)
+	fetch_func_name := maybeEscape(name + "_")
+	state_var := maybeEscape(name + "_state_")
 
 	return []string{
-		fmt.Sprintf(`LET %v = SELECT Content FROM http_client(url=%v%v)`,
-			result_name, escaped_name, http_args),
+		// Create a state dict that persists through the query
+		fmt.Sprintf(`LET %v <= scope().%v || dict(url=%v%v) `, state_var, state_var, escaped_name, http_args),
 
-		fmt.Sprintf(`LET %v <= if(condition=%v, then=%v.Content[0], else=%v)`,
-			escaped_name, should_fetch, result_name, escaped_name),
+		// Define the function to actually get the data
+		fmt.Sprintf(`LET %v = SELECT Content, set(item=%v, field="content", value=Content) FROM http_client(url=%v.url)`,
+			fetch_func_name, state_var, state_var),
 
-		fmt.Sprintf("LET %v <= %v", maybeEscape(marker), escaped_name),
+		// Get data from cache or from the URL
+		fmt.Sprintf(`LET %v = %v.content || %v[0].Content`,
+			escaped_name, state_var, fetch_func_name),
 	}
 }

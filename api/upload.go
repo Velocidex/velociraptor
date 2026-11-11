@@ -41,7 +41,7 @@ func toolUploadHandler(
 
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(config_obj, w, http.StatusUnauthorized, err)
+				returnError(org_config_obj, w, http.StatusUnauthorized, err)
 				return
 			}
 
@@ -58,7 +58,7 @@ func toolUploadHandler(
 			// upload of 10 MB files.
 			err = r.ParseMultipartForm(10 << 25)
 			if err != nil {
-				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
+				returnError(org_config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 			defer func() {
@@ -72,13 +72,13 @@ func toolUploadHandler(
 			tool := &artifacts_proto.Tool{}
 			params, pres := r.Form["_params_"]
 			if !pres || len(params) != 1 {
-				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
+				returnError(org_config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
 			err = json.Unmarshal([]byte(params[0]), tool)
 			if err != nil {
-				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
+				returnError(org_config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
@@ -87,7 +87,7 @@ func toolUploadHandler(
 			// the Header and the size of the file
 			file, handler, err := r.FormFile("file")
 			if err != nil {
-				returnError(config_obj, w, 403, utils.InvalidArgError)
+				returnError(org_config_obj, w, 403, utils.InvalidArgError)
 				return
 			}
 			defer file.Close()
@@ -107,7 +107,7 @@ func toolUploadHandler(
 					AdminOverride: true,
 				})
 			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
+				returnError(org_config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -120,7 +120,7 @@ func toolUploadHandler(
 
 			_, err = utils.Copy(ctx, writer, file)
 			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
+				returnError(org_config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 			writer.Close()
@@ -129,7 +129,7 @@ func toolUploadHandler(
 			tool, err = inventory.GetToolInfo(
 				r.Context(), org_config_obj, tool.Name, tool.Version)
 			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
+				returnError(org_config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
@@ -142,6 +142,11 @@ func toolUploadHandler(
 		})
 }
 
+// This is used to upload a file from the GUI:
+//  1. From the upload parameter type, the URL will be sent to the
+//     client.
+//  2. Uploading the artifact pack when inserting into the GUI before
+//     merging it.
 func formUploadHandler(
 	config_obj *config_proto.Config,
 	api_client_factory grpc_client.APIClientFactory,
@@ -157,7 +162,7 @@ func formUploadHandler(
 
 			org_config_obj, err := org_manager.GetOrgConfig(org_id)
 			if err != nil {
-				returnError(config_obj, w, http.StatusUnauthorized, err)
+				returnError(org_config_obj, w, http.StatusUnauthorized, err)
 				return
 			}
 
@@ -166,7 +171,7 @@ func formUploadHandler(
 			permissions := acls.COLLECT_CLIENT
 			perm, err := services.CheckAccess(org_config_obj, userinfo.Name, permissions)
 			if !perm || err != nil {
-				returnError(config_obj, w, http.StatusUnauthorized, ToolError)
+				returnError(org_config_obj, w, http.StatusUnauthorized, ToolError)
 				return
 			}
 
@@ -174,7 +179,7 @@ func formUploadHandler(
 			// upload of 10 MB files.
 			err = r.ParseMultipartForm(10 << 20)
 			if err != nil {
-				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
+				returnError(org_config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 			defer func() {
@@ -188,13 +193,13 @@ func formUploadHandler(
 			form_desc := &api_proto.FormUploadMetadata{}
 			params, pres := r.Form["_params_"]
 			if !pres || len(params) != 1 {
-				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
+				returnError(org_config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
 			err = json.Unmarshal([]byte(params[0]), form_desc)
 			if err != nil {
-				returnError(config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
+				returnError(org_config_obj, w, http.StatusBadRequest, utils.InvalidArgError)
 				return
 			}
 
@@ -203,7 +208,7 @@ func formUploadHandler(
 			// the Header and the size of the file
 			file, handler, err := r.FormFile("file")
 			if err != nil {
-				returnError(config_obj, w, 403,
+				returnError(org_config_obj, w, 403,
 					fmt.Errorf("%w: %v", utils.InvalidArgError, err))
 				return
 			}
@@ -215,25 +220,31 @@ func formUploadHandler(
 				org_config_obj, form_desc.Filename)
 
 			pathspec := path_manager.Path()
+
 			form_desc.VfsPath = pathspec.Components()
 
-			file_store_factory := file_store.GetFileStore(config_obj)
+			// This is the URL as needed by the client to reach this
+			// file. The GUI will embed this in the artifact params
+			// for the client to fetch.
+			form_desc.Url = path_manager.URL()
+
+			file_store_factory := file_store.GetFileStore(org_config_obj)
 			writer, err := file_store_factory.WriteFile(pathspec)
 			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
+				returnError(org_config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 			defer writer.Close()
 
 			err = writer.Truncate()
 			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
+				returnError(org_config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
 			_, err = io.Copy(writer, file)
 			if err != nil {
-				returnError(config_obj, w, http.StatusInternalServerError, err)
+				returnError(org_config_obj, w, http.StatusInternalServerError, err)
 				return
 			}
 
