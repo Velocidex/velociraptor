@@ -15,7 +15,7 @@ parameters:
   - name: TargetFlowId
     description: The FlowId to export.
   - name: TargetClientId
-    description: The Cllient to export.
+    description: The Client to export.
   - name: Format
     type: choices
     choices:
