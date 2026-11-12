@@ -1,0 +1,61 @@
+name: Server.Utils.ExportFlow
+description: |
+  Exports a flow's results to a downloadable zip archive with
+  configurable data formatting options.
+
+  Sometimes exporting a flow through the GUI takes longer than the 10
+  minute default time limit. If your exports need more time, you can
+  use this artifact instead of the GUI's "prepare download" feature.
+
+  Once this artifact is done you should see that the export is
+  available as a new download item on the hunt's overview tab.
+
+type: SERVER
+parameters:
+  - name: TargetFlowId
+    description: The FlowId to export.
+  - name: TargetClientId
+    description: The Cllient to export.
+  - name: Format
+    type: choices
+    choices:
+      - Combined
+      - JSON
+      - CSV
+  - name: Password
+    type: bool
+    description: |
+      If set we use the user's password to encrypt the zip file.
+
+sources:
+  - query: |
+      LET Base = if(condition=BaseName, then=BaseName + "-", else="")
+
+      LET FormatLookup <= dict(
+         Combined="",
+         JSON="json",
+         CVS="csv")
+
+      LET Result <= stat(accessor="fs", filename=create_flow_download(
+         flow_id=TargetFlowId,
+         client_id=TargetClientId,
+         password=if(condition=Password,
+                     then=user_options(user=whoami()).default_password,
+                     else=""),
+         wait=TRUE,
+         format=get(item=FormatLookup, field=Format),
+         expand_sparse=TRUE))
+
+      SELECT Result.OSPath AS OSPath,
+          dict(
+            Accessor="fs",
+            Components=Result.OSPath.Components,
+            Size= Result.Size) AS Preview
+      FROM scope()
+
+resources:
+  timeout: 6000
+
+column_types:
+  - name: Preview
+    type: upload_preview

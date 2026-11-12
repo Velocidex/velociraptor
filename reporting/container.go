@@ -13,7 +13,6 @@ import (
 	"strings"
 	"sync"
 	"time"
-	"unicode"
 
 	"github.com/alexmullins/zip"
 	"github.com/dustin/go-humanize"
@@ -341,34 +340,6 @@ func (self *Container) WriteJSON(name string, data interface{}) error {
 	return err
 }
 
-func formatFilename(filename *accessors.OSPath, accessor string) string {
-	result := filename.String()
-
-	// These paths can be very large so we elide them.
-	switch accessor {
-	case "data":
-		elided_result := "data:"
-		for _, r := range result {
-			if unicode.IsPrint(r) {
-				elided_result += string(r)
-			}
-			if len(elided_result) > 50 {
-				elided_result += " ..."
-				break
-			}
-		}
-
-		return elided_result
-
-	case "sparse":
-		if len(result) > 50 {
-			result = result[:50] + "..."
-		}
-	}
-
-	return result
-}
-
 // Upload the file into the zip file.  We treat the zip file as our
 // filestore here - this means that file paths will be very
 // conservatively escaped to ensure maximum compatibility with zip
@@ -403,7 +374,7 @@ func (self *Container) Upload(
 	}
 
 	result = &uploads.UploadResponse{
-		Path: formatFilename(filename, accessor),
+		Path: files.ElideFilename(filename, accessor),
 		Size: uint64(expected_size),
 	}
 
@@ -433,7 +404,7 @@ func (self *Container) Upload(
 	}
 
 	scope.Log("Collecting file %s into %s (%v bytes)",
-		formatFilename(filename, accessor), result.StoredName, expected_size)
+		files.ElideFilename(filename, accessor), result.StoredName, expected_size)
 
 	// Try to collect sparse files if possible
 	err = self.maybeCollectSparseFile(ctx, scope, reader, result, mtime)

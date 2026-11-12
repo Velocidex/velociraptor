@@ -86,6 +86,10 @@ func (self *Tracker) Inc(filename string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
+	if len(filename) > 100 {
+		filename = filename[:100] + "..."
+	}
+
 	prev := self.refs[filename]
 	self.refs[filename] = prev + 1
 }
@@ -107,6 +111,10 @@ func (self *Tracker) Reset() {
 func (self *Tracker) Dec(filename string) {
 	self.mu.Lock()
 	defer self.mu.Unlock()
+
+	if len(filename) > 100 {
+		filename = filename[:100] + "..."
+	}
 
 	prev, ok := self.refs[filename]
 	if ok {
