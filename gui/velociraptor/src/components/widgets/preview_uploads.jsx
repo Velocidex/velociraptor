@@ -489,7 +489,7 @@ export default class PreviewUpload extends Component {
         }
 
         let accessor = upload.Accessor || "auto";
-        let components = this.props.upload.Components;
+        let components = this.props.upload.Components || [];
         if (_.isUndefined(components)) {
             // No components available - do our best
             let path = (this.props.upload.Path || "");
@@ -611,6 +611,7 @@ const normalizeComponentList = (components, client_id, flow_id, accessor)=>{
 
     switch (components[0]) {
     case "clients":
+    case "downloads":
     case "notebooks":
     case "hunts":
         // It is a filestore path already

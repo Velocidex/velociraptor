@@ -160,25 +160,25 @@ func (self *FileStoreFileInfo) GetLink() (*accessors.OSPath, error) {
 
 func (self *FileStoreFileInfo) MarshalJSON() ([]byte, error) {
 	result, err := json.Marshal(&struct {
-		FullPath string
-		Size     int64
-		Mode     os.FileMode
-		ModeStr  string
-		ModTime  time.Time
-		Btime    time.Time
-		Mtime    time.Time
-		Ctime    time.Time
-		Atime    time.Time
+		OSPath  string
+		Size    int64
+		Mode    os.FileMode
+		ModeStr string
+		ModTime time.Time
+		Btime   time.Time
+		Mtime   time.Time
+		Ctime   time.Time
+		Atime   time.Time
 	}{
-		FullPath: self.FullPath(),
-		Size:     self.Size(),
-		Mode:     self.Mode(),
-		ModeStr:  self.Mode().String(),
-		ModTime:  self.ModTime(),
-		Btime:    self.Btime(),
-		Mtime:    self.Mtime(),
-		Ctime:    self.Ctime(),
-		Atime:    self.Atime(),
+		OSPath:  self.OSPath().String(),
+		Size:    self.Size(),
+		Mode:    self.Mode(),
+		ModeStr: self.Mode().String(),
+		ModTime: self.ModTime(),
+		Btime:   self.Btime(),
+		Mtime:   self.Mtime(),
+		Ctime:   self.Ctime(),
+		Atime:   self.Atime(),
 	})
 
 	return result, err

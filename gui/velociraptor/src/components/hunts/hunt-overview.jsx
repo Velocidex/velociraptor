@@ -20,6 +20,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import api from '../core/api-service.jsx';
 import {CancelToken} from 'axios';
 import { requestToParameters } from "../flows/utils.jsx";
+import { runArtifact } from "../flows/utils.jsx";
 import AvailableDownloads from "../notebooks/downloads.jsx";
 
 const POLL_TIME = 5000;
@@ -158,6 +159,30 @@ export default class HuntOverview extends React.Component {
             params.only_combined_hunt = true;
             params.csv_format = true;
             break;
+
+        case 'background':
+            // Just fire and forget - the GUI will refresh by itself.
+            api.post("v1/CollectArtifact", {
+                client_id: "server",
+                allow_custom_overrides: true,
+                artifacts: ["Server.Utils.ExportHunt"],
+                specs: [{artifact: "Server.Utils.ExportHunt",
+                         parameters: {env:[{
+                             key: "TargetHuntId",
+                             value: params.hunt_id,
+                         },{
+                             key: "OnlyCombined",
+                             value: "Y",
+                         },{
+                             key: "Format",
+                             value: "JSON",
+                         },{
+                             key: "Password",
+                             value: params.password == "" ? "N" : "Y",
+                         }]}
+                        }],
+            });
+            return;
 
         default:
             return;
@@ -360,6 +385,10 @@ export default class HuntOverview extends React.Component {
                             <Dropdown.Item
                               onClick={() => this.prepareDownload('summary-json')}>
                               {T("Summary (JSON Only)")}
+                            </Dropdown.Item>
+                            <Dropdown.Item
+                              onClick={() => this.prepareDownload("background")}>
+                                {T("Background Export")}
                             </Dropdown.Item>
                           </Dropdown.Menu>
                         </Dropdown>
