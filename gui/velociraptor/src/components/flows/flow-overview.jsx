@@ -41,6 +41,42 @@ export default class FlowOverview extends React.Component {
         this.source.cancel("unmounted");
     }
 
+    startBackgroundExport = () => {
+        let flow_id = this.props.flow && this.props.flow.session_id;
+        let client_id = this.props.flow && this.props.flow.client_id;
+
+        if(!flow_id || !client_id) {
+            return;
+        }
+
+        let lock_password = "N";
+        if (this.state.lock) {
+            lock_password = "Y";
+        }
+
+        // Just fire and forget - the GUI will refresh by itself.
+        api.post("v1/CollectArtifact", {
+            client_id: "server",
+            allow_custom_overrides: true,
+            artifacts: ["Server.Utils.ExportFlow"],
+            specs: [{artifact: "Server.Utils.ExportFlow",
+                     parameters: {env:[{
+                         key: "TargetFlowId",
+                         value: flow_id,
+                     },{
+                         key: "TargetClientId",
+                         value: client_id,
+                     },{
+                         key: "Format",
+                         value: "JSON",
+                     },{
+                         key: "Password",
+                         value: lock_password,
+                     }]}
+                    }],
+        });
+    }
+
     prepareDownload = (opts) => {
         let options = opts || {};
         if (this.state.lock) {
@@ -275,6 +311,10 @@ export default class FlowOverview extends React.Component {
                                       csv_format: true,
                                   })}>
                                   {T("Prepare CSV And JSON Download")}
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  onClick={()=>this.startBackgroundExport()}>
+                                  {T("Background Export")}
                                 </Dropdown.Item>
                               </Dropdown.Menu>
                             </Dropdown>

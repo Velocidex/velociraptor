@@ -13,7 +13,7 @@ description: |
 
 type: SERVER
 parameters:
-  - name: HuntId
+  - name: TargetHuntId
     description: The hunt ID to export.
   - name: OnlyCombined
     type: bool
@@ -26,6 +26,10 @@ parameters:
       - Combined
       - JSON
       - CSV
+  - name: Password
+    type: bool
+    description: |
+      If set we use the user's password to encrypt the zip file.
 
 sources:
   - query: |
@@ -36,15 +40,27 @@ sources:
          JSON="json",
          CVS="csv")
 
-      SELECT create_hunt_download(
-         hunt_id=HuntId,
+      LET Result <= stat(accessor="fs", filename=create_hunt_download(
+         hunt_id=TargetHuntId,
          only_combined=OnlyCombined,
-         password=user_options(user=whoami()).default_password,
+         password=if(condition=Password,
+                     then=user_options(user=whoami()).default_password,
+                     else=""),
          wait=TRUE,
          base=Base,
          format=get(item=FormatLookup, field=Format),
-         expand_sparse=TRUE) AS VFSPath
+         expand_sparse=TRUE))
+
+      SELECT Result.OSPath AS OSPath,
+          dict(
+            Accessor="fs",
+            Components=Result.OSPath.Components,
+            Size= Result.Size) AS Preview
       FROM scope()
 
 resources:
   timeout: 6000
+
+column_types:
+  - name: Preview
+    type: upload_preview
