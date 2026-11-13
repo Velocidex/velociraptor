@@ -1,0 +1,212 @@
+name: Windows.Forensics.BitLocker
+description: |
+  Discovers, validates, and triages Microsoft BitLocker Drive Encryption
+  configuration, volume encryption states, encryption algorithms, Group Policy
+  settings, and critical lifecycle security events.
+
+  BitLocker is Windows' native full-volume encryption feature designed to
+  protect data by encrypting entire disk volumes (operating system volumes,
+  fixed data drives, and removable BitLocker To Go drives) using AES-CBC or
+  XTS-AES.
+
+  During incident response, forensic examiners and security operations teams
+  frequently need to verify whether sensitive volumes were encrypted at rest,
+  audit key escrow and protector configurations, and detect unauthorized
+  attempts by attackers or ransomware to disable BitLocker (`manage-bde -off`)
+  or decrypt drives prior to extortion or data exfiltration.
+
+  This artifact provides three forensic sources:
+  * `VolumeStatus`: Queries the `Win32_EncryptableVolume` WMI class to extract
+    volume GUIDs, drive letters, volume types (OS, Fixed, Removable),
+    encryption methods (e.g. XTS-AES 128/256), protection statuses, and
+    conversion progress.
+  * `Policies`: Queries the active BitLocker Group Policy settings and system
+    flags from `HKLM\SOFTWARE\Policies\Microsoft\FVE` and
+    `HKLM\SYSTEM\CurrentControlSet\Control\BitLocker`, identifying TPM/PIN
+    requirements, recovery key escrow policies, and enforced encryption ciphers.
+  * `ManagementEvents`: Parses the `Microsoft-Windows-BitLocker` event logs
+    (`.evtx`) to reconstruct the lifecycle of BitLocker protection, including
+    protection enablement (768), protection disablement (769), decryption
+    start (773) and completion (774), volume lock/unlock (778/779), and
+    recovery password unlock usage (845/852).
+
+author: Furious-05
+
+reference:
+  - https://attack.mitre.org/techniques/T1486/
+  - https://attack.mitre.org/techniques/T1552/
+  - https://learn.microsoft.com/en-us/windows/security/operating-system-security/data-protection/bitlocker/
+  - https://learn.microsoft.com/en-us/windows/win32/secprov/win32-encryptablevolume
+
+type: CLIENT
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+parameters:
+  - name: DriveLetterRegex
+    type: regex
+    description: Regex to filter specific drive letters (e.g. '^C:').
+    default: .
+
+  - name: EventIdRegex
+    type: regex
+    description: Regex of BitLocker event IDs to extract.
+    default: ^(768|769|770|771|772|773|774|775|778|779|784|785|813|845|851|852|853|854)$
+
+  - name: DateAfter
+    type: timestamp
+    description: Only return events after this timestamp.
+
+  - name: DateBefore
+    type: timestamp
+    description: Only return events before this timestamp.
+
+  - name: BitLockerLogGlob
+    description: Path or glob pattern for the BitLocker EVTX event logs.
+    default: '%SystemRoot%\System32\Winevt\Logs\Microsoft-Windows-BitLocker%4*.evtx'
+
+  - name: Accessor
+    description: Accessor to use for event log files ('auto' falls back to raw NTFS).
+    default: auto
+
+sources:
+  - name: VolumeStatus
+    query: |
+      LET ProtectionStatusLookup <= dict(
+          `0`="Unprotected (Off)",
+          `1`="Protected (On)",
+          `2`="Protection Unknown"
+      )
+
+      LET ConversionStatusLookup <= dict(
+          `0`="Fully Decrypted",
+          `1`="Fully Encrypted",
+          `2`="Encryption In Progress",
+          `3`="Decryption In Progress",
+          `4`="Encryption Paused",
+          `5`="Decryption Paused"
+      )
+
+      LET EncryptionMethodLookup <= dict(
+          `0`="None",
+          `1`="AES-128 With Diffuser",
+          `2`="AES-256 With Diffuser",
+          `3`="AES-128",
+          `4`="AES-256",
+          `5`="Hardware Encryption",
+          `6`="XTS-AES 128",
+          `7`="XTS-AES 256"
+      )
+
+      LET VolumeTypeLookup <= dict(
+          `0`="OS Volume",
+          `1`="Fixed Data Volume",
+          `2`="Removable Data Volume"
+      )
+
+      LET raw_volumes = SELECT
+          DeviceID,
+          DriveLetter,
+          int(int=ProtectionStatus) AS ProtectionStatusCode,
+          int(int=ConversionStatus) AS ConversionStatusCode,
+          int(int=EncryptionMethod) AS EncryptionMethodCode,
+          int(int=VolumeType) AS VolumeTypeCode,
+          bool(test=IsVolumeInitializedForProtection) AS InitializedForProtection,
+          PersistentVolumeID
+      FROM wmi(
+          query="SELECT DeviceID, DriveLetter, ProtectionStatus, ConversionStatus, EncryptionMethod, VolumeType, IsVolumeInitializedForProtection, PersistentVolumeID FROM Win32_EncryptableVolume",
+          namespace="root/CIMV2/Security/MicrosoftVolumeEncryption"
+      )
+      WHERE if(condition=DriveLetter,
+               then=DriveLetter =~ DriveLetterRegex,
+               else=true)
+
+      SELECT
+          DeviceID,
+          DriveLetter,
+          VolumeTypeLookup[str(str=VolumeTypeCode)] || ("Unknown (" + str(str=VolumeTypeCode) + ")") AS VolumeType,
+          ProtectionStatusLookup[str(str=ProtectionStatusCode)] || ("Unknown (" + str(str=ProtectionStatusCode) + ")") AS ProtectionStatus,
+          ConversionStatusLookup[str(str=ConversionStatusCode)] || ("Unknown (" + str(str=ConversionStatusCode) + ")") AS ConversionStatus,
+          EncryptionMethodLookup[str(str=EncryptionMethodCode)] || ("Unknown (" + str(str=EncryptionMethodCode) + ")") AS EncryptionMethod,
+          InitializedForProtection,
+          PersistentVolumeID
+      FROM raw_volumes
+
+  - name: Policies
+    query: |
+      LET policy_globs = (
+          "HKEY_LOCAL_MACHINE\\SOFTWARE\\Policies\\Microsoft\\FVE\\*",
+          "HKEY_LOCAL_MACHINE\\SYSTEM\\CurrentControlSet\\Control\\BitLocker\\*"
+      )
+
+      LET raw_values = SELECT
+          OSPath.Path AS KeyPath,
+          Name AS ValueName,
+          Data.value AS ValueData,
+          Data.type AS ValueType,
+          Mtime
+      FROM glob(globs=policy_globs, accessor="registry")
+
+      SELECT
+          KeyPath,
+          ValueName,
+          ValueData,
+          ValueType,
+          Mtime
+      FROM raw_values
+      ORDER BY KeyPath, ValueName
+
+  - name: ManagementEvents
+    query: |
+      LET StartTime <= if(condition=DateAfter,
+                          then=timestamp(epoch=DateAfter),
+                          else=timestamp(epoch=0))
+      LET EndTime <= if(condition=DateBefore,
+                        then=timestamp(epoch=DateBefore),
+                        else=timestamp(epoch="2200-01-01"))
+
+      LET ActionLookup <= dict(
+          `768`="BitLocker Protection Enabled",
+          `769`="BitLocker Protection Disabled",
+          `770`="BitLocker Encryption Started",
+          `771`="BitLocker Encryption Paused",
+          `772`="BitLocker Encryption Resumed",
+          `773`="BitLocker Decryption Started",
+          `774`="BitLocker Decryption Completed",
+          `775`="BitLocker Encryption Completed",
+          `778`="BitLocker Volume Unlocked",
+          `779`="BitLocker Volume Locked",
+          `784`="BitLocker Key Protector Added",
+          `785`="BitLocker Key Protector Deleted",
+          `813`="BitLocker Recovery Key Backed Up to AD/Entra ID",
+          `845`="BitLocker Recovery Password Used to Unlock Volume",
+          `851`="BitLocker Volume Unlocked with TPM",
+          `852`="BitLocker Volume Unlocked with Recovery Password",
+          `853`="BitLocker Volume Unlocked with External Key",
+          `854`="BitLocker Volume Unlocked with Passphrase"
+      )
+
+      LET files = SELECT OSPath
+      FROM glob(globs=expand(path=BitLockerLogGlob), accessor=Accessor)
+      WHERE NOT IsDir
+
+      SELECT * FROM foreach(row=files,
+        query={
+          SELECT
+              timestamp(epoch=int(int=System.TimeCreated.SystemTime)) AS Timestamp,
+              int(int=System.EventID.Value) AS EventID,
+              ActionLookup[str(str=System.EventID.Value)] || ("Event " + str(str=System.EventID.Value)) AS Action,
+              System.Security.UserID AS UserSID,
+              EventData.IdentificationGuid || EventData.VolumeGuid AS VolumeGuid,
+              EventData.DriveVolume || EventData.Volume || EventData.VolumeName AS DriveVolume,
+              System.Computer AS Computer,
+              int(int=System.EventRecordID) AS RecordID,
+              EventData
+          FROM parse_evtx(filename=OSPath, accessor=Accessor)
+          WHERE str(str=System.EventID.Value) =~ EventIdRegex
+            AND (NOT DateAfter OR Timestamp > StartTime)
+            AND (NOT DateBefore OR Timestamp < EndTime)
+            AND if(condition=DriveVolume,
+                   then=DriveVolume =~ DriveLetterRegex,
+                   else=true)
+        })
