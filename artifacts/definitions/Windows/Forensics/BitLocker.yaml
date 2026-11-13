@@ -111,7 +111,7 @@ sources:
           int(int=ConversionStatus) AS ConversionStatusCode,
           int(int=EncryptionMethod) AS EncryptionMethodCode,
           int(int=VolumeType) AS VolumeTypeCode,
-          bool(test=IsVolumeInitializedForProtection) AS InitializedForProtection,
+          IsVolumeInitializedForProtection AS InitializedForProtection,
           PersistentVolumeID
       FROM wmi(
           query="SELECT DeviceID, DriveLetter, ProtectionStatus, ConversionStatus, EncryptionMethod, VolumeType, IsVolumeInitializedForProtection, PersistentVolumeID FROM Win32_EncryptableVolume",
