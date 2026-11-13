@@ -154,7 +154,7 @@ sources:
           ValueType,
           Mtime
       FROM raw_values
-      ORDER BY KeyPath, ValueName
+      ORDER BY KeyPath
 
   - name: ManagementEvents
     query: |
