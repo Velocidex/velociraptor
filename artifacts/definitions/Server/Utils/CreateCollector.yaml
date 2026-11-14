@@ -30,7 +30,7 @@ parameters:
 
   - name: encryption_scheme
     description: |
-      Encryption scheme to use. Currently supported are Password, X509 or PGP
+      Encryption scheme to use. Currently supported are Password or X509
 
   - name: encryption_args
     description: |
@@ -327,7 +327,7 @@ parameters:
 
          -- For X509 encryption we use a random session password.
          SELECT join(array=RandomPassword.A) as Pass From scope()
-         WHERE encryption_scheme =~ "pgp|x509"
+         WHERE encryption_scheme =~ "x509"
           AND log(message="I will generate a container password using the %v scheme",
                   args=encryption_scheme)
 
@@ -350,7 +350,7 @@ parameters:
           then=dict(
              EncryptedPass=pk_encrypt(data=pass[0].Pass,
                 public_key=encryption_args.public_key,
-             scheme=encryption_scheme),
+                scheme=encryption_scheme),
           Scheme=encryption_scheme,
           PublicKey=encryption_args.public_key))
 
@@ -455,7 +455,7 @@ export: |
            "enum": ["ZIP", "GCS", "S3", "Azure", "SMBShare", "SFTP", "WebDAV"]
         },
         "EncryptionScheme": {
-           "enum": ["None", "X509", "Password", "PGP"],
+           "enum": ["None", "X509", "Password"],
            "default": "None"
         },
         "EncryptionArgs": {

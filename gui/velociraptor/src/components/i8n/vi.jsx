@@ -482,7 +482,6 @@ const Vietnamese = {
      "Output format": "Định dạng đầu ra",
      "Override Tool": "Công cụ ghi đè",
      "Overview": "Tổng quan",
-     "PGP Encryption": "Mã hóa PGP",
      "Parameters configuration Step": "Bước cấu hình tham số",
      "Password": "Mật khẩu",
      "Passwords do not match": "Mật khẩu không khớp",
