@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/google/btree"
+	"www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
@@ -36,35 +37,34 @@ func (self *Indexer) RebuildIndex(
 		default:
 		}
 
-		client_info, err := client_info_manager.Get(ctx, client_id)
-		if err != nil {
-			continue
-		}
+		_, _ = services.GetClientInfoItem(ctx, config_obj, client_id,
+			func(client_info *proto.ClientInfo) (interface{}, error) {
+				count++
 
-		count++
+				// The all item corresponds to the "." search term.
+				_ = self.setIndexTree(client_id, "all", btree)
+				_ = self.setIndexTree(client_id, client_id, btree)
 
-		// The all item corresponds to the "." search term.
-		_ = self.setIndexTree(client_id, "all", btree)
-		_ = self.setIndexTree(client_id, client_id, btree)
+				if client_info.Hostname != "" {
+					_ = self.setIndexTree(client_id, "host:"+client_info.Hostname, btree)
+				}
 
-		if client_info.Hostname != "" {
-			_ = self.setIndexTree(client_id, "host:"+client_info.Hostname, btree)
-		}
+				// Add labels to the index.
+				for _, label := range client_info.Labels {
+					_ = self.setIndexTree(client_id, "label:"+strings.ToLower(label), btree)
+				}
 
-		// Add labels to the index.
-		for _, label := range client_info.Labels {
-			_ = self.setIndexTree(client_id, "label:"+strings.ToLower(label), btree)
-		}
+				// Add MAC addresses to the index.
+				for _, mac := range client_info.MacAddresses {
+					_ = self.setIndexTree(client_id, "mac:"+mac, btree)
+				}
 
-		// Add MAC addresses to the index.
-		for _, mac := range client_info.MacAddresses {
-			_ = self.setIndexTree(client_id, "mac:"+mac, btree)
-		}
-
-		// Now add user custom search verbs.
-		for k, v := range client_info.Metadata {
-			_ = self.setIndexTree(client_id, k+":"+v, btree)
-		}
+				// Now add user custom search verbs.
+				for k, v := range client_info.Metadata {
+					_ = self.setIndexTree(client_id, k+":"+v, btree)
+				}
+				return nil, nil
+			})
 	}
 
 	logger.Debug("<green>Indexing service</> search index loaded %v items in %v",

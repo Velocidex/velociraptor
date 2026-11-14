@@ -7,7 +7,7 @@ import (
 	"time"
 
 	kingpin "github.com/alecthomas/kingpin/v2"
-	"github.com/mitchellh/panicwrap"
+	"github.com/grongor/panicwatch"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	logging "www.velocidex.com/golang/velociraptor/logging"
@@ -29,36 +29,34 @@ func writeLogOnPanic() error {
 
 	if config_obj.Logging != nil &&
 		config_obj.Logging.OutputDirectory != "" {
-		exitStatus, err := panicwrap.BasicWrap(func(output string) {
-			// Create a special log file in the log directory.
-			filename := utils.Join(
-				config_obj.Logging.OutputDirectory,
-				fmt.Sprintf("panic-%v.log", strings.Replace(
-					time.Now().Format(time.RFC3339), ":", "_", -1)))
 
-			fd, err := os.OpenFile(filename,
-				os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-			if err != nil {
-				return
-			}
-			_, _ = fd.Write([]byte(output))
-			fd.Close()
+		err := panicwatch.Start(panicwatch.Config{
+			OnPanic: func(p panicwatch.Panic) {
+				// Create a special log file in the log directory.
+				filename := utils.Join(
+					config_obj.Logging.OutputDirectory,
+					fmt.Sprintf("panic-%v.log", strings.Replace(
+						time.Now().Format(time.RFC3339), ":", "_", -1)))
+
+				fd, err := os.OpenFile(filename,
+					os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+				if err != nil {
+					return
+				}
+				// Try our best to write - cant do anything if this does not work.
+				_, _ = fmt.Fprintf(fd, "Panic: %v\n Stack: %v", p.Message, p.Stack)
+				fd.Close()
+			},
+			OnWatcherDied: func(err error) {
+				logger := logging.GetLogger(config_obj, &logging.FrontendComponent)
+				logger.Error("panicwatch watcher process died!")
+			},
 		})
 		if err != nil {
 			// Something went wrong setting up the panic
 			// wrapper. Unlikely, but possible.
 			panic(err)
 		}
-
-		// If exitStatus >= 0, then we're the parent process
-		// and the panicwrap re-executed ourselves and
-		// completed. Just exit with the proper status.
-		if exitStatus >= 0 {
-			os.Exit(exitStatus)
-		}
-
-		// Otherwise, exitStatus < 0 means we're the
-		// child. Continue executing as normal...
 	}
 	return nil
 }

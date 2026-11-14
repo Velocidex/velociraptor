@@ -670,7 +670,8 @@ func (self *Launcher) WriteArtifactCollectionRecord(
 
 	// If the client id is not known, refuse to schedule messages to
 	// it.
-	_, err = client_manager.Get(ctx, client_id)
+	_, err = services.GetClientInfoItem(
+		ctx, config_obj, client_id, services.CheckForPresence)
 	if err != nil {
 		return "", err
 	}
