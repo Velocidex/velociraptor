@@ -101,6 +101,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/mccutchen/go-httpbin/v2 v2.18.3
 	github.com/microcosm-cc/bluemonday v1.0.23
+	github.com/microsoft/wmi v0.45.0
 	github.com/minio/minio-go/v7 v7.0.99
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/mitchellh/panicwrap v1.0.0
