@@ -115,9 +115,15 @@ func (self *Store) Modify(
 	modifier func(client_info *services.ClientInfo) (
 		*services.ClientInfo, error)) error {
 
-	// The server record can not be modified anyway
+	// The server record can not be modified anyway so just use a
+	// temporary record.
 	if client_id == constants.VELOCIRAPTOR_SERVER_CLIENT_ID {
-		return nil
+		_, err := modifier(&services.ClientInfo{
+			ClientInfo: &actions_proto.ClientInfo{
+				ClientId: constants.VELOCIRAPTOR_SERVER_CLIENT_ID,
+			},
+		})
+		return err
 	}
 
 	self.mu.Lock()
