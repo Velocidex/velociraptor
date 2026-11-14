@@ -1,0 +1,77 @@
+name: Windows.Registry.WinSCP
+author: Joshua Bishop - @skryptkiddie
+description: |
+  Extracts WinSCP SFTP host keys and saved fingerprints stored in the Windows registry for  
+  each user. This can be used to identify potential exfiltration destinations.  
+  
+  This artefact searches for:  
+  - Saved SSH Host Keys (known hosts),  
+  - Saved SSH fingerprints,  
+  - Cached remote folder paths.
+
+type: CLIENT
+
+parameters:
+   - name: SubjectUser
+     default: .
+   - name: SshHostKeysGlob
+     default: Software\Martin Prikryl\WinSCP 2\SshHostKeys\**
+   - name: LastFingerprintGlob
+     default: Software\Martin Prikryl\WinSCP 2\Configuration\LastFingerprints\**
+   - name: CDCacheGlob
+     default: Software\Martin Prikryl\WinSCP 2\Configuration\CDCache\**
+
+precondition:
+  SELECT OS From info() where OS = 'windows'
+
+sources:
+  - name: SshHostKeys
+    query: |
+      LET HKEY_USERS <= pathspec(path_type="registry", Path="HKEY_USERS")
+
+      SELECT
+        Mtime,
+        Username,
+        OSPath.Basename AS KeyName,
+        Data.value AS KeyValue,
+        HKEY_USERS + UUID + OSPath.Dirname AS Key,
+        OSPath.DelegatePath AS SourcePath
+      FROM Artifact.Windows.Registry.NTUser(KeyGlob=SshHostKeysGlob,userRegex=SubjectUser)
+
+
+  - name: LastFingerprints
+    query: |
+      LET HKEY_USERS <= pathspec(path_type="registry", Path="HKEY_USERS")
+
+      SELECT
+        Mtime,
+        Username,
+        OSPath.Basename AS KeyName,
+        Data.value AS KeyValue,
+        HKEY_USERS + UUID + OSPath.Dirname AS Key,
+        OSPath.DelegatePath AS SourcePath
+      FROM Artifact.Windows.Registry.NTUser(KeyGlob=LastFingerprintGlob,userRegex=SubjectUser)
+
+
+  - name: CDCache
+    query: |
+      LET HKEY_USERS <= pathspec(path_type="registry", Path="HKEY_USERS")
+
+      SELECT
+        Mtime,
+        Username,
+        OSPath.Basename AS KeyName,
+        Data.value AS KeyValue,
+        str(str=Data.value) AS DecodedKeyValue,
+        HKEY_USERS + UUID + OSPath.Dirname AS Key,
+        OSPath.DelegatePath AS SourcePath
+      FROM Artifact.Windows.Registry.NTUser(KeyGlob=CDCacheGlob,userRegex=SubjectUser)
+      
+
+column_types:
+  - name: Mtime
+    type: timestamp
+  - name: KeyValue
+    type: string
+  - name: DecodedKeyValue
+    type: string
