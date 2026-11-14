@@ -57,14 +57,9 @@ func (self FlowsPlugin) Call(
 			return
 		}
 
-		client_info_manager, err := services.GetClientInfoManager(config_obj)
-		if err != nil {
-			scope.Log("flows: %v", err)
-			return
-		}
-
 		// Check the client exists at all.
-		_, err = client_info_manager.Get(ctx, arg.ClientId)
+		_, err = services.GetClientInfoItem(
+			ctx, config_obj, arg.ClientId, services.CheckForPresence)
 		if err != nil {
 			scope.Log("flows: unable to get client %v: %v",
 				arg.ClientId, err)

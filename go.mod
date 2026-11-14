@@ -68,7 +68,7 @@ require (
 	github.com/elastic/go-libaudit/v2 v2.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/glaslos/tlsh v0.2.0
-	github.com/go-errors/errors v1.4.2
+	github.com/go-errors/errors v1.5.1
 	github.com/go-json-experiment/json v0.0.0-20260820222146-c27c302e5fc3
 	github.com/go-ole/go-ole v1.3.1-0.20261012162311-28687b437c4b
 	github.com/go-sql-driver/mysql v1.7.1
@@ -104,7 +104,6 @@ require (
 	github.com/microsoft/wmi v0.45.0
 	github.com/minio/minio-go/v7 v7.0.99
 	github.com/mitchellh/go-wordwrap v1.0.1
-	github.com/mitchellh/panicwrap v1.0.0
 	github.com/mooijtech/go-pst/v6 v6.0.2
 	github.com/olekukonko/tablewriter v0.0.5
 	github.com/oschwald/maxminddb-golang v1.8.0
@@ -121,7 +120,7 @@ require (
 	github.com/sergi/go-diff v1.4.0
 	github.com/shirou/gopsutil/v4 v4.25.1
 	github.com/sirupsen/logrus v1.9.4
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.1
 	github.com/syndtr/goleveldb v1.0.0
 	github.com/ulikunitz/xz v0.5.15
 	github.com/valyala/fastjson v1.6.4
@@ -254,6 +253,7 @@ require (
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/geoffgarside/ber v1.2.0 // indirect
 	github.com/gizak/termui/v3 v3.1.0 // indirect
+	github.com/glycerine/rbuf v0.0.0-20190314090850-75b78581bebe // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-jose/go-jose/v4 v4.1.6 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
@@ -270,6 +270,7 @@ require (
 	github.com/googleapis/enterprise-certificate-proxy v0.3.11 // indirect
 	github.com/googleapis/gax-go/v2 v2.17.0 // indirect
 	github.com/gorilla/css v1.0.0 // indirect
+	github.com/grongor/panicwatch v1.3.0 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
@@ -339,15 +340,16 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.44.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.64.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.64.0 // indirect
-	go.opentelemetry.io/otel v1.45.0 // indirect
-	go.opentelemetry.io/otel/metric v1.45.0 // indirect
+	go.opentelemetry.io/otel v1.47.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
+	go.opentelemetry.io/otel/metric v1.47.0 // indirect
 	go.opentelemetry.io/otel/sdk v1.45.0 // indirect
 	go.opentelemetry.io/otel/sdk/metric v1.45.0 // indirect
-	go.opentelemetry.io/otel/trace v1.45.0 // indirect
+	go.opentelemetry.io/otel/trace v1.47.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.28.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.4 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/arch v0.23.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/sync v0.24.0 // indirect

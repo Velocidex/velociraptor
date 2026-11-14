@@ -419,17 +419,9 @@ func (self ImportCollectionFunction) ensureClientId(
 	hostname string) (string, error) {
 
 	// Check if the client is already known.
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
-	if err != nil {
-		return "", err
-	}
-
-	// Check to see if we know about this client id. If we do
-	// then just return the same client id as in the
-	// container.
-	record, err := client_info_manager.Get(ctx, client_id)
+	_, err := services.GetClientInfoItem(ctx, config_obj, client_id, services.CheckForPresence)
 	if err == nil {
-		return record.ClientId, nil
+		return client_id, nil
 	}
 
 	// If we get here we don't know the client so we just create a

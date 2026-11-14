@@ -120,12 +120,15 @@ func (self *EnrollmentService) ProcessEnrollment(
 		return err
 	}
 
-	client_info, err := client_info_manager.Get(ctx, client_id)
+	last_interrogate, err := services.GetClientInfoItemString(ctx, config_obj, client_id,
+		func(client_info *actions_proto.ClientInfo) (string, error) {
+			return client_info.LastInterrogateFlowId, nil
+		})
 
 	// If we have a valid client record we do not need to
 	// interrogate. Interrogation happens automatically only once -
 	// the first time a client appears.
-	if err == nil && client_info.LastInterrogateFlowId != "" {
+	if err == nil && last_interrogate != "" {
 		return nil
 	}
 
@@ -149,14 +152,17 @@ func (self *EnrollmentService) ProcessEnrollment(
 	}
 
 	// Try again in case things changed while we waited for the limiter.
-	client_info, err = client_info_manager.Get(ctx, client_id)
-	if err == nil && client_info.LastInterrogateFlowId != "" {
+	last_interrogate, err = services.GetClientInfoItemString(ctx, config_obj, client_id,
+		func(client_info *actions_proto.ClientInfo) (string, error) {
+			return client_info.LastInterrogateFlowId, nil
+		})
+	if err == nil && last_interrogate != "" {
 		return nil
 	}
 
 	// Create a placeholder client record for interrogation.
 	err = client_info_manager.Set(ctx, &services.ClientInfo{
-		&actions_proto.ClientInfo{
+		ClientInfo: &actions_proto.ClientInfo{
 			ClientId: client_id,
 		}})
 	if err != nil {
