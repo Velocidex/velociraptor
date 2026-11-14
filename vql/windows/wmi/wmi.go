@@ -1,3 +1,6 @@
+//go:build windows
+// +build windows
+
 /*
    Velociraptor - Dig Deeper
    Copyright (C) 2019-2025 Rapid7 Inc.
@@ -15,29 +18,25 @@
    You should have received a copy of the GNU Affero General Public License
    along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-// VQL code for windows.
-/* This file is adapted from github.com/StackExchange/wmi/wmi.go
-
-We could not use that package directly because it only supports
-extracting the OLE data to a Go struct but we really need it in a
-ordereddict.Dict().
-*/
 
 package wmi
 
 import (
 	"context"
 	"errors"
+	"io"
+	"log"
 	"runtime"
 	"sync"
 
 	"github.com/Velocidex/ordereddict"
-	ole "github.com/go-ole/go-ole"
-	"github.com/go-ole/go-ole/oleutil"
 	"www.velocidex.com/golang/velociraptor/acls"
+	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
+
+	wmi "github.com/microsoft/wmi/pkg/wmiinstance"
 )
 
 var (
@@ -47,10 +46,10 @@ var (
 	lock               sync.Mutex
 )
 
-// S_FALSE is returned by CoInitializeEx if it was already called on this thread.
-const S_FALSE = 0x00000001
+func Query(query string, namespace string) (res []*ordereddict.Dict, err error) {
+	// The github.com/microsoft/wmi can panic
+	defer utils.CheckForPanic("WMI %s", query)
 
-func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 	lock.Lock()
 	defer lock.Unlock()
 
@@ -61,138 +60,40 @@ func Query(query string, namespace string) ([]*ordereddict.Dict, error) {
 		namespace = "ROOT/CIMV2"
 	}
 
-	err := ole.CoInitializeEx(0, ole.COINIT_MULTITHREADED)
-	if err != nil {
-		oleCode := err.(*ole.OleError).Code()
-		if oleCode != ole.S_OK && oleCode != S_FALSE {
-			return nil, err
-		}
-	}
-	defer ole.CoUninitialize()
+	sm := wmi.NewWmiSessionManager()
+	defer sm.Close()
 
-	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
-	if err != nil {
-		return nil, err
-	} else if unknown == nil {
-		return nil, ErrNilCreateObject
-	}
-	defer unknown.Release()
-
-	wmi, err := unknown.QueryInterface(ole.IID_IDispatch)
+	session, err := sm.GetLocalSession(namespace)
 	if err != nil {
 		return nil, err
 	}
-	defer wmi.Release()
+	_, err = session.Connect()
+	if err != nil {
+		return nil, err
+	}
+	defer session.Close()
 
-	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", nil, namespace)
+	rows, err := session.QueryInstances(query)
 	if err != nil {
 		return nil, err
 	}
 
-	service := serviceRaw.ToIDispatch()
-	defer service.Release()
-
-	resultRaw, err := oleutil.CallMethod(service, "ExecQuery", query)
-	if err != nil {
-		return nil, err
-	}
-	wmi_result := resultRaw.ToIDispatch()
-	defer wmi_result.Release()
-
-	result := []*ordereddict.Dict{}
-	properties := []string{}
-
-	err = oleutil.ForEach(wmi_result,
-		func(v *ole.VARIANT) error {
-			item := v.ToIDispatch()
-			defer item.Release()
-
-			if len(properties) == 0 {
-				item_properties, err := getProperties(item)
-				if err != nil {
-					return err
-				}
-				properties = item_properties
-			}
-
-			row := ordereddict.NewDict().SetCaseInsensitive()
-			for _, property := range properties {
-				property_raw, err := item.GetProperty(property)
-				if err != nil {
-					row.Set(property, &vfilter.Null{})
-					continue
-				}
-
-				defer func() {
-					_ = property_raw.Clear()
-				}()
-
-				// If it is an array we convert it here.
-				if property_raw.VT&ole.VT_ARRAY > 0 {
-					result := []interface{}{}
-					for _, item := range property_raw.ToArray().ToValueArray() {
-						switch item.(type) {
-						case *ole.IDispatch:
-						case *ole.IUnknown:
-						default:
-							result = append(result, item)
-						}
-					}
-
-					row.Set(property, result)
-					continue
-				}
-
-				switch property_raw.VT {
-				case ole.VT_UNKNOWN, ole.VT_DISPATCH:
-					// Do not set these because we
-					// cant do anything with them.
-
-				default:
-					row.Set(property, property_raw.Value())
-				}
-			}
-
-			result = append(result, row)
-			return nil
-		})
-	return result, err
-}
-
-func getProperties(item *ole.IDispatch) ([]string, error) {
-	result := []string{}
-	properties_raw, err := item.GetProperty("Properties_")
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		_ = properties_raw.Clear()
-	}()
-
-	properties := properties_raw.ToIDispatch()
-	defer properties.Release()
-
-	err = oleutil.ForEach(properties,
-		func(v *ole.VARIANT) error {
-			v_dispatch := v.ToIDispatch()
-			defer v_dispatch.Release()
-
-			name, err := v_dispatch.GetProperty("Name")
+	// Iterating over the results
+	for _, instance := range rows {
+		row := ordereddict.NewDict().SetCaseInsensitive()
+		properties := instance.GetClass().GetPropertiesNames()
+		for _, property := range properties {
+			fieldValue, err := instance.GetProperty(property)
 			if err != nil {
-				return err
-			}
-			defer func() {
-				_ = name.Clear()
-			}()
-
-			value, ok := name.Value().(string)
-			if ok {
-				result = append(result, value)
+				continue
 			}
 
-			return nil
-		})
-	return result, err
+			row.Set(property, fieldValue)
+		}
+		res = append(res, row)
+	}
+
+	return res, err
 }
 
 // The VQL WMI plugin.
@@ -231,6 +132,7 @@ func runWMIQuery(
 }
 
 func init() {
+	log.SetOutput(io.Discard)
 	vql_subsystem.RegisterPlugin(&vfilter.GenericListPlugin{
 		PluginName: "wmi",
 		Doc:        "Execute simple WMI queries synchronously.",
