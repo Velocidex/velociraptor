@@ -90,13 +90,11 @@ class OfflineCollectorParameters  extends React.Component {
                       >
                         <option value="None">{T("None")}</option>
                         <option value="X509">{T("X509 Certificate/Frontend Cert")}</option>
-                        <option value="PGP">{T("PGP Encryption")}</option>
                         <option value="Password">{T("Password")}</option>
                       </Form.Control>
                     </Col>
                   </Form.Group>
-                  {(this.props.parameters.encryption_scheme === "PGP" ||
-                    this.props.parameters.encryption_scheme === "X509") &&
+                  {this.props.parameters.encryption_scheme === "X509" &&
                    <Form.Group as={Row} >
                      <Form.Label column sm="3">{T("Public Key/Cert")}</Form.Label>
                      <Col sm="8">
