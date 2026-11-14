@@ -301,12 +301,7 @@ func ws_send_client_messages(
 		// check should be very quick since it is just a lookup in the
 		// client info manager's LRU.
 		source := message_info.Source
-		client_info_manager, err := services.GetClientInfoManager(org_config_obj)
-		if err != nil {
-			return send_error(ws, err, http.StatusServiceUnavailable)
-		}
-
-		_, err = client_info_manager.Get(ctx, source)
+		_, err = services.GetClientInfoItem(ctx, config_obj, source, services.CheckForPresence)
 		if err != nil {
 			journal, err := services.GetJournal(org_config_obj)
 			if err != nil {

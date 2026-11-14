@@ -61,6 +61,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"golang.org/x/time/rate"
 	"google.golang.org/protobuf/proto"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	flows_proto "www.velocidex.com/golang/velociraptor/flows/proto"
@@ -362,12 +363,10 @@ func (self *HuntManager) ProcessParticipationWithError(
 	}
 
 	// Get some info about the client
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
-	if err != nil {
-		return err
-	}
-
-	client_info, err := client_info_manager.Get(ctx, participation_row.ClientId)
+	host_os, err := services.GetClientInfoItemString(ctx, config_obj, participation_row.ClientId,
+		func(record *actions_proto.ClientInfo) (string, error) {
+			return record.System, nil
+		})
 	if err != nil {
 		return fmt.Errorf("hunt_manager: failed to get client %v: %w",
 			participation_row.ClientId, err)
@@ -414,7 +413,7 @@ func (self *HuntManager) ProcessParticipationWithError(
 		// Hunt is stopped.
 		return fmt.Errorf("Hunt %v is stopped", participation_row.HuntId)
 
-	} else if !huntMatchesOS(hunt_obj, client_info) {
+	} else if !huntMatchesOS(hunt_obj, services.NewClientOS(host_os)) {
 		// Hunt does not match OS condition
 		return fmt.Errorf("Hunt %v: %v does not match OS condition",
 			participation_row.HuntId, participation_row.ClientId)
@@ -533,7 +532,7 @@ func huntHasExcludeLabel(
 	return true
 }
 
-func huntMatchesOS(hunt_obj *api_proto.Hunt, client_info *services.ClientInfo) bool {
+func huntMatchesOS(hunt_obj *api_proto.Hunt, os services.ClientOS) bool {
 	if hunt_obj.Condition == nil {
 		return true
 	}
@@ -542,7 +541,6 @@ func huntMatchesOS(hunt_obj *api_proto.Hunt, client_info *services.ClientInfo) b
 		return true
 	}
 
-	os := client_info.OS()
 	switch os_condition.Os {
 	case api_proto.HuntOsCondition_WINDOWS:
 		return os == services.Windows

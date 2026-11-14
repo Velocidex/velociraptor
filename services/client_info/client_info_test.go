@@ -2,6 +2,7 @@ package client_info_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"sync"
@@ -399,6 +400,33 @@ func (self *ClientInfoTestSuite) TestMetadataIndex() {
 	// We should be able to search for the metadata record.
 	assert.Equal(self.T(), 1, len(response.Names))
 	assert.Equal(self.T(), "dept:accountants", response.Names[0])
+}
+
+func (self *ClientInfoTestSuite) TestClientInfoHelpers() {
+	// Non existent clients should return utils.NotFoundError
+	_, err := services.GetClientInfoItem(self.Ctx, self.ConfigObj, "C.NoSuchId",
+		func(record *actions_proto.ClientInfo) (interface{}, error) {
+			return 1, nil
+		})
+	assert.Error(self.T(), err)
+	assert.True(self.T(), errors.Is(err, utils.NotFoundError))
+
+	// The callback can return anything
+	res, err := services.GetClientInfoItem(self.Ctx, self.ConfigObj, self.client_id,
+		func(record *actions_proto.ClientInfo) (interface{}, error) {
+			return 1, nil
+		})
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), 1, res)
+
+	hostname, err := services.GetClientInfoItemString(self.Ctx, self.ConfigObj, self.client_id,
+		func(record *actions_proto.ClientInfo) (string, error) {
+			return record.Hostname, nil
+		})
+
+	assert.NoError(self.T(), err)
+	assert.Equal(self.T(), "Hostname", hostname)
+
 }
 
 func (self *ClientInfoTestSuite) cleanFixture(in []byte) []byte {

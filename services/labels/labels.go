@@ -89,20 +89,21 @@ func (self *Labeler) getRecord(
 		return cached_any.(*CachedLabels), nil
 	}
 
-	client_info_manager, err := services.GetClientInfoManager(config_obj)
+	cached_any, err = services.GetClientInfoItem(ctx, config_obj, client_id,
+		func(client_info *actions_proto.ClientInfo) (interface{}, error) {
+			return &CachedLabels{record: &api_proto.ClientLabels{
+				Timestamp: client_info.LabelsTimestamp,
+				Label:     client_info.Labels,
+			}}, nil
+		})
 	if err != nil {
 		return nil, err
 	}
 
-	client_info, err := client_info_manager.Get(ctx, client_id)
-	if err != nil {
-		return nil, err
+	cached, ok := cached_any.(*CachedLabels)
+	if !ok {
+		return nil, utils.InvalidArgError
 	}
-
-	cached := &CachedLabels{record: &api_proto.ClientLabels{
-		Timestamp: client_info.LabelsTimestamp,
-		Label:     client_info.Labels,
-	}}
 
 	cached.lower_labels = nil
 	for _, label := range cached.record.Label {

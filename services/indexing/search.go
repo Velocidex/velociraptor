@@ -305,8 +305,7 @@ func (self *Indexer) searchClientIndex(
 		}
 
 		if uint64(len(result.Items)) <= limit {
-			api_client, err := self._FastGetApiClient(ctx, self.config_obj,
-				client_id, client_info_manager)
+			api_client, err := self.FastGetApiClient(ctx, self.config_obj, client_id)
 			if err != nil {
 				total_count--
 				continue
@@ -408,8 +407,7 @@ func (self *Indexer) searchUnlabeledClients(
 		}
 
 		if uint64(len(result.Items)) <= limit {
-			api_client, err := self._FastGetApiClient(ctx, self.config_obj,
-				client_id, client_info_manager)
+			api_client, err := self.FastGetApiClient(ctx, self.config_obj, client_id)
 			if err != nil {
 				total_count--
 				continue

@@ -554,19 +554,13 @@ func send_client_messages(
 			// Must be before the Process() call to prevent race.
 			source := message_info.Source
 
-			client_info_manager, err := services.GetClientInfoManager(org_config_obj)
-			if err != nil {
-				http.Error(w, "", http.StatusServiceUnavailable)
-				return
-			}
-
 			// If client is not known, make it enroll. This can happen for
 			// example, when the client was just deleted, but we still
 			// have ciphers cached to it - the client is not known but we
 			// can still verify the comms as authenticated. NOTE: this
 			// check should be very quick since it is just a lookup in the
 			// client info manager's LRU.
-			_, err = client_info_manager.Get(ctx, source)
+			_, err = services.GetClientInfoItem(ctx, config_obj, source, services.CheckForPresence)
 			if err != nil {
 				journal, err := services.GetJournal(org_config_obj)
 				if err != nil {
