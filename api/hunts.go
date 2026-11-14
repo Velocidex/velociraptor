@@ -12,6 +12,7 @@ import (
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"www.velocidex.com/golang/velociraptor/acls"
+	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/api/tables"
 	"www.velocidex.com/golang/velociraptor/constants"
@@ -635,17 +636,14 @@ func (self *ApiServer) EstimateHunt(
 				os_name = "darwin"
 			}
 
-			client_info_manager, err := services.GetClientInfoManager(org_config_obj)
-			if err != nil {
-				return nil, Status(self.verbose, err)
-			}
-
-			for hit := range indexer.SearchIndexWithPrefix(ctx,
-				org_config_obj, "all") {
+			for hit := range indexer.SearchIndexWithPrefix(ctx, org_config_obj, "all") {
 				client_id := hit.Entity
-				client_info, err := client_info_manager.Get(ctx, client_id)
+				system, err := services.GetClientInfoItem(ctx, org_config_obj, client_id,
+					func(record *actions_proto.ClientInfo) (interface{}, error) {
+						return record.System, nil
+					})
 				if err == nil {
-					if os_name == client_info.System {
+					if os_name == system {
 						is_client_recent(hit.Entity, seen)
 					}
 				}

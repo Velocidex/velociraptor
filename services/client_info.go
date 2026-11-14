@@ -2,12 +2,14 @@ package services
 
 import (
 	"context"
+	"strings"
 
 	"github.com/Velocidex/ordereddict"
 	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 const (
@@ -27,6 +29,18 @@ var (
 )
 
 type ClientOS int
+
+func NewClientOS(os string) ClientOS {
+	switch strings.ToLower(os) {
+	case "windows":
+		return Windows
+	case "linux":
+		return Linux
+	case "darwin":
+		return MacOS
+	}
+	return Unknown
+}
 
 // Keep some stats about the client in the cache. These will be synced
 // to disk periodically.
@@ -57,15 +71,7 @@ func (self *ClientInfo) Copy() *ClientInfo {
 }
 
 func (self *ClientInfo) OS() ClientOS {
-	switch self.System {
-	case "windows":
-		return Windows
-	case "linux":
-		return Linux
-	case "darwin":
-		return MacOS
-	}
-	return Unknown
+	return NewClientOS(self.System)
 }
 
 type ClientInfoManager interface {
@@ -85,6 +91,8 @@ type ClientInfoManager interface {
 	Modify(ctx context.Context, client_id string,
 		modifier func(client_info *ClientInfo) (new_record *ClientInfo, err error)) error
 
+	// Gets a **copy** of the client record. This is expensive -
+	// consider using Modify to get only the fields you want.
 	Get(ctx context.Context,
 		client_id string) (*ClientInfo, error)
 
@@ -154,14 +162,68 @@ func GetHostname(
 	ctx context.Context,
 	config_obj *config_proto.Config,
 	client_id string) string {
-	client_info_manager, err := GetClientInfoManager(config_obj)
-	if err != nil {
-		return ""
-	}
-	info, err := client_info_manager.Get(ctx, client_id)
-	if err != nil {
-		return ""
+
+	hostname, err := GetClientInfoItem(ctx, config_obj, client_id,
+		func(record *actions_proto.ClientInfo) (interface{}, error) {
+			return record.Hostname, nil
+		})
+	if err == nil {
+		return hostname.(string)
 	}
 
-	return info.Hostname
+	return ""
 }
+
+// A helper function to safely copy parts of the client record under
+// lock.
+func GetClientInfoItem(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	cb func(record *actions_proto.ClientInfo) (interface{}, error)) (result interface{}, err error) {
+	client_info_manager, err := GetClientInfoManager(config_obj)
+	if err != nil {
+		return nil, err
+	}
+
+	err1 := client_info_manager.Modify(ctx, client_id,
+		func(client_info *ClientInfo) (new_record *ClientInfo, err error) {
+			if client_info == nil {
+				return nil, utils.NotFoundError
+			}
+
+			if cb != nil {
+				result, err = cb(client_info.ClientInfo)
+			}
+			return nil, nil
+		})
+
+	if err1 != nil {
+		return nil, err1
+	}
+	return result, nil
+}
+
+func GetClientInfoItemString(
+	ctx context.Context,
+	config_obj *config_proto.Config,
+	client_id string,
+	cb func(record *actions_proto.ClientInfo) (string, error)) (result string, err error) {
+	res, err := GetClientInfoItem(ctx, config_obj, client_id,
+		func(record *actions_proto.ClientInfo) (interface{}, error) {
+			return cb(record)
+		})
+	if err != nil {
+		return "", err
+	}
+	res_str, ok := res.(string)
+	if !ok {
+		return "", utils.InvalidArgError
+	}
+
+	return res_str, nil
+}
+
+var (
+	CheckForPresence func(record *actions_proto.ClientInfo) (interface{}, error) = nil
+)
