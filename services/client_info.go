@@ -163,12 +163,12 @@ func GetHostname(
 	config_obj *config_proto.Config,
 	client_id string) string {
 
-	hostname, err := GetClientInfoItem(ctx, config_obj, client_id,
-		func(record *actions_proto.ClientInfo) (interface{}, error) {
+	hostname, err := GetClientInfoItemString(ctx, config_obj, client_id,
+		func(record *actions_proto.ClientInfo) (string, error) {
 			return record.Hostname, nil
 		})
 	if err == nil {
-		return hostname.(string)
+		return hostname
 	}
 
 	return ""
