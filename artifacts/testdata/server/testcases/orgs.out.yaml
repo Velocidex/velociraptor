@@ -378,6 +378,17 @@ Output: []
 Query: LET _ <= org_create(name="MySecondOrg", org_id="ORGID2")
 Output: []
 
+# Try to switch to the new org.
+Query: SELECT * FROM query(query={ SELECT * FROM query(query={ SELECT config.nonce FROM scope() }, org_id="ORGID2") }, runas="ReaderUser")
+Output: []
+
+Query: SELECT * FROM test_read_logs() WHERE Log =~ "User ReaderUser does not have access to org ORGID2" AND NOT Log =~ "SELECT"
+Output: [
+ {
+  "Log": "Velociraptor: ERROR:query: User ReaderUser does not have access to org ORGID2: PermissionDenied\n"
+ }
+]
+
 # Give OrgUser a reader role in that org.
 Query: LET _ <= user_grant(user="OrgUser", roles="reader", orgs=["ORGID2"])
 Output: []

@@ -64,7 +64,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.11.0
 	github.com/crewjam/saml v0.6.3
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/dustin/go-humanize v1.0.1
+	github.com/dustin/go-humanize v1.1.0
 	github.com/elastic/go-libaudit/v2 v2.4.0
 	github.com/evanphx/json-patch/v5 v5.6.0
 	github.com/glaslos/tlsh v0.2.0
@@ -97,7 +97,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/lpar/gzipped v1.1.0
 	github.com/magefile/mage v1.17.2
-	github.com/mattn/go-isatty v0.0.20
+	github.com/mattn/go-isatty v0.0.24
 	github.com/mattn/go-pointer v0.0.0-20180825124634-49522c3f3791
 	github.com/mattn/go-sqlite3 v1.14.44
 	github.com/mccutchen/go-httpbin/v2 v2.18.3
@@ -157,7 +157,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20260820173147-f8fe490bf569
+	www.velocidex.com/golang/vfilter v0.0.0-20261116103538-0cb438f2ba71
 	www.velocidex.com/golang/vtypes v0.0.0-20261028150435-b85936486574
 )
 

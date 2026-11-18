@@ -182,7 +182,6 @@ func checkDataStorePermissions(
 
 	// If the user is allowed to impersonate another user, then we
 	// need to check the other user's permission.
-
 	err = checkToken(token, filename, alternative_permissions)
 	if err != nil {
 		return nil, "", err

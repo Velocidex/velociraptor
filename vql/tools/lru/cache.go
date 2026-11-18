@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
@@ -35,13 +36,13 @@ func NewLRU(ctx context.Context, scope vfilter.Scope, opts Options) (LRUCache, e
 }
 
 type _CacheFunctionArgs struct {
-	Func     types.LazyExpr  `vfilter:"optional,field=func,doc=A function to evaluate (deprecated - use a lambda instead)"`
-	Lambda   *vfilter.Lambda `vfilter:"optional,field=lambda,doc=A VQL lambda to evaluate with the key as parameter. e.g.. x=>x+1 "`
-	Name     string          `vfilter:"optional,field=name,doc=The global name of this cache (needed when more than one)"`
-	Key      types.Any       `vfilter:"optional,field=key,doc=Cache key to use."`
-	Period   int64           `vfilter:"optional,field=period,doc=The latest age of the cache."`
-	Filename string          `vfilter:"optional,field=filename,doc=Filename for a persistent cache."`
-	MaxSize  uint64          `vfilter:"optional,field=max_size,doc=Maximum size of the LRU (default 10000)."`
+	Func     types.LazyExpr    `vfilter:"optional,field=func,doc=A function to evaluate (deprecated - use a lambda instead)"`
+	Lambda   *vfilter.Lambda   `vfilter:"optional,field=lambda,doc=A VQL lambda to evaluate with the key as parameter. e.g.. x=>x+1 "`
+	Name     string            `vfilter:"optional,field=name,doc=The global name of this cache (needed when more than one)"`
+	Key      types.Any         `vfilter:"optional,field=key,doc=Cache key to use."`
+	Period   int64             `vfilter:"optional,field=period,doc=The latest age of the cache."`
+	Filename *accessors.OSPath `vfilter:"optional,field=filename,doc=Filename for a persistent cache."`
+	MaxSize  uint64            `vfilter:"optional,field=max_size,doc=Maximum size of the LRU (default 10000)."`
 }
 
 type _CacheFunc struct{}
@@ -83,7 +84,19 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 		}
 
 		opts := Options{}
-		opts.Filename = arg.Filename
+		if arg.Filename != nil {
+			err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+			if err != nil {
+				scope.Log("cache: %s", err.Error())
+				return vfilter.Null{}
+			}
+
+			opts.Filename, err = accessors.GetUnderlyingAPIFilename("file", scope, arg.Filename)
+			if err != nil {
+				scope.Log("cache: %s", err.Error())
+				return vfilter.Null{}
+			}
+		}
 		opts.MaxExpirySec = int(arg.Period)
 		opts.UpdateExpiryOnAccess = true
 		opts.MaxSize = int(arg.MaxSize)

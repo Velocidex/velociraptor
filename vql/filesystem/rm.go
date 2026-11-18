@@ -40,7 +40,7 @@ func (self *_RmFunction) Call(ctx context.Context,
 	}
 
 	// Make sure we are allowed to write there.
-	err = file.CheckPath(arg.Filename)
+	filename, err := file.CheckPath(arg.Filename)
 	if err != nil {
 		scope.Log("rm: %v", err)
 		return false
@@ -48,12 +48,12 @@ func (self *_RmFunction) Call(ctx context.Context,
 
 	// On windows especially we can not remove files that are opened
 	// by something else, so we keep trying for a while.
-	_, err = os.Stat(arg.Filename)
+	_, err = os.Stat(filename)
 	if errors.Is(err, os.ErrNotExist) {
 		return false
 	}
 
-	RemoveFile(ctx, 0, arg.Filename, scope)
+	RemoveFile(ctx, 0, filename, scope)
 
 	return true
 }

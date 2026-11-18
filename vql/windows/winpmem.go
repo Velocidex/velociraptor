@@ -89,7 +89,7 @@ func (self WinpmemFunction) Call(
 				return vfilter.Null{}
 			}
 		} else {
-			err = file.CheckPath(arg.DriverPath)
+			arg.DriverPath, err = file.CheckPath(arg.DriverPath)
 			if err != nil {
 				scope.Log("ERROR:winpmem: %v", err)
 				return vfilter.Null{}
@@ -140,7 +140,7 @@ func (self WinpmemFunction) Call(
 
 	// The user asked for a memory image.
 	if arg.ImagePath != "" {
-		err = file.CheckPath(arg.ImagePath)
+		arg.ImagePath, err = file.CheckPath(arg.ImagePath)
 		if err != nil {
 			scope.Log("ERROR:winpmem: %v", err)
 			return vfilter.Null{}

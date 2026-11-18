@@ -29,7 +29,7 @@ import (
 	"go.lsp.dev/jsonrpc2"
 	"go.lsp.dev/protocol"
 	"www.velocidex.com/golang/velociraptor/grpc_client"
-	"www.velocidex.com/golang/velociraptor/logging"
+	logging "www.velocidex.com/golang/velociraptor/logging"
 	lsp_client "www.velocidex.com/golang/velociraptor/services/lsp/client"
 )
 
@@ -47,7 +47,7 @@ var (
 		"truncated.").Bool()
 
 	lsp_cmd_port = lsp_cmd.Flag(
-		"port", "Is specified we listen on this TCP port, "+
+		"port", "If specified we listen on this TCP port, "+
 			"otherwise use stdio").Int()
 )
 

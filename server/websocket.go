@@ -301,7 +301,7 @@ func ws_send_client_messages(
 		// check should be very quick since it is just a lookup in the
 		// client info manager's LRU.
 		source := message_info.Source
-		_, err = services.GetClientInfoItem(ctx, config_obj, source, services.CheckForPresence)
+		_, err = services.GetClientInfoItem(ctx, org_config_obj, source, services.CheckForPresence)
 		if err != nil {
 			journal, err := services.GetJournal(org_config_obj)
 			if err != nil {
@@ -357,7 +357,7 @@ func ws_send_client_messages(
 			defer ws.Close()
 
 			for {
-				deadline := utils.Now().Add(http_comms.PongPeriod(config_obj))
+				deadline := utils.Now().Add(http_comms.PongPeriod(org_config_obj))
 				_, _, err = ws.NextReaderWithDeadline(deadline)
 				if err != nil {
 					return

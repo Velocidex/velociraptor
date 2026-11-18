@@ -57,6 +57,15 @@ func SetupTest(t *testing.T) (string, string) {
 	assert.NoError(t, err)
 
 	if len(binaries) == 0 {
+		binaries, err = filepath.Glob(
+			filepath.Join(cwd, "output",
+				"velociraptor*"+constants.VERSION+"-"+runtime.GOOS+
+					"-"+runtime.GOARCH+extension))
+		assert.NoError(t, err)
+	}
+	assert.True(t, len(binaries) > 0)
+
+	if len(binaries) == 0 {
 		binaries, _ = filepath.Glob(
 			filepath.Join(cwd, "..", "output", "velociraptor*"+extension))
 	}

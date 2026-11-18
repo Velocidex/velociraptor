@@ -3,6 +3,7 @@ package tools
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/acls"
@@ -49,9 +50,12 @@ func init() {
 				_, pres := args.Get("MapPanic")
 				if pres {
 					makeMapPanic()
-				}
+					time.Sleep(10 * time.Second)
 
-				panic("oops")
+				} else {
+					panic("oops")
+				}
+				return result
 			},
 			Doc: "Crash the program with a panic!",
 		})
