@@ -652,6 +652,7 @@ func build_gui_files() error {
 
 		fd, err := os.OpenFile(keep_path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 		if err == nil {
+			fd.WriteString("\n")
 			fd.Close()
 		}
 	}

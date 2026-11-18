@@ -97,7 +97,7 @@ func (self RepackFunction) Call(ctx context.Context,
 		}
 
 		// Make sure we are allowed to write there.
-		err = file.CheckPath(arg.DestFilename)
+		arg.DestFilename, err = file.CheckPath(arg.DestFilename)
 		if err != nil {
 			scope.Log("ERROR:client_repack: %v", err)
 			return vfilter.Null{}
@@ -195,7 +195,7 @@ func (self RepackFunction) Call(ctx context.Context,
 
 	// Write to a local file.
 	if arg.DestFilename != "" {
-		err = file.CheckPath(arg.DestFilename)
+		arg.DestFilename, err = file.CheckPath(arg.DestFilename)
 		if err != nil {
 			return err
 		}

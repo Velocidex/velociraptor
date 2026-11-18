@@ -533,7 +533,8 @@ func ExportNotebookToHTML(
 			return nil, err
 		}
 
-		_, err = tee_writer.Write([]byte(fmt.Sprintf(HtmlPreable, notebook.Name)))
+		_, err = fmt.Fprintf(tee_writer, HtmlPreable,
+			html.EscapeString(notebook.Name))
 		if err != nil {
 			return nil, err
 		}

@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	vfilter "www.velocidex.com/golang/vfilter"
@@ -91,7 +93,7 @@ type _MemoizeFunctionArgs struct {
 	Key      string            `vfilter:"required,field=key,doc=The name of the column to use as a key."`
 	Period   int64             `vfilter:"optional,field=period,doc=The latest age of the cache."`
 	Name     string            `vfilter:"optional,field=name,doc=The name of this cache."`
-	Filename string            `vfilter:"optional,field=filename,doc=Filename for a persistent cache."`
+	Filename *accessors.OSPath `vfilter:"optional,field=filename,doc=Filename for a persistent cache."`
 }
 
 type _MemoizeFunction struct{}
@@ -122,7 +124,19 @@ func (self _MemoizeFunction) Call(ctx context.Context, scope vfilter.Scope,
 	period := time.Duration(arg.Period) * time.Second
 
 	opts := Options{}
-	opts.Filename = arg.Filename
+	if arg.Filename != nil {
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("memoize: %s", err.Error())
+			return vfilter.Null{}
+		}
+
+		opts.Filename, err = accessors.GetUnderlyingAPIFilename("file", scope, arg.Filename)
+		if err != nil {
+			scope.Log("memoize: %s", err.Error())
+			return vfilter.Null{}
+		}
+	}
 
 	// Make sure that the underlying LRU does not expire anything - we
 	// handle expiry ourselves.

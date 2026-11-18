@@ -22,6 +22,8 @@ import (
 
 	"github.com/Velocidex/disklru"
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
+	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/services/debug"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -525,14 +527,43 @@ func (self _InstallProcessTracker) Call(ctx context.Context,
 	if arg.CacheFile == "" {
 		arg.CacheFile = utils.ExpandEnv(vql_subsystem.GetStringFromRow(
 			scope, scope, constants.PROCESS_TRACKER_CACHE))
+
+	}
+
+	raw_filename := ""
+	if arg.CacheFile != "" {
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
+		if err != nil {
+			scope.Log("process_tracker: %v", err)
+			return false
+		}
+
+		accessor, err := accessors.GetAccessor("file", scope)
+		if err != nil {
+			scope.Log("process_tracker: %v", err)
+			return false
+		}
+		pathspec, err := accessor.ParsePath(arg.CacheFile)
+		if err != nil {
+			scope.Log("process_tracker: %v", err)
+			return false
+		}
+
+		raw_filename, err = accessors.GetUnderlyingAPIFilename(
+			"file", scope, pathspec)
+		if err != nil {
+			scope.Log("process_tracker: %v", err)
+			return false
+		}
 	}
 
 	// The cache contains both process entries and links. The Size
 	// should be large enough to also contain live links to the
 	// entries.
+
 	opts := Options{
 		Options: disklru.Options{
-			Filename:             arg.CacheFile,
+			Filename:             raw_filename,
 			MaxSize:              int(arg.MaxSize),
 			MaxExpirySec:         int(arg.MaxExpirySec),
 			UpdateExpiryOnAccess: true,

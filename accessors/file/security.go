@@ -24,13 +24,18 @@ func SetPrefixes(allowed *utils.PrefixTree, denied *utils.PrefixTree) {
 	deniedPrefixes = denied
 }
 
-func CheckPath(full_path string) error {
+func CheckPath(full_path string) (string, error) {
 	destination_path, err := accessors.NewNativePath(full_path)
 	if err != nil || len(destination_path.Components) == 0 {
-		return err
+		return "", err
 	}
 
-	return CheckPrefix(destination_path)
+	err = CheckPrefix(destination_path)
+	if err != nil {
+		return "", err
+	}
+
+	return destination_path.String(), nil
 }
 
 func CheckPrefix(full_path *accessors.OSPath) error {

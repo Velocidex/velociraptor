@@ -142,12 +142,12 @@ func (self *BasicAuthenticator) AuthenticateUserHandler(
 				return
 			}
 
-			// Must use json encoding because grpc can not handle
+			// Must use quote encoding because grpc can not handle
 			// binary data in metadata.
 			ctx := context.WithValue(
 				r.Context(),
 				constants.GRPC_USER_CONTEXT,
-				string(user_record.Name))
+				utils.Quote(user_record.Name))
 
 			_ = users_manager.SetUserStats(r.Context(), self.config_obj, username,
 				&api_proto.UserStats{

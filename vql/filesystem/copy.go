@@ -127,7 +127,7 @@ func (self CopyFunction) Call(ctx context.Context,
 	}
 
 	// Make sure we are allowed to write there.
-	err = file.CheckPath(arg.Destination)
+	dest, err := file.CheckPath(arg.Destination)
 	if err != nil {
 		scope.Log("copy: %s", err.Error())
 		return vfilter.Null{}
@@ -139,10 +139,10 @@ func (self CopyFunction) Call(ctx context.Context,
 	}
 
 	if arg.Directories {
-		err = os.MkdirAll(filepath.Dir(arg.Destination), dir_permissions)
+		err = os.MkdirAll(filepath.Dir(dest), dir_permissions)
 		if err != nil {
 			scope.Log("copy: Failed to create directories for %v: %v",
-				arg.Destination, err)
+				dest, err)
 			return vfilter.Null{}
 		}
 	}
@@ -151,13 +151,7 @@ func (self CopyFunction) Call(ctx context.Context,
 	sub_ctx, cancel := context.WithCancel(ctx)
 	_ = scope.AddDestructor(cancel)
 
-	err = file.CheckPath(arg.Destination)
-	if err != nil {
-		scope.Log("ERROR:copy: %v", err)
-		return vfilter.Null{}
-	}
-
-	to, err := os.OpenFile(arg.Destination, flags, permissions)
+	to, err := os.OpenFile(dest, flags, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",
 			arg.Destination, err)
@@ -171,7 +165,7 @@ func (self CopyFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return arg.Destination
+	return dest
 }
 
 func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

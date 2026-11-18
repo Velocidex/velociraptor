@@ -159,7 +159,7 @@ func (self CollectPlugin) configureCollection(
 	if arg.Output != "" {
 
 		// Make sure we are allowed to write there.
-		err = file.CheckPath(arg.Output)
+		output, err := file.CheckPath(arg.Output)
 		if err != nil {
 			return nil, err
 		}
@@ -171,7 +171,7 @@ func (self CollectPlugin) configureCollection(
 
 		// Build the container to receive the output from the
 		// queries. The container may be password protected.
-		err = manager.MakeContainer(arg.Output, arg.Password, arg.Level)
+		err = manager.MakeContainer(output, arg.Password, arg.Level)
 		if err != nil {
 			return nil, err
 		}

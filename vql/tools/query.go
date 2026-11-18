@@ -107,7 +107,17 @@ func (self QueryPlugin) Call(
 		// The subscope will switch to the specified org.
 		builder.Config = org_config_obj
 		builder.ACLManager = acl_managers.NewServerACLManager(
-			org_config_obj, vql_subsystem.GetPrincipal(scope))
+			org_config_obj, principal)
+
+		// Verify that the user actually has minimal permission in the
+		// target org.
+		perm, err := builder.ACLManager.CheckAccess(acls.READ_RESULTS)
+		if !perm || err != nil {
+			scope.Log("ERROR:query: User %v does not have access to org %v: %v",
+				principal, org_config_obj.OrgId, err)
+			close(output_chan)
+			return output_chan
+		}
 	}
 
 	if arg.Principal != "" && arg.Principal != principal {
@@ -129,7 +139,9 @@ func (self QueryPlugin) Call(
 			return output_chan
 		}
 
-		// Run as the specified user.
+		// Run as the specified user. NOTE: The specified user may not
+		// actually have access but we run them anyway because of the
+		// impersonation.
 		builder.ACLManager = acl_managers.NewServerACLManager(
 			org_config_obj, arg.Principal)
 	}

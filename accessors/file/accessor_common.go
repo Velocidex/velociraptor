@@ -317,6 +317,11 @@ func (self OSFileSystemAccessor) ReadDir(dir string) ([]accessors.FileInfo, erro
 
 func (self *OSFileSystemAccessor) GetUnderlyingAPIFilename(
 	full_path *accessors.OSPath) (string, error) {
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return "", err
+	}
+
 	return full_path.PathSpec().Path, nil
 }
 

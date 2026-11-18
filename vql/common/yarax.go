@@ -82,6 +82,14 @@ func (self YaraXScanPlugin) Call(
 			return
 		}
 
+		// Being able to link the yarax dll is equivalent to execve.
+		err = vql_subsystem.CheckAccess(
+			scope, acls.EXECVE, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("yarax: %v", err)
+			return
+		}
+
 		if !yara_x.IsLoaded() {
 			yara_dll_path := utils.ToString(arg.YaraXDLLPath.Reduce(
 				ctx, scope, []vfilter.Any{scope}))

@@ -188,6 +188,9 @@ cat << SYSVSCRIPT > /etc/rc.d/init.d/{{.SysvService}}
 {{ ShellEscape ( Expand "SysvServiceDefinition" ) }}
 SYSVSCRIPT
 
+  # Allow the server to bind to low ports and increase its fd limit.
+  setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip {{.VelociraptorBinaryPath}}
+
   /bin/chmod +x /etc/rc.d/init.d/{{.SysvService}}
 
   ## Set it to start at boot
@@ -308,8 +311,6 @@ chmod -R go-r $(dirname "{{.ConfigPath}}")
 chown root:root {{.VelociraptorBinaryPath}}
 chmod 755 {{.VelociraptorBinaryPath}}
 
-# Allow the server to bind to low ports and increase its fd limit.
-setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip {{.VelociraptorBinaryPath}}
 /bin/systemctl enable {{.SystemdServiceFile}}
 /bin/systemctl start {{.SystemdServiceFile}}
 `,

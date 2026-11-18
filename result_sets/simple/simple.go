@@ -173,6 +173,12 @@ func (self *ResultSetWriterImpl) WriteCompressedJSONL(
 		return utils.MemoryError
 	}
 
+	// This is not reasonable - just reject it.
+	if byte_offset > constants.MAX_FILE_SIZE ||
+		uncompressed_size > constants.MAX_FILE_SIZE {
+		return utils.MemoryError
+	}
+
 	// Sync the index with the current buffers.
 	self.Flush()
 

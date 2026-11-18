@@ -26,7 +26,6 @@ import (
 
 	"github.com/Velocidex/ordereddict"
 	"www.velocidex.com/golang/velociraptor/accessors"
-	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
@@ -265,13 +264,6 @@ func (self WriteCSVPlugin) Call(
 			err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
 				scope.Log("write_csv: %s", err)
-				return
-			}
-
-			// Make sure we are allowed to write there.
-			err = file.CheckPrefix(arg.Filename)
-			if err != nil {
-				scope.Log("write_csv: %v", err)
 				return
 			}
 
