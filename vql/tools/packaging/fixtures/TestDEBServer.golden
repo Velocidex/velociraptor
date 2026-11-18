@@ -319,8 +319,6 @@ chmod -R go-r $(dirname "/etc/velociraptor/server.config.yaml")
 chown root:root /usr/local/bin/velociraptor
 chmod 755 /usr/local/bin/velociraptor
 
-# Allow the server to bind to low ports and increase its fd limit.
-setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor
 /bin/systemctl enable velociraptor_server.service
 /bin/systemctl start velociraptor_server.service
 

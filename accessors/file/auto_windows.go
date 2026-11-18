@@ -156,6 +156,10 @@ On Windows, we fallback to ntfs accessor if the file is not readable or locked.
 
 func (self *AutoFilesystemAccessor) GetUnderlyingAPIFilename(
 	full_path *accessors.OSPath) (string, error) {
+	err := CheckPrefix(full_path)
+	if err != nil {
+		return "", err
+	}
 	return full_path.PathSpec().Path, nil
 }
 

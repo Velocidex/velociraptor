@@ -57,6 +57,12 @@ func (self CatPlugin) Call(
 			return
 		}
 
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("cat: %v", err)
+			return
+		}
+
 		raw_accessor, ok := accessor.(accessors.RawFileAPIAccessor)
 		if !ok {
 			scope.Log("cat: accessor has no underlying file")

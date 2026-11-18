@@ -66,7 +66,7 @@ func (self *CompressedMemoryReader) Read(buf []byte) (n int, err error) {
 
 	offset := 0
 	for {
-		if offset >= len(buf) {
+		if offset >= len(buf) || offset < 0 {
 			break
 		}
 
@@ -79,7 +79,7 @@ func (self *CompressedMemoryReader) Read(buf []byte) (n int, err error) {
 		self.offset += int64(n)
 	}
 
-	if offset == 0 {
+	if offset <= 0 {
 		return 0, io.EOF
 	}
 

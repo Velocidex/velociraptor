@@ -147,14 +147,14 @@ func VerifyCatalogSignature(
 	return cat_file, nil
 }
 
-func ParseCatFile(cat_file string, output *ordereddict.Dict, verbose bool) error {
+func ParseCatFile(cat_file string, output *ordereddict.Dict, verbose bool) (err error) {
 
 	// Set the catalog file even if we can not read it - will be
 	// replaced later with the proper parse.
 	output.Update("_ExtraInfo", ordereddict.NewDict().
 		Set("Catalog", cat_file))
 
-	err := file.CheckPath(cat_file)
+	cat_file, err = file.CheckPath(cat_file)
 	if err != nil {
 		return err
 	}

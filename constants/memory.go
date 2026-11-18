@@ -17,4 +17,7 @@ const (
 
 	// A reasonable size for IO transfers
 	BLOCK_SIZE = 512 * 1024
+
+	// Largest uploaded file that makes sense 1Tb.
+	MAX_FILE_SIZE = 1024 * 1024 * 1024 * 1024
 )

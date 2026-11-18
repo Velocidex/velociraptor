@@ -20,10 +20,11 @@ type RoleACLManager struct {
 func (self *RoleACLManager) CheckAccess(
 	permissions ...acls.ACL_PERMISSION) (bool, error) {
 
+	// Reject if any of the permissions is missing.
 	for _, permission := range permissions {
 		ok, err := services.CheckAccessWithToken(self.Token, permission)
 		if !ok || err != nil {
-			return ok, err
+			return false, err
 		}
 	}
 

@@ -74,7 +74,7 @@ func (self *ApiServer) FSWriteBuffer(
 		api.PathType(in.PathType))
 
 	config_obj, principal, err := checkDataStorePermissions(
-		ctx, in.OrgId, path_spec, acls.READ_RESULTS)
+		ctx, in.OrgId, path_spec, acls.READ_RESULTS, acls.DATASTORE_ACCESS)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -171,7 +171,7 @@ func (self *ApiServer) FSDelete(
 		path.Components...).SetType(api.PathType(path.PathType))
 
 	org_config_obj, principal, err := checkDataStorePermissions(
-		ctx, in.OrgId, filename, acls.READ_RESULTS)
+		ctx, in.OrgId, filename, acls.DATASTORE_ACCESS, acls.READ_RESULTS)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}

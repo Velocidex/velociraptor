@@ -180,6 +180,9 @@ exit \$RETVAL
 
 SYSVSCRIPT
 
+  # Allow the server to bind to low ports and increase its fd limit.
+  setcap CAP_SYS_RESOURCE,CAP_NET_BIND_SERVICE=+eip /usr/local/bin/velociraptor_client
+
   /bin/chmod +x /etc/rc.d/init.d/velociraptor_client
 
   ## Set it to start at boot

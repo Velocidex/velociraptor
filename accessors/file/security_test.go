@@ -1,6 +1,7 @@
 package file_test
 
 import (
+	"strings"
 	"testing"
 
 	"www.velocidex.com/golang/velociraptor/accessors/file"
@@ -19,8 +20,16 @@ func TestAccessorFileSecurity(t *testing.T) {
 
 	sanity_service.CheckSecuritySettings(config_obj)
 
-	assert.NoError(t, file.CheckPath("/tmp/foo/bar/baz"))
-	assert.NoError(t, file.CheckPath("/etc/passwd"))
+	_, err := file.CheckPath("/tmp/foo/bar/baz")
+	assert.NoError(t, err)
+
+	// Check that path traversal chars are removed.
+	path, err := file.CheckPath("/tmp/../../../../bar/baz")
+	assert.NoError(t, err)
+	assert.True(t, !strings.Contains(path, ".."))
+
+	_, err = file.CheckPath("/etc/passwd")
+	assert.NoError(t, err)
 
 	// Default server configuration:
 	// 1. Block access to the entire filesystem
@@ -33,8 +42,11 @@ func TestAccessorFileSecurity(t *testing.T) {
 
 	sanity_service.CheckSecuritySettings(config_obj)
 
-	assert.NoError(t, file.CheckPath("/tmp/foo/bar/baz"))
-	assert.Error(t, file.CheckPath("/etc/passwd"))
+	_, err = file.CheckPath("/tmp/foo/bar/baz")
+	assert.NoError(t, err)
+
+	_, err = file.CheckPath("/etc/passwd")
+	assert.Error(t, err)
 
 	// Allow access to the whole server but reject access to the
 	// datastore.
@@ -46,8 +58,11 @@ func TestAccessorFileSecurity(t *testing.T) {
 
 	sanity_service.CheckSecuritySettings(config_obj)
 
-	assert.Error(t, file.CheckPath("/opt/velociraptor/downloads/filename.zip"))
-	assert.NoError(t, file.CheckPath("/etc/passwd"))
+	_, err = file.CheckPath("/opt/velociraptor/downloads/filename.zip")
+	assert.Error(t, err)
+
+	_, err = file.CheckPath("/etc/passwd")
+	assert.NoError(t, err)
 
 	// Allow file access to a small part of the filestore, as well as
 	// the /tmp/
@@ -64,16 +79,20 @@ func TestAccessorFileSecurity(t *testing.T) {
 	sanity_service.CheckSecuritySettings(config_obj)
 
 	// Backups are not allowed.
-	assert.Error(t, file.CheckPath("/opt/velociraptor/backups/filename.zip"))
+	_, err = file.CheckPath("/opt/velociraptor/backups/filename.zip")
+	assert.Error(t, err)
 
 	// Downloads are specifically allowed.
-	assert.NoError(t, file.CheckPath("/opt/velociraptor/downloads/filename.zip"))
+	_, err = file.CheckPath("/opt/velociraptor/downloads/filename.zip")
+	assert.NoError(t, err)
 
 	// Random locations on the server are not allowed.
-	assert.Error(t, file.CheckPath("/etc/passwd"))
+	_, err = file.CheckPath("/etc/passwd")
+	assert.Error(t, err)
 
 	// Locations in /tmp are allowed.
-	assert.NoError(t, file.CheckPath("/tmp"))
+	_, err = file.CheckPath("/tmp")
+	assert.NoError(t, err)
 
 	// Allow to read everywhere on the server, except for the file store. But also allow reading in the downloads folder.
 	config_obj.Security = &config_proto.Security{
@@ -89,16 +108,20 @@ func TestAccessorFileSecurity(t *testing.T) {
 	sanity_service.CheckSecuritySettings(config_obj)
 
 	// Backups are not allowed since they are in the file store.
-	assert.Error(t, file.CheckPath("/opt/velociraptor/backups/filename.zip"))
+	_, err = file.CheckPath("/opt/velociraptor/backups/filename.zip")
+	assert.Error(t, err)
 
 	// Downloads are specifically allowed.
-	assert.NoError(t, file.CheckPath("/opt/velociraptor/downloads/filename.zip"))
+	_, err = file.CheckPath("/opt/velociraptor/downloads/filename.zip")
+	assert.NoError(t, err)
 
 	// Random locations on the server are allowed.
-	assert.NoError(t, file.CheckPath("/etc/passwd"))
+	_, err = file.CheckPath("/etc/passwd")
+	assert.NoError(t, err)
 
 	// Locations in /tmp are allowed.
-	assert.NoError(t, file.CheckPath("/tmp"))
+	_, err = file.CheckPath("/tmp")
+	assert.NoError(t, err)
 
 	// Deny access to the filesystem but allow access to /tmp/
 	config_obj.Security = &config_proto.Security{
@@ -109,6 +132,9 @@ func TestAccessorFileSecurity(t *testing.T) {
 
 	sanity_service.CheckSecuritySettings(config_obj)
 
-	assert.Error(t, file.CheckPath("/opt/velociraptor/downloads/filename.zip"))
-	assert.NoError(t, file.CheckPath("/tmp/some/long/path.txt"))
+	_, err = file.CheckPath("/opt/velociraptor/downloads/filename.zip")
+	assert.Error(t, err)
+
+	_, err = file.CheckPath("/tmp/some/long/path.txt")
+	assert.NoError(t, err)
 }

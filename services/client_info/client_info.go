@@ -570,8 +570,15 @@ func (self *ClientInfoManager) Get(
 	notifier, err := services.GetNotifier(self.config_obj)
 	if err == nil {
 		if notifier.IsClientDirectlyConnected(client_id) {
-			record.Ping = uint64(utils.GetTime().Now().UnixNano() / 1000)
-			err := self.storage.SetRecord(self.config_obj, record)
+			err := self.storage.Modify(ctx, self.config_obj, client_id,
+				func(client_info *services.ClientInfo) (*services.ClientInfo, error) {
+					if client_info != nil {
+						return nil, nil
+					}
+
+					client_info.Ping = uint64(utils.GetTime().Now().UnixNano() / 1000)
+					return client_info, nil
+				})
 			if err != nil {
 				return nil, err
 			}
