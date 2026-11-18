@@ -743,8 +743,8 @@ func MustNewZipFilePath(path string) *OSPath {
 
 func NewNativePath(path string) (*OSPath, error) {
 	if runtime.GOOS == "windows" {
-		return NewLinuxOSPath(path)
-	} else {
 		return NewWindowsOSPath(path)
+	} else {
+		return NewLinuxOSPath(path)
 	}
 }

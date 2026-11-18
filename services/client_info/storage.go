@@ -36,6 +36,7 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promauto"
+	"google.golang.org/protobuf/proto"
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -128,11 +129,14 @@ func (self *Store) Modify(
 
 	self.mu.Lock()
 	record, pres := self.data[client_id]
+	self.mu.Unlock()
+
+	// Send a nil into the callback to indicate the record is not
+	// found, but do not store anything.
 	if !pres {
 		record = self.newClientRecord(nil)
-		self.data[client_id] = record
+		return record.Modify(client_id, modifier)
 	}
-	self.mu.Unlock()
 
 	// Write the modified record to the LRU
 	return record.Modify(client_id, modifier)
@@ -170,8 +174,11 @@ func (self *Store) GetRecord(client_id string) (*actions_proto.ClientInfo, error
 func (self *Store) SetRecord(
 	config_obj *config_proto.Config,
 	record *actions_proto.ClientInfo) error {
+
+	copy := proto.Clone(record).(*actions_proto.ClientInfo)
+
 	self.mu.Lock()
-	self.data[record.ClientId] = self.newClientRecord(record)
+	self.data[record.ClientId] = self.newClientRecord(copy)
 	self._SetDirty()
 	self.mu.Unlock()
 

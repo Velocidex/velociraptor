@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"os"
 	"os/exec"
 	"regexp"
 	"strconv"
@@ -101,7 +102,19 @@ func readFromPipe(ctx context.Context,
 }
 
 // End to end test of the lsp server.
+// NOTE: For this test to work, ensure the frontend is running:
+// velociraptor frontend -v
+//
+// Export the server config file:
+// export VELOCIRAPTOR_CONFIG=/path/to/server.config.yaml
+//
+// Run the test:
+// go test -v ./bin/ -test.run TestLSPServer
 func TestLSPServer(t *testing.T) {
+	value := os.Getenv("VELOCIRAPTOR_CONFIG")
+	if value == "" {
+		t.Skip("Test skipped because VELOCIRAPTOR_CONFIG is not defined. Set up VELOCIRAPTOR_CONFIG and server and try again.")
+	}
 	binary, _ := SetupTest(t)
 
 	ctx, cancel := main.Install_sig_handler()

@@ -93,7 +93,7 @@ func (self *Labeler) getRecord(
 		func(client_info *actions_proto.ClientInfo) (interface{}, error) {
 			return &CachedLabels{record: &api_proto.ClientLabels{
 				Timestamp: client_info.LabelsTimestamp,
-				Label:     client_info.Labels,
+				Label:     utils.CopySlice(client_info.Labels),
 			}}, nil
 		})
 	if err != nil {

@@ -560,7 +560,7 @@ func send_client_messages(
 			// can still verify the comms as authenticated. NOTE: this
 			// check should be very quick since it is just a lookup in the
 			// client info manager's LRU.
-			_, err = services.GetClientInfoItem(ctx, config_obj, source, services.CheckForPresence)
+			_, err = services.GetClientInfoItem(ctx, org_config_obj, source, services.CheckForPresence)
 			if err != nil {
 				journal, err := services.GetJournal(org_config_obj)
 				if err != nil {

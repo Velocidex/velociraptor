@@ -224,7 +224,7 @@ func getCredentials(
 		domain, _ = os.Hostname()
 	}
 
-	if strings.ToLower(parts[1][0:5]) == "ntlm:" {
+	if strings.HasPrefix(strings.ToLower(parts[1]), "ntlm:") {
 		hash, _ := hex.DecodeString(parts[1][5:])
 		return &smb2.NTLMInitiator{
 			User:        parts[0],

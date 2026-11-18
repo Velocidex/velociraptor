@@ -45,7 +45,7 @@ func (self *Indexer) FastGetApiClient(
 					Release:      client_info.Release,
 					Machine:      client_info.Architecture,
 					Fqdn:         client_info.Fqdn,
-					MacAddresses: client_info.MacAddresses,
+					MacAddresses: utils.CopySlice(client_info.MacAddresses),
 				},
 				FirstSeenAt:                 client_info.FirstSeenAt,
 				LastSeenAt:                  client_info.Ping,

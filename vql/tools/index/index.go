@@ -86,7 +86,7 @@ func (self IndexPlugin) Call(
 		}
 
 		// Make sure we are allowed to write there.
-		err = file.CheckPath(arg.Output)
+		output, err := file.CheckPath(arg.Output)
 		if err != nil {
 			scope.Log("index: %v", err)
 			return
@@ -103,9 +103,9 @@ func (self IndexPlugin) Call(
 				return
 			}
 
-			stat, err := os.Lstat(arg.Output)
+			stat, err := os.Lstat(output)
 			if err == nil && stat.IsDir() {
-				err := os.RemoveAll(arg.Output)
+				err := os.RemoveAll(output)
 				if err != nil {
 					scope.Log("index: %v", err)
 					return
@@ -146,7 +146,7 @@ func (self IndexPlugin) Call(
 		idx_mapping.DefaultMapping = doc_mapping
 		idx_mapping.DefaultAnalyzer = arg.DefaultAnalyzer
 
-		index, err := api.NewIndex(arg.Output, idx_mapping)
+		index, err := api.NewIndex(output, idx_mapping)
 		if err != nil {
 			scope.Log("index: %v", err)
 			return
@@ -280,13 +280,13 @@ func (self IndexSearchPlugin) Call(
 		}
 
 		// Make sure we are allowed to write there.
-		err = file.CheckPath(arg.IndexPath)
+		index_path, err := file.CheckPath(arg.IndexPath)
 		if err != nil {
 			scope.Log("index: %v", err)
 			return
 		}
 
-		index, err := api.OpenIndex(arg.IndexPath)
+		index, err := api.OpenIndex(index_path)
 		if err != nil {
 			scope.Log("index_search: %v", err)
 			return

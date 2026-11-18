@@ -57,26 +57,26 @@ func (self *Compress) Call(ctx context.Context,
 	}
 
 	// Are we allowed to write there?
-	err = file.CheckPath(arg.Path)
+	path, err := file.CheckPath(arg.Path)
 	if err != nil {
 		scope.Log("compress: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	err = file.CheckPath(arg.Output)
+	output, err := file.CheckPath(arg.Output)
 	if err != nil {
 		scope.Log("compress: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	fd, err := os.Open(arg.Path)
+	fd, err := os.Open(path)
 	if err != nil {
 		scope.Log("compress: %v", err)
 		return vfilter.Null{}
 	}
 	defer fd.Close()
 
-	out_fd, err := os.OpenFile(arg.Output,
+	out_fd, err := os.OpenFile(output,
 		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		scope.Log("compress: %v", err)
@@ -99,7 +99,7 @@ func (self *Compress) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return arg.Output
+	return output
 }
 
 func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

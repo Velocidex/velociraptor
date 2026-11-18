@@ -120,7 +120,7 @@ func (self *AuthenticodeFunction) Call(ctx context.Context,
 		return output
 	}
 
-	err = file.CheckPath(normalized_path)
+	normalized_path, err = file.CheckPath(normalized_path)
 	if err != nil {
 		scope.Log("authenticode: %v", err)
 		return vfilter.Null{}

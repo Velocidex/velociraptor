@@ -169,7 +169,7 @@ func openOutputFile(scope vfilter.Scope, path string) (*os.File, error) {
 		return nil, err
 	}
 
-	err = file.CheckPath(path)
+	path, err = file.CheckPath(path)
 	if err != nil {
 		return nil, err
 	}

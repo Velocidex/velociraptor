@@ -149,8 +149,8 @@ func (self *ClientInfoTestSuite) TestClientInfoModify() {
 	assert.NoError(self.T(), err)
 
 	info, err = client_info_manager.Get(self.Ctx, "C.DOESNOTEXIT")
-	assert.NoError(self.T(), err)
-	assert.Equal(self.T(), info.Ping, uint64(20))
+	assert.Error(self.T(), err)
+	assert.ErrorContains(self.T(), err, "not known in this org")
 }
 
 func (self *ClientInfoTestSuite) TestClientInfo() {

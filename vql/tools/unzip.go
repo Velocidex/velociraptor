@@ -88,7 +88,7 @@ func (self UnzipPlugin) Call(
 		}
 
 		// Make sure we are allowed to write there.
-		err = file.CheckPath(output_directory)
+		output_directory, err = file.CheckPath(output_directory)
 		if err != nil {
 			scope.Log("unzip: %v", err)
 			return
@@ -160,7 +160,7 @@ func (self *UnzipPlugin) unpackZip(
 		}
 
 		output_path := utils.Join(output_directory, member.Name)
-		err = file.CheckPath(output_path)
+		output_path, err = file.CheckPath(output_path)
 		if err != nil {
 			return err
 		}
@@ -250,7 +250,7 @@ func (self *UnzipPlugin) unpackTGZ(
 			continue
 		}
 
-		err = file.CheckPath(output_path)
+		output_path, err = file.CheckPath(output_path)
 		if err != nil {
 			return err
 		}
