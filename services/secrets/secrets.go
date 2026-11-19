@@ -103,6 +103,27 @@ func (self *SecretsService) getSecretDefinition(
 }
 
 func (self *SecretsService) getSecret(
+	ctx context.Context, type_name, secret_name string,
+	requesting_org string) (*services.Secret, error) {
+
+	result, err := self.loadSecret(ctx, type_name, secret_name)
+	if err != nil {
+		return nil, err
+	}
+
+	// This is a cross org request - check if it is allowed
+	if requesting_org != self.config_obj.OrgId &&
+		!result.VisibleToAllOrgs &&
+		!utils.InString(result.Orgs, requesting_org) {
+		return nil, utils.Wrap(utils.PermissionDenied,
+			"Secret %v not allowed to be accessed from org %v",
+			secret_name, requesting_org)
+	}
+
+	return result, nil
+}
+
+func (self *SecretsService) loadSecret(
 	ctx context.Context, type_name, secret_name string) (
 	*services.Secret, error) {
 	secret, err := self.secrets_lru.Get(SecretLRUKey(type_name, secret_name))
@@ -124,7 +145,7 @@ func (self *SecretsService) getSecret(
 	// If we don't have the secret ourselves, but we have a delegate
 	// manager, we can call them to try and resolve the secret.
 	if self.parent != nil && utils.IsNotFound(err) {
-		return self.parent.getSecret(ctx, type_name, secret_name)
+		return self.parent.getSecret(ctx, type_name, secret_name, self.config_obj.OrgId)
 	}
 
 	if err != nil {
@@ -136,6 +157,7 @@ func (self *SecretsService) getSecret(
 		return nil, err
 	}
 
+	// Add to the lru
 	return result, self.secrets_lru.Set(
 		SecretLRUKey(type_name, secret_name), result)
 }
@@ -323,7 +345,8 @@ func (self *SecretsService) ModifySecret(ctx context.Context,
 				Set("Name", request.Name))
 	}
 
-	secret_record, err := self.getSecret(ctx, request.TypeName, request.Name)
+	secret_record, err := self.getSecret(ctx,
+		request.TypeName, request.Name, self.config_obj.OrgId)
 	if err != nil {
 		return err
 	}
@@ -372,7 +395,8 @@ func (self *SecretsService) ModifySecret(ctx context.Context,
 func (self *SecretsService) GetSecret(ctx context.Context,
 	principal, type_name, secret_name string) (*services.Secret, error) {
 
-	secret_record, err := self.getSecret(ctx, type_name, secret_name)
+	secret_record, err := self.getSecret(ctx,
+		type_name, secret_name, self.config_obj.OrgId)
 	if err != nil {
 		return nil, err
 	}
@@ -390,9 +414,16 @@ func (self *SecretsService) GetSecret(ctx context.Context,
 func (self *SecretsService) GetSecretMetadata(ctx context.Context,
 	type_name, secret_name string) (*services.Secret, error) {
 
-	secret_record, err := self.getSecret(ctx, type_name, secret_name)
+	secret_record, err := self.getSecret(ctx,
+		type_name, secret_name, self.config_obj.OrgId)
 	if err != nil {
 		return nil, err
+	}
+
+	// For non root orgs hide the other orgs that this secret may be
+	// shared with.
+	if !utils.IsRootOrg(self.config_obj.OrgId) {
+		secret_record.Orgs = nil
 	}
 
 	return &services.Secret{
