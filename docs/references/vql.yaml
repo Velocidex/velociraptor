@@ -4233,6 +4233,77 @@
 
      SELECT * FROM HTTP_CLIENT(URLs=["http://www.google.com", "http://www.microsoft.com"])
      ```
+
+    ### URL schemes
+
+    The `url` parameter accepts the following URL schemes:
+
+    | Scheme | Example | Notes |
+    |--------|---------|-------|
+    | `http` | `http://www.example.com/` | Standard HTTP. |
+    | `https` | `https://www.example.com/` | Standard HTTPS. |
+    | `file` | `file:///etc/hostname` | Reads a local file. GET only. |
+    | `smb` | `smb://user:password@host/Share/file.exe` | Reads a file from an SMB share. GET only. |
+    | `unix` | `/var/run/docker.sock:unix/v1/version` | Sends the request over a Unix domain socket. |
+    | `secret` | `secret://MyHTTPSecret` | Uses a server HTTP secret to supply the request. Server only. |
+
+    The `file` scheme reads a file from the local disk using the same
+    `file` accessor that other plugins use. Access is subject to the
+    accessor security settings such as
+    `security.allowed_file_accessor_prefix` and
+    `security.denied_file_accessor_prefix`.
+
+    The `smb` scheme downloads a file directly from an SMB share
+    without mapping a drive. The URL must contain a username and
+    password, and the path must contain the share name followed by
+    the file path:
+
+    ```
+    smb://user:password@192.168.1.1/Tools/tool.exe
+    ```
+
+    This is useful when tools or other files are kept on a file
+    share, for example in a network without internet access. This
+    query downloads the file and writes it to a temporary file:
+
+    ```vql
+    SELECT *
+    FROM http_client(
+        url='smb://user:password@192.168.1.1/Tools/tool.exe',
+        tempfile_extension='.exe')
+    ```
+
+    The `file` and `smb` schemes only support the GET method. As with
+    any request made by this plugin, the user needs the `NETWORK`
+    permission.
+
+    The `secret` form is special: instead of making a request to a
+    server, it looks up a [server HTTP
+    secret](/docs/gui/#server-secrets) which supplies the URL,
+    method, headers and parameters. Secrets are only available on the
+    server, not on endpoints.
+
+    The `unix` scheme sends an HTTP request over a local Unix domain
+    socket. It is written as `/path/to/socket:unix/path` and is mainly
+    useful for communicating with local daemons such as Docker:
+
+    ```vql
+    SELECT *
+    FROM http_client(url='/var/run/docker.sock:unix/v1/version')
+    ```
+
+    {{% notice warning %}}
+
+    Credentials in an `smb` URL are part of the URL itself. The
+    credentials are stored wherever the URL is stored (for example in
+    a tool definition) and may be written to logs. Use a dedicated
+    read-only account that can only access the share you need.
+
+    {{% /notice %}}
+
+    See
+    [hardening the http_client() plugin](/docs/deployment/security/#accessing-files-from-vql)
+    for the security implications of the `file` and `unix` schemes.
   type: Plugin
   version: 3
   args:
