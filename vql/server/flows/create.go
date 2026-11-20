@@ -206,7 +206,7 @@ func (self ScheduleCollectionFunction) Info(scope vfilter.Scope, type_map *vfilt
 			ExecutionContext(vql_subsystem.MasterExecutionContext).
 			Permissions(acls.COLLECT_CLIENT,
 				acls.COLLECT_SERVER, acls.COLLECT_BASIC).Build(),
-		Version: 3,
+		Version: 4,
 	}
 }
 

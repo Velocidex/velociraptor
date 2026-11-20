@@ -106,7 +106,7 @@ func (self DeleteClientPlugin) Info(
 		ArgType: type_map.AddType(scope, &DeleteClientArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().
 			ExecutionContext(vql_subsystem.MasterExecutionContext).
-			Permissions(acls.DELETE_RESULTS).Build(),
+			Permissions(acls.SERVER_ADMIN).Build(),
 	}
 }
 

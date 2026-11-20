@@ -201,6 +201,13 @@ func (self *ServerMetadataFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	args.Set("client_id", constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
+
+	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	if err != nil {
+		scope.Log("ERROR:server_metadata: %v", err)
+		return vfilter.Null{}
+	}
+
 	return (&ClientMetadataFunction{
 		name: "server_metadata",
 	}).Call(ctx, scope, args)
@@ -230,6 +237,13 @@ func (self *ServerSetMetadataFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	args.Set("client_id", constants.VELOCIRAPTOR_SERVER_CLIENT_ID)
+
+	err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+	if err != nil {
+		scope.Log("ERROR:server_set_metadata: %v", err)
+		return vfilter.Null{}
+	}
+
 	return (&ClientSetMetadataFunction{
 		name: "server_set_metadata",
 	}).Call(ctx, scope, args)

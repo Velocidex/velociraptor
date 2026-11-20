@@ -43,7 +43,7 @@ type _ParseFileWithRegexArgs struct {
 
 type _ParseFileWithRegex struct{}
 
-func _ParseFile(
+func (self _ParseFileWithRegex) _ParseFile(
 	ctx context.Context,
 	filename *accessors.OSPath,
 	scope vfilter.Scope,
@@ -171,7 +171,7 @@ func (self _ParseFileWithRegex) Call(
 		defer vql_subsystem.RegisterMonitor(ctx, "parse_records_with_regex", args)()
 
 		for _, filename := range arg.Filenames {
-			_ParseFile(ctx, filename, scope, arg, output_chan)
+			self._ParseFile(ctx, filename, scope, arg, output_chan)
 		}
 	}()
 

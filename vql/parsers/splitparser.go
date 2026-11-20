@@ -64,7 +64,7 @@ func slideBuffer(buffer []byte, start, end int) int {
 	return i
 }
 
-func processFile(
+func (self SplitRecordParser) processFile(
 	ctx context.Context,
 	scope vfilter.Scope,
 	file *accessors.OSPath,
@@ -202,7 +202,7 @@ func (self SplitRecordParser) Call(
 				return
 
 			default:
-				processFile(ctx, scope, file, compiled_regex,
+				self.processFile(ctx, scope, file, compiled_regex,
 					line_regex, &arg, output_chan)
 			}
 		}

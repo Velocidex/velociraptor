@@ -86,7 +86,7 @@ func (self *PSTFileSystemAccessor) OpenWithOSPath(
 	full_path *accessors.OSPath) (
 	accessors.ReadSeekCloser, error) {
 
-	attachment, closer, err := self.getAttachment(full_path)
+	attachment, closer, err := self.getAttachment(self.scope, full_path)
 	if err != nil {
 		return nil, err
 	}
@@ -114,6 +114,7 @@ func (self *PSTFileSystemAccessor) Lstat(path string) (
 }
 
 func (self *PSTFileSystemAccessor) getAttachment(
+	scope vfilter.Scope,
 	path *accessors.OSPath) (res *pst.Attachment, closer func(), err error) {
 
 	if len(path.Components) == 0 {
@@ -138,7 +139,12 @@ func (self *PSTFileSystemAccessor) getAttachment(
 		return nil, nil, err
 	}
 
-	pstFile, err := pst_cache.Open(self.scope, path.DelegateAccessor(), delegate)
+	attachement_accessor, err := accessors.GetAccessor(path.DelegateAccessor(), scope)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	pstFile, err := pst_cache.Open(self.scope, attachement_accessor, delegate)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -149,7 +155,7 @@ func (self *PSTFileSystemAccessor) getAttachment(
 func (self *PSTFileSystemAccessor) LstatWithOSPath(full_path *accessors.OSPath) (
 	accessors.FileInfo, error) {
 
-	attachment, closer, err := self.getAttachment(full_path)
+	attachment, closer, err := self.getAttachment(self.scope, full_path)
 	if err != nil {
 		return nil, err
 	}

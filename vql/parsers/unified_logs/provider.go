@@ -174,7 +174,7 @@ func (self *VeloFileProvider) Debug() []string {
 	return res
 }
 
-func NewVeloFileProvider(
+func (self ParseUnifiedPlugin) NewVeloFileProvider(
 	ctx context.Context,
 	scope vfilter.Scope,
 	arg *ParseUnifiedPluginArgs) (*VeloFileProvider, error) {

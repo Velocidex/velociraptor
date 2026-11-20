@@ -188,12 +188,12 @@ func (self *PSTCache) Close() {
 // Opens the PST file or get it from cache.
 func (self *PSTCache) Open(
 	scope vfilter.Scope,
-	accessor_name string, path *accessors.OSPath) (*PSTFile, error) {
+	accessor accessors.FileSystemAccessor, path *accessors.OSPath) (*PSTFile, error) {
 
 	self.mu.Lock()
 	defer self.mu.Unlock()
 
-	key := accessor_name + path.String()
+	key := accessor.Describe().Name + path.String()
 	pst_file_any, err := self.lru.Get(key)
 	// Cache hit
 	if err == nil {
@@ -203,11 +203,6 @@ func (self *PSTCache) Open(
 	}
 
 	// Open it the old fashioned way.
-	accessor, err := accessors.GetAccessor(accessor_name, scope)
-	if err != nil {
-		return nil, err
-	}
-
 	reader, err := accessor.OpenWithOSPath(path)
 	if err != nil {
 		return nil, err

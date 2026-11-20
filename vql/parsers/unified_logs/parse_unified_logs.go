@@ -49,7 +49,7 @@ func (self ParseUnifiedPlugin) Call(
 				count.Get(), ulogs.GetStats())
 		})
 
-		provider, err := NewVeloFileProvider(ctx, scope, arg)
+		provider, err := self.NewVeloFileProvider(ctx, scope, arg)
 		if err != nil {
 			scope.Log("parse_unified_logs: %s", err.Error())
 			return

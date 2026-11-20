@@ -114,6 +114,13 @@ func (self WatchJournaldPlugin) Call(
 			return
 		}
 
+		// Make sure we can actually read the files.
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("watch_evtx: %s", err.Error())
+			return
+		}
+
 		event_channel := make(chan vfilter.Row)
 
 		// Register the output channel as a listener to the

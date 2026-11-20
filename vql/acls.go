@@ -125,3 +125,16 @@ func GetPrincipal(scope vfilter.Scope) string {
 
 	return manager.GetPrincipal()
 }
+
+// Declares that the plugin requires artifacts that use it to handle
+// more permissions than are actually checked. This happens because in
+// some situation those additional permissions might be implicitly
+// needed.
+//
+// For example, using the query() plugin, an arbitrary query may be
+// run which could use any permission, even those who are not actively
+// checked within the plugin itself. This is a noop function which is
+// just used by the static analysis.
+func ImplyPermissions(...acls.ACL_PERMISSION) {
+
+}
