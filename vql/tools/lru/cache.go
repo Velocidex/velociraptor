@@ -85,7 +85,7 @@ func (self _CacheFunc) Call(ctx context.Context, scope vfilter.Scope,
 
 		opts := Options{}
 		if arg.Filename != nil {
-			err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+			err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
 			if err != nil {
 				scope.Log("cache: %s", err.Error())
 				return vfilter.Null{}

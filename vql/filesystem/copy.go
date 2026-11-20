@@ -118,19 +118,14 @@ func (self CopyFunction) Call(ctx context.Context,
 			arg.Destination)
 	}
 
-	// We are about to write on the filesystem - make sure the user
-	// has write access.
-	err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
-	if err != nil {
-		scope.Log("copy: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	// Make sure we are allowed to write there.
-	dest, err := file.CheckPath(arg.Destination)
-	if err != nil {
-		scope.Log("copy: %s", err.Error())
-		return vfilter.Null{}
+	if arg.Directories {
+		err = file.CreateIntermediateDirectories(scope,
+			filepath.Dir(arg.Destination), dir_permissions)
+		if err != nil {
+			scope.Log("copy: Failed to create directories for %v: %v",
+				arg.Destination, err)
+			return vfilter.Null{}
+		}
 	}
 
 	flags := os.O_RDWR | os.O_CREATE | os.O_TRUNC
@@ -138,20 +133,11 @@ func (self CopyFunction) Call(ctx context.Context,
 		flags = os.O_WRONLY | os.O_APPEND
 	}
 
-	if arg.Directories {
-		err = os.MkdirAll(filepath.Dir(dest), dir_permissions)
-		if err != nil {
-			scope.Log("copy: Failed to create directories for %v: %v",
-				dest, err)
-			return vfilter.Null{}
-		}
-	}
-
 	// Make sure the file is fully closed when the scope is destroyed.
 	sub_ctx, cancel := context.WithCancel(ctx)
 	_ = scope.AddDestructor(cancel)
 
-	to, err := os.OpenFile(dest, flags, permissions)
+	to, err := file.OpenFileForWriting(scope, arg.Destination, flags, permissions)
 	if err != nil {
 		scope.Log("copy: Failed to open %v for writing: %v",
 			arg.Destination, err)
@@ -165,7 +151,7 @@ func (self CopyFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return dest
+	return to.Name()
 }
 
 func (self CopyFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

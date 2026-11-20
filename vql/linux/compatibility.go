@@ -18,23 +18,35 @@ type LookupSidFunctionArgs struct {
 	Sid string `vfilter:"required,field=sid,doc=A SID to lookup using LookupAccountSid "`
 }
 
-func init() {
-	vql_subsystem.RegisterFunction(
-		vfilter.GenericFunction{
-			ArgType:      &LookupSidFunctionArgs{},
-			FunctionName: "lookupSID",
-			Metadata: vql_subsystem.VQLMetadata().Permissions(
-				acls.MACHINE_STATE).Build(),
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) vfilter.Any {
+type LookupSidFunction struct{}
 
-				sid, pres := args.Get("sid")
-				if pres {
-					return sid
-				}
-				return &vfilter.Null{}
-			},
-		})
+func (self LookupSidFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("lookupSID: %s", err)
+		return vfilter.Null{}
+	}
+
+	sid, pres := args.Get("sid")
+	if pres {
+		return sid
+	}
+	return &vfilter.Null{}
+}
+
+func (self LookupSidFunction) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name:     "lookupSID",
+		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
+		ArgType:  type_map.AddType(scope, &LookupSidFunctionArgs{}),
+	}
+}
+
+func init() {
+	vql_subsystem.RegisterFunction(&LookupSidFunction{})
 }

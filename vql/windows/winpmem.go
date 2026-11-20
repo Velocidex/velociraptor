@@ -5,6 +5,7 @@ package windows
 
 import (
 	"context"
+	"io"
 	"os"
 	"time"
 
@@ -89,13 +90,8 @@ func (self WinpmemFunction) Call(
 				return vfilter.Null{}
 			}
 		} else {
-			arg.DriverPath, err = file.CheckPath(arg.DriverPath)
-			if err != nil {
-				scope.Log("ERROR:winpmem: %v", err)
-				return vfilter.Null{}
-			}
 
-			tmpfile, err = os.OpenFile(arg.DriverPath,
+			tmpfile, err = file.OpenFileForWriting(scope, arg.DriverPath,
 				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 			if err != nil {
 				scope.Log("winpmem: %v", err)
@@ -140,13 +136,7 @@ func (self WinpmemFunction) Call(
 
 	// The user asked for a memory image.
 	if arg.ImagePath != "" {
-		arg.ImagePath, err = file.CheckPath(arg.ImagePath)
-		if err != nil {
-			scope.Log("ERROR:winpmem: %v", err)
-			return vfilter.Null{}
-		}
-
-		out_fd, err := os.OpenFile(arg.ImagePath,
+		out_fd, err := file.OpenFileForWriting(scope, arg.ImagePath,
 			os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 		if err != nil {
 			scope.Log("winpmem: %v", err)
@@ -176,7 +166,7 @@ func (self WinpmemFunction) Call(
 
 		out_fd.Close()
 
-		offset, _ := out_fd.Seek(0, os.SEEK_CUR)
+		offset, _ := out_fd.Seek(0, io.SeekCurrent)
 		result.Set("ImageSize", offset)
 		result.Set("Image", out_fd.Name())
 	}
@@ -186,11 +176,12 @@ func (self WinpmemFunction) Call(
 
 func (self WinpmemFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
-		Name:     "winpmem",
-		Doc:      "Uses the winpmem driver to take a memory image. This plugin is also needed to facilitate the winpmem accessor.",
-		ArgType:  type_map.AddType(scope, &WinpmemArgs{}),
-		Metadata: vql.VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-		Version:  2,
+		Name:    "winpmem",
+		Doc:     "Uses the winpmem driver to take a memory image. This plugin is also needed to facilitate the winpmem accessor.",
+		ArgType: type_map.AddType(scope, &WinpmemArgs{}),
+		Metadata: vql.VQLMetadata().Permissions(
+			acls.MACHINE_STATE, acls.FILESYSTEM_WRITE).Build(),
+		Version: 2,
 	}
 }
 

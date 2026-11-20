@@ -32,7 +32,7 @@ func (self *HostFunction) Call(ctx context.Context,
 
 	arg := &HostFunctionArgs{}
 
-	err := vql_subsystem.CheckAccess(scope, acls.NETWORK)
+	err := vql_subsystem.CheckAccess(scope, acls.NETWORK, acls.MACHINE_STATE)
 	if err != nil {
 		scope.Log("host: %v", err)
 		return false
@@ -126,7 +126,7 @@ func (self *HostFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc:     "Perform a DNS resolution.",
 		ArgType: type_map.AddType(scope, &HostFunctionArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.MACHINE_STATE).Build(),
+			acls.NETWORK, acls.MACHINE_STATE).Build(),
 		Version: 2,
 	}
 }

@@ -50,7 +50,7 @@ type EnvFunctionArgs struct {
 
 type EnvFunction struct{}
 
-func (self *EnvFunction) Call(ctx context.Context,
+func (self EnvFunction) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 	arg := &EnvFunctionArgs{}
@@ -75,7 +75,7 @@ func (self *EnvFunction) Call(ctx context.Context,
 	return os.Getenv(arg.Var)
 }
 
-func (self *EnvFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+func (self EnvFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "environ",
 		Doc:     "Get an environment variable.",
@@ -85,66 +85,84 @@ func (self *EnvFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *v
 	}
 }
 
+type EnvPlugin struct{}
+
+func (self EnvPlugin) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor(ctx, "environ", args)()
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("environ: %s", err)
+			return
+		}
+
+		arg := &EnvPluginArgs{}
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("%s: %s", "environ", err.Error())
+			return
+		}
+
+		row := ordereddict.NewDict().
+			SetDefault(&vfilter.Null{}).
+			SetCaseInsensitive()
+		if len(arg.Vars) == 0 {
+			for _, env_var := range os.Environ() {
+				parts := strings.SplitN(env_var, "=", 2)
+
+				// Just hide ShadowedEnv but do not warn about
+				// it since there is nothing the caller can do
+				// to avoid it.
+				if utils.InString(ShadowedEnv, parts[0]) {
+					continue
+				}
+
+				if len(parts) > 1 {
+					row.Set(parts[0], parts[1])
+				}
+			}
+
+		} else {
+			for _, env_var := range arg.Vars {
+				value, pres := os.LookupEnv(env_var)
+				if pres {
+					if utils.InString(ShadowedEnv, env_var) {
+						scope.Log("environ: access to env var %s is denied", env_var)
+						continue
+					}
+					row.Set(env_var, value)
+				}
+			}
+		}
+
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- row:
+		}
+	}()
+
+	return output_chan
+}
+
+func (self EnvPlugin) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "environ",
+		ArgType: type_map.AddType(scope, &EnvPluginArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.MACHINE_STATE).Build(),
+	}
+}
+
 func init() {
 	vql_subsystem.RegisterFunction(&EnvFunction{})
-	vql_subsystem.RegisterPlugin(
-		vfilter.GenericListPlugin{
-			PluginName: "environ",
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
-				if err != nil {
-					scope.Log("environ: %s", err)
-					return result
-				}
-
-				arg := &EnvPluginArgs{}
-				err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-				if err != nil {
-					scope.Log("%s: %s", "environ", err.Error())
-					return result
-				}
-
-				row := ordereddict.NewDict().
-					SetDefault(&vfilter.Null{}).
-					SetCaseInsensitive()
-				if len(arg.Vars) == 0 {
-					for _, env_var := range os.Environ() {
-						parts := strings.SplitN(env_var, "=", 2)
-
-						// Just hide ShadowedEnv but do not warn about
-						// it since there is nothing the caller can do
-						// to avoid it.
-						if utils.InString(ShadowedEnv, parts[0]) {
-							continue
-						}
-
-						if len(parts) > 1 {
-							row.Set(parts[0], parts[1])
-						}
-					}
-				} else {
-					for _, env_var := range arg.Vars {
-						value, pres := os.LookupEnv(env_var)
-						if pres {
-							if utils.InString(ShadowedEnv, env_var) {
-								scope.Log("environ: access to env var %s is denied", env_var)
-								continue
-							}
-							row.Set(env_var, value)
-						}
-					}
-				}
-
-				if row.Len() > 0 {
-					result = append(result, row)
-				}
-				return result
-			},
-			ArgType: &EnvPluginArgs{},
-		})
+	vql_subsystem.RegisterPlugin(&EnvPlugin{})
 }

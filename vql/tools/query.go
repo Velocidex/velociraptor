@@ -61,6 +61,9 @@ func (self QueryPlugin) Call(
 		return output_chan
 	}
 
+	//  This plugin can run arbitrary queries, which might need arbitrary permissions. We add the most important ones here - a noop function only used by the static analyzer.
+	vql_subsystem.ImplyPermissions(acls.EXECVE, acls.FILESYSTEM_WRITE, acls.MACHINE_STATE)
+
 	config_obj, ok := vql_subsystem.GetServerConfig(scope)
 	if !ok {
 		config_obj, err = org_manager.GetOrgConfig(services.ROOT_ORG_ID)

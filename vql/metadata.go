@@ -1,6 +1,8 @@
 package vql
 
 import (
+	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
@@ -31,6 +33,17 @@ func (self *MetadataBuilder) Permissions(perms ...acls.ACL_PERMISSION) *Metadata
 }
 
 func (self *MetadataBuilder) Build() *ordereddict.Dict {
+	// Report the location of our caller - this is usually the Info()
+	// function of the plugin definition.
+	pc, _, _, ok := runtime.Caller(1)
+	if ok {
+		fn := runtime.FuncForPC(pc)
+		file, line := fn.FileLine(pc)
+		self.Dict.
+			Set("Line", line).
+			Set("File", strings.TrimPrefix(file, ProjectRoot)).
+			Set("Fn", fn.Name())
+	}
 	return self.Dict
 }
 
@@ -53,4 +66,15 @@ func (self *MetadataBuilder) ExecutionContext(
 
 func VQLMetadata() *MetadataBuilder {
 	return &MetadataBuilder{ordereddict.NewDict()}
+}
+
+var (
+	ProjectRoot = projectRoot()
+)
+
+func projectRoot() string {
+	_, file, _, _ := runtime.Caller(0)
+	res := filepath.Dir(filepath.Dir(file)) + string(filepath.Separator)
+	res = strings.ReplaceAll(res, "\\", "/")
+	return res
 }

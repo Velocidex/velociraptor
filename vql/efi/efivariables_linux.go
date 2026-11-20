@@ -5,6 +5,7 @@ package efi
 import (
 	"fmt"
 	"io/ioutil"
+	"os"
 	"strings"
 )
 
@@ -12,7 +13,7 @@ const efiPath = "/sys/firmware/efi/efivars/"
 
 func GetEfiVariables() ([]EfiVariable, error) {
 	var result []EfiVariable
-	files, err := ioutil.ReadDir(efiPath)
+	files, err := os.ReadDir(efiPath)
 	if err != nil {
 		return nil, err
 	}

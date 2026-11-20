@@ -46,7 +46,7 @@ func (self LevelDBPlugin) Call(
 			arg.Accessor = "auto"
 		}
 
-		db, err := getLevelDBHandle(ctx, scope, arg.Accessor, arg.Filename)
+		db, err := self.getLevelDBHandle(ctx, scope, arg.Accessor, arg.Filename)
 		if err != nil {
 			return
 		}
@@ -82,7 +82,7 @@ func (self LevelDBPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 	}
 }
 
-func getLevelDBHandle(
+func (self LevelDBPlugin) getLevelDBHandle(
 	ctx context.Context, scope vfilter.Scope,
 	accessor string, filename *accessors.OSPath) (
 	db *leveldb.DB, err error) {

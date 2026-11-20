@@ -132,6 +132,11 @@ func doServerDeb() error {
 		*server_debian_command_output = "."
 	}
 
+	output_dir, err := filepath.Abs(*server_debian_command_output)
+	if err != nil {
+		return err
+	}
+
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -139,7 +144,7 @@ func doServerDeb() error {
 		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Release", *debian_command_release).
-			Set("Output", *server_debian_command_output).
+			Set("Output", output_dir).
 			Set("BinaryToPackage", *server_debian_command_binary).
 			Set("ConfigPath", abs_config_path).
 			Set("ServiceUser", *server_debian_command_user).
@@ -215,6 +220,11 @@ func doClientDeb() error {
 		*client_debian_command_output = "."
 	}
 
+	output_dir, err := filepath.Abs(*client_debian_command_output)
+	if err != nil {
+		return err
+	}
+
 	logger := &LogWriter{config_obj: sm.Config}
 	builder := services.ScopeBuilder{
 		Config:     sm.Config,
@@ -222,7 +232,7 @@ func doClientDeb() error {
 		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Release", *debian_command_release).
-			Set("Output", *client_debian_command_output).
+			Set("Output", output_dir).
 			Set("BinaryToPackage", *client_debian_command_binary).
 			Set("ConfigPath", abs_config_path),
 	}

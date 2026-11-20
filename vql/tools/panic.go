@@ -28,35 +28,49 @@ func makeMapPanic() {
 	}
 }
 
+type PanicPlugin struct{}
+
+func (self PanicPlugin) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor(ctx, "panic", args)()
+
+		err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		if err != nil {
+			scope.Log("panic: %s", err)
+			return
+		}
+
+		// Allow the user to select what kind of panic should be produced.
+		_, pres := args.Get("MapPanic")
+		if pres {
+			makeMapPanic()
+			time.Sleep(10 * time.Second)
+
+		} else {
+			panic("oops")
+		}
+	}()
+
+	return output_chan
+}
+
+func (self PanicPlugin) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "panic",
+		Doc:  "Crash the program with a panic!",
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.SERVER_ADMIN).Build(),
+	}
+}
+
 func init() {
-	vql_subsystem.RegisterPlugin(
-		vfilter.GenericListPlugin{
-			PluginName: "panic",
-			Metadata: vql_subsystem.VQLMetadata().
-				Permissions(acls.SERVER_ADMIN).Build(),
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				err := vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
-				if err != nil {
-					scope.Log("panic: %s", err)
-					return result
-				}
-
-				// Allow the user to select what kind of panic should be produced.
-				_, pres := args.Get("MapPanic")
-				if pres {
-					makeMapPanic()
-					time.Sleep(10 * time.Second)
-
-				} else {
-					panic("oops")
-				}
-				return result
-			},
-			Doc: "Crash the program with a panic!",
-		})
+	vql_subsystem.RegisterPlugin(&PanicPlugin{})
 }

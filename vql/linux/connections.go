@@ -72,32 +72,51 @@ func makeDict(in psutils.ConnectionStat) *ordereddict.Dict {
 		Set("Uids", in.Uids)
 }
 
+type ConnectionsPlugins struct{}
+
+func (self ConnectionsPlugins) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor(ctx, "connections", args)()
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("connections: %s", err)
+			return
+		}
+
+		cons, err := psutils.ConnectionsWithContext(ctx, "all")
+		if err != nil {
+			return
+		}
+
+		for _, item := range cons {
+			select {
+			case <-ctx.Done():
+				return
+			case output_chan <- makeDict(item):
+			}
+		}
+	}()
+
+	return output_chan
+}
+
+func (self ConnectionsPlugins) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "connections",
+		Doc:  "List all active connections",
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.MACHINE_STATE).Build(),
+	}
+}
+
 func init() {
-	vql_subsystem.RegisterPlugin(
-		&vfilter.GenericListPlugin{
-			PluginName: "connections",
-			Metadata: vql_subsystem.VQLMetadata().Permissions(
-				acls.MACHINE_STATE).Build(),
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				var result []vfilter.Row
-
-				err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
-				if err != nil {
-					scope.Log("connections: %s", err)
-					return result
-				}
-
-				cons, err := psutils.ConnectionsWithContext(ctx, "all")
-				if err == nil {
-					for _, item := range cons {
-						result = append(result, makeDict(item))
-					}
-				}
-				return result
-			},
-			Doc: "List all active connections",
-		})
+	vql_subsystem.RegisterPlugin(&ConnectionsPlugins{})
 }
