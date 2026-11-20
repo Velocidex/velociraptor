@@ -97,6 +97,7 @@ func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilt
 		Doc:      "Compress a file in the server's FileStore. ",
 		ArgType:  type_map.AddType(scope, &CompressArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ).Build(),
+		Version:  2,
 	}
 }
 

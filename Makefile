@@ -76,6 +76,9 @@ windows:
 windows_bare:
 	go run make.go -v windowsBare
 
+windows_dev:
+	go run make.go -v windowsDev
+
 # A 32 bit windows binary.
 windowsx86:
 	go run make.go -v windowsx86

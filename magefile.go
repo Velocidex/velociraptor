@@ -455,7 +455,7 @@ func WindowsDev(ctx context.Context) error {
 
 	return Builder{
 		goos:       "windows",
-		extra_tags: " release yara ",
+		extra_tags: " release yara dev ",
 		cc:         cc,
 		filename:   "velociraptor",
 		arch:       "amd64"}.Run()
