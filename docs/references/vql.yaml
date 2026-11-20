@@ -1741,7 +1741,7 @@
     you will often need to specify a field name containing full
     stop. You can escape this using the backticks like the example above.
   type: Function
-  version: 3
+  version: 4
   args:
   - name: client_id
     type: string
@@ -1940,6 +1940,7 @@
 
     Unlike the common `gzip` utility the file is not removed after compression.
   type: Function
+  version: 2
   args:
   - name: path
     type: accessors.OSPath
@@ -6175,9 +6176,9 @@
     required: true
   category: windows
   metadata:
-    File: vql/windows/users.go
-    Fn: www.velocidex.com/golang/velociraptor/vql/windows.(*LookupSidFunction).Info
-    Line: "200"
+    File: vql/linux/compatibility.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.LookupSidFunction.Info
+    Line: "45"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -6242,6 +6243,7 @@
 
     This function is most useful when decoding prefetch files.
   type: Function
+  version: 2
   args:
   - name: data
     type: string
@@ -6881,9 +6883,9 @@
   type: Plugin
   category: popular
   metadata:
-    File: vql/networking/netstat_windows.go
-    Fn: www.velocidex.com/golang/velociraptor/vql/networking.init
-    Line: "356"
+    File: vql/networking/netstat_linux.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking._NetstatPlugin.Info
+    Line: "267"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -9343,9 +9345,9 @@
     description: A process ID to list. If not provided list all processes.
   category: popular
   metadata:
-    File: vql/windows/processes.go
-    Fn: www.velocidex.com/golang/velociraptor/vql/windows.PslistPlugin.Info
-    Line: "283"
+    File: vql/linux/process.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.PslistPlugin.Info
+    Line: "101"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
