@@ -42,6 +42,7 @@ import (
 	"www.velocidex.com/golang/vfilter"
 
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
+
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
 )
 
