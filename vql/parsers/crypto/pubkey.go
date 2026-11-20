@@ -45,6 +45,12 @@ func (self *PKEncryptFunction) Call(ctx context.Context,
 	}
 
 	if arg.PublicKey == "" && (arg.Scheme == "" || strings.ToLower(arg.Scheme) == "x509") {
+		err = vql_subsystem.CheckAccess(scope, acls.SERVER_ADMIN)
+		if err != nil {
+			scope.Log("ERROR:pk_encrypt: %v", err)
+			return vfilter.Null{}
+		}
+
 		config_obj, ok := vql_subsystem.GetServerConfig(scope)
 		if !ok {
 			scope.Log("ERROR:pk_encrypt: Must specify public key if not running on server")

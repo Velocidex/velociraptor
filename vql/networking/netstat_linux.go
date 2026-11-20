@@ -217,33 +217,57 @@ func readProcNet(which string, si socketInfo) ([]*ConnectionStat, error) {
 	return rv, nil
 }
 
-func runNetstat(ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
-	var result []vfilter.Row
-	si, err := gatherSocketInfo()
-	scope.Log("netstat: gathered %d sockinfo entries, err=%v", len(si), err)
-	for _, which := range [...]string{"tcp", "tcp6", "udp", "udp6"} {
-		if cs, err := readProcNet(which, si); err != nil {
-			scope.Log("netstat: parse %s: %s", which, err)
-			continue
-		} else {
+type _NetstatPlugin struct{}
+
+func (self _NetstatPlugin) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor(ctx, "netstat", args)()
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("ERROR:netstat: %v", err)
+			return
+		}
+
+		si, err := gatherSocketInfo()
+		scope.Log("netstat: gathered %d sockinfo entries, err=%v", len(si), err)
+		for _, which := range []string{"tcp", "tcp6", "udp", "udp6"} {
+			cs, err := readProcNet(which, si)
+			if err != nil {
+				scope.Log("netstat: parse %s: %s", which, err)
+				continue
+			}
+
 			for _, item := range cs {
-				result = append(result, item)
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- item:
+				}
 			}
 		}
-	}
+	}()
 
-	return result
+	return output_chan
 }
 
-var _Netstat = vfilter.GenericListPlugin{
-	PluginName: "netstat",
-	Doc:        "Collect network information.",
-	Function:   runNetstat,
-	ArgType:    &NetstatArgs{},
-	Metadata: vql_subsystem.VQLMetadata().Permissions(
-		acls.MACHINE_STATE).Build(),
+func (self _NetstatPlugin) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "netstat",
+		Doc:     "Collect network information.",
+		ArgType: type_map.AddType(scope, &NetstatArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
+	}
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&_Netstat)
+	vql_subsystem.RegisterPlugin(&_NetstatPlugin{})
 }

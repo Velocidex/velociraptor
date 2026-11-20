@@ -71,7 +71,8 @@ func (self _CarveEvtxPlugin) Call(
 
 		var writer *evtxWriter
 		if arg.Output != "" {
-			out_fd, err := openOutputFile(scope, arg.Output)
+			out_fd, err := file.OpenFileForWriting(scope, arg.Output,
+				os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 			if err != nil {
 				scope.Log("carve_evtx: %v", err)
 				return
@@ -159,22 +160,6 @@ func (self _CarveEvtxPlugin) Call(
 // Chunks written to the output file.
 func includeInOutput(chunk *carvedChunk) bool {
 	return true
-}
-
-// Create the output file after checking that the query may write
-// there.
-func openOutputFile(scope vfilter.Scope, path string) (*os.File, error) {
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE)
-	if err != nil {
-		return nil, err
-	}
-
-	path, err = file.CheckPath(path)
-	if err != nil {
-		return nil, err
-	}
-
-	return os.OpenFile(path, os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0600)
 }
 
 // Emit the same event structure as parse_evtx() with details about

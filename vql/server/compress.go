@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
+	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/accessors/file"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -33,8 +34,9 @@ import (
 )
 
 type CompressArgs struct {
-	Path   string `vfilter:"required,field=path,doc=A path to compress"`
-	Output string `vfilter:"required,field=output,doc=A path to write the output - default is the path with a .gz extension"`
+	Path     *accessors.OSPath `vfilter:"required,field=path,doc=A path to compress"`
+	Accessor string            `vfilter:"optional,field=accessor,doc=Accessor (e.g. ntfs,file)"`
+	Output   string            `vfilter:"required,field=output,doc=A path to write the output - default is the path with a .gz extension"`
 }
 
 type Compress struct{}
@@ -43,40 +45,27 @@ func (self *Compress) Call(ctx context.Context,
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ)
-	if err != nil {
-		scope.Log("compress: %v", err)
-		return vfilter.Null{}
-	}
-
 	arg := &CompressArgs{}
-	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("compress: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	// Are we allowed to write there?
-	path, err := file.CheckPath(arg.Path)
+	accessor, err := accessors.GetAccessor(arg.Accessor, scope)
 	if err != nil {
 		scope.Log("compress: %s", err.Error())
 		return vfilter.Null{}
 	}
 
-	output, err := file.CheckPath(arg.Output)
-	if err != nil {
-		scope.Log("compress: %s", err.Error())
-		return vfilter.Null{}
-	}
-
-	fd, err := os.Open(path)
+	fd, err := accessor.OpenWithOSPath(arg.Path)
 	if err != nil {
 		scope.Log("compress: %v", err)
 		return vfilter.Null{}
 	}
 	defer fd.Close()
 
-	out_fd, err := os.OpenFile(output,
+	out_fd, err := file.OpenFileForWriting(scope, arg.Output,
 		os.O_RDWR|os.O_CREATE|os.O_TRUNC, 0660)
 	if err != nil {
 		scope.Log("compress: %v", err)
@@ -87,7 +76,7 @@ func (self *Compress) Call(ctx context.Context,
 	zw := gzip.NewWriter(out_fd)
 	defer zw.Close()
 
-	zw.Name = strings.TrimPrefix(arg.Path, "/")
+	zw.Name = strings.Join(arg.Path.Components, "/")
 
 	_, err = utils.Copy(ctx, zw, fd)
 	if err != nil {
@@ -99,7 +88,7 @@ func (self *Compress) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
-	return output
+	return out_fd.Name()
 }
 
 func (self Compress) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {

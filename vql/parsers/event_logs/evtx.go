@@ -89,6 +89,14 @@ func (self _ParseEvtxPlugin) Call(
 			return
 		}
 
+		if arg.Database != "" {
+			err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+			if err != nil {
+				scope.Log("parse_evtx: %s", err.Error())
+				return
+			}
+		}
+
 		resolver, err := getMessageResolver(scope, arg.Database)
 		if err != nil {
 			scope.Log("parse_evtx: %s", err.Error())
@@ -164,6 +172,13 @@ func (self _WatchEvtxPlugin) Call(
 		// owns it and it will be closed by it.
 		arg := &_ParseEvtxPluginArgs{}
 		err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Log("watch_evtx: %s", err.Error())
+			return
+		}
+
+		// Make sure we can actually read the files.
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
 		if err != nil {
 			scope.Log("watch_evtx: %s", err.Error())
 			return

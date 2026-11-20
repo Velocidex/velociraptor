@@ -134,8 +134,8 @@ require (
 	go.lsp.dev/uri v1.0.1
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
 	golang.org/x/crypto v0.59.0
-	golang.org/x/mod v0.42.0
-	golang.org/x/net v0.62.0
+	golang.org/x/mod v0.43.0
+	golang.org/x/net v0.63.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sys v0.50.0
 	golang.org/x/text v0.44.0
@@ -157,7 +157,7 @@ require (
 	www.velocidex.com/golang/go-prefetch v0.0.0-20260922101442-4bae97962980
 	www.velocidex.com/golang/oleparse v0.0.0-20250312121321-f7c2b4ec0959
 	www.velocidex.com/golang/regparser v0.0.0-20250203141505-31e704a67ef7
-	www.velocidex.com/golang/vfilter v0.0.0-20261116103538-0cb438f2ba71
+	www.velocidex.com/golang/vfilter v0.0.0-20261119123827-e7c70409a61f
 	www.velocidex.com/golang/vtypes v0.0.0-20261028150435-b85936486574
 )
 
@@ -353,6 +353,7 @@ require (
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/sync v0.25.0 // indirect
 	golang.org/x/term v0.48.0 // indirect
+	golang.org/x/tools v0.53.0 // indirect
 	google.golang.org/genproto v0.0.0-20260128011058-8636f8732409 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260724162435-b2f20204f0df // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

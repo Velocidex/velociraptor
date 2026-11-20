@@ -22,52 +22,70 @@ type EfiVariable struct {
 	Value     []byte
 }
 
-func runEfiVariables(
-	ctx context.Context, scope vfilter.Scope, args *ordereddict.Dict) []vfilter.Row {
-	var result []vfilter.Row
+type EFIVariablesPlugin struct{}
 
-	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
-	if err != nil {
-		scope.Error("efivariables: %v", err)
-		return result
-	}
+func (self EFIVariablesPlugin) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
 
-	arg := &EfiVariablesArgs{}
-	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
-	if err != nil {
-		scope.Error("efivariables: %v", err)
-		return result
-	}
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor(ctx, "connections", args)()
 
-	firmwareVariables, err := GetEfiVariables()
-	if err != nil {
-		scope.Error("efivariables: %v", err)
-		return result
-	}
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Error("efivariables: %v", err)
+			return
+		}
 
-	for _, item := range firmwareVariables {
-		if (arg.Namespace == "" || arg.Namespace == item.Namespace) && (arg.Name == "" || arg.Name == item.Name) {
-			if arg.Value {
-				item.Value, err = GetEfiVariableValue(item.Namespace, item.Name)
-				if err != nil {
-					scope.Error("efivariables: %v %x", err, err)
-					return result
+		arg := &EfiVariablesArgs{}
+		err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+		if err != nil {
+			scope.Error("efivariables: %v", err)
+			return
+		}
+
+		firmwareVariables, err := GetEfiVariables()
+		if err != nil {
+			scope.Error("efivariables: %v", err)
+			return
+		}
+
+		for _, item := range firmwareVariables {
+			if (arg.Namespace == "" || arg.Namespace == item.Namespace) && (arg.Name == "" || arg.Name == item.Name) {
+				if arg.Value {
+					item.Value, err = GetEfiVariableValue(item.Namespace, item.Name)
+					if err != nil {
+						scope.Error("efivariables: %v %x", err, err)
+						return
+					}
+				}
+				select {
+				case <-ctx.Done():
+					return
+				case output_chan <- item:
 				}
 			}
-			result = append(result, item)
 		}
-	}
 
-	return result
+	}()
+
+	return output_chan
+}
+
+func (self EFIVariablesPlugin) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name:    "efivariables",
+		Doc:     "Enumerate efi variables.",
+		ArgType: type_map.AddType(scope, &EfiVariablesArgs{}),
+		Metadata: vql_subsystem.VQLMetadata().Permissions(
+			acls.MACHINE_STATE).Build(),
+	}
 }
 
 func init() {
-	vql_subsystem.RegisterPlugin(&vfilter.GenericListPlugin{
-		PluginName: "efivariables",
-		Doc:        "Enumerate efi variables.",
-		Function:   runEfiVariables,
-		ArgType:    &EfiVariablesArgs{},
-		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.MACHINE_STATE).Build(),
-	})
+	vql_subsystem.RegisterPlugin(&EFIVariablesPlugin{})
 }

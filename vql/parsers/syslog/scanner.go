@@ -60,7 +60,7 @@ func (self ScannerPlugin) Call(
 
 		for _, filename := range arg.Filenames {
 			func() {
-				fd, err := maybeOpenGzip(scope, arg.Accessor, filename)
+				fd, err := self.maybeOpenGzip(scope, arg.Accessor, filename)
 				if err != nil {
 					scope.Log("parse_lines: %v", err)
 					return
@@ -290,6 +290,13 @@ func (self WatchSyslogPlugin) Call(
 			return
 		}
 
+		// Make sure we can actually read the files.
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("watch_syslog: %v", err)
+			return
+		}
+
 		config_obj := &config_proto.Config{Client: client_config_obj}
 		manager := newFileManager(ctx, scope, config_obj,
 			arg.Accessor, arg.Query)
@@ -334,7 +341,7 @@ func (self WatchSyslogPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMa
 	}
 }
 
-func maybeOpenGzip(scope vfilter.Scope,
+func (self ScannerPlugin) maybeOpenGzip(scope vfilter.Scope,
 	accessor_name string,
 	filename *accessors.OSPath) (io.ReadCloser, error) {
 	accessor, err := accessors.GetAccessor(accessor_name, scope)

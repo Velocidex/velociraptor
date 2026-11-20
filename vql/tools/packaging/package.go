@@ -371,7 +371,8 @@ func (self CreatePackagePlugin) Info(scope vfilter.Scope, type_map *vfilter.Type
 		Doc:     self.description,
 		ArgType: type_map.AddType(scope, &CreatePackageArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
-			acls.COLLECT_SERVER, acls.FILESYSTEM_WRITE, acls.SERVER_ADMIN).Build(),
+			acls.COLLECT_SERVER, acls.FILESYSTEM_READ,
+			acls.FILESYSTEM_WRITE, acls.SERVER_ADMIN).Build(),
 		Version: 2,
 	}
 }

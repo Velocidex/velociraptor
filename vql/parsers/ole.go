@@ -42,7 +42,7 @@ type _OLEVBAArgs struct {
 
 type _OLEVBAPlugin struct{}
 
-func _OLEVBAPlugin_ParseFile(
+func (self _OLEVBAPlugin) _ParseFile(
 	ctx context.Context,
 	filename *accessors.OSPath,
 	scope vfilter.Scope,
@@ -157,7 +157,7 @@ func (self _OLEVBAPlugin) Call(
 		}
 
 		for _, filename := range arg.Filenames {
-			macros, err := _OLEVBAPlugin_ParseFile(ctx, filename, scope, arg)
+			macros, err := self._ParseFile(ctx, filename, scope, arg)
 			if err != nil {
 				scope.Log("olevba: while parsing %v:  %s", filename, err)
 				continue
