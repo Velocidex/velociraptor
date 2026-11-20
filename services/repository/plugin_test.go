@@ -44,6 +44,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 
 	_ "www.velocidex.com/golang/velociraptor/vql/common"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
 // The test artifact plugin: This is the gateway to calling other
