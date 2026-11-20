@@ -56,6 +56,12 @@ func (self _PEDumpFunction) Call(
 		lru_size = 100
 	}
 
+	err = vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("pe_dump: %s", err)
+		return &vfilter.Null{}
+	}
+
 	accessor, err := accessors.GetAccessor("process", scope)
 	if err != nil {
 		scope.Log("pe_dump: %s", err)

@@ -181,6 +181,12 @@ func (self CarveUSNPlugin) Call(
 			return
 		}
 
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("carve_usn: %v", err)
+			return
+		}
+
 		ntfs_ctx, usn_stream, size, err := arg.GetStreams(scope)
 		if err != nil {
 			scope.Log("carve_usn: %v", err)

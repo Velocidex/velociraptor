@@ -47,6 +47,7 @@ func (self LZXpressFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap
 		Name:    "lzxpress_decompress",
 		Doc:     "Decompress an lzxpress blob.",
 		ArgType: type_map.AddType(scope, &LZXpressFunctionArgs{}),
+		Version: 2,
 	}
 }
 

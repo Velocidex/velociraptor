@@ -34,6 +34,7 @@ import (
 	_ "www.velocidex.com/golang/velociraptor/result_sets/timed"
 	"www.velocidex.com/golang/velociraptor/vql/acl_managers"
 	_ "www.velocidex.com/golang/velociraptor/vql/functions"
+	_ "www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
 type ServerArtifactsTestSuite struct {

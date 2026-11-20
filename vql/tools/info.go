@@ -15,7 +15,7 @@ GNU Affero General Public License for more details.
 You should have received a copy of the GNU Affero General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-package vql
+package tools
 
 import (
 	"context"
@@ -28,6 +28,7 @@ import (
 
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
+	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/velociraptor/vql/psutils"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -58,7 +59,7 @@ func GetInfo(host *psutils.InfoStat) *ordereddict.Dict {
 		Set("HostID", psutils.HostID()).
 		Set("Exe", me).
 		Set("CWD", cwd).
-		Set("IsAdmin", IsAdmin()).
+		Set("IsAdmin", vql_subsystem.IsAdmin()).
 		Set("ClientStart", start_time).
 		Set("LocalTZ", zone).
 		Set("LocalTZOffset", tz_offset)
@@ -70,14 +71,8 @@ func info(
 	scope vfilter.Scope,
 	args *ordereddict.Dict) vfilter.Any {
 
-	err := CheckAccess(scope, acls.MACHINE_STATE)
-	if err != nil {
-		scope.Log("info: %s", err)
-		return vfilter.Null{}
-	}
-
 	arg := &vfilter.Empty{}
-	err = arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
+	err := arg_parser.ExtractArgsWithContext(ctx, scope, args, arg)
 	if err != nil {
 		scope.Log("info: %s", err.Error())
 		return vfilter.Null{}
@@ -86,14 +81,14 @@ func info(
 	// It turns out that host.Info() is
 	// actually rather slow so we cache it
 	// in the scope cache.
-	info, ok := CacheGet(scope, "__info").(*psutils.InfoStat)
+	info, ok := vql_subsystem.CacheGet(scope, "__info").(*psutils.InfoStat)
 	if !ok {
 		info, err = psutils.InfoWithContext(ctx)
 		if err != nil {
 			scope.Log("info: %s", err)
 			return vfilter.Null{}
 		}
-		CacheSet(scope, "__info", info)
+		vql_subsystem.CacheSet(scope, "__info", info)
 	}
 
 	return GetInfo(info).
@@ -101,32 +96,76 @@ func info(
 		Set("Architecture", utils.GetArch())
 }
 
+type InfoFunction struct{}
+
+func (self InfoFunction) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) vfilter.Any {
+
+	err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+	if err != nil {
+		scope.Log("info: %s", err)
+		return vfilter.Null{}
+	}
+
+	return info(ctx, scope, args)
+}
+
+func (self InfoFunction) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
+	return &vfilter.FunctionInfo{
+		Name: "info",
+		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.MACHINE_STATE).Build(),
+		Doc: "Get information about the running host. This is the function version of the info() plugin",
+	}
+}
+
+type InfoPlugin struct{}
+
+func (self InfoPlugin) Call(ctx context.Context,
+	scope vfilter.Scope,
+	args *ordereddict.Dict) <-chan vfilter.Row {
+	output_chan := make(chan vfilter.Row)
+
+	go func() {
+		defer close(output_chan)
+		defer vql_subsystem.RegisterMonitor(ctx, "info", args)()
+
+		err := vql_subsystem.CheckAccess(scope, acls.MACHINE_STATE)
+		if err != nil {
+			scope.Log("info: %s", err)
+			return
+		}
+
+		res := info(ctx, scope, args)
+		if utils.IsNil(res) {
+			return
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case output_chan <- res:
+		}
+	}()
+
+	return output_chan
+}
+
+func (self InfoPlugin) Info(
+	scope vfilter.Scope,
+	type_map *vfilter.TypeMap) *vfilter.PluginInfo {
+	return &vfilter.PluginInfo{
+		Name: "info",
+		Metadata: vql_subsystem.VQLMetadata().
+			ExecutionContext(vql_subsystem.MasterExecutionContext).
+			Permissions(acls.MACHINE_STATE).Build(),
+		Doc: "Get information about the running host.",
+	}
+}
+
 func init() {
-	RegisterPlugin(
-		vfilter.GenericListPlugin{
-			PluginName: "info",
-			Metadata: VQLMetadata().
-				ExecutionContext(MasterExecutionContext).
-				Permissions(acls.MACHINE_STATE).Build(),
-			Function: func(
-				ctx context.Context,
-				scope vfilter.Scope,
-				args *ordereddict.Dict) []vfilter.Row {
-				res := info(ctx, scope, args)
-				if utils.IsNil(res) {
-					return []vfilter.Row{}
-				}
-				return []vfilter.Row{res}
-			},
-			Doc: "Get information about the running host.",
-		})
-
-	RegisterFunction(
-		vfilter.GenericFunction{
-			FunctionName: "info",
-			Metadata:     VQLMetadata().Permissions(acls.MACHINE_STATE).Build(),
-			Function:     info,
-			Doc:          "Get information about the running host. This is the function version of the info() plugin",
-		})
-
+	vql_subsystem.RegisterPlugin(&InfoPlugin{})
+	vql_subsystem.RegisterFunction(&InfoFunction{})
 }

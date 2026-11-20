@@ -33,6 +33,9 @@ func (self WriteFunction) Call(ctx context.Context,
 		return vfilter.Null{}
 	}
 
+	// These permissions are delegated to the copy function.
+	vql_subsystem.ImplyPermissions(acls.FILESYSTEM_WRITE, acls.FILESYSTEM_READ)
+
 	return CopyFunction{}.Call(ctx, scope, ordereddict.NewDict().
 		Set("accessor", "data").
 		Set("filename", arg.Data).

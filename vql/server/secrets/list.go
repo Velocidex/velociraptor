@@ -95,6 +95,7 @@ func (self SecretsPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *
 		Doc:     "Retrieve the list of secrets on the server.",
 		ArgType: type_map.AddType(scope, &SecretsPluginArgs{}),
 		Metadata: vql_subsystem.VQLMetadata().
+			Permissions(acls.SERVER_ADMIN).
 			ExecutionContext(vql_subsystem.MasterExecutionContext).
 			Build(),
 	}

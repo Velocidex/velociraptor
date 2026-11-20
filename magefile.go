@@ -207,7 +207,7 @@ func Auto() error {
 func AutoDev() error {
 	return Builder{goos: runtime.GOOS,
 		arch:        runtime.GOARCH,
-		extra_tags:  " yara ",
+		extra_tags:  " yara dev ",
 		filename:    "velociraptor",
 		extra_flags: []string{"-race"}}.Run()
 }
@@ -268,7 +268,7 @@ func Linux() error {
 
 func LinuxDebug() error {
 	return Builder{
-		extra_tags:  " release yara ",
+		extra_tags:  " release yara dev ",
 		goos:        "linux",
 		debug_build: true,
 		arch:        "amd64"}.Run()
@@ -399,21 +399,6 @@ func LinuxMips() error {
 	}.Run()
 }
 
-// Builds a Development binary. This does not embed things like GUI
-// resources to allow them to be loaded from the local directory.
-func Dev(ctx context.Context) error {
-	cc, err := getToolchainCC(ctx, "windows/amd64")
-	if err != nil {
-		return err
-	}
-
-	return Builder{
-		goos:        "linux",
-		arch:        "amd64",
-		cc:          cc,
-		extra_flags: []string{"-race"}}.Run()
-}
-
 // Cross compile the windows binary using mingw. Note that this does
 // not run the race detector because the ubuntu distribution of mingw
 // does not include tsan.
@@ -470,7 +455,7 @@ func WindowsDev(ctx context.Context) error {
 
 	return Builder{
 		goos:       "windows",
-		extra_tags: " release yara ",
+		extra_tags: " release yara dev ",
 		cc:         cc,
 		filename:   "velociraptor",
 		arch:       "amd64"}.Run()

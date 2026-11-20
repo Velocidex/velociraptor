@@ -35,6 +35,11 @@ func (self SigmaPlugin) Call(
 	args *ordereddict.Dict) <-chan vfilter.Row {
 	output_chan := make(chan vfilter.Row)
 
+	// This plugin can invoke any subqueries and evaluate lambda
+	// functions. Therefore it may require arbitrary permissions.
+	vql_subsystem.ImplyPermissions(acls.MACHINE_STATE, acls.SERVER_ADMIN,
+		acls.EXECVE, acls.FILESYSTEM_READ, acls.FILESYSTEM_WRITE)
+
 	go func() {
 		defer close(output_chan)
 		defer vql_subsystem.RegisterMonitor(ctx, "sigma", args)()
@@ -124,6 +129,7 @@ func (self SigmaPlugin) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vf
 		// pretty much anything.
 		Metadata: vql_subsystem.VQLMetadata().Permissions(
 			acls.MACHINE_STATE,
+			acls.SERVER_ADMIN,
 			acls.EXECVE,
 			acls.FILESYSTEM_READ,
 			acls.FILESYSTEM_WRITE,

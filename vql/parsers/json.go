@@ -718,6 +718,13 @@ func (self WatchJsonlPlugin) Call(
 			return
 		}
 
+		// Make sure we can actually read the files.
+		err = vql_subsystem.CheckAccess(scope, acls.FILESYSTEM_READ)
+		if err != nil {
+			scope.Log("watch_jsonl: %v", err)
+			return
+		}
+
 		config_obj := &config_proto.Config{Client: client_config_obj}
 
 		event_channel := make(chan vfilter.Row)

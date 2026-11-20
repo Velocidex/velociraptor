@@ -29,6 +29,9 @@ import (
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/vtesting"
 	"www.velocidex.com/golang/velociraptor/vtesting/assert"
+
+	// For info plugin
+	_ "www.velocidex.com/golang/velociraptor/vql/tools"
 )
 
 var (

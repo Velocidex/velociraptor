@@ -185,8 +185,14 @@ func (self *PSTParser) Call(
 			return
 		}
 
+		accessor, err := accessors.GetAccessor(arg.Accessor, scope)
+		if err != nil {
+			scope.Log("parse_pst: %v", err)
+			return
+		}
+
 		pst_cache := pst_accessor.GetPSTCache(scope)
-		pstFile, err := pst_cache.Open(scope, arg.Accessor, arg.Filename)
+		pstFile, err := pst_cache.Open(scope, accessor, arg.Filename)
 		if err != nil {
 			scope.Log("parse_pst: %v", err)
 			return

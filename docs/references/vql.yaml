@@ -39,6 +39,9 @@
     description: Add the artifact to this label group (default all)
   category: server
   metadata:
+    File: vql/server/monitoring/add_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.AddClientMonitoringFunction.Info
+    Line: "139"
     execution: master
     permissions: COLLECT_CLIENT
   platforms:
@@ -60,6 +63,9 @@
     description: A dict of artifact parameters
   category: server
   metadata:
+    File: vql/server/monitoring/add_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.AddServerMonitoringFunction.Info
+    Line: "301"
     execution: master
     permissions: COLLECT_SERVER
   platforms:
@@ -276,6 +282,9 @@
     description: If true we remove extra metadata.
   category: server
   metadata:
+    File: vql/server/repository.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.ArtifactsPlugin.Info
+    Line: "402"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -293,6 +302,9 @@
     description: The Artifact to delete
   category: server
   metadata:
+    File: vql/server/repository.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.ArtifactDeleteFunction.Info
+    Line: "270"
     execution: master
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
@@ -322,6 +334,9 @@
       to the global repository.
   category: server
   metadata:
+    File: vql/server/repository.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.ArtifactSetFunction.Info
+    Line: "184"
     execution: master
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
@@ -372,6 +387,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/repository.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.ArtifactSetMetadataFunction.Info
+    Line: "512"
     permissions: ARTIFACT_WRITER,SERVER_ARTIFACT_WRITER
   platforms:
   - darwin_amd64_cgo
@@ -446,6 +464,9 @@
   type: Plugin
   category: linux
   metadata:
+    File: vql/linux/audit.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.AuditPlugin.Info
+    Line: "56"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -469,6 +490,9 @@
     description: Set to receive verbose information about all the certs.
   category: windows
   metadata:
+    File: vql/parsers/authenticode/authenticode.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/authenticode.AuthenticodeFunction.Info
+    Line: "156"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -615,6 +639,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/backup.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.BackupPlugin.Info
+    Line: "90"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -645,6 +672,9 @@
     description: If provided only restore providers matching this regex.
   category: server
   metadata:
+    File: vql/server/backup.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.RestoreBackupPlugin.Info
+    Line: "198"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -778,6 +808,7 @@
     type: uint64
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: bit_not
   description: Returns a bitwise NOT operation on an integer.
   type: Function
@@ -786,6 +817,7 @@
     type: uint64
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: bit_or
   description: Returns a bitwise OR operation between two integers.
   type: Function
@@ -796,6 +828,7 @@
     type: uint64
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: bit_shl
   description: Shifts the value to the left.
   type: Function
@@ -806,6 +839,7 @@
     type: uint64
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: bit_shr
   description: Shifts the value to the right.
   type: Function
@@ -816,6 +850,7 @@
     type: uint64
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: bit_xor
   description: Returns a bitwise XOR operation on an integer.
   type: Function
@@ -826,6 +861,7 @@
     type: uint64
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: brotli_decompress
   description: |
     Decompress a brotli compressed block of data.
@@ -922,12 +958,15 @@
     type: int64
     description: The latest age of the cache.
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: Filename for a persistent cache.
   - name: max_size
     type: uint64
     description: Maximum size of the LRU (default 10000).
   metadata:
+    File: vql/tools/lru/cache.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/lru._CacheFunc.Info
+    Line: "55"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -967,6 +1006,9 @@
     type: string
   category: server
   metadata:
+    File: vql/server/flows/flows.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.CancelFlowFunction.Info
+    Line: "210"
     execution: master
     permissions: COLLECT_SERVER,COLLECT_CLIENT
   platforms:
@@ -1069,6 +1111,9 @@
       path so they can be opened with Event Viewer. Each chunk is written once.
   category: parsers
   metadata:
+    File: vql/parsers/event_logs/carve_evtx.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/event_logs._CarveEvtxPlugin.Info
+    Line: "200"
     permissions: FILESYSTEM_READ,FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -1123,6 +1168,9 @@
     description: How long to scan for.
   category: parsers
   metadata:
+    File: vql/parsers/usn/carver.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/usn.CarveUSNPlugin.Info
+    Line: "232"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -1150,6 +1198,9 @@
     type: int
     description: If specified we abort reading after this much time.
   metadata:
+    File: vql/filesystem/cat.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.CatPlugin.Info
+    Line: "126"
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
@@ -1164,6 +1215,9 @@
   type: Plugin
   category: windows
   metadata:
+    File: vql/windows/crypto.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows.init.4
+    Line: "193"
     permissions: MACHINE_STATE
   platforms:
   - windows_386_cgo
@@ -1264,6 +1318,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/clients/new.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.NewClientFunction.Info
+    Line: "151"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -1284,8 +1341,11 @@
     type: bool
   category: server
   metadata:
+    File: vql/server/clients/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.DeleteClientPlugin.Info
+    Line: "109"
     execution: master
-    permissions: DELETE_RESULTS
+    permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -1330,6 +1390,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/clients/clients.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.ClientInfoFunction.Info
+    Line: "198"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -1357,6 +1420,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/clients/metadata.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.ClientMetadataFunction.Info
+    Line: "89"
     execution: master
     permissions: READ_RESULTS,SERVER_ADMIN
   platforms:
@@ -1426,6 +1492,9 @@
       on the client metadata..
   category: server
   metadata:
+    File: vql/server/clients/metadata.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.ClientSetMetadataFunction.Info
+    Line: "187"
     execution: master
     permissions: COLLECT_CLIENT,SERVER_ADMIN
   platforms:
@@ -1463,6 +1532,9 @@
     type: string
   category: server
   metadata:
+    File: vql/server/clients/clients.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.ClientsPlugin.Info
+    Line: "136"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -1505,6 +1577,9 @@
     description: Wait this many ms between events.
   category: event
   metadata:
+    File: vql/common/clock.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.ClockPlugin.Info
+    Line: "102"
     event: "true"
   platforms:
   - darwin_amd64_cgo
@@ -1578,6 +1653,9 @@
     type: string
     description: A Valid remapping configuration in YAML or JSON format.
   metadata:
+    File: vql/tools/collector/collector.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/collector.CollectPlugin.Info
+    Line: "191"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -1663,7 +1741,7 @@
     you will often need to specify a field name containing full
     stop. You can escape this using the backticks like the example above.
   type: Function
-  version: 3
+  version: 4
   args:
   - name: client_id
     type: string
@@ -1710,8 +1788,15 @@
   - name: org_id
     type: string
     description: If set the collection will be started in the specified org.
+  - name: do_not_schedule
+    type: bool
+    description: If set we do not actually schedule the flow, only write the flow
+      object into the filestore.
   category: server
   metadata:
+    File: vql/server/flows/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.ScheduleCollectionFunction.Info
+    Line: "208"
     execution: master
     permissions: COLLECT_CLIENT,COLLECT_SERVER,COLLECT_BASIC
   platforms:
@@ -1855,17 +1940,24 @@
 
     Unlike the common `gzip` utility the file is not removed after compression.
   type: Function
+  version: 2
   args:
   - name: path
-    type: string
+    type: accessors.OSPath
     description: A path to compress
     required: true
+  - name: accessor
+    type: string
+    description: Accessor (e.g. ntfs,file)
   - name: output
     type: string
     description: A path to write the output - default is the path with a .gz extension
     required: true
   category: encode
   metadata:
+    File: vql/server/compress.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.Compress.Info
+    Line: "99"
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -1879,6 +1971,9 @@
   type: Plugin
   category: linux
   metadata:
+    File: vql/linux/connections.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.ConnectionsPlugins.Info
+    Line: "116"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -1927,6 +2022,9 @@
     type: bool
     description: If true we ensure the destination directories exist
   metadata:
+    File: vql/filesystem/copy.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.CopyFunction.Info
+    Line: "163"
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -2006,6 +2104,9 @@
       based on flow id.
   category: server
   metadata:
+    File: vql/server/downloads/downloads.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/downloads.CreateFlowDownload.Info
+    Line: "121"
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -2050,6 +2151,9 @@
     description: If set we expand sparse files in the archive.
   category: server
   metadata:
+    File: vql/server/downloads/downloads.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/downloads.CreateHuntDownload.Info
+    Line: "190"
     permissions: PREPARE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -2072,6 +2176,9 @@
       the notebook id and timestamp
   category: server
   metadata:
+    File: vql/server/notebooks/download.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.CreateNotebookDownload.Info
+    Line: "73"
     execution: master
     permissions: PREPARE_RESULTS
   platforms:
@@ -2168,7 +2275,10 @@
     description: A Package spec to use instead of the default, for ultimate customization
   category: server
   metadata:
-    permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
+    File: vql/tools/packaging/package.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/packaging.CreatePackagePlugin.Info
+    Line: "375"
+    permissions: COLLECT_SERVER,FILESYSTEM_READ,FILESYSTEM_WRITE,SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -2239,6 +2349,9 @@
     description: If not specified, just show what files will be removed
   category: server
   metadata:
+    File: vql/server/monitoring/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.DeleteEventsPlugin.Info
+    Line: "109"
     permissions: DELETE_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -2264,6 +2377,9 @@
     description: If specified we ensure data is available immediately
   category: server
   metadata:
+    File: vql/server/flows/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.DeleteFlowPlugin.Info
+    Line: "94"
     execution: master
     permissions: DELETE_RESULTS
   platforms:
@@ -2304,6 +2420,9 @@
     description: The path of the PE file to inspect.
     required: true
   metadata:
+    File: vql/windows/process/describe_address.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.DescribeAddress.Info
+    Line: "71"
     permissions: FILESYSTEM_READ
   platforms:
   - windows_amd64_cgo
@@ -2420,6 +2539,9 @@
     description: Number of seconds between evaluation of the query.
   category: event
   metadata:
+    File: vql/common/diff.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common._DiffPlugin.Info
+    Line: "221"
     event: "true"
   platforms:
   - darwin_amd64_cgo
@@ -2484,6 +2606,9 @@
     type: bool
     description: Read variable value
   metadata:
+    File: vql/efi/efivariables.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/efi.EFIVariablesPlugin.Info
+    Line: "85"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -2567,6 +2692,9 @@
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
   metadata:
+    File: vql/server/elastic.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server._ElasticPlugin.Info
+    Line: "463"
     permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -2653,6 +2781,9 @@
     type: string
   category: server
   metadata:
+    File: vql/server/flows/flows.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.EnumerateFlowPlugin.Info
+    Line: "286"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -2671,6 +2802,9 @@
     description: Extract the var from the environment.
     required: true
   metadata:
+    File: vql/common/env.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.EnvFunction.Info
+    Line: "84"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -2690,6 +2824,11 @@
     description: Extract these variables from the environment and return them one
       per row
     repeated: true
+  metadata:
+    File: vql/common/env.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.EnvPlugin.Info
+    Line: "161"
+    permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -2705,6 +2844,9 @@
     description: 'The count of sessions to retrieve (default 64) '
   category: windows
   metadata:
+    File: vql/windows/etw/etw_sessions.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/etw.EtwSessions.Info
+    Line: "151"
     permissions: MACHINE_STATE
   platforms:
   - windows_amd64_cgo
@@ -2860,6 +3002,9 @@
     description: The name of a secret to use.
   category: popular
   metadata:
+    File: vql/tools/shell/execve.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/shell.ExecvePlugin.Info
+    Line: "395"
     permissions: EXECVE
   platforms:
   - darwin_amd64_cgo
@@ -2902,6 +3047,9 @@
     required: true
   category: popular
   metadata:
+    File: vql/functions/expand.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/functions.ExpandPath.Info
+    Line: "50"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -3091,6 +3239,9 @@
     description: If specified we flush all rows from cache after the call.
   category: event
   metadata:
+    File: vql/common/fifo.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common._FIFOPlugin.Info
+    Line: "250"
     event: "true"
   platforms:
   - darwin_amd64_cgo
@@ -3195,6 +3346,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/file_store.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.DeleteFileStore.Info
+    Line: "148"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -3277,6 +3431,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/flows/logs.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.FlowLogsPlugin.Info
+    Line: "84"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -3312,6 +3469,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/flows/results.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.FlowResultsPlugin.Info
+    Line: "589"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -3339,6 +3499,9 @@
       a bit faster.
   category: server
   metadata:
+    File: vql/server/flows/flows.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.FlowsPlugin.Info
+    Line: "140"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -3507,7 +3670,7 @@
     the "fs:" or "ds:" prefix.
   type: Accessor
   metadata:
-    permissions: SERVER_ADMIN
+    permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -3521,7 +3684,7 @@
     will result in zeros being returned.
   type: Accessor
   metadata:
-    permissions: SERVER_ADMIN
+    permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -3665,6 +3828,9 @@
     description: Path to the MaxMind GeoIP Database.
     required: true
   metadata:
+    File: vql/tools/geoip.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.GeoIPFunction.Info
+    Line: "107"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -3739,6 +3905,9 @@
   type: Function
   category: server
   metadata:
+    File: vql/server/monitoring/event_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.GetClientMonitoring.Info
+    Line: "66"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -3762,6 +3931,9 @@
       a bit faster.
   category: server
   metadata:
+    File: vql/server/flows/flows.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.GetFlowFunction.Info
+    Line: "356"
     execution: master
     permissions: COLLECT_CLIENT,COLLECT_SERVER
   platforms:
@@ -3778,6 +3950,9 @@
   type: Function
   category: server
   metadata:
+    File: vql/server/monitoring/event_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.GetServerMonitoring.Info
+    Line: "213"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -3792,6 +3967,9 @@
     This is typically used to exclude analysis from our own process.
   type: Function
   metadata:
+    File: vql/functions/pid.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/functions.GetPidFunction.Info
+    Line: "50"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -3936,6 +4114,9 @@
     description: If set we do not follow links to other filesystems.
   category: popular
   metadata:
+    File: vql/filesystem/filesystem.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.GlobPlugin.Info
+    Line: "157"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -3985,6 +4166,9 @@
       org.
   category: server
   metadata:
+    File: vql/server/users/users.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UsersPlugin.Info
+    Line: "97"
     execution: master
   platforms:
   - darwin_amd64_cgo
@@ -4061,6 +4245,9 @@
     repeated: true
   category: windows
   metadata:
+    File: vql/windows/process/handles.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.HandlesPlugin.Info
+    Line: "131"
     permissions: MACHINE_STATE
   platforms:
   - windows_amd64_cgo
@@ -4088,6 +4275,9 @@
     description: The maximum size of the file that will be hashed (default 100mb)
   category: encode
   metadata:
+    File: vql/functions/hash.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/functions.HashFunction.Info
+    Line: "209"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -4148,7 +4338,10 @@
     description: Only use the dns tracker - if the IP is not known then do not attempt
       to resolve it.
   metadata:
-    permissions: MACHINE_STATE
+    File: vql/networking/host.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking.(*HostFunction).Info
+    Line: "129"
+    permissions: NETWORK,MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4386,6 +4579,9 @@
     repeated: true
   category: popular
   metadata:
+    File: vql/networking/http_client.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking._HttpPlugin.Info
+    Line: "605"
     permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -4512,6 +4708,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/hunts/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.ScheduleHuntFunction.Info
+    Line: "320"
     permissions: START_HUNT,ORG_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -4567,6 +4766,9 @@
     description: If specified we relaunch the hunt on this client again.
   category: server
   metadata:
+    File: vql/server/hunts/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.AddToHuntFunction.Info
+    Line: "482"
     permissions: START_HUNT
   platforms:
   - darwin_amd64_cgo
@@ -4593,6 +4795,9 @@
       will be hidden from the GUI
   category: server
   metadata:
+    File: vql/server/hunts/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.DeleteHuntPlugin.Info
+    Line: "178"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -4628,6 +4833,9 @@
       id.
   category: server
   metadata:
+    File: vql/server/hunts/hunts.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.HuntFlowsPlugin.Info
+    Line: "472"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -4652,6 +4860,9 @@
       ).
   category: server
   metadata:
+    File: vql/server/hunts/info.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.HuntInfoFunction.Info
+    Line: "79"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -4675,6 +4886,7 @@
     description: The hunt to reindex. If not specified we index all hunts
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: hunt_results
   description: |
     Retrieve the results of a hunt.
@@ -4706,6 +4918,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/hunts/hunts.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.HuntResultsPlugin.Info
+    Line: "375"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -4744,6 +4959,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/hunts/stop.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.UpdateHuntFunction.Info
+    Line: "147"
     permissions: START_HUNT
   platforms:
   - darwin_amd64_cgo
@@ -4766,6 +4984,9 @@
       a bit faster.
   category: server
   metadata:
+    File: vql/server/hunts/hunts.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/hunts.HuntsPlugin.Info
+    Line: "139"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -4880,6 +5101,10 @@
     description: The Artifact to import
     required: true
   category: server
+  metadata:
+    File: vql/server/repository.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.ArtifactImportFunction.Info
+    Line: "578"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -4952,6 +5177,9 @@
     description: Whether the import is an offline_collector or hunt.
   category: server
   metadata:
+    File: vql/tools/collector/import.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/collector.ImportCollectionFunction.Info
+    Line: "688"
     permissions: COLLECT_SERVER,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -5026,9 +5254,13 @@
     type: bool
     description: Do not forward events (this is faster)
   metadata:
+    File: vql/tools/index/index.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/index.IndexPlugin.Info
+    Line: "240"
     permissions: FILESYSTEM_WRITE
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: index_search
   description: Search a previously created index.
   type: Plugin
@@ -5054,17 +5286,25 @@
     type: uint64
     description: Row number to start.
   metadata:
+    File: vql/tools/index/index.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/index.IndexSearchPlugin.Info
+    Line: "358"
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: info
   description: Get information about the running host. This is the function version
     of the info() plugin
   type: Function
   metadata:
+    File: vql/tools/info.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.InfoFunction.Info
+    Line: "120"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: info
   description: |
     Get information about the running host.
@@ -5130,6 +5370,9 @@
   type: Plugin
   category: popular
   metadata:
+    File: vql/tools/info.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.InfoPlugin.Info
+    Line: "163"
     execution: master
     permissions: MACHINE_STATE
   platforms:
@@ -5161,6 +5404,9 @@
   type: Plugin
   category: windows
   metadata:
+    File: vql/networking/network.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking.InterfacesPlugin.Info
+    Line: "38"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -5218,6 +5464,9 @@
     description: The accessor to use to read the file.
   category: server
   metadata:
+    File: vql/server/inventory.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.(*InventoryAddFunction).Info
+    Line: "139"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -5240,6 +5489,9 @@
     description: If specified we only probe the tool definition without materializing
   category: server
   metadata:
+    File: vql/server/inventory.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.(*InventoryGetFunction).Info
+    Line: "214"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -5501,6 +5753,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/kill.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.KillClientFunction.Info
+    Line: "98"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -5538,6 +5793,9 @@
     description: An operation on the labels (set, check, remove)
   category: server
   metadata:
+    File: vql/server/labels.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.AddLabels.Info
+    Line: "132"
     permissions: LABEL_CLIENT
   platforms:
   - darwin_amd64_cgo
@@ -5601,6 +5859,9 @@
     description: The accessor to use.
   category: parsers
   metadata:
+    File: vql/parsers/leveldb.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.LevelDBPlugin.Info
+    Line: "81"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -5725,6 +5986,10 @@
     description: If set the link accesses a different org. Otherwise we accesses the
       current org.
   category: server
+  metadata:
+    File: vql/server/links.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.(*LinkToFunction).Info
+    Line: "348"
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -5829,6 +6094,9 @@
     type: bool
   category: server
   metadata:
+    File: vql/server/logging.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.LogsPlugin.Info
+    Line: "165"
     event: "true"
     permissions: SERVER_ADMIN
   platforms:
@@ -5888,6 +6156,9 @@
     type: bool
     description: Enable verbose logging.
   metadata:
+    File: vql/tools/logscale/plugin.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/logscale.logscalePlugin.Info
+    Line: "266"
     permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -5905,6 +6176,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/linux/compatibility.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.LookupSidFunction.Info
+    Line: "45"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -5969,11 +6243,15 @@
 
     This function is most useful when decoding prefetch files.
   type: Function
+  version: 2
   args:
   - name: data
     type: string
     description: The lzxpress stream (bytes)
     required: true
+  - name: size
+    type: uint64
+    description: The uncompressed size
   category: encode
   platforms:
   - darwin_amd64_cgo
@@ -6035,6 +6313,9 @@
     type: string
     description: Additional magic to load
   metadata:
+    File: vql/tools/magic.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.MagicFunction.Info
+    Line: "152"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -6125,6 +6406,9 @@
     type: ordereddict.Dict
     description: A dict of headers to send.
   metadata:
+    File: vql/networking/mail.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking.MailFunction.Info
+    Line: "318"
     permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -6209,6 +6493,7 @@
     description: A VQL Lambda to apply on each item
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: max
   description: |
     Finds the largest item in the aggregate.
@@ -6323,7 +6608,7 @@
     type: string
     description: The name of this cache.
   - name: filename
-    type: string
+    type: accessors.OSPath
     description: Filename for a persistent cache.
   category: popular
   platforms:
@@ -6471,6 +6756,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/windows/process/vad.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.ModulesPlugin.Info
+    Line: "101"
     permissions: MACHINE_STATE
   platforms:
   - windows_386_cgo
@@ -6502,6 +6790,9 @@
     description: Start reading the result set from this row
   category: server
   metadata:
+    File: vql/server/flows/monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.MonitoringPlugin.Info
+    Line: "157"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -6533,6 +6824,9 @@
     description: Stop end events reach this time (event sources).
   category: server
   metadata:
+    File: vql/server/monitoring/monitoring_logs.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.MonitoringLogsPlugin.Info
+    Line: "146"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -6574,6 +6868,9 @@
     type: int
     description: Seconds to wait before retry - default 0 - do not retry
   metadata:
+    File: vql/networking/netcat.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking.NetcatPlugin.Info
+    Line: "149"
     permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -6586,6 +6883,9 @@
   type: Plugin
   category: popular
   metadata:
+    File: vql/networking/netstat_linux.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking._NetstatPlugin.Info
+    Line: "267"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -6619,6 +6919,9 @@
     description: An environment to initialize the notebook with
   category: server
   metadata:
+    File: vql/server/notebooks/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.CreateNotebookFunction.Info
+    Line: "115"
     execution: master
     permissions: COLLECT_SERVER
   platforms:
@@ -6638,6 +6941,9 @@
     type: bool
   category: server
   metadata:
+    File: vql/server/notebooks/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.DeleteNotebookPlugin.Info
+    Line: "82"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -6663,6 +6969,9 @@
     description: Set the type of the export (html or zip).
   category: server
   metadata:
+    File: vql/server/notebooks/export.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.ExportNotebookFunction.Info
+    Line: "122"
     execution: master
     permissions: PREPARE_RESULTS
   platforms:
@@ -6685,6 +6994,9 @@
     description: Include more information
   category: server
   metadata:
+    File: vql/server/notebooks/get.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.GetNotebookFunction.Info
+    Line: "114"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -6719,6 +7031,9 @@
     description: The name of the attachment
   category: server
   metadata:
+    File: vql/server/notebooks/update.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.UpdateNotebookFunction.Info
+    Line: "299"
     execution: master
     permissions: COLLECT_SERVER
   platforms:
@@ -6754,6 +7069,9 @@
       rendered output.
   category: server
   metadata:
+    File: vql/server/notebooks/update.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.UpdateNotebookCellFunction.Info
+    Line: "180"
     execution: master
     permissions: COLLECT_SERVER
   platforms:
@@ -6770,6 +7088,9 @@
     type: bool
     description: List all notebooks, not just the ones shared with the user
   metadata:
+    File: vql/server/notebooks/list.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/notebooks.ListNotebookPlugin.Info
+    Line: "109"
     execution: master
     permissions: SERVER_ADMIN,READ_RESULTS
   platforms:
@@ -6912,6 +7233,9 @@
     description: Maximum size of file we load into memory.
   category: parsers
   metadata:
+    File: vql/parsers/ole.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._OLEVBAPlugin.Info
+    Line: "187"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -6942,6 +7266,9 @@
     description: An ID for the new org (if not set use a random ID).
   category: server
   metadata:
+    File: vql/server/orgs/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/orgs.OrgCreateFunction.Info
+    Line: "93"
     execution: master
     permissions: ORG_ADMIN
   platforms:
@@ -6964,6 +7291,9 @@
     description: If not specified, just show what org will be removed
   category: server
   metadata:
+    File: vql/server/orgs/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/orgs.OrgDeleteFunction.Info
+    Line: "88"
     execution: master
     permissions: ORG_ADMIN
   platforms:
@@ -6977,6 +7307,9 @@
   type: Plugin
   category: server
   metadata:
+    File: vql/server/orgs/orgs.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/orgs.OrgsPlugin.Info
+    Line: "87"
     execution: master
   platforms:
   - darwin_amd64_cgo
@@ -7026,6 +7359,9 @@
   type: Plugin
   category: developer
   metadata:
+    File: vql/tools/panic.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.PanicPlugin.Info
+    Line: "70"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -7108,6 +7444,9 @@
     description: Number of rows in each batch.)
   category: server
   metadata:
+    File: vql/server/flows/parallel.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.ParallelPlugin.Info
+    Line: "173"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -7132,6 +7471,9 @@
     description: Maximum size of line buffer.
   category: parsers
   metadata:
+    File: vql/parsers/syslog/auditd.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/syslog.AuditdPlugin.Info
+    Line: "33"
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
@@ -7189,6 +7531,9 @@
     description: Additional environment variables to make available to the profile
   category: parsers
   metadata:
+    File: vql/parsers/binary.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.ParseBinaryFunction.Info
+    Line: "34"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7250,6 +7595,9 @@
     repeated: true
   category: parsers
   metadata:
+    File: vql/parsers/csv/csv.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/csv.ParseCSVPlugin.Info
+    Line: "170"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7273,6 +7621,9 @@
     required: true
   category: parsers
   metadata:
+    File: vql/parsers/ese/ese.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/ese._ESEPlugin.Info
+    Line: "242"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7292,6 +7643,9 @@
     description: The accessor to use.
   category: parsers
   metadata:
+    File: vql/parsers/ese/ese.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/ese._ESECatalogPlugin.Info
+    Line: "320"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7345,6 +7699,9 @@
       (default 1).
   category: parsers
   metadata:
+    File: vql/parsers/event_logs/evtx.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/event_logs._ParseEvtxPlugin.Info
+    Line: "154"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7391,6 +7748,9 @@
     description: Only parse events older than this time (default all times).
   category: parsers
   metadata:
+    File: vql/parsers/journald/journald.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/journald.JournalPlugin.Info
+    Line: "33"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7492,6 +7852,9 @@
     description: The accessor to use
   category: parsers
   metadata:
+    File: vql/parsers/json.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.ParseJsonlPlugin.Info
+    Line: "270"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7541,6 +7904,9 @@
     description: Maximum size of line buffer.
   category: parsers
   metadata:
+    File: vql/parsers/syslog/scanner.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/syslog.ScannerPlugin.Info
+    Line: "41"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7589,6 +7955,9 @@
     description: The first entry to scan.
   category: parsers
   metadata:
+    File: vql/parsers/ntfs.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.MFTScanPlugin.Info
+    Line: "281"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7841,6 +8210,9 @@
     description: The offset in the file for the base address.
   category: parsers
   metadata:
+    File: vql/parsers/pe.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._PEFunction.Info
+    Line: "49"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7878,6 +8250,9 @@
     type: bool
     description: If set we emit the raw message object for all objects
   metadata:
+    File: vql/parsers/pst_parser.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.(*PSTParser).Info
+    Line: "219"
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
@@ -7974,6 +8349,9 @@
     description: Maximum size of line buffer (default 64kb).
   category: parsers
   metadata:
+    File: vql/parsers/regexparser.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._ParseFileWithRegex.Info
+    Line: "186"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -7995,6 +8373,9 @@
     description: The accessor to use.
   category: parsers
   metadata:
+    File: vql/parsers/recyclebin.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._RecycleBinPlugin.Info
+    Line: "44"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8040,9 +8421,13 @@
     type: int64
     description: The number of threads to use (defalut 5).
   metadata:
+    File: vql/parsers/unified_logs/parse_unified_logs.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/unified_logs.ParseUnifiedPlugin.Info
+    Line: "97"
     permissions: FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: parse_usn
   description: |
     Parse the USN journal from a device, image file or USN file.
@@ -8085,6 +8470,9 @@
     description: If set we resolve full paths using faster but less accurate algorithm.
   category: parsers
   metadata:
+    File: vql/parsers/usn/usn.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/usn.USNPlugin.Info
+    Line: "223"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8141,6 +8529,9 @@
     description: The accessor to use
   category: parsers
   metadata:
+    File: vql/parsers/xml.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._ParseXMLFunction.Info
+    Line: "79"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8166,6 +8557,9 @@
     repeated: true
   category: parsers
   metadata:
+    File: vql/parsers/yaml.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.ParseYamlFunction.Info
+    Line: "128"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8197,6 +8591,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/users/password.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.SetPasswordFunction.Info
+    Line: "68"
     execution: master
   platforms:
   - darwin_amd64_cgo
@@ -8354,6 +8751,9 @@
       is larger than 0, we prepare the file in a memory buffer at the specified limit,
       to avoid AV alerts on disk access.
   metadata:
+    File: vql/parsers/pe_dump.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._PEDumpFunction.Info
+    Line: "35"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -8458,7 +8858,7 @@
   - name: scheme
     type: string
     description: 'Encryption scheme to use. Defaults to RSA. Currently supported:
-      PGP,RSA'
+      RSA'
   category: encode
   platforms:
   - darwin_amd64_cgo
@@ -8483,9 +8883,12 @@
   - name: scheme
     type: string
     description: 'Encryption scheme to use. Defaults to X509. Currently supported:
-      PGP,X509'
+      X509'
   category: encode
   metadata:
+    File: vql/parsers/crypto/pubkey.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/crypto.PKEncryptFunction.Info
+    Line: "139"
     permissions: SERVER_ADMIN
   platforms:
   - darwin_amd64_cgo
@@ -8506,6 +8909,9 @@
     description: The accessor to use.
   category: popular
   metadata:
+    File: vql/parsers/plist.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.PlistFunction.Info
+    Line: "44"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8527,6 +8933,9 @@
     description: The accessor to use.
   category: parsers
   metadata:
+    File: vql/parsers/plist.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._PlistPlugin.Info
+    Line: "117"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8548,6 +8957,9 @@
     description: The accessor to use.
   category: parsers
   metadata:
+    File: vql/parsers/prefetch.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers._PrefetchPlugin.Info
+    Line: "109"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -8573,6 +8985,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/windows/process/dump.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.ProcDumpPlugin.Info
+    Line: "139"
     permissions: MACHINE_STATE
   platforms:
   - windows_386_cgo
@@ -8620,6 +9035,9 @@
     description: Stop after this many hits (1).
   category: windows
   metadata:
+    File: vql/common/yara.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.YaraProcPlugin.Info
+    Line: "579"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -8849,6 +9267,9 @@
       be shown).
   category: developer
   metadata:
+    File: vql/golang/profile.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/golang.ProfilePlugin.Info
+    Line: "299"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -8865,6 +9286,9 @@
     description: Emit information in verbose form.
   category: developer
   metadata:
+    File: vql/golang/goroutines.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/golang.GoRoutinesPlugin.Info
+    Line: "134"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -8877,6 +9301,9 @@
   type: Plugin
   category: developer
   metadata:
+    File: vql/golang/memory.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/golang.MemoryAllocationsPlugin.Info
+    Line: "69"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -8893,6 +9320,9 @@
     description: A pid to kill.
     required: true
   metadata:
+    File: vql/functions/pskill.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/functions.PsKillFunction.Info
+    Line: "72"
     permissions: EXECVE
   platforms:
   - darwin_amd64_cgo
@@ -8915,6 +9345,9 @@
     description: A process ID to list. If not provided list all processes.
   category: popular
   metadata:
+    File: vql/linux/process.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.PslistPlugin.Info
+    Line: "101"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -9124,6 +9557,9 @@
       query is aborted
   category: server
   metadata:
+    File: vql/tools/query.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.QueryPlugin.Info
+    Line: "326"
     permissions: IMPERSONATION,EXECVE,FILESYSTEM_WRITE,MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -9345,6 +9781,9 @@
     type: string
     description: The accessor to use
   metadata:
+    File: vql/server/crypto/reader.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/crypto.ReadCryptFilePlugin.Info
+    Line: "115"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -9371,6 +9810,9 @@
     description: An accessor to use.
   category: popular
   metadata:
+    File: vql/filesystem/filesystem.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.ReadFileFunction.Info
+    Line: "341"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -9406,6 +9848,9 @@
     description: An accessor to use.
   category: popular
   metadata:
+    File: vql/filesystem/filesystem.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.ReadFilePlugin.Info
+    Line: "276"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -9456,6 +9901,7 @@
     description: A VQL Lambda to apply on each item
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: reformat
   description: |-
     Reformat VQL
@@ -9496,6 +9942,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/windows/registry/write.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/registry.RegDeleteKeyFunction.Info
+    Line: "276"
     permissions: FILESYSTEM_WRITE
   platforms:
   - windows_386_cgo
@@ -9510,6 +9959,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/windows/registry/write.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/registry.RegDeleteValueFunction.Info
+    Line: "206"
     permissions: FILESYSTEM_WRITE
   platforms:
   - windows_386_cgo
@@ -9535,6 +9987,9 @@
     description: Set to create missing intermediate keys
   category: windows
   metadata:
+    File: vql/windows/registry/write.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/registry.RegSetValueFunction.Info
+    Line: "134"
     permissions: FILESYSTEM_WRITE
   platforms:
   - windows_386_cgo
@@ -9680,6 +10135,9 @@
     type: int64
     description: Wait this long before rekeying the client.
   metadata:
+    File: vql/tools/rekey.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.RekeyFunction.Info
+    Line: "107"
     permissions: EXECVE
   platforms:
   - darwin_amd64_cgo
@@ -9765,6 +10223,9 @@
       path
   category: server
   metadata:
+    File: vql/tools/repack.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.RepackFunction.Info
+    Line: "593"
     permissions: COLLECT_SERVER,FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -9783,6 +10244,7 @@
     required: true
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: rm
   description: Remove a file from the filesystem using the API.
   type: Function
@@ -9792,6 +10254,9 @@
     description: Filename to remove.
     required: true
   metadata:
+    File: vql/filesystem/rm.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem._RmFunction.Info
+    Line: "103"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -9812,6 +10277,9 @@
     description: Remove the artifact from this label group (default the 'all'  group)
   category: server
   metadata:
+    File: vql/server/monitoring/rm_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.RemoveClientMonitoringFunction.Info
+    Line: "80"
     permissions: COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
@@ -9829,6 +10297,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/monitoring/rm_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.RemoveServerMonitoringFunction.Info
+    Line: "147"
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -9899,7 +10370,10 @@
     description: A Package spec to use instead of the default, for ultimate customization
   category: server
   metadata:
-    permissions: COLLECT_SERVER,FILESYSTEM_WRITE,SERVER_ADMIN
+    File: vql/tools/packaging/package.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/packaging.CreatePackagePlugin.Info
+    Line: "375"
+    permissions: COLLECT_SERVER,FILESYSTEM_READ,FILESYSTEM_WRITE,SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -9953,6 +10427,9 @@
     description: As a better alternative to disable_ssl_security, allows root ca certs
       to be added here.
   metadata:
+    File: vql/tools/rsyslog/rsyslog.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/rsyslog.RsyslogFunction.Info
+    Line: "139"
     permissions: NETWORK
   platforms:
   - linux_amd64_cgo
@@ -10110,6 +10587,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/secrets/add.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/secrets.AddSecretFunction.Info
+    Line: "75"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -10189,6 +10669,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/secrets/grant.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/secrets.ModifySecretFunction.Info
+    Line: "90"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -10199,7 +10682,11 @@
   type: Plugin
   category: server
   metadata:
+    File: vql/server/secrets/list.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/secrets.SecretsPlugin.Info
+    Line: "100"
     execution: master
+    permissions: SERVER_ADMIN
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -10241,6 +10728,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/events.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.SendEventFunction.Info
+    Line: "82"
     permissions: SERVER_ADMIN,PUBLISH
   platforms:
   - darwin_amd64_cgo
@@ -10346,6 +10836,9 @@
   type: Function
   category: server
   metadata:
+    File: vql/server/crypto.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server.ServerFrontendCertFunction.Info
+    Line: "48"
     permissions: MACHINE_STATE
   platforms:
   - darwin_amd64_cgo
@@ -10365,6 +10858,9 @@
     description: A dict containing metadata. If not specified we use kwargs.
   category: server
   metadata:
+    File: vql/server/clients/metadata.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.ServerMetadataFunction.Info
+    Line: "224"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -10395,6 +10891,9 @@
     description: A dict containing metadata. If not specified we use kwargs.
   category: server
   metadata:
+    File: vql/server/clients/metadata.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/clients.ServerSetMetadataFunction.Info
+    Line: "260"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -10442,6 +10941,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/monitoring/event_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.SetClientMonitoring.Info
+    Line: "151"
     permissions: COLLECT_CLIENT
   platforms:
   - darwin_amd64_cgo
@@ -10459,6 +10961,9 @@
     required: true
   category: server
   metadata:
+    File: vql/server/monitoring/event_monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/monitoring.SetServerMonitoring.Info
+    Line: "297"
     permissions: COLLECT_SERVER
   platforms:
   - darwin_amd64_cgo
@@ -10490,9 +10995,13 @@
     description: The name of the shell session. If the session already exists, we
       just return a handle to it.
   metadata:
+    File: vql/tools/shell/shell_service.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/shell.StartShellFunction.Info
+    Line: "383"
     permissions: EXECVE
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: shell_session_control
   description: Control a previously created shell session.
   type: Function
@@ -10512,9 +11021,13 @@
     type: bool
     description: If specified we kill the session.
   metadata:
+    File: vql/tools/shell/session.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools/shell.ShellSessionControl.Info
+    Line: "68"
     permissions: EXECVE
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: sigma
   description: |
     Evaluate sigma rules.
@@ -10573,7 +11086,10 @@
       the sigma rule does not specify it.
   category: popular
   metadata:
-    permissions: MACHINE_STATE,EXECVE,FILESYSTEM_READ,FILESYSTEM_WRITE
+    File: vql/sigma/sigma.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/sigma.SigmaPlugin.Info
+    Line: "136"
+    permissions: MACHINE_STATE,SERVER_ADMIN,EXECVE,FILESYSTEM_READ,FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -10777,6 +11293,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/flows/results.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.SourcePlugin.Info
+    Line: "310"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -10879,6 +11398,9 @@
     description: Maximum size of line buffer (default 64kb).
   category: parsers
   metadata:
+    File: vql/parsers/splitparser.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.SplitRecordParser.Info
+    Line: "223"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -10954,6 +11476,9 @@
     description: 'How long to keep idle HTTP connections open in seconds (default:
       55). Lower values help with firewalls/load balancer/HECs that close connections.'
   metadata:
+    File: vql/server/splunk.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server._SplunkPlugin.Info
+    Line: "425"
     permissions: NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -10984,6 +11509,9 @@
   - name: args
     type: Any
   metadata:
+    File: vql/parsers/sql/sql.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/sql.SQLPlugin.Info
+    Line: "236"
     permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -11160,6 +11688,9 @@
     description: An accessor to use.
   category: popular
   metadata:
+    File: vql/filesystem/filesystem.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.StatFunction.Info
+    Line: "442"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -11180,6 +11711,9 @@
     type: string
     description: An accessor to use.
   metadata:
+    File: vql/filesystem/filesystem.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.StatPlugin.Info
+    Line: "399"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -11315,6 +11849,9 @@
   type: Function
   category: linux
   metadata:
+    File: vql/linux/sysinfo.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux.LinuxSysinfoFunction.Info
+    Line: "24"
     permissions: MACHINE_STATE
   platforms:
   - linux_amd64_cgo
@@ -11328,6 +11865,9 @@
     description: If set we delay removal as much as possible.
   category: popular
   metadata:
+    File: vql/filesystem/tempfile.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.TempdirFunction.Info
+    Line: "192"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -11357,6 +11897,9 @@
     description: If set we delay removal as much as possible.
   category: popular
   metadata:
+    File: vql/filesystem/tempfile.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.TempfileFunction.Info
+    Line: "127"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -11380,6 +11923,10 @@
   - name: html
     type: bool
     description: Use when the output should be html escaped.
+  metadata:
+    File: vql/tools/template.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.(*TemplateFunction).Info
+    Line: "120"
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -11393,6 +11940,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/windows/process/thread.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.ThreadPlugin.Info
+    Line: "231"
     permissions: MACHINE_STATE
   platforms:
   - windows_amd64_cgo
@@ -11422,6 +11972,9 @@
     description: The notebook ID the timeline is stored in.
   category: server
   metadata:
+    File: vql/server/timelines/reader.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/timelines.TimelinePlugin.Info
+    Line: "118"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -11463,6 +12016,9 @@
     description: The notebook ID the timeline is stored in.
   category: server
   metadata:
+    File: vql/server/timelines/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/timelines.AddTimelineFunction.Info
+    Line: "130"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -11489,6 +12045,9 @@
       entire timeline
   category: server
   metadata:
+    File: vql/server/timelines/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/timelines.DeleteTimelineFunction.Info
+    Line: "100"
     execution: master
     permissions: NOTEBOOK_EDITOR
   platforms:
@@ -11505,6 +12064,9 @@
     description: The notebook ID the timeline is stored in.
   category: server
   metadata:
+    File: vql/server/timelines/reader.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/timelines.TimelineListPlugin.Info
+    Line: "205"
     execution: master
     permissions: READ_RESULTS
   platforms:
@@ -11704,6 +12266,9 @@
     description: The accessor to use
   category: encode
   metadata:
+    File: vql/functions/tlsh.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/functions.TLSHashFunction.Info
+    Line: "66"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -11768,6 +12333,9 @@
     required: true
   category: windows
   metadata:
+    File: vql/windows/process/token.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.TokenFunction.Info
+    Line: "227"
     permissions: MACHINE_STATE
   platforms:
   - windows_amd64_cgo
@@ -11824,6 +12392,10 @@
 
     - [format]({{< ref "/vql_reference/popular/format/" >}})
   type: Function
+  metadata:
+    File: vql/golang/typeof.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/golang.TypeOfFunction.Info
+    Line: "30"
   platforms:
   - darwin_amd64_cgo
   - linux_amd64_cgo
@@ -11891,6 +12463,9 @@
       or tgz or tar.gz).
   category: popular
   metadata:
+    File: vql/tools/unzip.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.UnzipPlugin.Info
+    Line: "299"
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -11977,6 +12552,9 @@
     description: Birth time to record
   category: popular
   metadata:
+    File: vql/networking/upload.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking.UploadFunction.Info
+    Line: "134"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12003,6 +12581,9 @@
     description: A SAS URL to use for upload to the container.
     required: true
   metadata:
+    File: vql/tools/azure_upload.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.AzureUploadFunction.Info
+    Line: "156"
     permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -12044,6 +12625,9 @@
     description: Birth time to set the output file.
   category: server
   metadata:
+    File: vql/networking/upload.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/networking.UploadDirectoryFunction.Info
+    Line: "247"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -12156,6 +12740,9 @@
     description: Alternatively use a secret from the secrets service. Secret must
       be of type 'AWS S3 Creds'
   metadata:
+    File: vql/tools/s3_upload_minio.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.S3UploadFunction.Info
+    Line: "232"
     permissions: NETWORK,FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12199,6 +12786,9 @@
     description: Alternatively, use a secret from the secrets service. Secret must
       be of type 'SSH PrivateKey'
   metadata:
+    File: vql/tools/sftp_upload.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.SFTPUploadFunction.Info
+    Line: "305"
     permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -12234,6 +12824,9 @@
       name (e.g. \\192.168.1.1:445\ShareName)
     required: true
   metadata:
+    File: vql/tools/smb_upload.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.SMBUploadFunction.Info
+    Line: "225"
     permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -12251,6 +12844,9 @@
   - name: flow_id
     type: string
   metadata:
+    File: vql/server/flows/upload_transactions.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.UploadTransactionsPlugin.Info
+    Line: "89"
     permissions: READ_RESULTS
   platforms:
   - linux_amd64_cgo
@@ -12290,6 +12886,9 @@
     type: string
     description: If specified, set a HTTP User-Agent.
   metadata:
+    File: vql/tools/webdav_upload.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/tools.WebDAVUploadFunction.Info
+    Line: "192"
     permissions: FILESYSTEM_READ,NETWORK
   platforms:
   - darwin_amd64_cgo
@@ -12316,6 +12915,9 @@
     description: A notebook ID
   category: server
   metadata:
+    File: vql/server/flows/uploads.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.UploadsPlugins.Info
+    Line: "259"
     permissions: READ_RESULTS
   platforms:
   - darwin_amd64_cgo
@@ -12387,6 +12989,9 @@
     description: The org under which we query the user's ACL.
   category: server
   metadata:
+    File: vql/server/users/get.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UserFunction.Info
+    Line: "70"
     execution: master
   platforms:
   - darwin_amd64_cgo
@@ -12422,6 +13027,9 @@
     repeated: true
   category: server
   metadata:
+    File: vql/server/users/create.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UserCreateFunction.Info
+    Line: "122"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -12449,6 +13057,9 @@
     description: If not specified, just show what user will be removed
   category: server
   metadata:
+    File: vql/server/users/delete.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UserDeleteFunction.Info
+    Line: "87"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -12481,6 +13092,9 @@
       function).
   category: server
   metadata:
+    File: vql/server/users/grant.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.GrantFunction.Info
+    Line: "98"
     execution: master
     permissions: SERVER_ADMIN
   platforms:
@@ -12503,9 +13117,13 @@
     type: ordereddict.Dict
     description: The message to deliver to the user.
   metadata:
+    File: vql/server/users/message.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UserMessageFunction.Info
+    Line: "76"
     execution: master
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
   free_form_args: true
 - name: user_messages
   description: Emit the user's console messages.
@@ -12519,9 +13137,13 @@
     type: string
     description: If set we read another user's messages (must be admin).
   metadata:
+    File: vql/server/users/message.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UserMessages.Info
+    Line: "175"
     execution: master
   platforms:
   - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: user_options
   description: |
     Update and read the user GUI options
@@ -12571,6 +13193,9 @@
     description: Set the user's default password for Zip Exports.
   category: server
   metadata:
+    File: vql/server/users/options.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/users.UserOptionsFunction.Info
+    Line: "123"
     execution: master
   platforms:
   - darwin_amd64_cgo
@@ -12673,6 +13298,10 @@
     type: bool
     description: If set, we do not allow override of built-in artifacts (allowed by
       default)
+  metadata:
+    File: vql/golang/verify.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/golang.VerifyFunction.Info
+    Line: "131"
   platforms:
   - linux_amd64_cgo
   - windows_amd64_cgo
@@ -12764,6 +13393,9 @@
     description: Depth of directory to list (default 0).
   category: server
   metadata:
+    File: vql/filesystem/vfs.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.VFSListDirectoryPlugin.Info
+    Line: "154"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -12851,6 +13483,9 @@
     description: Maximum size of line buffer.
   category: event
   metadata:
+    File: vql/parsers/syslog/auditd.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/syslog.WatchAuditdPlugin.Info
+    Line: "132"
     event: "true"
     permissions: MACHINE_STATE
   platforms:
@@ -12887,6 +13522,9 @@
     repeated: true
   category: event
   metadata:
+    File: vql/parsers/csv/csv.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/csv._WatchCSVPlugin.Info
+    Line: "238"
     event: "true"
     permissions: FILESYSTEM_READ
   platforms:
@@ -12977,6 +13615,9 @@
     description: A regex that must match the raw buffer before we process it.
   category: linux
   metadata:
+    File: vql/linux/ebpf/ebpf.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/linux/ebpf.EBPFEventPlugin.Info
+    Line: "45"
     event: "true"
     permissions: MACHINE_STATE
   platforms:
@@ -13157,6 +13798,12 @@
       be any of the types accepted by kernel_tracer_type)
     repeated: true
   category: event
+  metadata:
+    File: vql/windows/etw/watch_etw.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/etw.WatchETWPlugin.Info
+    Line: "202"
+    event: "true"
+    permissions: MACHINE_STATE
   platforms:
   - windows_386_cgo
   - windows_amd64_cgo
@@ -13195,6 +13842,9 @@
       (default 1).
   category: event
   metadata:
+    File: vql/parsers/event_logs/evtx.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/event_logs._WatchEvtxPlugin.Info
+    Line: "235"
     event: "true"
     permissions: FILESYSTEM_READ
   platforms:
@@ -13220,6 +13870,9 @@
     description: Emit raw events (not parsed).
   category: event
   metadata:
+    File: vql/parsers/journald/journald.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/journald.WatchJournaldPlugin.Info
+    Line: "163"
     event: "true"
     permissions: FILESYSTEM_READ
   platforms:
@@ -13245,6 +13898,9 @@
     description: Maximum size of line buffer.
   category: event
   metadata:
+    File: vql/parsers/json.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.WatchJsonlPlugin.Info
+    Line: "693"
     event: "true"
     permissions: FILESYSTEM_READ
   platforms:
@@ -13265,6 +13921,9 @@
     required: true
   category: event
   metadata:
+    File: vql/server/flows/monitoring.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/flows.WatchMonitoringPlugin.Info
+    Line: "265"
     event: "true"
     execution: master
     permissions: READ_RESULTS
@@ -13333,6 +13992,9 @@
       Rows must have an OSPath column.
   category: event
   metadata:
+    File: vql/parsers/syslog/scanner.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/syslog.WatchSyslogPlugin.Info
+    Line: "339"
     event: "true"
     permissions: FILESYSTEM_READ
   platforms:
@@ -13351,6 +14013,9 @@
     required: true
   category: event
   metadata:
+    File: vql/parsers/usn/usn.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/usn.WatchUSNPlugin.Info
+    Line: "309"
     event: "true"
     permissions: FILESYSTEM_READ
   platforms:
@@ -13378,6 +14043,9 @@
     description: Object namespace path.
   category: windows
   metadata:
+    File: vql/windows/process/winobj.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/process.WinObjPlugin.Info
+    Line: "82"
     permissions: MACHINE_STATE
   platforms:
   - windows_amd64_cgo
@@ -13437,7 +14105,10 @@
       folder
   category: windows
   metadata:
-    permissions: MACHINE_STATE
+    File: vql/windows/winpmem.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows.WinpmemFunction.Info
+    Line: "183"
+    permissions: MACHINE_STATE,FILESYSTEM_WRITE
   platforms:
   - windows_amd64_cgo
 - name: wmi
@@ -13460,6 +14131,9 @@
     description: The WMI namespace to use (ROOT/CIMV2)
   category: windows
   metadata:
+    File: vql/windows/wmi/wmi.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/wmi.init.0
+    Line: "141"
     permissions: MACHINE_STATE
   platforms:
   - windows_386_cgo
@@ -13485,6 +14159,10 @@
     required: true
   category: event
   metadata:
+    File: vql/windows/wmi/events.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/windows/wmi.WmiEventPlugin.Info
+    Line: "196"
+    event: "true"
     permissions: MACHINE_STATE
   platforms:
   - windows_386_cgo
@@ -13511,6 +14189,9 @@
     type: uint64
     description: When the file grows to this size, truncate it (default 1Gb).
   metadata:
+    File: vql/server/crypto/writer.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/server/crypto.WriteCryptFilePlugin.Info
+    Line: "155"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -13534,6 +14215,9 @@
     description: query to write into the file.
     required: true
   metadata:
+    File: vql/parsers/csv/csv.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers/csv.WriteCSVPlugin.Info
+    Line: "322"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -13566,6 +14250,9 @@
     type: bool
     description: If true we ensure the destination directories exist
   metadata:
+    File: vql/filesystem/write_file.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/filesystem.WriteFunction.Info
+    Line: "54"
     permissions: FILESYSTEM_WRITE,FILESYSTEM_READ
   platforms:
   - linux_amd64_cgo
@@ -13596,6 +14283,9 @@
     type: bool
     description: Append JSONL records to existing file.
   metadata:
+    File: vql/parsers/json.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/parsers.WriteJSONPlugin.Info
+    Line: "679"
     permissions: FILESYSTEM_WRITE
   platforms:
   - darwin_amd64_cgo
@@ -13809,6 +14499,9 @@
     description: Force buffer scan in all cases.
   category: parsers
   metadata:
+    File: vql/common/yara.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.YaraScanPlugin.Info
+    Line: "555"
     permissions: FILESYSTEM_READ
   platforms:
   - darwin_amd64_cgo
@@ -13874,6 +14567,10 @@
     type: bool
     description: Remove metadata to make rules smaller.
   category: parsers
+  metadata:
+    File: vql/common/yara_rules.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.(*YaraLintFunction).Info
+    Line: "624"
   platforms:
   - darwin_amd64_cgo
   - darwin_arm64_cgo
@@ -13948,6 +14645,9 @@
     type: bool
     description: Force buffer scan in all cases.
   metadata:
+    File: vql/common/yarax.go
+    Fn: www.velocidex.com/golang/velociraptor/vql/common.YaraXScanPlugin.Info
+    Line: "636"
     permissions: FILESYSTEM_READ,EXECVE
   platforms:
   - linux_amd64_cgo

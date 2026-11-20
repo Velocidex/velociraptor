@@ -62,6 +62,9 @@ func (self UserMessageFunction) Call(
 	return arg.Username
 }
 
+// Any user is allowed to message any other user. This function is not
+// bound to an org, so a user can message another user in another org
+// regardless of org ACLs.
 func (self UserMessageFunction) Info(scope vfilter.Scope, type_map *vfilter.TypeMap) *vfilter.FunctionInfo {
 	return &vfilter.FunctionInfo{
 		Name:    "user_message",
