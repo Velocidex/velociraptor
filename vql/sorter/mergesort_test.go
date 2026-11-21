@@ -2,6 +2,7 @@ package sorter
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
@@ -128,4 +129,45 @@ func TestMergeSorterDesc(t *testing.T) {
 	}
 
 	goldie.AssertJson(t, "TestMergeSorterDesc", res)
+}
+
+// NULL values sort like an empty string, which comes before any
+// number. Each chunk is sorted that way, so the merge must agree or
+// the NULL rows of each chunk get spliced in between the numbers.
+func TestMergeSorterNullValues(t *testing.T) {
+	values := []interface{}{5, nil, 3, 9, nil, 1, 7, 2, nil, 8}
+
+	for _, desc := range []bool{false, true} {
+		scope := vql_subsystem.MakeScope()
+		scope.SetLogger(log.New(os.Stderr, " ", 0))
+
+		input := make(chan types.Row)
+		sorter := MergeSorter{ChunkSize: 3}.Sort(
+			context.Background(), scope, input, "X", desc)
+
+		go func() {
+			defer close(input)
+			for _, value := range values {
+				input <- ordereddict.NewDict().Set("X", value)
+			}
+		}()
+
+		// Rows read back from a chunk file are uint64 but the last
+		// chunk stays in memory as int, so compare the printed values.
+		var res []string
+		for row := range sorter {
+			x, _ := row.(*ordereddict.Dict).Get("X")
+			res = append(res, fmt.Sprint(x))
+		}
+
+		if desc {
+			assert.Equal(t, []string{
+				"9", "8", "7", "5", "3", "2", "1",
+				"<nil>", "<nil>", "<nil>"}, res)
+		} else {
+			assert.Equal(t, []string{
+				"<nil>", "<nil>", "<nil>",
+				"1", "2", "3", "5", "7", "8", "9"}, res)
+		}
+	}
 }
