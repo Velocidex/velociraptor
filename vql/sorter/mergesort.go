@@ -179,7 +179,10 @@ func (self *MergeSorterCtx) Merge(ctx context.Context, output_chan chan types.Ro
 			}
 
 			if self.memory_sorter.Desc {
-				if self.memory_sorter.Scope.Gt(value, smallest_value) {
+				// Compare with Lt like the in memory sorter that
+				// ordered each chunk. Gt can disagree with it for
+				// mixed types, e.g. Gt("", 5) is true.
+				if self.memory_sorter.Scope.Lt(smallest_value, value) {
 					smallest_value = value
 					smallest_row = row
 					smallest_idx = i
