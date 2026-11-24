@@ -20,6 +20,11 @@ func Unmarshal(in []byte, item interface{}) error {
 	return yaml.Unmarshal(in, item)
 }
 
+// Marshal keeps the compact list indentation used in existing YAML exports.
+func Marshal(item interface{}) ([]byte, error) {
+	return yaml.Dump(item, yaml.WithV2Defaults(), yaml.WithCompactSeqIndent())
+}
+
 type NodeContext struct {
 	*yaml.Node
 

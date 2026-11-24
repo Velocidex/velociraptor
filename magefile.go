@@ -42,10 +42,10 @@ import (
 	"github.com/Velocidex/ordereddict"
 	"github.com/magefile/mage/mg"
 	"github.com/magefile/mage/sh"
-	"gopkg.in/yaml.v2"
 	"www.velocidex.com/golang/velociraptor/build"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 // Run with DEBUG=1 environment variable to see more debug messages.

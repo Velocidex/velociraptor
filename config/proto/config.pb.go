@@ -29,17 +29,17 @@ const (
 // version that produced the config file.
 type Version struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
-	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Description string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Version     string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty"`
-	Commit      string                 `protobuf:"bytes,4,opt,name=commit,proto3" json:"commit,omitempty"`
-	BuildTime   string                 `protobuf:"bytes,5,opt,name=build_time,json=buildTime,proto3" json:"build_time,omitempty"`
+	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Description string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
+	Version     string                 `protobuf:"bytes,3,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
+	Commit      string                 `protobuf:"bytes,4,opt,name=commit,proto3" json:"commit,omitempty" yaml:"commit,omitempty"`
+	BuildTime   string                 `protobuf:"bytes,5,opt,name=build_time,json=buildTime,proto3" json:"build_time,omitempty" yaml:"build_time,omitempty"`
 	// Populated by reading the writeback file.
-	InstallTime   uint64 `protobuf:"varint,8,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty"`
-	CiBuildUrl    string `protobuf:"bytes,6,opt,name=ci_build_url,json=ciBuildUrl,proto3" json:"ci_build_url,omitempty"`
-	Compiler      string `protobuf:"bytes,7,opt,name=compiler,proto3" json:"compiler,omitempty"`
-	System        string `protobuf:"bytes,9,opt,name=system,proto3" json:"system,omitempty"`
-	Architecture  string `protobuf:"bytes,10,opt,name=architecture,proto3" json:"architecture,omitempty"`
+	InstallTime   uint64 `protobuf:"varint,8,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty" yaml:"install_time,omitempty"`
+	CiBuildUrl    string `protobuf:"bytes,6,opt,name=ci_build_url,json=ciBuildUrl,proto3" json:"ci_build_url,omitempty" yaml:"ci_build_url,omitempty"`
+	Compiler      string `protobuf:"bytes,7,opt,name=compiler,proto3" json:"compiler,omitempty" yaml:"compiler,omitempty"`
+	System        string `protobuf:"bytes,9,opt,name=system,proto3" json:"system,omitempty" yaml:"system,omitempty"`
+	Architecture  string `protobuf:"bytes,10,opt,name=architecture,proto3" json:"architecture,omitempty" yaml:"architecture,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -147,8 +147,8 @@ func (x *Version) GetArchitecture() string {
 // A pointer to cuurently executing flows.
 type FlowCheckPoint struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
-	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty" yaml:"flow_id,omitempty"`
+	Path          string                 `protobuf:"bytes,2,opt,name=path,proto3" json:"path,omitempty" yaml:"path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -202,18 +202,18 @@ type Writeback struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// When the client was installed (basically the timestamp of the
 	// writeback file).
-	InstallTime uint64 `protobuf:"varint,16,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty"`
-	PrivateKey  string `protobuf:"bytes,7,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	InstallTime uint64 `protobuf:"varint,16,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty" yaml:"install_time,omitempty"`
+	PrivateKey  string `protobuf:"bytes,7,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty" yaml:"private_key,omitempty"`
 	// This is calculated from the public key above so it is only here
 	// for information.
-	ClientId               string `protobuf:"bytes,15,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	HuntLastTimestamp      uint64 `protobuf:"varint,13,opt,name=hunt_last_timestamp,json=huntLastTimestamp,proto3" json:"hunt_last_timestamp,omitempty"`
-	LastServerSerialNumber uint64 `protobuf:"varint,14,opt,name=last_server_serial_number,json=lastServerSerialNumber,proto3" json:"last_server_serial_number,omitempty"`
+	ClientId               string `protobuf:"bytes,15,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
+	HuntLastTimestamp      uint64 `protobuf:"varint,13,opt,name=hunt_last_timestamp,json=huntLastTimestamp,proto3" json:"hunt_last_timestamp,omitempty" yaml:"hunt_last_timestamp,omitempty"`
+	LastServerSerialNumber uint64 `protobuf:"varint,14,opt,name=last_server_serial_number,json=lastServerSerialNumber,proto3" json:"last_server_serial_number,omitempty" yaml:"last_server_serial_number,omitempty"`
 	// Record the last seen server pem we saw. This is used in writing
 	// encrypted logs before being able to connect to the server.
-	LastServerPem string               `protobuf:"bytes,18,opt,name=last_server_pem,json=lastServerPem,proto3" json:"last_server_pem,omitempty"`
-	EventQueries  *proto.VQLEventTable `protobuf:"bytes,1,opt,name=event_queries,json=eventQueries,proto3" json:"event_queries,omitempty"`
-	Checkpoints   []*FlowCheckPoint    `protobuf:"bytes,17,rep,name=checkpoints,proto3" json:"checkpoints,omitempty"`
+	LastServerPem string               `protobuf:"bytes,18,opt,name=last_server_pem,json=lastServerPem,proto3" json:"last_server_pem,omitempty" yaml:"last_server_pem,omitempty"`
+	EventQueries  *proto.VQLEventTable `protobuf:"bytes,1,opt,name=event_queries,json=eventQueries,proto3" json:"event_queries,omitempty" yaml:"event_queries,omitempty"`
+	Checkpoints   []*FlowCheckPoint    `protobuf:"bytes,17,rep,name=checkpoints,proto3" json:"checkpoints,omitempty" yaml:"checkpoints,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -307,10 +307,10 @@ func (x *Writeback) GetCheckpoints() []*FlowCheckPoint {
 // TODO - refactor from api/orgs.proto
 type InitialOrgRecord struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	OrgId string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	OrgId string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty" yaml:"org_id,omitempty"`
+	Name  string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
 	// If this is empty we use the org id
-	Nonce         string `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty"`
+	Nonce         string `protobuf:"bytes,3,opt,name=nonce,proto3" json:"nonce,omitempty" yaml:"nonce,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -372,9 +372,9 @@ func (x *InitialOrgRecord) GetNonce() string {
 // directory).
 type WindowsInstallerConfig struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName        string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	InstallPath        string                 `protobuf:"bytes,2,opt,name=install_path,json=installPath,proto3" json:"install_path,omitempty"`
-	ServiceDescription string                 `protobuf:"bytes,3,opt,name=service_description,json=serviceDescription,proto3" json:"service_description,omitempty"`
+	ServiceName        string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty" yaml:"service_name,omitempty"`
+	InstallPath        string                 `protobuf:"bytes,2,opt,name=install_path,json=installPath,proto3" json:"install_path,omitempty" yaml:"install_path,omitempty"`
+	ServiceDescription string                 `protobuf:"bytes,3,opt,name=service_description,json=serviceDescription,proto3" json:"service_description,omitempty" yaml:"service_description,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -432,8 +432,8 @@ func (x *WindowsInstallerConfig) GetServiceDescription() string {
 
 type DarwinInstallerConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty"`
-	InstallPath   string                 `protobuf:"bytes,2,opt,name=install_path,json=installPath,proto3" json:"install_path,omitempty"`
+	ServiceName   string                 `protobuf:"bytes,1,opt,name=service_name,json=serviceName,proto3" json:"service_name,omitempty" yaml:"service_name,omitempty"`
+	InstallPath   string                 `protobuf:"bytes,2,opt,name=install_path,json=installPath,proto3" json:"install_path,omitempty" yaml:"install_path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -484,11 +484,11 @@ func (x *DarwinInstallerConfig) GetInstallPath() string {
 
 type RingBufferConfig struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	MemorySize      uint64                 `protobuf:"varint,1,opt,name=memory_size,json=memorySize,proto3" json:"memory_size,omitempty"`
-	DiskSize        uint64                 `protobuf:"varint,2,opt,name=disk_size,json=diskSize,proto3" json:"disk_size,omitempty"`
-	FilenameLinux   string                 `protobuf:"bytes,4,opt,name=filename_linux,json=filenameLinux,proto3" json:"filename_linux,omitempty"`
-	FilenameWindows string                 `protobuf:"bytes,5,opt,name=filename_windows,json=filenameWindows,proto3" json:"filename_windows,omitempty"`
-	FilenameDarwin  string                 `protobuf:"bytes,6,opt,name=filename_darwin,json=filenameDarwin,proto3" json:"filename_darwin,omitempty"`
+	MemorySize      uint64                 `protobuf:"varint,1,opt,name=memory_size,json=memorySize,proto3" json:"memory_size,omitempty" yaml:"memory_size,omitempty"`
+	DiskSize        uint64                 `protobuf:"varint,2,opt,name=disk_size,json=diskSize,proto3" json:"disk_size,omitempty" yaml:"disk_size,omitempty"`
+	FilenameLinux   string                 `protobuf:"bytes,4,opt,name=filename_linux,json=filenameLinux,proto3" json:"filename_linux,omitempty" yaml:"filename_linux,omitempty"`
+	FilenameWindows string                 `protobuf:"bytes,5,opt,name=filename_windows,json=filenameWindows,proto3" json:"filename_windows,omitempty" yaml:"filename_windows,omitempty"`
+	FilenameDarwin  string                 `protobuf:"bytes,6,opt,name=filename_darwin,json=filenameDarwin,proto3" json:"filename_darwin,omitempty" yaml:"filename_darwin,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -560,82 +560,82 @@ func (x *RingBufferConfig) GetFilenameDarwin() string {
 
 type ClientConfig struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	Labels     []string               `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty"`
-	ServerUrls []string               `protobuf:"bytes,8,rep,name=server_urls,json=serverUrls,proto3" json:"server_urls,omitempty"`
+	Labels     []string               `protobuf:"bytes,6,rep,name=labels,proto3" json:"labels,omitempty" yaml:"labels,omitempty"`
+	ServerUrls []string               `protobuf:"bytes,8,rep,name=server_urls,json=serverUrls,proto3" json:"server_urls,omitempty" yaml:"server_urls,omitempty"`
 	// A proxy setting to use.
-	Proxy string `protobuf:"bytes,32,opt,name=proxy,proto3" json:"proxy,omitempty"`
+	Proxy string `protobuf:"bytes,32,opt,name=proxy,proto3" json:"proxy,omitempty" yaml:"proxy,omitempty"`
 	// For more complex proxy configurations use this setting
 	// (overrides the `proxy` configuration above).
-	ProxyConfig      *ProxyConfig `protobuf:"bytes,46,opt,name=proxy_config,json=proxyConfig,proto3" json:"proxy_config,omitempty"`
-	CaCertificate    string       `protobuf:"bytes,11,opt,name=ca_certificate,json=caCertificate,proto3" json:"ca_certificate,omitempty"`
-	Nonce            string       `protobuf:"bytes,12,opt,name=nonce,proto3" json:"nonce,omitempty"`
-	WritebackDarwin  string       `protobuf:"bytes,20,opt,name=writeback_darwin,json=writebackDarwin,proto3" json:"writeback_darwin,omitempty"`
-	WritebackLinux   string       `protobuf:"bytes,9,opt,name=writeback_linux,json=writebackLinux,proto3" json:"writeback_linux,omitempty"`
-	WritebackWindows string       `protobuf:"bytes,10,opt,name=writeback_windows,json=writebackWindows,proto3" json:"writeback_windows,omitempty"`
+	ProxyConfig      *ProxyConfig `protobuf:"bytes,46,opt,name=proxy_config,json=proxyConfig,proto3" json:"proxy_config,omitempty" yaml:"proxy_config,omitempty"`
+	CaCertificate    string       `protobuf:"bytes,11,opt,name=ca_certificate,json=caCertificate,proto3" json:"ca_certificate,omitempty" yaml:"ca_certificate,omitempty"`
+	Nonce            string       `protobuf:"bytes,12,opt,name=nonce,proto3" json:"nonce,omitempty" yaml:"nonce,omitempty"`
+	WritebackDarwin  string       `protobuf:"bytes,20,opt,name=writeback_darwin,json=writebackDarwin,proto3" json:"writeback_darwin,omitempty" yaml:"writeback_darwin,omitempty"`
+	WritebackLinux   string       `protobuf:"bytes,9,opt,name=writeback_linux,json=writebackLinux,proto3" json:"writeback_linux,omitempty" yaml:"writeback_linux,omitempty"`
+	WritebackWindows string       `protobuf:"bytes,10,opt,name=writeback_windows,json=writebackWindows,proto3" json:"writeback_windows,omitempty" yaml:"writeback_windows,omitempty"`
 	// If this is set we use a second file for the level2
 	// writeback. The string expected here is added to the regular
 	// writeback filename. For example setting to "l2" will create a
 	// file named "velociraptor.writeback.yaml.l2"
-	Level2WritebackSuffix string `protobuf:"bytes,44,opt,name=level2_writeback_suffix,json=level2WritebackSuffix,proto3" json:"level2_writeback_suffix,omitempty"`
+	Level2WritebackSuffix string `protobuf:"bytes,44,opt,name=level2_writeback_suffix,json=level2WritebackSuffix,proto3" json:"level2_writeback_suffix,omitempty" yaml:"level2_writeback_suffix,omitempty"`
 	// A path to set the temp directory. If not set we use the system
 	// default. The path may be relative to the current directory
 	// (usually the location of the executable). If the path does not
 	// exist we fall back to the system temp directory.
-	TempdirLinux   string `protobuf:"bytes,1,opt,name=tempdir_linux,json=tempdirLinux,proto3" json:"tempdir_linux,omitempty"`
-	TempdirWindows string `protobuf:"bytes,2,opt,name=tempdir_windows,json=tempdirWindows,proto3" json:"tempdir_windows,omitempty"`
-	TempdirDarwin  string `protobuf:"bytes,3,opt,name=tempdir_darwin,json=tempdirDarwin,proto3" json:"tempdir_darwin,omitempty"`
+	TempdirLinux   string `protobuf:"bytes,1,opt,name=tempdir_linux,json=tempdirLinux,proto3" json:"tempdir_linux,omitempty" yaml:"tempdir_linux,omitempty"`
+	TempdirWindows string `protobuf:"bytes,2,opt,name=tempdir_windows,json=tempdirWindows,proto3" json:"tempdir_windows,omitempty" yaml:"tempdir_windows,omitempty"`
+	TempdirDarwin  string `protobuf:"bytes,3,opt,name=tempdir_darwin,json=tempdirDarwin,proto3" json:"tempdir_darwin,omitempty" yaml:"tempdir_darwin,omitempty"`
 	// Number of seconds to wait between polls (default 1
 	// second). NOTE: Velociraptor typically holds the connection up
 	// for at least max_poll time and then refreshes the
 	// connection. The min poll is used to determine how quickly
 	// connections should resume.
-	MinPoll    uint64 `protobuf:"varint,14,opt,name=min_poll,json=minPoll,proto3" json:"min_poll,omitempty"`
-	MaxPoll    uint64 `protobuf:"varint,15,opt,name=max_poll,json=maxPoll,proto3" json:"max_poll,omitempty"`
-	MaxPollStd uint64 `protobuf:"varint,27,opt,name=max_poll_std,json=maxPollStd,proto3" json:"max_poll_std,omitempty"`
+	MinPoll    uint64 `protobuf:"varint,14,opt,name=min_poll,json=minPoll,proto3" json:"min_poll,omitempty" yaml:"min_poll,omitempty"`
+	MaxPoll    uint64 `protobuf:"varint,15,opt,name=max_poll,json=maxPoll,proto3" json:"max_poll,omitempty" yaml:"max_poll,omitempty"`
+	MaxPollStd uint64 `protobuf:"varint,27,opt,name=max_poll_std,json=maxPollStd,proto3" json:"max_poll_std,omitempty" yaml:"max_poll_std,omitempty"`
 	// When using websockets the server pings the client periodically
 	// to see if it is still there. This setting controls how often
 	// this ping occurs (default 10).
-	WsPingWaitSec uint64 `protobuf:"varint,45,opt,name=ws_ping_wait_sec,json=wsPingWaitSec,proto3" json:"ws_ping_wait_sec,omitempty"`
+	WsPingWaitSec uint64 `protobuf:"varint,45,opt,name=ws_ping_wait_sec,json=wsPingWaitSec,proto3" json:"ws_ping_wait_sec,omitempty" yaml:"ws_ping_wait_sec,omitempty"`
 	// If this is set, the nanny will exit if we are not able to send
 	// messages to the server within this many seconds. NOTE - even a
 	// failed connection will reset the counter, the nanny will only
 	// fire if the client has failed in some way - e.g. the
 	// communicator is stopped for some reason
-	NannyMaxConnectionDelay uint64                  `protobuf:"varint,36,opt,name=nanny_max_connection_delay,json=nannyMaxConnectionDelay,proto3" json:"nanny_max_connection_delay,omitempty"`
-	WindowsInstaller        *WindowsInstallerConfig `protobuf:"bytes,16,opt,name=windows_installer,json=windowsInstaller,proto3" json:"windows_installer,omitempty"`
-	DarwinInstaller         *DarwinInstallerConfig  `protobuf:"bytes,21,opt,name=darwin_installer,json=darwinInstaller,proto3" json:"darwin_installer,omitempty"`
+	NannyMaxConnectionDelay uint64                  `protobuf:"varint,36,opt,name=nanny_max_connection_delay,json=nannyMaxConnectionDelay,proto3" json:"nanny_max_connection_delay,omitempty" yaml:"nanny_max_connection_delay,omitempty"`
+	WindowsInstaller        *WindowsInstallerConfig `protobuf:"bytes,16,opt,name=windows_installer,json=windowsInstaller,proto3" json:"windows_installer,omitempty" yaml:"windows_installer,omitempty"`
+	DarwinInstaller         *DarwinInstallerConfig  `protobuf:"bytes,21,opt,name=darwin_installer,json=darwinInstaller,proto3" json:"darwin_installer,omitempty" yaml:"darwin_installer,omitempty"`
 	// If this is set, prevent arbitrary code execution on
 	// clients. NOTE: Deprecated. You can now allow and reject any
 	// plugin (not just execve) using the allowed_plugins,
 	// allowed_functions and allowed_accessors parameters below.
-	PreventExecve bool `protobuf:"varint,17,opt,name=prevent_execve,json=preventExecve,proto3" json:"prevent_execve,omitempty"`
+	PreventExecve bool `protobuf:"varint,17,opt,name=prevent_execve,json=preventExecve,proto3" json:"prevent_execve,omitempty" yaml:"prevent_execve,omitempty"`
 	// Deprecated, new configs use server_version
-	Version *Version `protobuf:"bytes,18,opt,name=version,proto3" json:"version,omitempty"`
+	Version *Version `protobuf:"bytes,18,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
 	// The version of the server that originally generated this config
 	// file.
-	ServerVersion      *Version          `protobuf:"bytes,50,opt,name=server_version,json=serverVersion,proto3" json:"server_version,omitempty"`
-	DefaultMaxWait     uint64            `protobuf:"varint,19,opt,name=default_max_wait,json=defaultMaxWait,proto3" json:"default_max_wait,omitempty"`
-	UseSelfSignedSsl   bool              `protobuf:"varint,24,opt,name=use_self_signed_ssl,json=useSelfSignedSsl,proto3" json:"use_self_signed_ssl,omitempty"`
-	PinnedServerName   string            `protobuf:"bytes,28,opt,name=pinned_server_name,json=pinnedServerName,proto3" json:"pinned_server_name,omitempty"`
-	MaxUploadSize      uint64            `protobuf:"varint,25,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty"`
-	LocalBuffer        *RingBufferConfig `protobuf:"bytes,26,opt,name=local_buffer,json=localBuffer,proto3" json:"local_buffer,omitempty"`
-	MaxMemoryHardLimit uint64            `protobuf:"varint,29,opt,name=max_memory_hard_limit,json=maxMemoryHardLimit,proto3" json:"max_memory_hard_limit,omitempty"`
+	ServerVersion      *Version          `protobuf:"bytes,50,opt,name=server_version,json=serverVersion,proto3" json:"server_version,omitempty" yaml:"server_version,omitempty"`
+	DefaultMaxWait     uint64            `protobuf:"varint,19,opt,name=default_max_wait,json=defaultMaxWait,proto3" json:"default_max_wait,omitempty" yaml:"default_max_wait,omitempty"`
+	UseSelfSignedSsl   bool              `protobuf:"varint,24,opt,name=use_self_signed_ssl,json=useSelfSignedSsl,proto3" json:"use_self_signed_ssl,omitempty" yaml:"use_self_signed_ssl,omitempty"`
+	PinnedServerName   string            `protobuf:"bytes,28,opt,name=pinned_server_name,json=pinnedServerName,proto3" json:"pinned_server_name,omitempty" yaml:"pinned_server_name,omitempty"`
+	MaxUploadSize      uint64            `protobuf:"varint,25,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty" yaml:"max_upload_size,omitempty"`
+	LocalBuffer        *RingBufferConfig `protobuf:"bytes,26,opt,name=local_buffer,json=localBuffer,proto3" json:"local_buffer,omitempty" yaml:"local_buffer,omitempty"`
+	MaxMemoryHardLimit uint64            `protobuf:"varint,29,opt,name=max_memory_hard_limit,json=maxMemoryHardLimit,proto3" json:"max_memory_hard_limit,omitempty" yaml:"max_memory_hard_limit,omitempty"`
 	// Maximum number of concurrent queries the client will allow (default 2).
-	Concurrency uint64 `protobuf:"varint,31,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	Concurrency uint64 `protobuf:"varint,31,opt,name=concurrency,proto3" json:"concurrency,omitempty" yaml:"concurrency,omitempty"`
 	// Maximum timeout for connection retry - the length of time we
 	// try a connection before restarting it (default 5 min).
-	ConnectionTimeout uint64        `protobuf:"varint,35,opt,name=connection_timeout,json=connectionTimeout,proto3" json:"connection_timeout,omitempty"`
-	Crypto            *CryptoConfig `protobuf:"bytes,33,opt,name=Crypto,proto3" json:"Crypto,omitempty"`
+	ConnectionTimeout uint64        `protobuf:"varint,35,opt,name=connection_timeout,json=connectionTimeout,proto3" json:"connection_timeout,omitempty" yaml:"connection_timeout,omitempty"`
+	Crypto            *CryptoConfig `protobuf:"bytes,33,opt,name=Crypto,proto3" json:"Crypto,omitempty" yaml:"Crypto,omitempty"`
 	// Deprecated - do not set.
-	DisableCompression bool `protobuf:"varint,37,opt,name=disable_compression,json=disableCompression,proto3" json:"disable_compression,omitempty"`
+	DisableCompression bool `protobuf:"varint,37,opt,name=disable_compression,json=disableCompression,proto3" json:"disable_compression,omitempty" yaml:"disable_compression,omitempty"`
 	// How often clients inform the server about flow progress
 	// (default 5 seconds).
-	DefaultServerFlowStatsUpdate uint64 `protobuf:"varint,39,opt,name=default_server_flow_stats_update,json=defaultServerFlowStatsUpdate,proto3" json:"default_server_flow_stats_update,omitempty"`
+	DefaultServerFlowStatsUpdate uint64 `protobuf:"varint,39,opt,name=default_server_flow_stats_update,json=defaultServerFlowStatsUpdate,proto3" json:"default_server_flow_stats_update,omitempty" yaml:"default_server_flow_stats_update,omitempty"`
 	// Clients will send a Server.Internal.ClientInfo message to the
 	// server every this many seconds. This helps to keep the server
 	// info up to date about each client. This should not be sent too
 	// frequently. The default is 1 day (86400 seconds).
-	ClientInfoUpdateTime int64 `protobuf:"varint,40,opt,name=client_info_update_time,json=clientInfoUpdateTime,proto3" json:"client_info_update_time,omitempty"`
+	ClientInfoUpdateTime int64 `protobuf:"varint,40,opt,name=client_info_update_time,json=clientInfoUpdateTime,proto3" json:"client_info_update_time,omitempty" yaml:"client_info_update_time,omitempty"`
 	// Clients may not be able to reach a given host in the
 	// internet. For that case, this mapping contains alternatives
 	// which may be used instead. It's crucial that the addresses
@@ -651,45 +651,45 @@ type ClientConfig struct {
 	// reachable (for example if DNS is not available due to a network
 	// isolation because of an ongoing incident), 123.123.123.123:443
 	// will be used as a fallback.
-	FallbackAddresses map[string]string `protobuf:"bytes,41,rep,name=fallback_addresses,json=fallbackAddresses,proto3" json:"fallback_addresses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	FallbackAddresses map[string]string `protobuf:"bytes,41,rep,name=fallback_addresses,json=fallbackAddresses,proto3" json:"fallback_addresses,omitempty" yaml:"fallback_addresses,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// If greater than 0 we install a local DNS cache. This is usually
 	// not needed as most operating systems already have local DNS
 	// caching resolvers. This DNS cache will be refreshed
 	// periodically from upstream. Note that the ttl of the record is
 	// currently ignored and we refresh according to this setting.
 	// This setting takes effect both on the client and on the server.
-	DnsCacheRefreshMin uint64 `protobuf:"varint,54,opt,name=dns_cache_refresh_min,json=dnsCacheRefreshMin,proto3" json:"dns_cache_refresh_min,omitempty"`
+	DnsCacheRefreshMin uint64 `protobuf:"varint,54,opt,name=dns_cache_refresh_min,json=dnsCacheRefreshMin,proto3" json:"dns_cache_refresh_min,omitempty" yaml:"dns_cache_refresh_min,omitempty"`
 	// If set we disable client checkpoints and so we can not report
 	// to the server when the client crashes while collecting an
 	// artifact.
-	DisableCheckpoints bool `protobuf:"varint,42,opt,name=disable_checkpoints,json=disableCheckpoints,proto3" json:"disable_checkpoints,omitempty"`
+	DisableCheckpoints bool `protobuf:"varint,42,opt,name=disable_checkpoints,json=disableCheckpoints,proto3" json:"disable_checkpoints,omitempty" yaml:"disable_checkpoints,omitempty"`
 	// Here you can specify a list of event artifacts to automatically
 	// collect in addition to the list sent by the server. This is
 	// most useful to initialize the client.
-	AdditionalEventArtifacts []string `protobuf:"bytes,43,rep,name=additional_event_artifacts,json=additionalEventArtifacts,proto3" json:"additional_event_artifacts,omitempty"`
+	AdditionalEventArtifacts []string `protobuf:"bytes,43,rep,name=additional_event_artifacts,json=additionalEventArtifacts,proto3" json:"additional_event_artifacts,omitempty" yaml:"additional_event_artifacts,omitempty"`
 	// Path relative to the relevant tmpdir above where client side
 	// logs are kept. These logs are encrypted client side and need to
 	// be decrypted on the server to read.
-	LogfileName string `protobuf:"bytes,47,opt,name=logfile_name,json=logfileName,proto3" json:"logfile_name,omitempty"`
-	LogfileSize uint64 `protobuf:"varint,48,opt,name=logfile_size,json=logfileSize,proto3" json:"logfile_size,omitempty"`
-	PanicFile   string `protobuf:"bytes,49,opt,name=panic_file,json=panicFile,proto3" json:"panic_file,omitempty"`
+	LogfileName string `protobuf:"bytes,47,opt,name=logfile_name,json=logfileName,proto3" json:"logfile_name,omitempty" yaml:"logfile_name,omitempty"`
+	LogfileSize uint64 `protobuf:"varint,48,opt,name=logfile_size,json=logfileSize,proto3" json:"logfile_size,omitempty" yaml:"logfile_size,omitempty"`
+	PanicFile   string `protobuf:"bytes,49,opt,name=panic_file,json=panicFile,proto3" json:"panic_file,omitempty" yaml:"panic_file,omitempty"`
 	// NOTE: Velociraptor has 2 layers of encryption - this setting
 	// bypasses the outer TLS layer to expose the underlying HTTP
 	// communications. Client->server communication still remain
 	// encrypted however.
-	InsecureNetworkTraceFile string `protobuf:"bytes,51,opt,name=insecure_network_trace_file,json=insecureNetworkTraceFile,proto3" json:"insecure_network_trace_file,omitempty"`
+	InsecureNetworkTraceFile string `protobuf:"bytes,51,opt,name=insecure_network_trace_file,json=insecureNetworkTraceFile,proto3" json:"insecure_network_trace_file,omitempty" yaml:"insecure_network_trace_file,omitempty"`
 	// By default when running on a low resource machine we cap the
 	// CPU use to 50%. This allows to change that - needs to be
 	// between 0 and 100 (100 disables throttling).
-	LowResourceMaxCpu uint64 `protobuf:"varint,52,opt,name=low_resource_max_cpu,json=lowResourceMaxCpu,proto3" json:"low_resource_max_cpu,omitempty"`
+	LowResourceMaxCpu uint64 `protobuf:"varint,52,opt,name=low_resource_max_cpu,json=lowResourceMaxCpu,proto3" json:"low_resource_max_cpu,omitempty" yaml:"low_resource_max_cpu,omitempty"`
 	// We determine we are running on a low resource machine if the
 	// system has less than 2 cores. This allows to increase the
 	// threadhold. Set to a large number to disable.
-	LowResourceCpuCount uint64 `protobuf:"varint,53,opt,name=low_resource_cpu_count,json=lowResourceCpuCount,proto3" json:"low_resource_cpu_count,omitempty"`
+	LowResourceCpuCount uint64 `protobuf:"varint,53,opt,name=low_resource_cpu_count,json=lowResourceCpuCount,proto3" json:"low_resource_cpu_count,omitempty" yaml:"low_resource_cpu_count,omitempty"`
 	// Client specific logging configuration - this can be different
 	// from the server configuration. Usually the client does not log
 	// anything but you can enable this for debugging.
-	Logging       *LoggingConfig `protobuf:"bytes,55,opt,name=Logging,proto3" json:"Logging,omitempty"`
+	Logging       *LoggingConfig `protobuf:"bytes,55,opt,name=Logging,proto3" json:"Logging,omitempty" yaml:"Logging,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1050,17 +1050,17 @@ type OrgRedirection struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The OrgId to be redirected - this should be unique on the
 	// server.
-	OrgId   string `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	OrgName string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
+	OrgId   string `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty" yaml:"org_id,omitempty"`
+	OrgName string `protobuf:"bytes,2,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty" yaml:"org_name,omitempty"`
 	// The org id that will be mapped on the remote server.
-	RedirectedOrgId string `protobuf:"bytes,6,opt,name=redirected_org_id,json=redirectedOrgId,proto3" json:"redirected_org_id,omitempty"`
+	RedirectedOrgId string `protobuf:"bytes,6,opt,name=redirected_org_id,json=redirectedOrgId,proto3" json:"redirected_org_id,omitempty" yaml:"redirected_org_id,omitempty"`
 	// A path to an API config file created by the remote server. The
 	// API user should have the impersonate permission so it can relay
 	// API calls on behalf of the user logged into the current system.
-	ApiConfigFile string `protobuf:"bytes,3,opt,name=api_config_file,json=apiConfigFile,proto3" json:"api_config_file,omitempty"`
+	ApiConfigFile string `protobuf:"bytes,3,opt,name=api_config_file,json=apiConfigFile,proto3" json:"api_config_file,omitempty" yaml:"api_config_file,omitempty"`
 	// The server will parse the above api_config_file at startup and
 	// fill in the details here.
-	ApiConfig     *ApiClientConfig `protobuf:"bytes,4,opt,name=api_config,json=apiConfig,proto3" json:"api_config,omitempty"`
+	ApiConfig     *ApiClientConfig `protobuf:"bytes,4,opt,name=api_config,json=apiConfig,proto3" json:"api_config,omitempty" yaml:"api_config,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1133,11 +1133,11 @@ func (x *OrgRedirection) GetApiConfig() *ApiClientConfig {
 type APIConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Publicly accessible hostname.
-	Hostname      string `protobuf:"bytes,5,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	BindAddress   string `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
-	BindPort      uint32 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`
-	BindScheme    string `protobuf:"bytes,3,opt,name=bind_scheme,json=bindScheme,proto3" json:"bind_scheme,omitempty"`
-	PinnedGwName  string `protobuf:"bytes,4,opt,name=pinned_gw_name,json=pinnedGwName,proto3" json:"pinned_gw_name,omitempty"`
+	Hostname      string `protobuf:"bytes,5,opt,name=hostname,proto3" json:"hostname,omitempty" yaml:"hostname,omitempty"`
+	BindAddress   string `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty" yaml:"bind_address,omitempty"`
+	BindPort      uint32 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty" yaml:"bind_port,omitempty"`
+	BindScheme    string `protobuf:"bytes,3,opt,name=bind_scheme,json=bindScheme,proto3" json:"bind_scheme,omitempty" yaml:"bind_scheme,omitempty"`
+	PinnedGwName  string `protobuf:"bytes,4,opt,name=pinned_gw_name,json=pinnedGwName,proto3" json:"pinned_gw_name,omitempty" yaml:"pinned_gw_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1210,14 +1210,14 @@ func (x *APIConfig) GetPinnedGwName() string {
 // Configuration to be consumed by api clients.
 type ApiClientConfig struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	CaCertificate       string                 `protobuf:"bytes,1,opt,name=ca_certificate,json=caCertificate,proto3" json:"ca_certificate,omitempty"`
-	ClientCert          string                 `protobuf:"bytes,2,opt,name=client_cert,json=clientCert,proto3" json:"client_cert,omitempty"`
-	ClientPrivateKey    string                 `protobuf:"bytes,3,opt,name=client_private_key,json=clientPrivateKey,proto3" json:"client_private_key,omitempty"`
-	ApiConnectionString string                 `protobuf:"bytes,4,opt,name=api_connection_string,json=apiConnectionString,proto3" json:"api_connection_string,omitempty"`
-	Name                string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
-	PinnedServerName    string                 `protobuf:"bytes,6,opt,name=pinned_server_name,json=pinnedServerName,proto3" json:"pinned_server_name,omitempty"`
+	CaCertificate       string                 `protobuf:"bytes,1,opt,name=ca_certificate,json=caCertificate,proto3" json:"ca_certificate,omitempty" yaml:"ca_certificate,omitempty"`
+	ClientCert          string                 `protobuf:"bytes,2,opt,name=client_cert,json=clientCert,proto3" json:"client_cert,omitempty" yaml:"client_cert,omitempty"`
+	ClientPrivateKey    string                 `protobuf:"bytes,3,opt,name=client_private_key,json=clientPrivateKey,proto3" json:"client_private_key,omitempty" yaml:"client_private_key,omitempty"`
+	ApiConnectionString string                 `protobuf:"bytes,4,opt,name=api_connection_string,json=apiConnectionString,proto3" json:"api_connection_string,omitempty" yaml:"api_connection_string,omitempty"`
+	Name                string                 `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	PinnedServerName    string                 `protobuf:"bytes,6,opt,name=pinned_server_name,json=pinnedServerName,proto3" json:"pinned_server_name,omitempty" yaml:"pinned_server_name,omitempty"`
 	// This is 4mb by default but you can increase it if you like.
-	MaxGrpcRecvSize uint64 `protobuf:"varint,7,opt,name=max_grpc_recv_size,json=maxGrpcRecvSize,proto3" json:"max_grpc_recv_size,omitempty"`
+	MaxGrpcRecvSize uint64 `protobuf:"varint,7,opt,name=max_grpc_recv_size,json=maxGrpcRecvSize,proto3" json:"max_grpc_recv_size,omitempty" yaml:"max_grpc_recv_size,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
 }
@@ -1304,19 +1304,19 @@ func (x *ApiClientConfig) GetMaxGrpcRecvSize() uint64 {
 // Fine grained configuration of proxies for http connections.
 type ProxyConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Https string                 `protobuf:"bytes,1,opt,name=https,proto3" json:"https,omitempty"`
-	Http  string                 `protobuf:"bytes,2,opt,name=http,proto3" json:"http,omitempty"`
+	Https string                 `protobuf:"bytes,1,opt,name=https,proto3" json:"https,omitempty" yaml:"https,omitempty"`
+	Http  string                 `protobuf:"bytes,2,opt,name=http,proto3" json:"http,omitempty" yaml:"http,omitempty"`
 	// A list of url regexp to match the url and connect to the
 	// target. Use and empty string to denote direct connection.  For
 	// example: {"^https://localhost/": "",
 	//
 	//	"^https://www.example.com/": "http://localhost:3182"}
-	ProxyUrlRegexp map[string]string `protobuf:"bytes,3,rep,name=proxy_url_regexp,json=proxyUrlRegexp,proto3" json:"proxy_url_regexp,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	ProxyUrlRegexp map[string]string `protobuf:"bytes,3,rep,name=proxy_url_regexp,json=proxyUrlRegexp,proto3" json:"proxy_url_regexp,omitempty" yaml:"proxy_url_regexp,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Location of a PAC file (overrides the above settings).
-	Pac string `protobuf:"bytes,4,opt,name=pac,proto3" json:"pac,omitempty"`
+	Pac string `protobuf:"bytes,4,opt,name=pac,proto3" json:"pac,omitempty" yaml:"pac,omitempty"`
 	// If this is set we ignore the HTTP_PROXY and HTTPS_PROXY
 	// environment variables.
-	IgnoreEnvironment bool `protobuf:"varint,5,opt,name=ignore_environment,json=ignoreEnvironment,proto3" json:"ignore_environment,omitempty"`
+	IgnoreEnvironment bool `protobuf:"varint,5,opt,name=ignore_environment,json=ignoreEnvironment,proto3" json:"ignore_environment,omitempty" yaml:"ignore_environment,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -1388,20 +1388,20 @@ func (x *ProxyConfig) GetIgnoreEnvironment() bool {
 
 type GUILink struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
-	Text    string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty"`
-	Url     string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	IconUrl string                 `protobuf:"bytes,3,opt,name=icon_url,json=iconUrl,proto3" json:"icon_url,omitempty"`
+	Text    string                 `protobuf:"bytes,1,opt,name=text,proto3" json:"text,omitempty" yaml:"text,omitempty"`
+	Url     string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty" yaml:"url,omitempty"`
+	IconUrl string                 `protobuf:"bytes,3,opt,name=icon_url,json=iconUrl,proto3" json:"icon_url,omitempty" yaml:"icon_url,omitempty"`
 	// This can be "sidebar" (default), "context"
-	Type string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Type string `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	// If set we open in new tab
-	NewTab bool `protobuf:"varint,5,opt,name=new_tab,json=newTab,proto3" json:"new_tab,omitempty"`
+	NewTab bool `protobuf:"varint,5,opt,name=new_tab,json=newTab,proto3" json:"new_tab,omitempty" yaml:"new_tab,omitempty"`
 	// Encode value first using this (can be "plain", "base64")
-	Encode    string `protobuf:"bytes,6,opt,name=encode,proto3" json:"encode,omitempty"`
-	Parameter string `protobuf:"bytes,7,opt,name=parameter,proto3" json:"parameter,omitempty"`
+	Encode    string `protobuf:"bytes,6,opt,name=encode,proto3" json:"encode,omitempty" yaml:"encode,omitempty"`
+	Parameter string `protobuf:"bytes,7,opt,name=parameter,proto3" json:"parameter,omitempty" yaml:"parameter,omitempty"`
 	// Can be GET (default) or POST
-	Method string `protobuf:"bytes,8,opt,name=method,proto3" json:"method,omitempty"`
+	Method string `protobuf:"bytes,8,opt,name=method,proto3" json:"method,omitempty" yaml:"method,omitempty"`
 	// If set we ignore this entry completely
-	Disabled      bool `protobuf:"varint,9,opt,name=disabled,proto3" json:"disabled,omitempty"`
+	Disabled      bool `protobuf:"varint,9,opt,name=disabled,proto3" json:"disabled,omitempty" yaml:"disabled,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1501,8 +1501,8 @@ func (x *GUILink) GetDisabled() bool {
 
 type OIDCACL struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Roles         []string               `protobuf:"bytes,1,rep,name=roles,proto3" json:"roles,omitempty"`
-	Permissions   []string               `protobuf:"bytes,2,rep,name=permissions,proto3" json:"permissions,omitempty"`
+	Roles         []string               `protobuf:"bytes,1,rep,name=roles,proto3" json:"roles,omitempty" yaml:"roles,omitempty"`
+	Permissions   []string               `protobuf:"bytes,2,rep,name=permissions,proto3" json:"permissions,omitempty" yaml:"permissions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1559,10 +1559,10 @@ type OIDCClaims struct {
 	// the domain! It is vulnerability to allow something like 'name'
 	// across a public domain because anyone can set this name in
 	// their OIDC accounts!
-	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Username string `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty" yaml:"username,omitempty"`
 	// The field that specifies the roles. If this not set, we do not
 	// allow roles to be set via OIDC.
-	Roles string `protobuf:"bytes,2,opt,name=roles,proto3" json:"roles,omitempty"`
+	Roles string `protobuf:"bytes,2,opt,name=roles,proto3" json:"roles,omitempty" yaml:"roles,omitempty"`
 	// A mapping between OIDC claim roles and Velociraptor roles.
 	// For example:
 	// role_map:
@@ -1570,17 +1570,17 @@ type OIDCClaims struct {
 	//	Velociraptor.Reader:
 	//	  roles:
 	//	    - reader
-	RoleMap map[string]*OIDCACL `protobuf:"bytes,3,rep,name=role_map,json=roleMap,proto3" json:"role_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	RoleMap map[string]*OIDCACL `protobuf:"bytes,3,rep,name=role_map,json=roleMap,proto3" json:"role_map,omitempty" yaml:"role_map,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Velociraptor usually requires the email_verified claim before
 	// we can trust the email claim and use it as the
 	// username. However, some IDP (e.g. Azure) do not set this. If
 	// you want to ignore this requirement, set the below to true.
-	AllowUnverifiedEmail bool `protobuf:"varint,4,opt,name=allow_unverified_email,json=allowUnverifiedEmail,proto3" json:"allow_unverified_email,omitempty"`
+	AllowUnverifiedEmail bool `protobuf:"varint,4,opt,name=allow_unverified_email,json=allowUnverifiedEmail,proto3" json:"allow_unverified_email,omitempty" yaml:"allow_unverified_email,omitempty"`
 	// When this is set, the OIDC roles override (clear) existing
 	// velociraptor roles. The default behavior is to ensure the
 	// user's ACL contains at least the OIDC roles. This is needed if
 	// you want to be able to **remove** access from the IDP.
-	OverrideAcls  bool `protobuf:"varint,5,opt,name=override_acls,json=overrideAcls,proto3" json:"override_acls,omitempty"`
+	OverrideAcls  bool `protobuf:"varint,5,opt,name=override_acls,json=overrideAcls,proto3" json:"override_acls,omitempty" yaml:"override_acls,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1652,18 +1652,18 @@ func (x *OIDCClaims) GetOverrideAcls() bool {
 
 type Authenticator struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Type  string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Type  string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	// OIDC/OAuth2 Authenticator (Google, Github, Azure etc).
-	OidcIssuer        string            `protobuf:"bytes,4,opt,name=oidc_issuer,json=oidcIssuer,proto3" json:"oidc_issuer,omitempty"`
-	OidcName          string            `protobuf:"bytes,18,opt,name=oidc_name,json=oidcName,proto3" json:"oidc_name,omitempty"`
-	OidcAuthUrlParams map[string]string `protobuf:"bytes,24,rep,name=oidc_auth_url_params,json=oidcAuthUrlParams,proto3" json:"oidc_auth_url_params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	OidcIssuer        string            `protobuf:"bytes,4,opt,name=oidc_issuer,json=oidcIssuer,proto3" json:"oidc_issuer,omitempty" yaml:"oidc_issuer,omitempty"`
+	OidcName          string            `protobuf:"bytes,18,opt,name=oidc_name,json=oidcName,proto3" json:"oidc_name,omitempty" yaml:"oidc_name,omitempty"`
+	OidcAuthUrlParams map[string]string `protobuf:"bytes,24,rep,name=oidc_auth_url_params,json=oidcAuthUrlParams,proto3" json:"oidc_auth_url_params,omitempty" yaml:"oidc_auth_url_params,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Can be an img src for the avatar
-	Avatar            string      `protobuf:"bytes,19,opt,name=avatar,proto3" json:"avatar,omitempty"`
-	OauthClientId     string      `protobuf:"bytes,5,opt,name=oauth_client_id,json=oauthClientId,proto3" json:"oauth_client_id,omitempty"`
-	OauthClientSecret string      `protobuf:"bytes,6,opt,name=oauth_client_secret,json=oauthClientSecret,proto3" json:"oauth_client_secret,omitempty"`
-	Claims            *OIDCClaims `protobuf:"bytes,25,opt,name=claims,proto3" json:"claims,omitempty"`
+	Avatar            string      `protobuf:"bytes,19,opt,name=avatar,proto3" json:"avatar,omitempty" yaml:"avatar,omitempty"`
+	OauthClientId     string      `protobuf:"bytes,5,opt,name=oauth_client_id,json=oauthClientId,proto3" json:"oauth_client_id,omitempty" yaml:"oauth_client_id,omitempty"`
+	OauthClientSecret string      `protobuf:"bytes,6,opt,name=oauth_client_secret,json=oauthClientSecret,proto3" json:"oauth_client_secret,omitempty" yaml:"oauth_client_secret,omitempty"`
+	Claims            *OIDCClaims `protobuf:"bytes,25,opt,name=claims,proto3" json:"claims,omitempty" yaml:"claims,omitempty"`
 	// When this is set we emit detailed logging.
-	OidcDebug bool `protobuf:"varint,26,opt,name=oidc_debug,json=oidcDebug,proto3" json:"oidc_debug,omitempty"`
+	OidcDebug bool `protobuf:"varint,26,opt,name=oidc_debug,json=oidcDebug,proto3" json:"oidc_debug,omitempty" yaml:"oidc_debug,omitempty"`
 	// In many IdP the email address can be changed and is not
 	// verified. By default Velociraptor OIDC authenticator pins the
 	// email address to the immutable sub GUID reported by the OIDC
@@ -1674,27 +1674,27 @@ type Authenticator struct {
 	// that users are not able to set any email address for their
 	// account in the IdP as this allows them to take over other
 	// user's accounts.
-	DisableEmailToSubPin bool `protobuf:"varint,28,opt,name=disable_email_to_sub_pin,json=disableEmailToSubPin,proto3" json:"disable_email_to_sub_pin,omitempty"`
+	DisableEmailToSubPin bool `protobuf:"varint,28,opt,name=disable_email_to_sub_pin,json=disableEmailToSubPin,proto3" json:"disable_email_to_sub_pin,omitempty" yaml:"disable_email_to_sub_pin,omitempty"`
 	// Azure requires a tenancy as well.
-	Tenant string `protobuf:"bytes,7,opt,name=tenant,proto3" json:"tenant,omitempty"`
+	Tenant string `protobuf:"bytes,7,opt,name=tenant,proto3" json:"tenant,omitempty" yaml:"tenant,omitempty"`
 	// SAML Authenticator
-	SamlCertificate       string   `protobuf:"bytes,12,opt,name=saml_certificate,json=samlCertificate,proto3" json:"saml_certificate,omitempty"`
-	SamlPrivateKey        string   `protobuf:"bytes,13,opt,name=saml_private_key,json=samlPrivateKey,proto3" json:"saml_private_key,omitempty"`
-	SamlIdpMetadataUrl    string   `protobuf:"bytes,14,opt,name=saml_idp_metadata_url,json=samlIdpMetadataUrl,proto3" json:"saml_idp_metadata_url,omitempty"`
-	SamlRootUrl           string   `protobuf:"bytes,15,opt,name=saml_root_url,json=samlRootUrl,proto3" json:"saml_root_url,omitempty"`
-	SamlUserAttribute     string   `protobuf:"bytes,16,opt,name=saml_user_attribute,json=samlUserAttribute,proto3" json:"saml_user_attribute,omitempty"`
-	SamlUserRoles         []string `protobuf:"bytes,23,rep,name=saml_user_roles,json=samlUserRoles,proto3" json:"saml_user_roles,omitempty"`
-	SamlAllowIdpInitiated bool     `protobuf:"varint,27,opt,name=saml_allow_idp_initiated,json=samlAllowIdpInitiated,proto3" json:"saml_allow_idp_initiated,omitempty"`
+	SamlCertificate       string   `protobuf:"bytes,12,opt,name=saml_certificate,json=samlCertificate,proto3" json:"saml_certificate,omitempty" yaml:"saml_certificate,omitempty"`
+	SamlPrivateKey        string   `protobuf:"bytes,13,opt,name=saml_private_key,json=samlPrivateKey,proto3" json:"saml_private_key,omitempty" yaml:"saml_private_key,omitempty"`
+	SamlIdpMetadataUrl    string   `protobuf:"bytes,14,opt,name=saml_idp_metadata_url,json=samlIdpMetadataUrl,proto3" json:"saml_idp_metadata_url,omitempty" yaml:"saml_idp_metadata_url,omitempty"`
+	SamlRootUrl           string   `protobuf:"bytes,15,opt,name=saml_root_url,json=samlRootUrl,proto3" json:"saml_root_url,omitempty" yaml:"saml_root_url,omitempty"`
+	SamlUserAttribute     string   `protobuf:"bytes,16,opt,name=saml_user_attribute,json=samlUserAttribute,proto3" json:"saml_user_attribute,omitempty" yaml:"saml_user_attribute,omitempty"`
+	SamlUserRoles         []string `protobuf:"bytes,23,rep,name=saml_user_roles,json=samlUserRoles,proto3" json:"saml_user_roles,omitempty" yaml:"saml_user_roles,omitempty"`
+	SamlAllowIdpInitiated bool     `protobuf:"varint,27,opt,name=saml_allow_idp_initiated,json=samlAllowIdpInitiated,proto3" json:"saml_allow_idp_initiated,omitempty" yaml:"saml_allow_idp_initiated,omitempty"`
 	// MultiAuthenticator delegates to multiple other authenticators.
-	SubAuthenticators    []*Authenticator `protobuf:"bytes,17,rep,name=sub_authenticators,json=subAuthenticators,proto3" json:"sub_authenticators,omitempty"`
-	AuthRedirectTemplate string           `protobuf:"bytes,21,opt,name=auth_redirect_template,json=authRedirectTemplate,proto3" json:"auth_redirect_template,omitempty"`
+	SubAuthenticators    []*Authenticator `protobuf:"bytes,17,rep,name=sub_authenticators,json=subAuthenticators,proto3" json:"sub_authenticators,omitempty" yaml:"sub_authenticators,omitempty"`
+	AuthRedirectTemplate string           `protobuf:"bytes,21,opt,name=auth_redirect_template,json=authRedirectTemplate,proto3" json:"auth_redirect_template,omitempty" yaml:"auth_redirect_template,omitempty"`
 	// Certs authenticator: If a user presents a certificate but does
 	// not exist in the system, the user will receive a default
 	// role. If this is not set the user will be rejected.
-	DefaultRolesForUnknownUser []string `protobuf:"bytes,22,rep,name=default_roles_for_unknown_user,json=defaultRolesForUnknownUser,proto3" json:"default_roles_for_unknown_user,omitempty"`
+	DefaultRolesForUnknownUser []string `protobuf:"bytes,22,rep,name=default_roles_for_unknown_user,json=defaultRolesForUnknownUser,proto3" json:"default_roles_for_unknown_user,omitempty" yaml:"default_roles_for_unknown_user,omitempty"`
 	// How long to keep the session alive between auth flows - default
 	// 24 hours
-	DefaultSessionExpiryMin uint64 `protobuf:"varint,20,opt,name=default_session_expiry_min,json=defaultSessionExpiryMin,proto3" json:"default_session_expiry_min,omitempty"`
+	DefaultSessionExpiryMin uint64 `protobuf:"varint,20,opt,name=default_session_expiry_min,json=defaultSessionExpiryMin,proto3" json:"default_session_expiry_min,omitempty" yaml:"default_session_expiry_min,omitempty"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
 }
@@ -1885,11 +1885,11 @@ func (x *Authenticator) GetDefaultSessionExpiryMin() uint64 {
 
 type GUIConfig struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
-	BindAddress string                 `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
-	BindPort    uint32                 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`
+	BindAddress string                 `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty" yaml:"bind_address,omitempty"`
+	BindPort    uint32                 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty" yaml:"bind_port,omitempty"`
 	// A list of CIDR addresses from permitted networks. If this is
 	// not set, permit all connections to the GUI from anywhere.
-	AllowedCidr []string `protobuf:"bytes,23,rep,name=allowed_cidr,json=allowedCidr,proto3" json:"allowed_cidr,omitempty"`
+	AllowedCidr []string `protobuf:"bytes,23,rep,name=allowed_cidr,json=allowedCidr,proto3" json:"allowed_cidr,omitempty" yaml:"allowed_cidr,omitempty"`
 	// Header defined by the proxy containing the remote address. This
 	// header will be used in the allowed_cidr matching if specified.
 	// NOTE: Only use this if you do have a reverse proxy in front of
@@ -1897,40 +1897,40 @@ type GUIConfig struct {
 	// to pretent to come from any IP address. If this setting is
 	// specified we take the src address from the header, otherwise
 	// from the remote IP address.
-	ForwardedProxyHeader string `protobuf:"bytes,24,opt,name=forwarded_proxy_header,json=forwardedProxyHeader,proto3" json:"forwarded_proxy_header,omitempty"`
+	ForwardedProxyHeader string `protobuf:"bytes,24,opt,name=forwarded_proxy_header,json=forwardedProxyHeader,proto3" json:"forwarded_proxy_header,omitempty" yaml:"forwarded_proxy_header,omitempty"`
 	// Allows the GUI to start with no encryption - **WARNING** This
 	// only makes sense if you have TLS proxy in front. In fact the
 	// GUI **will not work** without a TLS proxy because the csrf
 	// cookie is set to secure only.
-	UsePlainHttp bool `protobuf:"varint,20,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty"`
+	UsePlainHttp bool `protobuf:"varint,20,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty" yaml:"use_plain_http,omitempty"`
 	// Serve the GUI from this base path instead of "/"
-	BasePath      string                `protobuf:"bytes,21,opt,name=base_path,json=basePath,proto3" json:"base_path,omitempty"`
-	GwCertificate string                `protobuf:"bytes,10,opt,name=gw_certificate,json=gwCertificate,proto3" json:"gw_certificate,omitempty"`
-	GwPrivateKey  string                `protobuf:"bytes,11,opt,name=gw_private_key,json=gwPrivateKey,proto3" json:"gw_private_key,omitempty"`
-	PublicUrl     string                `protobuf:"bytes,7,opt,name=public_url,json=publicUrl,proto3" json:"public_url,omitempty"`
-	ReverseProxy  []*ReverseProxyConfig `protobuf:"bytes,8,rep,name=reverse_proxy,json=reverseProxy,proto3" json:"reverse_proxy,omitempty"`
-	Links         []*GUILink            `protobuf:"bytes,9,rep,name=links,proto3" json:"links,omitempty"`
+	BasePath      string                `protobuf:"bytes,21,opt,name=base_path,json=basePath,proto3" json:"base_path,omitempty" yaml:"base_path,omitempty"`
+	GwCertificate string                `protobuf:"bytes,10,opt,name=gw_certificate,json=gwCertificate,proto3" json:"gw_certificate,omitempty" yaml:"gw_certificate,omitempty"`
+	GwPrivateKey  string                `protobuf:"bytes,11,opt,name=gw_private_key,json=gwPrivateKey,proto3" json:"gw_private_key,omitempty" yaml:"gw_private_key,omitempty"`
+	PublicUrl     string                `protobuf:"bytes,7,opt,name=public_url,json=publicUrl,proto3" json:"public_url,omitempty" yaml:"public_url,omitempty"`
+	ReverseProxy  []*ReverseProxyConfig `protobuf:"bytes,8,rep,name=reverse_proxy,json=reverseProxy,proto3" json:"reverse_proxy,omitempty" yaml:"reverse_proxy,omitempty"`
+	Links         []*GUILink            `protobuf:"bytes,9,rep,name=links,proto3" json:"links,omitempty" yaml:"links,omitempty"`
 	// These users are created with administrator role if they do not
 	// already exist in the data store. This is useful for
 	// initializing the server with some valid administrators.
-	InitialUsers []*GUIUser          `protobuf:"bytes,17,rep,name=initial_users,json=initialUsers,proto3" json:"initial_users,omitempty"`
-	InitialOrgs  []*InitialOrgRecord `protobuf:"bytes,22,rep,name=initial_orgs,json=initialOrgs,proto3" json:"initial_orgs,omitempty"`
+	InitialUsers []*GUIUser          `protobuf:"bytes,17,rep,name=initial_users,json=initialUsers,proto3" json:"initial_users,omitempty" yaml:"initial_users,omitempty"`
+	InitialOrgs  []*InitialOrgRecord `protobuf:"bytes,22,rep,name=initial_orgs,json=initialOrgs,proto3" json:"initial_orgs,omitempty" yaml:"initial_orgs,omitempty"`
 	// Orgs can be redirected by the GUI. When the user selects this org,
 	// the server will re-route requests to the remote endpoint and
 	// incorporate them into the GUI. This allows distributed, isolated
 	// servers to be treated as part of the same deployment.
-	RedirectedOrgs []*OrgRedirection `protobuf:"bytes,26,rep,name=redirected_orgs,json=redirectedOrgs,proto3" json:"redirected_orgs,omitempty"`
+	RedirectedOrgs []*OrgRedirection `protobuf:"bytes,26,rep,name=redirected_orgs,json=redirectedOrgs,proto3" json:"redirected_orgs,omitempty" yaml:"redirected_orgs,omitempty"`
 	// The authenticator to use - can not be null.
-	Authenticator *Authenticator `protobuf:"bytes,19,opt,name=authenticator,proto3" json:"authenticator,omitempty"`
+	Authenticator *Authenticator `protobuf:"bytes,19,opt,name=authenticator,proto3" json:"authenticator,omitempty" yaml:"authenticator,omitempty"`
 	// The GUI will filter artifact search results by this regular
 	// expression. This is useful to restrict the number of choices
 	// available in the GUI to a small subset (e.g. only certain
 	// packs).
-	ArtifactSearchFilter string `protobuf:"bytes,18,opt,name=artifact_search_filter,json=artifactSearchFilter,proto3" json:"artifact_search_filter,omitempty"`
+	ArtifactSearchFilter string `protobuf:"bytes,18,opt,name=artifact_search_filter,json=artifactSearchFilter,proto3" json:"artifact_search_filter,omitempty" yaml:"artifact_search_filter,omitempty"`
 	// A list of domains that we will trust to send us the CSRF
 	// token. Use this only when serving the JS from a different
 	// domain than the API server.
-	TrustedOrigins []string `protobuf:"bytes,25,rep,name=trusted_origins,json=trustedOrigins,proto3" json:"trusted_origins,omitempty"`
+	TrustedOrigins []string `protobuf:"bytes,25,rep,name=trusted_origins,json=trustedOrigins,proto3" json:"trusted_origins,omitempty" yaml:"trusted_origins,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -2086,9 +2086,9 @@ func (x *GUIConfig) GetTrustedOrigins() []string {
 
 type GUIUser struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	PasswordHash  string                 `protobuf:"bytes,2,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty"`
-	PasswordSalt  string                 `protobuf:"bytes,3,opt,name=password_salt,json=passwordSalt,proto3" json:"password_salt,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	PasswordHash  string                 `protobuf:"bytes,2,opt,name=password_hash,json=passwordHash,proto3" json:"password_hash,omitempty" yaml:"password_hash,omitempty"`
+	PasswordSalt  string                 `protobuf:"bytes,3,opt,name=password_salt,json=passwordSalt,proto3" json:"password_salt,omitempty" yaml:"password_salt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2146,7 +2146,7 @@ func (x *GUIUser) GetPasswordSalt() string {
 
 type CAConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	PrivateKey    string                 `protobuf:"bytes,1,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	PrivateKey    string                 `protobuf:"bytes,1,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty" yaml:"private_key,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2190,9 +2190,9 @@ func (x *CAConfig) GetPrivateKey() string {
 
 type ReverseProxyConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Route         string                 `protobuf:"bytes,1,opt,name=route,proto3" json:"route,omitempty"`
-	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
-	RequireAuth   bool                   `protobuf:"varint,3,opt,name=require_auth,json=requireAuth,proto3" json:"require_auth,omitempty"`
+	Route         string                 `protobuf:"bytes,1,opt,name=route,proto3" json:"route,omitempty" yaml:"route,omitempty"`
+	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty" yaml:"url,omitempty"`
+	RequireAuth   bool                   `protobuf:"varint,3,opt,name=require_auth,json=requireAuth,proto3" json:"require_auth,omitempty" yaml:"require_auth,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2253,25 +2253,25 @@ type DynDNSConfig struct {
 	// Type of DynDNS server. Currently supported:
 	// * empty string or dyndns
 	// * cloudflare
-	Type         string `protobuf:"bytes,8,opt,name=type,proto3" json:"type,omitempty"`
-	DdnsUsername string `protobuf:"bytes,2,opt,name=ddns_username,json=ddnsUsername,proto3" json:"ddns_username,omitempty"`
-	DdnsPassword string `protobuf:"bytes,3,opt,name=ddns_password,json=ddnsPassword,proto3" json:"ddns_password,omitempty"`
+	Type         string `protobuf:"bytes,8,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
+	DdnsUsername string `protobuf:"bytes,2,opt,name=ddns_username,json=ddnsUsername,proto3" json:"ddns_username,omitempty" yaml:"ddns_username,omitempty"`
+	DdnsPassword string `protobuf:"bytes,3,opt,name=ddns_password,json=ddnsPassword,proto3" json:"ddns_password,omitempty" yaml:"ddns_password,omitempty"`
 	// Some providers require a different hostname be updated that the
 	// actual hostname (e.g. no-ip.com uses all.ddnskey.com to hide
 	// the domain)
-	DdnsHostname string `protobuf:"bytes,11,opt,name=ddns_hostname,json=ddnsHostname,proto3" json:"ddns_hostname,omitempty"`
+	DdnsHostname string `protobuf:"bytes,11,opt,name=ddns_hostname,json=ddnsHostname,proto3" json:"ddns_hostname,omitempty" yaml:"ddns_hostname,omitempty"`
 	// This can be a full golang template for example
 	// http://ip1.dynupdate.no-ip.com/nic/update?hostname={{.Hostname}}&myip={{.IP}}
 	// or just the base URL
-	UpdateUrl string `protobuf:"bytes,4,opt,name=update_url,json=updateUrl,proto3" json:"update_url,omitempty"`
-	Frequency uint64 `protobuf:"varint,5,opt,name=frequency,proto3" json:"frequency,omitempty"`
+	UpdateUrl string `protobuf:"bytes,4,opt,name=update_url,json=updateUrl,proto3" json:"update_url,omitempty" yaml:"update_url,omitempty"`
+	Frequency uint64 `protobuf:"varint,5,opt,name=frequency,proto3" json:"frequency,omitempty" yaml:"frequency,omitempty"`
 	// The url we will use to check the ip. Should return a plain IP address
-	CheckipUrl string `protobuf:"bytes,6,opt,name=checkip_url,json=checkipUrl,proto3" json:"checkip_url,omitempty"`
+	CheckipUrl string `protobuf:"bytes,6,opt,name=checkip_url,json=checkipUrl,proto3" json:"checkip_url,omitempty" yaml:"checkip_url,omitempty"`
 	// DNS server we query for our own hostname/ip mapping (default 8.8.8.8:53)
-	DnsServer string `protobuf:"bytes,7,opt,name=dns_server,json=dnsServer,proto3" json:"dns_server,omitempty"`
+	DnsServer string `protobuf:"bytes,7,opt,name=dns_server,json=dnsServer,proto3" json:"dns_server,omitempty" yaml:"dns_server,omitempty"`
 	// cloudflare settings - required
-	ApiToken      string `protobuf:"bytes,9,opt,name=api_token,json=apiToken,proto3" json:"api_token,omitempty"`
-	ZoneName      string `protobuf:"bytes,10,opt,name=zone_name,json=zoneName,proto3" json:"zone_name,omitempty"`
+	ApiToken      string `protobuf:"bytes,9,opt,name=api_token,json=apiToken,proto3" json:"api_token,omitempty" yaml:"api_token,omitempty"`
+	ZoneName      string `protobuf:"bytes,10,opt,name=zone_name,json=zoneName,proto3" json:"zone_name,omitempty" yaml:"zone_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2383,13 +2383,13 @@ type FrontendResourceControl struct {
 	// the clients to back off. This mechanism allows the server to
 	// loadshed client connections. We allow up to 10 seconds
 	// sustained QPS above this limit before we start load shedding.
-	ConnectionsPerSecond uint64 `protobuf:"varint,1,opt,name=connections_per_second,json=connectionsPerSecond,proto3" json:"connections_per_second,omitempty"`
+	ConnectionsPerSecond uint64 `protobuf:"varint,1,opt,name=connections_per_second,json=connectionsPerSecond,proto3" json:"connections_per_second,omitempty" yaml:"connections_per_second,omitempty"`
 	// How fast to notify clients of a new hunt creation (This
 	// effectively limits client recruitment rate). Default 10
 	// notifications per sec.
-	NotificationsPerSecond uint64 `protobuf:"varint,2,opt,name=notifications_per_second,json=notificationsPerSecond,proto3" json:"notifications_per_second,omitempty"`
+	NotificationsPerSecond uint64 `protobuf:"varint,2,opt,name=notifications_per_second,json=notificationsPerSecond,proto3" json:"notifications_per_second,omitempty" yaml:"notifications_per_second,omitempty"`
 	// How quickly do we enroll clients (default 100/s, -1 to disable enrollments)
-	EnrollmentsPerSecond int64 `protobuf:"varint,3,opt,name=enrollments_per_second,json=enrollmentsPerSecond,proto3" json:"enrollments_per_second,omitempty"`
+	EnrollmentsPerSecond int64 `protobuf:"varint,3,opt,name=enrollments_per_second,json=enrollmentsPerSecond,proto3" json:"enrollments_per_second,omitempty" yaml:"enrollments_per_second,omitempty"`
 	// The maximum number of concurrent client connections we can
 	// process. Concurrency limits helps to ensure the server is not
 	// overloaded serving too many clients at the same time.
@@ -2397,76 +2397,76 @@ type FrontendResourceControl struct {
 	// (i.e. time taken to read the response and write to the
 	// datastore), not the total number of clients served by
 	// server. Default is number of cores * 2.
-	Concurrency uint64 `protobuf:"varint,9,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
+	Concurrency uint64 `protobuf:"varint,9,opt,name=concurrency,proto3" json:"concurrency,omitempty" yaml:"concurrency,omitempty"`
 	// Aim for this heap size (default 2Gb). If actual memory usage
 	// approaches this maximum, the frontend will begin to limit
 	// client connections.
 	// DEPRECATED
-	TargetHeapSize uint64 `protobuf:"varint,10,opt,name=target_heap_size,json=targetHeapSize,proto3" json:"target_heap_size,omitempty"`
+	TargetHeapSize uint64 `protobuf:"varint,10,opt,name=target_heap_size,json=targetHeapSize,proto3" json:"target_heap_size,omitempty" yaml:"target_heap_size,omitempty"`
 	// The maximum time a client will be waiting for a concurrency
 	// slot before timing out. A small value will result in many
 	// reconnections under load.
-	ConcurrencyTimeout uint64 `protobuf:"varint,24,opt,name=concurrency_timeout,json=concurrencyTimeout,proto3" json:"concurrency_timeout,omitempty"`
+	ConcurrencyTimeout uint64 `protobuf:"varint,24,opt,name=concurrency_timeout,json=concurrencyTimeout,proto3" json:"concurrency_timeout,omitempty" yaml:"concurrency_timeout,omitempty"`
 	// Increasing this allows the frontend to receive larger POST
 	// messages lowering crypto overheads but this comes at the
 	// expense of more memory use.
-	MaxUploadSize uint64 `protobuf:"varint,11,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty"`
+	MaxUploadSize uint64 `protobuf:"varint,11,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty" yaml:"max_upload_size,omitempty"`
 	// This setting controls the size of various LRU caches in the
 	// frontend (e.g. the session key cache, client info cache). This
 	// number should be larger than the number of actual clients or
 	// else the system will see high CPU load from cache misses.
-	ExpectedClients int64 `protobuf:"varint,15,opt,name=expected_clients,json=expectedClients,proto3" json:"expected_clients,omitempty"`
+	ExpectedClients int64 `protobuf:"varint,15,opt,name=expected_clients,json=expectedClients,proto3" json:"expected_clients,omitempty" yaml:"expected_clients,omitempty"`
 	// Bandwidth control: Per client and global rates in bytes/sec
-	PerClientUploadRate int64 `protobuf:"varint,21,opt,name=per_client_upload_rate,json=perClientUploadRate,proto3" json:"per_client_upload_rate,omitempty"`
-	GlobalUploadRate    int64 `protobuf:"varint,22,opt,name=global_upload_rate,json=globalUploadRate,proto3" json:"global_upload_rate,omitempty"`
+	PerClientUploadRate int64 `protobuf:"varint,21,opt,name=per_client_upload_rate,json=perClientUploadRate,proto3" json:"per_client_upload_rate,omitempty" yaml:"per_client_upload_rate,omitempty"`
+	GlobalUploadRate    int64 `protobuf:"varint,22,opt,name=global_upload_rate,json=globalUploadRate,proto3" json:"global_upload_rate,omitempty" yaml:"global_upload_rate,omitempty"`
 	// Wait time for collecting events from clients - smaller means
 	// less latency to respond to client events but also means more
 	// TLS handshake and network overheads due to frequent POST.
-	ClientEventMaxWait uint64 `protobuf:"varint,23,opt,name=client_event_max_wait,json=clientEventMaxWait,proto3" json:"client_event_max_wait,omitempty"`
+	ClientEventMaxWait uint64 `protobuf:"varint,23,opt,name=client_event_max_wait,json=clientEventMaxWait,proto3" json:"client_event_max_wait,omitempty" yaml:"client_event_max_wait,omitempty"`
 	// Minions batch updates to the master so as to minimize RPC as
 	// much as possible, this controls how often these batches are
 	// flushed to the master (default 10 sec).
-	MinionBatchWaitTimeMs uint64 `protobuf:"varint,25,opt,name=minion_batch_wait_time_ms,json=minionBatchWaitTimeMs,proto3" json:"minion_batch_wait_time_ms,omitempty"`
+	MinionBatchWaitTimeMs uint64 `protobuf:"varint,25,opt,name=minion_batch_wait_time_ms,json=minionBatchWaitTimeMs,proto3" json:"minion_batch_wait_time_ms,omitempty" yaml:"minion_batch_wait_time_ms,omitempty"`
 	// How often to save an index snapshot to storage (default 600
 	// sec). Index files are typically 150kb / 1000 clients.
-	IndexSnapshotFrequency uint64 `protobuf:"varint,26,opt,name=index_snapshot_frequency,json=indexSnapshotFrequency,proto3" json:"index_snapshot_frequency,omitempty"`
+	IndexSnapshotFrequency uint64 `protobuf:"varint,26,opt,name=index_snapshot_frequency,json=indexSnapshotFrequency,proto3" json:"index_snapshot_frequency,omitempty" yaml:"index_snapshot_frequency,omitempty"`
 	// Number of seconds before expiring client info cache
 	// entries. Default (0) means do not expire at all. Expiring
 	// client info from cache too frequently can result in a lot more
 	// IO. Default size of this cache is the expected_clients above.
-	ClientInfoLruTtl uint64 `protobuf:"varint,27,opt,name=client_info_lru_ttl,json=clientInfoLruTtl,proto3" json:"client_info_lru_ttl,omitempty"`
+	ClientInfoLruTtl uint64 `protobuf:"varint,27,opt,name=client_info_lru_ttl,json=clientInfoLruTtl,proto3" json:"client_info_lru_ttl,omitempty" yaml:"client_info_lru_ttl,omitempty"`
 	// How often to sync client info records (ms)
-	ClientInfoSyncTime  uint64 `protobuf:"varint,29,opt,name=client_info_sync_time,json=clientInfoSyncTime,proto3" json:"client_info_sync_time,omitempty"`
-	ClientInfoWriteTime uint64 `protobuf:"varint,30,opt,name=client_info_write_time,json=clientInfoWriteTime,proto3" json:"client_info_write_time,omitempty"`
+	ClientInfoSyncTime  uint64 `protobuf:"varint,29,opt,name=client_info_sync_time,json=clientInfoSyncTime,proto3" json:"client_info_sync_time,omitempty" yaml:"client_info_sync_time,omitempty"`
+	ClientInfoWriteTime uint64 `protobuf:"varint,30,opt,name=client_info_write_time,json=clientInfoWriteTime,proto3" json:"client_info_write_time,omitempty" yaml:"client_info_write_time,omitempty"`
 	// Old versions of Velociraptor would write client records
 	// separately. This is no longer used as the records are combined
 	// into larger index files. However, it may still be worth writing
 	// the legacy records because it allows Velociraptor to rebuild
 	// the index if needed. This may prove to add too much to the load
 	// so we can turn it off.
-	ClientInfoSkipWritingLegacyRecords bool `protobuf:"varint,34,opt,name=client_info_skip_writing_legacy_records,json=clientInfoSkipWritingLegacyRecords,proto3" json:"client_info_skip_writing_legacy_records,omitempty"`
+	ClientInfoSkipWritingLegacyRecords bool `protobuf:"varint,34,opt,name=client_info_skip_writing_legacy_records,json=clientInfoSkipWritingLegacyRecords,proto3" json:"client_info_skip_writing_legacy_records,omitempty" yaml:"client_info_skip_writing_legacy_records,omitempty"`
 	// The journal files are used to queue messages between event
 	// generators and event consumers when the consumer is unable to
 	// drain these quickly enough. The setting specifies the maximum
 	// size of the file - when it is exceeded, the file will be
 	// truncated and events will be lost. Default is 1gb
-	MaxJournalBufferSize int64 `protobuf:"varint,28,opt,name=max_journal_buffer_size,json=maxJournalBufferSize,proto3" json:"max_journal_buffer_size,omitempty"`
+	MaxJournalBufferSize int64 `protobuf:"varint,28,opt,name=max_journal_buffer_size,json=maxJournalBufferSize,proto3" json:"max_journal_buffer_size,omitempty" yaml:"max_journal_buffer_size,omitempty"`
 	// The maximum time in seconds the client will batch log messages
 	// before forwarding them to the server (default 1 second).
-	DefaultLogBatchTime uint64 `protobuf:"varint,31,opt,name=default_log_batch_time,json=defaultLogBatchTime,proto3" json:"default_log_batch_time,omitempty"`
+	DefaultLogBatchTime uint64 `protobuf:"varint,31,opt,name=default_log_batch_time,json=defaultLogBatchTime,proto3" json:"default_log_batch_time,omitempty" yaml:"default_log_batch_time,omitempty"`
 	// The maximum time in seconds the client will batch minitoring
 	// log messages before forwarding them to the server (default 600
 	// second).
-	DefaultMonitoringLogBatchTime uint64 `protobuf:"varint,32,opt,name=default_monitoring_log_batch_time,json=defaultMonitoringLogBatchTime,proto3" json:"default_monitoring_log_batch_time,omitempty"`
+	DefaultMonitoringLogBatchTime uint64 `protobuf:"varint,32,opt,name=default_monitoring_log_batch_time,json=defaultMonitoringLogBatchTime,proto3" json:"default_monitoring_log_batch_time,omitempty" yaml:"default_monitoring_log_batch_time,omitempty"`
 	// Disables file buffering for event queues. This may result in
 	// poor performance under load.
-	DisableFileBuffering bool `protobuf:"varint,33,opt,name=disable_file_buffering,json=disableFileBuffering,proto3" json:"disable_file_buffering,omitempty"`
+	DisableFileBuffering bool `protobuf:"varint,33,opt,name=disable_file_buffering,json=disableFileBuffering,proto3" json:"disable_file_buffering,omitempty" yaml:"disable_file_buffering,omitempty"`
 	// Various housekeeping tasks operate with lower priority on the
 	// server. This rate throttles these to a reasonable rate. Default
 	// is 100 per second. Set to -1 to disable.
-	HousekeepOpRate int64 `protobuf:"varint,35,opt,name=housekeep_op_rate,json=housekeepOpRate,proto3" json:"housekeep_op_rate,omitempty"`
+	HousekeepOpRate int64 `protobuf:"varint,35,opt,name=housekeep_op_rate,json=housekeepOpRate,proto3" json:"housekeep_op_rate,omitempty" yaml:"housekeep_op_rate,omitempty"`
 	// How many housekeeping threads are allowed (default 4)
-	HousekeepConcurrency int64 `protobuf:"varint,36,opt,name=housekeep_concurrency,json=housekeepConcurrency,proto3" json:"housekeep_concurrency,omitempty"`
+	HousekeepConcurrency int64 `protobuf:"varint,36,opt,name=housekeep_concurrency,json=housekeepConcurrency,proto3" json:"housekeep_concurrency,omitempty" yaml:"housekeep_concurrency,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -2665,78 +2665,78 @@ func (x *FrontendResourceControl) GetHousekeepConcurrency() int64 {
 type FrontendConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Publicly accessible hostname for this frontend.
-	Hostname string `protobuf:"bytes,19,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Hostname string `protobuf:"bytes,19,opt,name=hostname,proto3" json:"hostname,omitempty" yaml:"hostname,omitempty"`
 	// Address to bind frontend endpoint. Clients connect to this
 	// endpoint to poll for jobs.
-	BindAddress string `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
+	BindAddress string `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty" yaml:"bind_address,omitempty"`
 	// Port to bind to
-	BindPort uint32 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`
+	BindPort uint32 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty" yaml:"bind_port,omitempty"`
 	// Serve the GUI from this base path instead of "/"
-	BasePath string `protobuf:"bytes,25,opt,name=base_path,json=basePath,proto3" json:"base_path,omitempty"`
+	BasePath string `protobuf:"bytes,25,opt,name=base_path,json=basePath,proto3" json:"base_path,omitempty" yaml:"base_path,omitempty"`
 	// This allows the frontends to listen on plain HTTP - It is
 	// useful if you have SSL offloading (e.g. ngix). This is not
 	// configured by the wizard - you will need to manually configure
 	// it. You better know what you are doing here!
-	UsePlainHttp bool `protobuf:"varint,24,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty"`
+	UsePlainHttp bool `protobuf:"varint,24,opt,name=use_plain_http,json=usePlainHttp,proto3" json:"use_plain_http,omitempty" yaml:"use_plain_http,omitempty"`
 	// Enabling this requires the clients to present a valid
 	// certificate (signed by one of the Root CAs listed in
 	// Client.Crypto.root_certs or the Velociraptor built in CA
 	// itself).
-	RequireClientCertificates bool `protobuf:"varint,36,opt,name=require_client_certificates,json=requireClientCertificates,proto3" json:"require_client_certificates,omitempty"`
+	RequireClientCertificates bool `protobuf:"varint,36,opt,name=require_client_certificates,json=requireClientCertificates,proto3" json:"require_client_certificates,omitempty" yaml:"require_client_certificates,omitempty"`
 	// A proxy setting to use - Velociraptor needs to connect to
 	// download tools. This setting will force it to go out over this
 	// proxy. NOTE- If you dont want your server to allow outbound
 	// connections, just set this to an non existant setting.
-	Proxy string `protobuf:"bytes,33,opt,name=proxy,proto3" json:"proxy,omitempty"`
+	Proxy string `protobuf:"bytes,33,opt,name=proxy,proto3" json:"proxy,omitempty" yaml:"proxy,omitempty"`
 	// For more complex proxy configurations use this setting
 	// (overrides the `proxy` configuration above).
-	ProxyConfig *ProxyConfig `protobuf:"bytes,37,opt,name=proxy_config,json=proxyConfig,proto3" json:"proxy_config,omitempty"`
+	ProxyConfig *ProxyConfig `protobuf:"bytes,37,opt,name=proxy_config,json=proxyConfig,proto3" json:"proxy_config,omitempty" yaml:"proxy_config,omitempty"`
 	// These are used to secure the client/server communications -
 	// Even when using external TLS certificates! This certificate
 	// must be signed by the Velociraptor rooot CA in all cases. If
 	// using an external TLS configuration this layer of encryption
 	// happens **in addition** to the external TLS certificates.
-	Certificate string `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty"`
-	PrivateKey  string `protobuf:"bytes,4,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty"`
+	Certificate string `protobuf:"bytes,3,opt,name=certificate,proto3" json:"certificate,omitempty" yaml:"certificate,omitempty"`
+	PrivateKey  string `protobuf:"bytes,4,opt,name=private_key,json=privateKey,proto3" json:"private_key,omitempty" yaml:"private_key,omitempty"`
 	// Be sure to set Client.use_self_signed_ssl=false when you set this.
-	TlsCertificateFilename           string        `protobuf:"bytes,28,opt,name=tls_certificate_filename,json=tlsCertificateFilename,proto3" json:"tls_certificate_filename,omitempty"`
-	TlsPrivateKeyFilename            string        `protobuf:"bytes,29,opt,name=tls_private_key_filename,json=tlsPrivateKeyFilename,proto3" json:"tls_private_key_filename,omitempty"`
-	DnsName                          string        `protobuf:"bytes,6,opt,name=dns_name,json=dnsName,proto3" json:"dns_name,omitempty"`
-	DoNotCompressArtifacts           bool          `protobuf:"varint,10,opt,name=do_not_compress_artifacts,json=doNotCompressArtifacts,proto3" json:"do_not_compress_artifacts,omitempty"`
-	DynDns                           *DynDNSConfig `protobuf:"bytes,12,opt,name=dyn_dns,json=dynDns,proto3" json:"dyn_dns,omitempty"`
-	ProxyHeader                      string        `protobuf:"bytes,13,opt,name=proxy_header,json=proxyHeader,proto3" json:"proxy_header,omitempty"`
-	DefaultClientMonitoringArtifacts []string      `protobuf:"bytes,14,rep,name=default_client_monitoring_artifacts,json=defaultClientMonitoringArtifacts,proto3" json:"default_client_monitoring_artifacts,omitempty"`
+	TlsCertificateFilename           string        `protobuf:"bytes,28,opt,name=tls_certificate_filename,json=tlsCertificateFilename,proto3" json:"tls_certificate_filename,omitempty" yaml:"tls_certificate_filename,omitempty"`
+	TlsPrivateKeyFilename            string        `protobuf:"bytes,29,opt,name=tls_private_key_filename,json=tlsPrivateKeyFilename,proto3" json:"tls_private_key_filename,omitempty" yaml:"tls_private_key_filename,omitempty"`
+	DnsName                          string        `protobuf:"bytes,6,opt,name=dns_name,json=dnsName,proto3" json:"dns_name,omitempty" yaml:"dns_name,omitempty"`
+	DoNotCompressArtifacts           bool          `protobuf:"varint,10,opt,name=do_not_compress_artifacts,json=doNotCompressArtifacts,proto3" json:"do_not_compress_artifacts,omitempty" yaml:"do_not_compress_artifacts,omitempty"`
+	DynDns                           *DynDNSConfig `protobuf:"bytes,12,opt,name=dyn_dns,json=dynDns,proto3" json:"dyn_dns,omitempty" yaml:"dyn_dns,omitempty"`
+	ProxyHeader                      string        `protobuf:"bytes,13,opt,name=proxy_header,json=proxyHeader,proto3" json:"proxy_header,omitempty" yaml:"proxy_header,omitempty"`
+	DefaultClientMonitoringArtifacts []string      `protobuf:"bytes,14,rep,name=default_client_monitoring_artifacts,json=defaultClientMonitoringArtifacts,proto3" json:"default_client_monitoring_artifacts,omitempty" yaml:"default_client_monitoring_artifacts,omitempty"`
 	// We have the Server.Monitor.Health enabled always but these are
 	// any additional artifacts that should be installed by default.
-	DefaultServerMonitoringArtifacts []string `protobuf:"bytes,31,rep,name=default_server_monitoring_artifacts,json=defaultServerMonitoringArtifacts,proto3" json:"default_server_monitoring_artifacts,omitempty"`
+	DefaultServerMonitoringArtifacts []string `protobuf:"bytes,31,rep,name=default_server_monitoring_artifacts,json=defaultServerMonitoringArtifacts,proto3" json:"default_server_monitoring_artifacts,omitempty" yaml:"default_server_monitoring_artifacts,omitempty"`
 	// If set this will cause the frontend to collect these artifacts
 	// the first time it is run after install.
-	InitialServerArtifacts []string                 `protobuf:"bytes,34,rep,name=initial_server_artifacts,json=initialServerArtifacts,proto3" json:"initial_server_artifacts,omitempty"`
-	RunAsUser              string                   `protobuf:"bytes,16,opt,name=run_as_user,json=runAsUser,proto3" json:"run_as_user,omitempty"`
-	GRPCPoolMaxSize        int64                    `protobuf:"varint,17,opt,name=GRPC_pool_max_size,json=GRPCPoolMaxSize,proto3" json:"GRPC_pool_max_size,omitempty"`
-	GRPCPoolMaxWait        int64                    `protobuf:"varint,18,opt,name=GRPC_pool_max_wait,json=GRPCPoolMaxWait,proto3" json:"GRPC_pool_max_wait,omitempty"`
-	Resources              *FrontendResourceControl `protobuf:"bytes,27,opt,name=resources,proto3" json:"resources,omitempty"`
+	InitialServerArtifacts []string                 `protobuf:"bytes,34,rep,name=initial_server_artifacts,json=initialServerArtifacts,proto3" json:"initial_server_artifacts,omitempty" yaml:"initial_server_artifacts,omitempty"`
+	RunAsUser              string                   `protobuf:"bytes,16,opt,name=run_as_user,json=runAsUser,proto3" json:"run_as_user,omitempty" yaml:"run_as_user,omitempty"`
+	GRPCPoolMaxSize        int64                    `protobuf:"varint,17,opt,name=GRPC_pool_max_size,json=GRPCPoolMaxSize,proto3" json:"GRPC_pool_max_size,omitempty" yaml:"GRPC_pool_max_size,omitempty"`
+	GRPCPoolMaxWait        int64                    `protobuf:"varint,18,opt,name=GRPC_pool_max_wait,json=GRPCPoolMaxWait,proto3" json:"GRPC_pool_max_wait,omitempty" yaml:"GRPC_pool_max_wait,omitempty"`
+	Resources              *FrontendResourceControl `protobuf:"bytes,27,opt,name=resources,proto3" json:"resources,omitempty" yaml:"resources,omitempty"`
 	// Used internally to tag this frontend as the master.
-	IsMinion bool `protobuf:"varint,30,opt,name=is_minion,json=isMinion,proto3" json:"is_minion,omitempty"`
+	IsMinion bool `protobuf:"varint,30,opt,name=is_minion,json=isMinion,proto3" json:"is_minion,omitempty" yaml:"is_minion,omitempty"`
 	// Below options are DEPRECATED - moved to resources by migration code.
-	Concurrency   uint64 `protobuf:"varint,9,opt,name=concurrency,proto3" json:"concurrency,omitempty"`
-	MaxUploadSize uint64 `protobuf:"varint,11,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty"`
+	Concurrency   uint64 `protobuf:"varint,9,opt,name=concurrency,proto3" json:"concurrency,omitempty" yaml:"concurrency,omitempty"`
+	MaxUploadSize uint64 `protobuf:"varint,11,opt,name=max_upload_size,json=maxUploadSize,proto3" json:"max_upload_size,omitempty" yaml:"max_upload_size,omitempty"`
 	// Various performoance related tweaks.
-	ExpectedClients int64 `protobuf:"varint,15,opt,name=expected_clients,json=expectedClients,proto3" json:"expected_clients,omitempty"`
+	ExpectedClients int64 `protobuf:"varint,15,opt,name=expected_clients,json=expectedClients,proto3" json:"expected_clients,omitempty" yaml:"expected_clients,omitempty"`
 	// Per client rate in bytes/sec
-	PerClientUploadRate int64 `protobuf:"varint,21,opt,name=per_client_upload_rate,json=perClientUploadRate,proto3" json:"per_client_upload_rate,omitempty"`
-	GlobalUploadRate    int64 `protobuf:"varint,22,opt,name=global_upload_rate,json=globalUploadRate,proto3" json:"global_upload_rate,omitempty"`
+	PerClientUploadRate int64 `protobuf:"varint,21,opt,name=per_client_upload_rate,json=perClientUploadRate,proto3" json:"per_client_upload_rate,omitempty" yaml:"per_client_upload_rate,omitempty"`
+	GlobalUploadRate    int64 `protobuf:"varint,22,opt,name=global_upload_rate,json=globalUploadRate,proto3" json:"global_upload_rate,omitempty" yaml:"global_upload_rate,omitempty"`
 	// Wait time for collecting events from clients - smaller means
 	// less latency to respond to client events but also means more
 	// TLS handshake and network overheads due to frequent POST.
-	ClientEventMaxWait uint64 `protobuf:"varint,23,opt,name=client_event_max_wait,json=clientEventMaxWait,proto3" json:"client_event_max_wait,omitempty"`
+	ClientEventMaxWait uint64 `protobuf:"varint,23,opt,name=client_event_max_wait,json=clientEventMaxWait,proto3" json:"client_event_max_wait,omitempty" yaml:"client_event_max_wait,omitempty"`
 	// Load artifacts from this directory at startup
-	ArtifactDefinitionsDirectory string `protobuf:"bytes,32,opt,name=artifact_definitions_directory,json=artifactDefinitionsDirectory,proto3" json:"artifact_definitions_directory,omitempty"`
+	ArtifactDefinitionsDirectory string `protobuf:"bytes,32,opt,name=artifact_definitions_directory,json=artifactDefinitionsDirectory,proto3" json:"artifact_definitions_directory,omitempty" yaml:"artifact_definitions_directory,omitempty"`
 	// A regular expression that if matches any log messages from the
 	// client's query represent a failure of the collection.
-	CollectionErrorRegex string `protobuf:"bytes,35,opt,name=collection_error_regex,json=collectionErrorRegex,proto3" json:"collection_error_regex,omitempty"`
+	CollectionErrorRegex string `protobuf:"bytes,35,opt,name=collection_error_regex,json=collectionErrorRegex,proto3" json:"collection_error_regex,omitempty" yaml:"collection_error_regex,omitempty"`
 	// DEPRECATED - ignored.
-	DoNotRedirect bool `protobuf:"varint,26,opt,name=do_not_redirect,json=doNotRedirect,proto3" json:"do_not_redirect,omitempty"`
+	DoNotRedirect bool `protobuf:"varint,26,opt,name=do_not_redirect,json=doNotRedirect,proto3" json:"do_not_redirect,omitempty" yaml:"do_not_redirect,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3009,10 +3009,10 @@ type DatastoreConfig struct {
 	//     memcache server. This configuration is suitable for the
 	//     Minion node on a slow EFS backed filesystem. All data store
 	//     access will go through to the master memcache using gRPC.
-	Implementation string `protobuf:"bytes,1,opt,name=implementation,proto3" json:"implementation,omitempty"`
+	Implementation string `protobuf:"bytes,1,opt,name=implementation,proto3" json:"implementation,omitempty" yaml:"implementation,omitempty"`
 	// For FileBaseDataStore
-	Location           string `protobuf:"bytes,2,opt,name=location,proto3" json:"location,omitempty"`
-	FilestoreDirectory string `protobuf:"bytes,3,opt,name=filestore_directory,json=filestoreDirectory,proto3" json:"filestore_directory,omitempty"`
+	Location           string `protobuf:"bytes,2,opt,name=location,proto3" json:"location,omitempty" yaml:"location,omitempty"`
+	FilestoreDirectory string `protobuf:"bytes,3,opt,name=filestore_directory,json=filestoreDirectory,proto3" json:"filestore_directory,omitempty" yaml:"filestore_directory,omitempty"`
 	// Allowed settings:
 	//   - none: No compression - disable compression in client
 	//     transmission. Note that for older clients (prior to 0.75),
@@ -3020,18 +3020,18 @@ type DatastoreConfig struct {
 	//     disable compression on new clients as well.
 	//   - zlib: Zlib compression enabled on collections. This is the
 	//     default setting when communicating with newer clients.
-	Compression string `protobuf:"bytes,19,opt,name=compression,proto3" json:"compression,omitempty"`
+	Compression string `protobuf:"bytes,19,opt,name=compression,proto3" json:"compression,omitempty" yaml:"compression,omitempty"`
 	// Set to the min required disk space. When we fall below this
 	// available disk space, we refuse to write files. This avoids the
 	// possibility of writing corrupted files. Default is 50mb. Set to
 	// -1 to disable disk space checking.
-	MinAllowedFileSpaceMb int64 `protobuf:"varint,15,opt,name=min_allowed_file_space_mb,json=minAllowedFileSpaceMb,proto3" json:"min_allowed_file_space_mb,omitempty"`
+	MinAllowedFileSpaceMb int64 `protobuf:"varint,15,opt,name=min_allowed_file_space_mb,json=minAllowedFileSpaceMb,proto3" json:"min_allowed_file_space_mb,omitempty" yaml:"min_allowed_file_space_mb,omitempty"`
 	// How often to check the disk space (default 10 sec)
-	DiskCheckFrequencySec int64 `protobuf:"varint,16,opt,name=disk_check_frequency_sec,json=diskCheckFrequencySec,proto3" json:"disk_check_frequency_sec,omitempty"`
+	DiskCheckFrequencySec int64 `protobuf:"varint,16,opt,name=disk_check_frequency_sec,json=diskCheckFrequencySec,proto3" json:"disk_check_frequency_sec,omitempty" yaml:"disk_check_frequency_sec,omitempty"`
 	// Cap directories to this size after reporting error - this
 	// should not happen normally but may happen if the deployment has
 	// been very active or due to a bug!
-	MaxDirSize uint64 `protobuf:"varint,13,opt,name=max_dir_size,json=maxDirSize,proto3" json:"max_dir_size,omitempty"`
+	MaxDirSize uint64 `protobuf:"varint,13,opt,name=max_dir_size,json=maxDirSize,proto3" json:"max_dir_size,omitempty" yaml:"max_dir_size,omitempty"`
 	// The maximum size of stored objects in the datastore. The
 	// Datastore is assumed to contain smallish objects which are read
 	// and written atomically. This setting places a limit on the size
@@ -3039,19 +3039,19 @@ type DatastoreConfig struct {
 	// this limit it means that you need to rethink your approach. See
 	// https://docs.velociraptor.app/knowledge_base/tips/grpc_errors/
 	// The default size is 4Mb.
-	MaxObjectSize uint64 `protobuf:"varint,20,opt,name=max_object_size,json=maxObjectSize,proto3" json:"max_object_size,omitempty"`
+	MaxObjectSize uint64 `protobuf:"varint,20,opt,name=max_object_size,json=maxObjectSize,proto3" json:"max_object_size,omitempty" yaml:"max_object_size,omitempty"`
 	// How long to expire the memcache (default 10 min)
-	MemcacheExpirationSec uint64 `protobuf:"varint,4,opt,name=memcache_expiration_sec,json=memcacheExpirationSec,proto3" json:"memcache_expiration_sec,omitempty"`
+	MemcacheExpirationSec uint64 `protobuf:"varint,4,opt,name=memcache_expiration_sec,json=memcacheExpirationSec,proto3" json:"memcache_expiration_sec,omitempty" yaml:"memcache_expiration_sec,omitempty"`
 	// How many mutations to queue up ahead of busy writers. By
 	// default 0 means writes will be blocked until they are handed
 	// off to a writer thread. Set to -1 to disable asynchronous
 	// writes.
-	MemcacheWriteMutationBuffer int64 `protobuf:"varint,5,opt,name=memcache_write_mutation_buffer,json=memcacheWriteMutationBuffer,proto3" json:"memcache_write_mutation_buffer,omitempty"`
+	MemcacheWriteMutationBuffer int64 `protobuf:"varint,5,opt,name=memcache_write_mutation_buffer,json=memcacheWriteMutationBuffer,proto3" json:"memcache_write_mutation_buffer,omitempty" yaml:"memcache_write_mutation_buffer,omitempty"`
 	// Number of writing threads - increase for high latency
 	// filesystems (default 100).
-	MemcacheWriteMutationWriters int64 `protobuf:"varint,6,opt,name=memcache_write_mutation_writers,json=memcacheWriteMutationWriters,proto3" json:"memcache_write_mutation_writers,omitempty"`
+	MemcacheWriteMutationWriters int64 `protobuf:"varint,6,opt,name=memcache_write_mutation_writers,json=memcacheWriteMutationWriters,proto3" json:"memcache_write_mutation_writers,omitempty" yaml:"memcache_write_mutation_writers,omitempty"`
 	// Aim to not exceed this memory limit.
-	MemcacheWriteMaxMemory int64 `protobuf:"varint,17,opt,name=memcache_write_max_memory,json=memcacheWriteMaxMemory,proto3" json:"memcache_write_max_memory,omitempty"` // Default 100Mb
+	MemcacheWriteMaxMemory int64 `protobuf:"varint,17,opt,name=memcache_write_max_memory,json=memcacheWriteMaxMemory,proto3" json:"memcache_write_max_memory,omitempty" yaml:"memcache_write_max_memory,omitempty"` // Default 100Mb
 	// How long to delay writes so they can be combined. This applies
 	// for writing result sets - we keep the writes in memory for
 	// min_age seconds in order to combine further writes. If another
@@ -3060,17 +3060,17 @@ type DatastoreConfig struct {
 	// forced. The aim is to keep combine separate writes as much as
 	// possible into larger writes but at the same time keep
 	// frequently written files from never flushing to disk.
-	MemcacheWriteMutationMinAge int64 `protobuf:"varint,14,opt,name=memcache_write_mutation_min_age,json=memcacheWriteMutationMinAge,proto3" json:"memcache_write_mutation_min_age,omitempty"` // Default 1000 msec
-	MemcacheWriteMutationMaxAge int64 `protobuf:"varint,9,opt,name=memcache_write_mutation_max_age,json=memcacheWriteMutationMaxAge,proto3" json:"memcache_write_mutation_max_age,omitempty"`  // Default 5000 msec
+	MemcacheWriteMutationMinAge int64 `protobuf:"varint,14,opt,name=memcache_write_mutation_min_age,json=memcacheWriteMutationMinAge,proto3" json:"memcache_write_mutation_min_age,omitempty" yaml:"memcache_write_mutation_min_age,omitempty"` // Default 1000 msec
+	MemcacheWriteMutationMaxAge int64 `protobuf:"varint,9,opt,name=memcache_write_mutation_max_age,json=memcacheWriteMutationMaxAge,proto3" json:"memcache_write_mutation_max_age,omitempty" yaml:"memcache_write_mutation_max_age,omitempty"`  // Default 5000 msec
 	// Maximum size of memcache lru (default 10000)
-	MemcacheDatastoreMaxSize     int64 `protobuf:"varint,10,opt,name=memcache_datastore_max_size,json=memcacheDatastoreMaxSize,proto3" json:"memcache_datastore_max_size,omitempty"`
-	MemcacheDatastoreMaxItemSize int64 `protobuf:"varint,11,opt,name=memcache_datastore_max_item_size,json=memcacheDatastoreMaxItemSize,proto3" json:"memcache_datastore_max_item_size,omitempty"`
-	MemcacheDatastoreMaxDirSize  int64 `protobuf:"varint,12,opt,name=memcache_datastore_max_dir_size,json=memcacheDatastoreMaxDirSize,proto3" json:"memcache_datastore_max_dir_size,omitempty"`
+	MemcacheDatastoreMaxSize     int64 `protobuf:"varint,10,opt,name=memcache_datastore_max_size,json=memcacheDatastoreMaxSize,proto3" json:"memcache_datastore_max_size,omitempty" yaml:"memcache_datastore_max_size,omitempty"`
+	MemcacheDatastoreMaxItemSize int64 `protobuf:"varint,11,opt,name=memcache_datastore_max_item_size,json=memcacheDatastoreMaxItemSize,proto3" json:"memcache_datastore_max_item_size,omitempty" yaml:"memcache_datastore_max_item_size,omitempty"`
+	MemcacheDatastoreMaxDirSize  int64 `protobuf:"varint,12,opt,name=memcache_datastore_max_dir_size,json=memcacheDatastoreMaxDirSize,proto3" json:"memcache_datastore_max_dir_size,omitempty" yaml:"memcache_datastore_max_dir_size,omitempty"`
 	// Remote datastore is used by the minion (default 1000 sec)
-	RemoteDatastoreRpcDeadline int64 `protobuf:"varint,18,opt,name=remote_datastore_rpc_deadline,json=remoteDatastoreRpcDeadline,proto3" json:"remote_datastore_rpc_deadline,omitempty"`
+	RemoteDatastoreRpcDeadline int64 `protobuf:"varint,18,opt,name=remote_datastore_rpc_deadline,json=remoteDatastoreRpcDeadline,proto3" json:"remote_datastore_rpc_deadline,omitempty" yaml:"remote_datastore_rpc_deadline,omitempty"`
 	// Experimental - do not set in configs yet!
-	MinionImplementation string `protobuf:"bytes,7,opt,name=minion_implementation,json=minionImplementation,proto3" json:"minion_implementation,omitempty"`
-	MasterImplementation string `protobuf:"bytes,8,opt,name=master_implementation,json=masterImplementation,proto3" json:"master_implementation,omitempty"`
+	MinionImplementation string `protobuf:"bytes,7,opt,name=minion_implementation,json=minionImplementation,proto3" json:"minion_implementation,omitempty" yaml:"minion_implementation,omitempty"`
+	MasterImplementation string `protobuf:"bytes,8,opt,name=master_implementation,json=masterImplementation,proto3" json:"master_implementation,omitempty" yaml:"master_implementation,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
 }
@@ -3250,8 +3250,8 @@ func (x *DatastoreConfig) GetMasterImplementation() string {
 type MinionConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Used to override Defaults.notebook_number_of_local_workers
-	NotebookNumberOfLocalWorkers int64 `protobuf:"varint,1,opt,name=notebook_number_of_local_workers,json=notebookNumberOfLocalWorkers,proto3" json:"notebook_number_of_local_workers,omitempty"`
-	NotebookWorkerPriority       int64 `protobuf:"varint,2,opt,name=notebook_worker_priority,json=notebookWorkerPriority,proto3" json:"notebook_worker_priority,omitempty"`
+	NotebookNumberOfLocalWorkers int64 `protobuf:"varint,1,opt,name=notebook_number_of_local_workers,json=notebookNumberOfLocalWorkers,proto3" json:"notebook_number_of_local_workers,omitempty" yaml:"notebook_number_of_local_workers,omitempty"`
+	NotebookWorkerPriority       int64 `protobuf:"varint,2,opt,name=notebook_worker_priority,json=notebookWorkerPriority,proto3" json:"notebook_worker_priority,omitempty" yaml:"notebook_worker_priority,omitempty"`
 	unknownFields                protoimpl.UnknownFields
 	sizeCache                    protoimpl.SizeCache
 }
@@ -3303,12 +3303,12 @@ func (x *MinionConfig) GetNotebookWorkerPriority() int64 {
 // Configuration for the mail server.
 type MailConfig struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	From          string                 `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	Server        string                 `protobuf:"bytes,2,opt,name=server,proto3" json:"server,omitempty"`
-	ServerPort    uint64                 `protobuf:"varint,3,opt,name=server_port,json=serverPort,proto3" json:"server_port,omitempty"`
-	AuthUsername  string                 `protobuf:"bytes,4,opt,name=auth_username,json=authUsername,proto3" json:"auth_username,omitempty"`
-	AuthPassword  string                 `protobuf:"bytes,5,opt,name=auth_password,json=authPassword,proto3" json:"auth_password,omitempty"`
-	SkipVerify    bool                   `protobuf:"varint,6,opt,name=skip_verify,json=skipVerify,proto3" json:"skip_verify,omitempty"`
+	From          string                 `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty" yaml:"from,omitempty"`
+	Server        string                 `protobuf:"bytes,2,opt,name=server,proto3" json:"server,omitempty" yaml:"server,omitempty"`
+	ServerPort    uint64                 `protobuf:"varint,3,opt,name=server_port,json=serverPort,proto3" json:"server_port,omitempty" yaml:"server_port,omitempty"`
+	AuthUsername  string                 `protobuf:"bytes,4,opt,name=auth_username,json=authUsername,proto3" json:"auth_username,omitempty" yaml:"auth_username,omitempty"`
+	AuthPassword  string                 `protobuf:"bytes,5,opt,name=auth_password,json=authPassword,proto3" json:"auth_password,omitempty" yaml:"auth_password,omitempty"`
+	SkipVerify    bool                   `protobuf:"varint,6,opt,name=skip_verify,json=skipVerify,proto3" json:"skip_verify,omitempty" yaml:"skip_verify,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3388,11 +3388,11 @@ func (x *MailConfig) GetSkipVerify() bool {
 type LoggingRetentionConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// How often to rotate the files in seconds.
-	RotationTime uint64 `protobuf:"varint,3,opt,name=rotation_time,json=rotationTime,proto3" json:"rotation_time,omitempty"`
+	RotationTime uint64 `protobuf:"varint,3,opt,name=rotation_time,json=rotationTime,proto3" json:"rotation_time,omitempty" yaml:"rotation_time,omitempty"`
 	// Maximum age of each file (File will be deleted after this time (1 year).
-	MaxAge uint64 `protobuf:"varint,4,opt,name=max_age,json=maxAge,proto3" json:"max_age,omitempty"`
+	MaxAge uint64 `protobuf:"varint,4,opt,name=max_age,json=maxAge,proto3" json:"max_age,omitempty" yaml:"max_age,omitempty"`
 	// If this is true this log source is disabled.
-	Disabled      bool `protobuf:"varint,5,opt,name=disabled,proto3" json:"disabled,omitempty"`
+	Disabled      bool `protobuf:"varint,5,opt,name=disabled,proto3" json:"disabled,omitempty" yaml:"disabled,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3450,16 +3450,16 @@ func (x *LoggingRetentionConfig) GetDisabled() bool {
 
 type LoggingConfig struct {
 	state                    protoimpl.MessageState  `protogen:"open.v1"`
-	OutputDirectory          string                  `protobuf:"bytes,1,opt,name=output_directory,json=outputDirectory,proto3" json:"output_directory,omitempty"`
-	SeparateLogsPerComponent bool                    `protobuf:"varint,2,opt,name=separate_logs_per_component,json=separateLogsPerComponent,proto3" json:"separate_logs_per_component,omitempty"`
-	RotationTime             uint64                  `protobuf:"varint,3,opt,name=rotation_time,json=rotationTime,proto3" json:"rotation_time,omitempty"`
-	MaxAge                   uint64                  `protobuf:"varint,4,opt,name=max_age,json=maxAge,proto3" json:"max_age,omitempty"`
-	Debug                    *LoggingRetentionConfig `protobuf:"bytes,5,opt,name=debug,proto3" json:"debug,omitempty"`
-	Info                     *LoggingRetentionConfig `protobuf:"bytes,6,opt,name=info,proto3" json:"info,omitempty"`
-	Error                    *LoggingRetentionConfig `protobuf:"bytes,7,opt,name=error,proto3" json:"error,omitempty"`
-	RemoteSyslogServer       string                  `protobuf:"bytes,8,opt,name=remote_syslog_server,json=remoteSyslogServer,proto3" json:"remote_syslog_server,omitempty"`
-	RemoteSyslogProtocol     string                  `protobuf:"bytes,9,opt,name=remote_syslog_protocol,json=remoteSyslogProtocol,proto3" json:"remote_syslog_protocol,omitempty"`
-	RemoteSyslogComponents   []string                `protobuf:"bytes,10,rep,name=remote_syslog_components,json=remoteSyslogComponents,proto3" json:"remote_syslog_components,omitempty"`
+	OutputDirectory          string                  `protobuf:"bytes,1,opt,name=output_directory,json=outputDirectory,proto3" json:"output_directory,omitempty" yaml:"output_directory,omitempty"`
+	SeparateLogsPerComponent bool                    `protobuf:"varint,2,opt,name=separate_logs_per_component,json=separateLogsPerComponent,proto3" json:"separate_logs_per_component,omitempty" yaml:"separate_logs_per_component,omitempty"`
+	RotationTime             uint64                  `protobuf:"varint,3,opt,name=rotation_time,json=rotationTime,proto3" json:"rotation_time,omitempty" yaml:"rotation_time,omitempty"`
+	MaxAge                   uint64                  `protobuf:"varint,4,opt,name=max_age,json=maxAge,proto3" json:"max_age,omitempty" yaml:"max_age,omitempty"`
+	Debug                    *LoggingRetentionConfig `protobuf:"bytes,5,opt,name=debug,proto3" json:"debug,omitempty" yaml:"debug,omitempty"`
+	Info                     *LoggingRetentionConfig `protobuf:"bytes,6,opt,name=info,proto3" json:"info,omitempty" yaml:"info,omitempty"`
+	Error                    *LoggingRetentionConfig `protobuf:"bytes,7,opt,name=error,proto3" json:"error,omitempty" yaml:"error,omitempty"`
+	RemoteSyslogServer       string                  `protobuf:"bytes,8,opt,name=remote_syslog_server,json=remoteSyslogServer,proto3" json:"remote_syslog_server,omitempty" yaml:"remote_syslog_server,omitempty"`
+	RemoteSyslogProtocol     string                  `protobuf:"bytes,9,opt,name=remote_syslog_protocol,json=remoteSyslogProtocol,proto3" json:"remote_syslog_protocol,omitempty" yaml:"remote_syslog_protocol,omitempty"`
+	RemoteSyslogComponents   []string                `protobuf:"bytes,10,rep,name=remote_syslog_components,json=remoteSyslogComponents,proto3" json:"remote_syslog_components,omitempty" yaml:"remote_syslog_components,omitempty"`
 	unknownFields            protoimpl.UnknownFields
 	sizeCache                protoimpl.SizeCache
 }
@@ -3566,11 +3566,11 @@ func (x *LoggingConfig) GetRemoteSyslogComponents() []string {
 
 type MonitoringConfig struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
-	BindAddress string                 `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty"`
-	BindPort    uint32                 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty"`
+	BindAddress string                 `protobuf:"bytes,1,opt,name=bind_address,json=bindAddress,proto3" json:"bind_address,omitempty" yaml:"bind_address,omitempty"`
+	BindPort    uint32                 `protobuf:"varint,2,opt,name=bind_port,json=bindPort,proto3" json:"bind_port,omitempty" yaml:"bind_port,omitempty"`
 	// If set we use this in links etc, otherwise we take a guess
 	// based on bind_address and bind_port above.
-	MetricsUrl    string `protobuf:"bytes,3,opt,name=metrics_url,json=metricsUrl,proto3" json:"metrics_url,omitempty"`
+	MetricsUrl    string `protobuf:"bytes,3,opt,name=metrics_url,json=metricsUrl,proto3" json:"metrics_url,omitempty" yaml:"metrics_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -3628,8 +3628,8 @@ func (x *MonitoringConfig) GetMetricsUrl() string {
 
 type AutoExecConfig struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	Argv                []string               `protobuf:"bytes,1,rep,name=argv,proto3" json:"argv,omitempty"`
-	ArtifactDefinitions []*proto1.Artifact     `protobuf:"bytes,2,rep,name=artifact_definitions,json=artifactDefinitions,proto3" json:"artifact_definitions,omitempty"`
+	Argv                []string               `protobuf:"bytes,1,rep,name=argv,proto3" json:"argv,omitempty" yaml:"argv,omitempty"`
+	ArtifactDefinitions []*proto1.Artifact     `protobuf:"bytes,2,rep,name=artifact_definitions,json=artifactDefinitions,proto3" json:"artifact_definitions,omitempty" yaml:"artifact_definitions,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -3681,37 +3681,37 @@ func (x *AutoExecConfig) GetArtifactDefinitions() []*proto1.Artifact {
 // Do not set these in the configuration file - they are used internally.
 type ServerServicesConfig struct {
 	state                 protoimpl.MessageState `protogen:"open.v1"`
-	HuntManager           bool                   `protobuf:"varint,1,opt,name=hunt_manager,json=huntManager,proto3" json:"hunt_manager,omitempty"`
-	HuntDispatcher        bool                   `protobuf:"varint,2,opt,name=hunt_dispatcher,json=huntDispatcher,proto3" json:"hunt_dispatcher,omitempty"`
-	StatsCollector        bool                   `protobuf:"varint,3,opt,name=stats_collector,json=statsCollector,proto3" json:"stats_collector,omitempty"`
-	ServerMonitoring      bool                   `protobuf:"varint,4,opt,name=server_monitoring,json=serverMonitoring,proto3" json:"server_monitoring,omitempty"`
-	ServerArtifacts       bool                   `protobuf:"varint,5,opt,name=server_artifacts,json=serverArtifacts,proto3" json:"server_artifacts,omitempty"`
-	DynDns                bool                   `protobuf:"varint,6,opt,name=dyn_dns,json=dynDns,proto3" json:"dyn_dns,omitempty"`
-	Interrogation         bool                   `protobuf:"varint,7,opt,name=interrogation,proto3" json:"interrogation,omitempty"`
-	SanityChecker         bool                   `protobuf:"varint,8,opt,name=sanity_checker,json=sanityChecker,proto3" json:"sanity_checker,omitempty"`
-	VfsService            bool                   `protobuf:"varint,9,opt,name=vfs_service,json=vfsService,proto3" json:"vfs_service,omitempty"`
-	UserManager           bool                   `protobuf:"varint,10,opt,name=user_manager,json=userManager,proto3" json:"user_manager,omitempty"`
-	ClientMonitoring      bool                   `protobuf:"varint,11,opt,name=client_monitoring,json=clientMonitoring,proto3" json:"client_monitoring,omitempty"`
-	MonitoringService     bool                   `protobuf:"varint,12,opt,name=monitoring_service,json=monitoringService,proto3" json:"monitoring_service,omitempty"`
-	ApiServer             bool                   `protobuf:"varint,13,opt,name=api_server,json=apiServer,proto3" json:"api_server,omitempty"`
-	FrontendServer        bool                   `protobuf:"varint,14,opt,name=frontend_server,json=frontendServer,proto3" json:"frontend_server,omitempty"`
-	GuiServer             bool                   `protobuf:"varint,15,opt,name=gui_server,json=guiServer,proto3" json:"gui_server,omitempty"`
-	IndexServer           bool                   `protobuf:"varint,16,opt,name=index_server,json=indexServer,proto3" json:"index_server,omitempty"`
-	JournalService        bool                   `protobuf:"varint,17,opt,name=journal_service,json=journalService,proto3" json:"journal_service,omitempty"`
-	ReplicationService    bool                   `protobuf:"varint,26,opt,name=replication_service,json=replicationService,proto3" json:"replication_service,omitempty"`
-	NotificationService   bool                   `protobuf:"varint,18,opt,name=notification_service,json=notificationService,proto3" json:"notification_service,omitempty"`
-	RepositoryManager     bool                   `protobuf:"varint,19,opt,name=repository_manager,json=repositoryManager,proto3" json:"repository_manager,omitempty"`
-	TestRepositoryManager bool                   `protobuf:"varint,25,opt,name=test_repository_manager,json=testRepositoryManager,proto3" json:"test_repository_manager,omitempty"`
-	InventoryService      bool                   `protobuf:"varint,20,opt,name=inventory_service,json=inventoryService,proto3" json:"inventory_service,omitempty"`
-	ClientInfo            bool                   `protobuf:"varint,21,opt,name=client_info,json=clientInfo,proto3" json:"client_info,omitempty"`
-	Label                 bool                   `protobuf:"varint,22,opt,name=label,proto3" json:"label,omitempty"`
-	Launcher              bool                   `protobuf:"varint,23,opt,name=launcher,proto3" json:"launcher,omitempty"`
-	NotebookService       bool                   `protobuf:"varint,24,opt,name=notebook_service,json=notebookService,proto3" json:"notebook_service,omitempty"`
-	SchedulerService      bool                   `protobuf:"varint,29,opt,name=scheduler_service,json=schedulerService,proto3" json:"scheduler_service,omitempty"`
-	BackupService         bool                   `protobuf:"varint,30,opt,name=backup_service,json=backupService,proto3" json:"backup_service,omitempty"`
+	HuntManager           bool                   `protobuf:"varint,1,opt,name=hunt_manager,json=huntManager,proto3" json:"hunt_manager,omitempty" yaml:"hunt_manager,omitempty"`
+	HuntDispatcher        bool                   `protobuf:"varint,2,opt,name=hunt_dispatcher,json=huntDispatcher,proto3" json:"hunt_dispatcher,omitempty" yaml:"hunt_dispatcher,omitempty"`
+	StatsCollector        bool                   `protobuf:"varint,3,opt,name=stats_collector,json=statsCollector,proto3" json:"stats_collector,omitempty" yaml:"stats_collector,omitempty"`
+	ServerMonitoring      bool                   `protobuf:"varint,4,opt,name=server_monitoring,json=serverMonitoring,proto3" json:"server_monitoring,omitempty" yaml:"server_monitoring,omitempty"`
+	ServerArtifacts       bool                   `protobuf:"varint,5,opt,name=server_artifacts,json=serverArtifacts,proto3" json:"server_artifacts,omitempty" yaml:"server_artifacts,omitempty"`
+	DynDns                bool                   `protobuf:"varint,6,opt,name=dyn_dns,json=dynDns,proto3" json:"dyn_dns,omitempty" yaml:"dyn_dns,omitempty"`
+	Interrogation         bool                   `protobuf:"varint,7,opt,name=interrogation,proto3" json:"interrogation,omitempty" yaml:"interrogation,omitempty"`
+	SanityChecker         bool                   `protobuf:"varint,8,opt,name=sanity_checker,json=sanityChecker,proto3" json:"sanity_checker,omitempty" yaml:"sanity_checker,omitempty"`
+	VfsService            bool                   `protobuf:"varint,9,opt,name=vfs_service,json=vfsService,proto3" json:"vfs_service,omitempty" yaml:"vfs_service,omitempty"`
+	UserManager           bool                   `protobuf:"varint,10,opt,name=user_manager,json=userManager,proto3" json:"user_manager,omitempty" yaml:"user_manager,omitempty"`
+	ClientMonitoring      bool                   `protobuf:"varint,11,opt,name=client_monitoring,json=clientMonitoring,proto3" json:"client_monitoring,omitempty" yaml:"client_monitoring,omitempty"`
+	MonitoringService     bool                   `protobuf:"varint,12,opt,name=monitoring_service,json=monitoringService,proto3" json:"monitoring_service,omitempty" yaml:"monitoring_service,omitempty"`
+	ApiServer             bool                   `protobuf:"varint,13,opt,name=api_server,json=apiServer,proto3" json:"api_server,omitempty" yaml:"api_server,omitempty"`
+	FrontendServer        bool                   `protobuf:"varint,14,opt,name=frontend_server,json=frontendServer,proto3" json:"frontend_server,omitempty" yaml:"frontend_server,omitempty"`
+	GuiServer             bool                   `protobuf:"varint,15,opt,name=gui_server,json=guiServer,proto3" json:"gui_server,omitempty" yaml:"gui_server,omitempty"`
+	IndexServer           bool                   `protobuf:"varint,16,opt,name=index_server,json=indexServer,proto3" json:"index_server,omitempty" yaml:"index_server,omitempty"`
+	JournalService        bool                   `protobuf:"varint,17,opt,name=journal_service,json=journalService,proto3" json:"journal_service,omitempty" yaml:"journal_service,omitempty"`
+	ReplicationService    bool                   `protobuf:"varint,26,opt,name=replication_service,json=replicationService,proto3" json:"replication_service,omitempty" yaml:"replication_service,omitempty"`
+	NotificationService   bool                   `protobuf:"varint,18,opt,name=notification_service,json=notificationService,proto3" json:"notification_service,omitempty" yaml:"notification_service,omitempty"`
+	RepositoryManager     bool                   `protobuf:"varint,19,opt,name=repository_manager,json=repositoryManager,proto3" json:"repository_manager,omitempty" yaml:"repository_manager,omitempty"`
+	TestRepositoryManager bool                   `protobuf:"varint,25,opt,name=test_repository_manager,json=testRepositoryManager,proto3" json:"test_repository_manager,omitempty" yaml:"test_repository_manager,omitempty"`
+	InventoryService      bool                   `protobuf:"varint,20,opt,name=inventory_service,json=inventoryService,proto3" json:"inventory_service,omitempty" yaml:"inventory_service,omitempty"`
+	ClientInfo            bool                   `protobuf:"varint,21,opt,name=client_info,json=clientInfo,proto3" json:"client_info,omitempty" yaml:"client_info,omitempty"`
+	Label                 bool                   `protobuf:"varint,22,opt,name=label,proto3" json:"label,omitempty" yaml:"label,omitempty"`
+	Launcher              bool                   `protobuf:"varint,23,opt,name=launcher,proto3" json:"launcher,omitempty" yaml:"launcher,omitempty"`
+	NotebookService       bool                   `protobuf:"varint,24,opt,name=notebook_service,json=notebookService,proto3" json:"notebook_service,omitempty" yaml:"notebook_service,omitempty"`
+	SchedulerService      bool                   `protobuf:"varint,29,opt,name=scheduler_service,json=schedulerService,proto3" json:"scheduler_service,omitempty" yaml:"scheduler_service,omitempty"`
+	BackupService         bool                   `protobuf:"varint,30,opt,name=backup_service,json=backupService,proto3" json:"backup_service,omitempty" yaml:"backup_service,omitempty"`
 	// Client services
-	HttpCommunicator bool `protobuf:"varint,27,opt,name=http_communicator,json=httpCommunicator,proto3" json:"http_communicator,omitempty"`
-	ClientEventTable bool `protobuf:"varint,28,opt,name=client_event_table,json=clientEventTable,proto3" json:"client_event_table,omitempty"`
+	HttpCommunicator bool `protobuf:"varint,27,opt,name=http_communicator,json=httpCommunicator,proto3" json:"http_communicator,omitempty" yaml:"http_communicator,omitempty"`
+	ClientEventTable bool `protobuf:"varint,28,opt,name=client_event_table,json=clientEventTable,proto3" json:"client_event_table,omitempty" yaml:"client_event_table,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -3958,97 +3958,97 @@ func (x *ServerServicesConfig) GetClientEventTable() bool {
 
 type Defaults struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	HuntExpiryHours int64                  `protobuf:"varint,1,opt,name=hunt_expiry_hours,json=huntExpiryHours,proto3" json:"hunt_expiry_hours,omitempty"`
+	HuntExpiryHours int64                  `protobuf:"varint,1,opt,name=hunt_expiry_hours,json=huntExpiryHours,proto3" json:"hunt_expiry_hours,omitempty" yaml:"hunt_expiry_hours,omitempty"`
 	// How often to refresh the hunt index (default 600 sec)
-	HuntDispatcherRefreshSec  int64  `protobuf:"varint,43,opt,name=hunt_dispatcher_refresh_sec,json=huntDispatcherRefreshSec,proto3" json:"hunt_dispatcher_refresh_sec,omitempty"`
-	HuntDispatcherRefreshRate uint64 `protobuf:"varint,60,opt,name=hunt_dispatcher_refresh_rate,json=huntDispatcherRefreshRate,proto3" json:"hunt_dispatcher_refresh_rate,omitempty"`
+	HuntDispatcherRefreshSec  int64  `protobuf:"varint,43,opt,name=hunt_dispatcher_refresh_sec,json=huntDispatcherRefreshSec,proto3" json:"hunt_dispatcher_refresh_sec,omitempty" yaml:"hunt_dispatcher_refresh_sec,omitempty"`
+	HuntDispatcherRefreshRate uint64 `protobuf:"varint,60,opt,name=hunt_dispatcher_refresh_rate,json=huntDispatcherRefreshRate,proto3" json:"hunt_dispatcher_refresh_rate,omitempty" yaml:"hunt_dispatcher_refresh_rate,omitempty"`
 	// By default new cells only list 50 rows if there is no custom
 	// cell template. This is to make refreshing the cell
 	// quick. Usually users need to edit or the limit clause to see
 	// the full result table in the cell. This setting increases the
 	// default 50 rows.
-	NotebookDefaultNewCellRows int64 `protobuf:"varint,57,opt,name=notebook_default_new_cell_rows,json=notebookDefaultNewCellRows,proto3" json:"notebook_default_new_cell_rows,omitempty"`
-	NotebookCellTimeoutMin     int64 `protobuf:"varint,2,opt,name=notebook_cell_timeout_min,json=notebookCellTimeoutMin,proto3" json:"notebook_cell_timeout_min,omitempty"`
+	NotebookDefaultNewCellRows int64 `protobuf:"varint,57,opt,name=notebook_default_new_cell_rows,json=notebookDefaultNewCellRows,proto3" json:"notebook_default_new_cell_rows,omitempty" yaml:"notebook_default_new_cell_rows,omitempty"`
+	NotebookCellTimeoutMin     int64 `protobuf:"varint,2,opt,name=notebook_cell_timeout_min,json=notebookCellTimeoutMin,proto3" json:"notebook_cell_timeout_min,omitempty" yaml:"notebook_cell_timeout_min,omitempty"`
 	// When calculating a new cell we do not start calculation until
 	// the process memory is smaller than the low memory mark.
-	NotebookMemoryLowWaterMark uint64 `protobuf:"varint,36,opt,name=notebook_memory_low_water_mark,json=notebookMemoryLowWaterMark,proto3" json:"notebook_memory_low_water_mark,omitempty"`
+	NotebookMemoryLowWaterMark uint64 `protobuf:"varint,36,opt,name=notebook_memory_low_water_mark,json=notebookMemoryLowWaterMark,proto3" json:"notebook_memory_low_water_mark,omitempty" yaml:"notebook_memory_low_water_mark,omitempty"`
 	// When the process memory exceeds the high water marrk, we
 	// actively cancel in flight notebook cell calculations.
-	NotebookMemoryHighWaterMark uint64 `protobuf:"varint,37,opt,name=notebook_memory_high_water_mark,json=notebookMemoryHighWaterMark,proto3" json:"notebook_memory_high_water_mark,omitempty"`
+	NotebookMemoryHighWaterMark uint64 `protobuf:"varint,37,opt,name=notebook_memory_high_water_mark,json=notebookMemoryHighWaterMark,proto3" json:"notebook_memory_high_water_mark,omitempty" yaml:"notebook_memory_high_water_mark,omitempty"`
 	// Wait this long for a worker to become available before giving
 	// up.
-	NotebookWaitTimeForWorkerMs int64 `protobuf:"varint,46,opt,name=notebook_wait_time_for_worker_ms,json=notebookWaitTimeForWorkerMs,proto3" json:"notebook_wait_time_for_worker_ms,omitempty"`
+	NotebookWaitTimeForWorkerMs int64 `protobuf:"varint,46,opt,name=notebook_wait_time_for_worker_ms,json=notebookWaitTimeForWorkerMs,proto3" json:"notebook_wait_time_for_worker_ms,omitempty" yaml:"notebook_wait_time_for_worker_ms,omitempty"`
 	// Set to -1 to disable local workers. The default is 5 local
 	// workers. If you want the master to **not** perform any notebook
 	// computations reduce this to -1 and set
 	// Minion.notebook_number_of_local_workers to 5.
-	NotebookNumberOfLocalWorkers int64 `protobuf:"varint,38,opt,name=notebook_number_of_local_workers,json=notebookNumberOfLocalWorkers,proto3" json:"notebook_number_of_local_workers,omitempty"`
+	NotebookNumberOfLocalWorkers int64 `protobuf:"varint,38,opt,name=notebook_number_of_local_workers,json=notebookNumberOfLocalWorkers,proto3" json:"notebook_number_of_local_workers,omitempty" yaml:"notebook_number_of_local_workers,omitempty"`
 	// The default priority of notebook processors (Higher priority
 	// will receive jobs over lower priority).
-	NotebookWorkerPriority int64 `protobuf:"varint,39,opt,name=notebook_worker_priority,json=notebookWorkerPriority,proto3" json:"notebook_worker_priority,omitempty"`
+	NotebookWorkerPriority int64 `protobuf:"varint,39,opt,name=notebook_worker_priority,json=notebookWorkerPriority,proto3" json:"notebook_worker_priority,omitempty" yaml:"notebook_worker_priority,omitempty"`
 	// Total number of cell versions we keep for undo/redo support.
-	NotebookVersions int64 `protobuf:"varint,42,opt,name=notebook_versions,json=notebookVersions,proto3" json:"notebook_versions,omitempty"`
+	NotebookVersions int64 `protobuf:"varint,42,opt,name=notebook_versions,json=notebookVersions,proto3" json:"notebook_versions,omitempty" yaml:"notebook_versions,omitempty"`
 	// The default CSV delimiter
-	CsvDelimiter       string `protobuf:"bytes,3,opt,name=csv_delimiter,json=csvDelimiter,proto3" json:"csv_delimiter,omitempty"`
-	EventMaxWait       uint64 `protobuf:"varint,4,opt,name=event_max_wait,json=eventMaxWait,proto3" json:"event_max_wait,omitempty"`
-	EventMaxWaitJitter uint64 `protobuf:"varint,5,opt,name=event_max_wait_jitter,json=eventMaxWaitJitter,proto3" json:"event_max_wait_jitter,omitempty"`
+	CsvDelimiter       string `protobuf:"bytes,3,opt,name=csv_delimiter,json=csvDelimiter,proto3" json:"csv_delimiter,omitempty" yaml:"csv_delimiter,omitempty"`
+	EventMaxWait       uint64 `protobuf:"varint,4,opt,name=event_max_wait,json=eventMaxWait,proto3" json:"event_max_wait,omitempty" yaml:"event_max_wait,omitempty"`
+	EventMaxWaitJitter uint64 `protobuf:"varint,5,opt,name=event_max_wait_jitter,json=eventMaxWaitJitter,proto3" json:"event_max_wait_jitter,omitempty" yaml:"event_max_wait_jitter,omitempty"`
 	// If set we actively notify all clients as soon as event table is
 	// changed. This causes a lot of load on large deployments so it
 	// is off by default.
-	EventChangeNotifyAllClients bool `protobuf:"varint,6,opt,name=event_change_notify_all_clients,json=eventChangeNotifyAllClients,proto3" json:"event_change_notify_all_clients,omitempty"`
+	EventChangeNotifyAllClients bool `protobuf:"varint,6,opt,name=event_change_notify_all_clients,json=eventChangeNotifyAllClients,proto3" json:"event_change_notify_all_clients,omitempty" yaml:"event_change_notify_all_clients,omitempty"`
 	// Deprecated - not used
-	MaxVfsDirectorySize uint64 `protobuf:"varint,7,opt,name=max_vfs_directory_size,json=maxVfsDirectorySize,proto3" json:"max_vfs_directory_size,omitempty"`
+	MaxVfsDirectorySize uint64 `protobuf:"varint,7,opt,name=max_vfs_directory_size,json=maxVfsDirectorySize,proto3" json:"max_vfs_directory_size,omitempty" yaml:"max_vfs_directory_size,omitempty"`
 	// These artifact definitions will also be loaded at start and
 	// will be considered built in.
-	ArtifactDefinitionsDirectories []string `protobuf:"bytes,8,rep,name=artifact_definitions_directories,json=artifactDefinitionsDirectories,proto3" json:"artifact_definitions_directories,omitempty"`
+	ArtifactDefinitionsDirectories []string `protobuf:"bytes,8,rep,name=artifact_definitions_directories,json=artifactDefinitionsDirectories,proto3" json:"artifact_definitions_directories,omitempty" yaml:"artifact_definitions_directories,omitempty"`
 	// The number of rows to keep in memory during a group by
 	// operation. Once this is exceeded we switch to disk mode which
 	// is a lot slower. Default 30000
-	MaxInMemoryGroupBy uint64 `protobuf:"varint,9,opt,name=max_in_memory_group_by,json=maxInMemoryGroupBy,proto3" json:"max_in_memory_group_by,omitempty"`
+	MaxInMemoryGroupBy uint64 `protobuf:"varint,9,opt,name=max_in_memory_group_by,json=maxInMemoryGroupBy,proto3" json:"max_in_memory_group_by,omitempty" yaml:"max_in_memory_group_by,omitempty"`
 	// How long to cache ACL policies (default 60 sec)
-	AclLruTimeoutSec uint64 `protobuf:"varint,13,opt,name=acl_lru_timeout_sec,json=aclLruTimeoutSec,proto3" json:"acl_lru_timeout_sec,omitempty"`
+	AclLruTimeoutSec uint64 `protobuf:"varint,13,opt,name=acl_lru_timeout_sec,json=aclLruTimeoutSec,proto3" json:"acl_lru_timeout_sec,omitempty" yaml:"acl_lru_timeout_sec,omitempty"`
 	// Ignore messages from unauthenticated clients for this long -
 	// gives them a chance to enrol first (default 10 sec).
-	UnauthenticatedLruTimeoutSec int64 `protobuf:"varint,14,opt,name=unauthenticated_lru_timeout_sec,json=unauthenticatedLruTimeoutSec,proto3" json:"unauthenticated_lru_timeout_sec,omitempty"`
+	UnauthenticatedLruTimeoutSec int64 `protobuf:"varint,14,opt,name=unauthenticated_lru_timeout_sec,json=unauthenticatedLruTimeoutSec,proto3" json:"unauthenticated_lru_timeout_sec,omitempty" yaml:"unauthenticated_lru_timeout_sec,omitempty"`
 	// The Maximum size of a sparse file that can be expanded. Files
 	// larger than this will not be expanded. This protects the server
 	// from expanding potentially Tb worth of sparse files when
 	// requested.
-	MaxSparseExpandSize uint64 `protobuf:"varint,15,opt,name=max_sparse_expand_size,json=maxSparseExpandSize,proto3" json:"max_sparse_expand_size,omitempty"`
+	MaxSparseExpandSize uint64 `protobuf:"varint,15,opt,name=max_sparse_expand_size,json=maxSparseExpandSize,proto3" json:"max_sparse_expand_size,omitempty" yaml:"max_sparse_expand_size,omitempty"`
 	// Control GUI features
-	DisableServerEvents     bool   `protobuf:"varint,26,opt,name=disable_server_events,json=disableServerEvents,proto3" json:"disable_server_events,omitempty"`
-	AuthRedirectTemplate    string `protobuf:"bytes,27,opt,name=auth_redirect_template,json=authRedirectTemplate,proto3" json:"auth_redirect_template,omitempty"`
-	DisableQuarantineButton bool   `protobuf:"varint,28,opt,name=disable_quarantine_button,json=disableQuarantineButton,proto3" json:"disable_quarantine_button,omitempty"`
-	DefaultTheme            string `protobuf:"bytes,29,opt,name=default_theme,json=defaultTheme,proto3" json:"default_theme,omitempty"`
+	DisableServerEvents     bool   `protobuf:"varint,26,opt,name=disable_server_events,json=disableServerEvents,proto3" json:"disable_server_events,omitempty" yaml:"disable_server_events,omitempty"`
+	AuthRedirectTemplate    string `protobuf:"bytes,27,opt,name=auth_redirect_template,json=authRedirectTemplate,proto3" json:"auth_redirect_template,omitempty" yaml:"auth_redirect_template,omitempty"`
+	DisableQuarantineButton bool   `protobuf:"varint,28,opt,name=disable_quarantine_button,json=disableQuarantineButton,proto3" json:"disable_quarantine_button,omitempty" yaml:"disable_quarantine_button,omitempty"`
+	DefaultTheme            string `protobuf:"bytes,29,opt,name=default_theme,json=defaultTheme,proto3" json:"default_theme,omitempty" yaml:"default_theme,omitempty"`
 	// Defaults for client communication limits. Decrease those if
 	// your clients are behind a proxy that only accepts very small
 	// POST messages. If not set we use client defaults.
-	MaxRows          uint64 `protobuf:"varint,30,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
-	MaxLogs          uint64 `protobuf:"varint,56,opt,name=max_logs,json=maxLogs,proto3" json:"max_logs,omitempty"`
-	MaxRowBufferSize uint64 `protobuf:"varint,31,opt,name=max_row_buffer_size,json=maxRowBufferSize,proto3" json:"max_row_buffer_size,omitempty"`
-	MaxBatchWait     uint64 `protobuf:"varint,35,opt,name=max_batch_wait,json=maxBatchWait,proto3" json:"max_batch_wait,omitempty"`
+	MaxRows          uint64 `protobuf:"varint,30,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty" yaml:"max_rows,omitempty"`
+	MaxLogs          uint64 `protobuf:"varint,56,opt,name=max_logs,json=maxLogs,proto3" json:"max_logs,omitempty" yaml:"max_logs,omitempty"`
+	MaxRowBufferSize uint64 `protobuf:"varint,31,opt,name=max_row_buffer_size,json=maxRowBufferSize,proto3" json:"max_row_buffer_size,omitempty" yaml:"max_row_buffer_size,omitempty"`
+	MaxBatchWait     uint64 `protobuf:"varint,35,opt,name=max_batch_wait,json=maxBatchWait,proto3" json:"max_batch_wait,omitempty" yaml:"max_batch_wait,omitempty"`
 	// Controls how exports work (creating hunt or colletion exports
 	// to a zip file).
-	ExportConcurrency   int64 `protobuf:"varint,40,opt,name=export_concurrency,json=exportConcurrency,proto3" json:"export_concurrency,omitempty"`
-	ExportMaxTimeoutSec int64 `protobuf:"varint,41,opt,name=export_max_timeout_sec,json=exportMaxTimeoutSec,proto3" json:"export_max_timeout_sec,omitempty"`
+	ExportConcurrency   int64 `protobuf:"varint,40,opt,name=export_concurrency,json=exportConcurrency,proto3" json:"export_concurrency,omitempty" yaml:"export_concurrency,omitempty"`
+	ExportMaxTimeoutSec int64 `protobuf:"varint,41,opt,name=export_max_timeout_sec,json=exportMaxTimeoutSec,proto3" json:"export_max_timeout_sec,omitempty" yaml:"export_max_timeout_sec,omitempty"`
 	// Watch plugin frequency sleep time in seconds: How often
 	// watch_syslog() will check for changes (default 3).
-	WatchPluginFrequency int64 `protobuf:"varint,44,opt,name=watch_plugin_frequency,json=watchPluginFrequency,proto3" json:"watch_plugin_frequency,omitempty"`
+	WatchPluginFrequency int64 `protobuf:"varint,44,opt,name=watch_plugin_frequency,json=watchPluginFrequency,proto3" json:"watch_plugin_frequency,omitempty" yaml:"watch_plugin_frequency,omitempty"`
 	// Maximum length of the line that will be parsed (16kb)
-	WatchPluginBufferSize int64 `protobuf:"varint,45,opt,name=watch_plugin_buffer_size,json=watchPluginBufferSize,proto3" json:"watch_plugin_buffer_size,omitempty"`
+	WatchPluginBufferSize int64 `protobuf:"varint,45,opt,name=watch_plugin_buffer_size,json=watchPluginBufferSize,proto3" json:"watch_plugin_buffer_size,omitempty" yaml:"watch_plugin_buffer_size,omitempty"`
 	// Period in seconds when to produce a backup
-	BackupPeriodSeconds int64 `protobuf:"varint,47,opt,name=backup_period_seconds,json=backupPeriodSeconds,proto3" json:"backup_period_seconds,omitempty"`
+	BackupPeriodSeconds int64 `protobuf:"varint,47,opt,name=backup_period_seconds,json=backupPeriodSeconds,proto3" json:"backup_period_seconds,omitempty" yaml:"backup_period_seconds,omitempty"`
 	// How often to run the client info's house keeping thread in
 	// seconds (default 60 sec)
-	ClientInfoHousekeepingPeriod int64 `protobuf:"varint,48,opt,name=client_info_housekeeping_period,json=clientInfoHousekeepingPeriod,proto3" json:"client_info_housekeeping_period,omitempty"`
+	ClientInfoHousekeepingPeriod int64 `protobuf:"varint,48,opt,name=client_info_housekeeping_period,json=clientInfoHousekeepingPeriod,proto3" json:"client_info_housekeeping_period,omitempty" yaml:"client_info_housekeeping_period,omitempty"`
 	// Disable unicode usernames. By default Velociraptor allows
 	// usernames to consist of any Unicode character for i8n support,
 	// however this opens the possibility for Homoglyph
 	// attacks. Setting the following to true will restrict usernames
 	// to the set a-z and 0-9
-	DisableUnicodeUsernames bool `protobuf:"varint,49,opt,name=disable_unicode_usernames,json=disableUnicodeUsernames,proto3" json:"disable_unicode_usernames,omitempty"`
+	DisableUnicodeUsernames bool `protobuf:"varint,49,opt,name=disable_unicode_usernames,json=disableUnicodeUsernames,proto3" json:"disable_unicode_usernames,omitempty" yaml:"disable_unicode_usernames,omitempty"`
 	// How often to refresh the search index (default 5 min)
-	ReindexPeriodSeconds int64 `protobuf:"varint,50,opt,name=reindex_period_seconds,json=reindexPeriodSeconds,proto3" json:"reindex_period_seconds,omitempty"`
+	ReindexPeriodSeconds int64 `protobuf:"varint,50,opt,name=reindex_period_seconds,json=reindexPeriodSeconds,proto3" json:"reindex_period_seconds,omitempty" yaml:"reindex_period_seconds,omitempty"`
 	// For example, define here:
 	// indexed_client_metadata:
 	//   - department
@@ -4056,27 +4056,27 @@ type Defaults struct {
 	// Then a search for `department:accounting` will match all
 	// clients with the key department and value contains accounting
 	// in their client metadata.
-	IndexedClientMetadata []string `protobuf:"bytes,51,rep,name=indexed_client_metadata,json=indexedClientMetadata,proto3" json:"indexed_client_metadata,omitempty"`
+	IndexedClientMetadata []string `protobuf:"bytes,51,rep,name=indexed_client_metadata,json=indexedClientMetadata,proto3" json:"indexed_client_metadata,omitempty" yaml:"indexed_client_metadata,omitempty"`
 	// If this is set we do not actively check the status of inflight
 	// collections. This is a new feature and may need to be disabled
 	// in some large deployments.
-	DisableActiveInflightChecks bool  `protobuf:"varint,52,opt,name=disable_active_inflight_checks,json=disableActiveInflightChecks,proto3" json:"disable_active_inflight_checks,omitempty"`
-	InflightCheckTime           int64 `protobuf:"varint,59,opt,name=inflight_check_time,json=inflightCheckTime,proto3" json:"inflight_check_time,omitempty"`
+	DisableActiveInflightChecks bool  `protobuf:"varint,52,opt,name=disable_active_inflight_checks,json=disableActiveInflightChecks,proto3" json:"disable_active_inflight_checks,omitempty" yaml:"disable_active_inflight_checks,omitempty"`
+	InflightCheckTime           int64 `protobuf:"varint,59,opt,name=inflight_check_time,json=inflightCheckTime,proto3" json:"inflight_check_time,omitempty" yaml:"inflight_check_time,omitempty"`
 	// Normally internal event artifacts are not written to disk but
 	// passed internally. For debugging it is useful to have a written
 	// record though. Enabling this will also write them to disk.
-	WriteInternalEvents bool `protobuf:"varint,53,opt,name=write_internal_events,json=writeInternalEvents,proto3" json:"write_internal_events,omitempty"`
+	WriteInternalEvents bool `protobuf:"varint,53,opt,name=write_internal_events,json=writeInternalEvents,proto3" json:"write_internal_events,omitempty" yaml:"write_internal_events,omitempty"`
 	// DEPRECATED: The below are deprecated and will be moved by the
 	// upgrade code.
-	AllowedPlugins                        []string `protobuf:"bytes,10,rep,name=allowed_plugins,json=allowedPlugins,proto3" json:"allowed_plugins,omitempty"`
-	AllowedFunctions                      []string `protobuf:"bytes,11,rep,name=allowed_functions,json=allowedFunctions,proto3" json:"allowed_functions,omitempty"`
-	AllowedAccessors                      []string `protobuf:"bytes,12,rep,name=allowed_accessors,json=allowedAccessors,proto3" json:"allowed_accessors,omitempty"`
-	DeniedPlugins                         []string `protobuf:"bytes,54,rep,name=denied_plugins,json=deniedPlugins,proto3" json:"denied_plugins,omitempty"`
-	DeniedFunctions                       []string `protobuf:"bytes,55,rep,name=denied_functions,json=deniedFunctions,proto3" json:"denied_functions,omitempty"`
-	DeniedAccessors                       []string `protobuf:"bytes,58,rep,name=denied_accessors,json=deniedAccessors,proto3" json:"denied_accessors,omitempty"`
-	LockdownDeniedPermissions             []string `protobuf:"bytes,32,rep,name=lockdown_denied_permissions,json=lockdownDeniedPermissions,proto3" json:"lockdown_denied_permissions,omitempty"`
-	CertificateValidityDays               int64    `protobuf:"varint,33,opt,name=certificate_validity_days,json=certificateValidityDays,proto3" json:"certificate_validity_days,omitempty"`
-	DisableInventoryServiceExternalAccess bool     `protobuf:"varint,34,opt,name=disable_inventory_service_external_access,json=disableInventoryServiceExternalAccess,proto3" json:"disable_inventory_service_external_access,omitempty"`
+	AllowedPlugins                        []string `protobuf:"bytes,10,rep,name=allowed_plugins,json=allowedPlugins,proto3" json:"allowed_plugins,omitempty" yaml:"allowed_plugins,omitempty"`
+	AllowedFunctions                      []string `protobuf:"bytes,11,rep,name=allowed_functions,json=allowedFunctions,proto3" json:"allowed_functions,omitempty" yaml:"allowed_functions,omitempty"`
+	AllowedAccessors                      []string `protobuf:"bytes,12,rep,name=allowed_accessors,json=allowedAccessors,proto3" json:"allowed_accessors,omitempty" yaml:"allowed_accessors,omitempty"`
+	DeniedPlugins                         []string `protobuf:"bytes,54,rep,name=denied_plugins,json=deniedPlugins,proto3" json:"denied_plugins,omitempty" yaml:"denied_plugins,omitempty"`
+	DeniedFunctions                       []string `protobuf:"bytes,55,rep,name=denied_functions,json=deniedFunctions,proto3" json:"denied_functions,omitempty" yaml:"denied_functions,omitempty"`
+	DeniedAccessors                       []string `protobuf:"bytes,58,rep,name=denied_accessors,json=deniedAccessors,proto3" json:"denied_accessors,omitempty" yaml:"denied_accessors,omitempty"`
+	LockdownDeniedPermissions             []string `protobuf:"bytes,32,rep,name=lockdown_denied_permissions,json=lockdownDeniedPermissions,proto3" json:"lockdown_denied_permissions,omitempty" yaml:"lockdown_denied_permissions,omitempty"`
+	CertificateValidityDays               int64    `protobuf:"varint,33,opt,name=certificate_validity_days,json=certificateValidityDays,proto3" json:"certificate_validity_days,omitempty" yaml:"certificate_validity_days,omitempty"`
+	DisableInventoryServiceExternalAccess bool     `protobuf:"varint,34,opt,name=disable_inventory_service_external_access,json=disableInventoryServiceExternalAccess,proto3" json:"disable_inventory_service_external_access,omitempty" yaml:"disable_inventory_service_external_access,omitempty"`
 	unknownFields                         protoimpl.UnknownFields
 	sizeCache                             protoimpl.SizeCache
 }
@@ -4466,7 +4466,7 @@ type CryptoConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Include these root CA's to verify certificates (in addition to
 	// built in CA's). Certs should be concatenated in PEM format.
-	RootCerts string `protobuf:"bytes,1,opt,name=root_certs,json=rootCerts,proto3" json:"root_certs,omitempty"`
+	RootCerts string `protobuf:"bytes,1,opt,name=root_certs,json=rootCerts,proto3" json:"root_certs,omitempty" yaml:"root_certs,omitempty"`
 	// Clients may connect to servers which use a self-signed certificate.
 	// This list allows to specify a set of certificate thumbprints (SHA256)
 	// which are used to validate TLS server certificates.
@@ -4482,7 +4482,7 @@ type CryptoConfig struct {
 	//	E6:E2:8B:35:CE:C5:BA:C4:53:C5:AF:BF:2B:76:34:62:40:5C:D0:60:80:E1:30:1A:A7:A5:A9:DA:0C:8B:11:E1
 	//	E6E28B35CEC5BAC453C5AFBF2B763462405CD06080E1301AA7A5A9DA0C8B11E1
 	//	e6e28b35cec5bac453c5afbf2b763462405cd06080e1301aa7a5a9da0c8b11e1
-	CertificateThumbprints []string `protobuf:"bytes,2,rep,name=certificate_thumbprints,json=certificateThumbprints,proto3" json:"certificate_thumbprints,omitempty"`
+	CertificateThumbprints []string `protobuf:"bytes,2,rep,name=certificate_thumbprints,json=certificateThumbprints,proto3" json:"certificate_thumbprints,omitempty" yaml:"certificate_thumbprints,omitempty"`
 	// Velociraptor supports several ways of verifying TLS certificates. The
 	// certificate_verification_mode specifies which of the three modes is applied.
 	// Currently, three modes are available:
@@ -4495,17 +4495,17 @@ type CryptoConfig struct {
 	//     matching thumbprint in certificate_thumbprints. All
 	//     other certificates will be rejected. This mode is
 	//     also known as certificate pinning.
-	CertificateVerificationMode string `protobuf:"bytes,3,opt,name=certificate_verification_mode,json=certificateVerificationMode,proto3" json:"certificate_verification_mode,omitempty"`
+	CertificateVerificationMode string `protobuf:"bytes,3,opt,name=certificate_verification_mode,json=certificateVerificationMode,proto3" json:"certificate_verification_mode,omitempty" yaml:"certificate_verification_mode,omitempty"`
 	// If this is set we do not enforce minimum configuration for TLS
 	// servers. This is required when connecting to Velociraptor with
 	// some legacy clients (like Powershell) who do not support TLS13
-	AllowWeakTlsServer bool `protobuf:"varint,4,opt,name=allow_weak_tls_server,json=allowWeakTlsServer,proto3" json:"allow_weak_tls_server,omitempty"`
+	AllowWeakTlsServer bool `protobuf:"varint,4,opt,name=allow_weak_tls_server,json=allowWeakTlsServer,proto3" json:"allow_weak_tls_server,omitempty" yaml:"allow_weak_tls_server,omitempty"`
 	// If you want to use mTLS to mutually authenticate clients to the
 	// server, place a list of pem encoded client certificates
 	// here. They will be presented to the server if the server
 	// requires mTLS authentication.
-	ClientCertificate           string `protobuf:"bytes,5,opt,name=client_certificate,json=clientCertificate,proto3" json:"client_certificate,omitempty"`
-	ClientCertificatePrivateKey string `protobuf:"bytes,6,opt,name=client_certificate_private_key,json=clientCertificatePrivateKey,proto3" json:"client_certificate_private_key,omitempty"`
+	ClientCertificate           string `protobuf:"bytes,5,opt,name=client_certificate,json=clientCertificate,proto3" json:"client_certificate,omitempty" yaml:"client_certificate,omitempty"`
+	ClientCertificatePrivateKey string `protobuf:"bytes,6,opt,name=client_certificate_private_key,json=clientCertificatePrivateKey,proto3" json:"client_certificate_private_key,omitempty" yaml:"client_certificate_private_key,omitempty"`
 	unknownFields               protoimpl.UnknownFields
 	sizeCache                   protoimpl.SizeCache
 }
@@ -4584,9 +4584,9 @@ func (x *CryptoConfig) GetClientCertificatePrivateKey() string {
 
 type MountPoint struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Accessor      string                 `protobuf:"bytes,1,opt,name=accessor,proto3" json:"accessor,omitempty"`
-	Prefix        string                 `protobuf:"bytes,2,opt,name=prefix,proto3" json:"prefix,omitempty"`
-	PathType      string                 `protobuf:"bytes,3,opt,name=path_type,json=pathType,proto3" json:"path_type,omitempty"`
+	Accessor      string                 `protobuf:"bytes,1,opt,name=accessor,proto3" json:"accessor,omitempty" yaml:"accessor,omitempty"`
+	Prefix        string                 `protobuf:"bytes,2,opt,name=prefix,proto3" json:"prefix,omitempty" yaml:"prefix,omitempty"`
+	PathType      string                 `protobuf:"bytes,3,opt,name=path_type,json=pathType,proto3" json:"path_type,omitempty" yaml:"path_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4645,27 +4645,27 @@ func (x *MountPoint) GetPathType() string {
 type RemappingConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Operation: Currently mount, identify
-	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	// Human readable description of what this mapping rule should
 	// produce.
-	Description string `protobuf:"bytes,10,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,10,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
 	// A Sequence of VQL LET statements to preconfigure the scope for
 	// the accessor in the From clause.
-	Scope string `protobuf:"bytes,11,opt,name=scope,proto3" json:"scope,omitempty"`
+	Scope string `protobuf:"bytes,11,opt,name=scope,proto3" json:"scope,omitempty" yaml:"scope,omitempty"`
 	// For mount options
-	From *MountPoint `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty"`
-	On   *MountPoint `protobuf:"bytes,3,opt,name=on,proto3" json:"on,omitempty"`
+	From *MountPoint `protobuf:"bytes,2,opt,name=from,proto3" json:"from,omitempty" yaml:"from,omitempty"`
+	On   *MountPoint `protobuf:"bytes,3,opt,name=on,proto3" json:"on,omitempty" yaml:"on,omitempty"`
 	// For type=permissions - permissions come from acls/acls.go
-	Permissions []string `protobuf:"bytes,4,rep,name=permissions,proto3" json:"permissions,omitempty"`
+	Permissions []string `protobuf:"bytes,4,rep,name=permissions,proto3" json:"permissions,omitempty" yaml:"permissions,omitempty"`
 	// For type=impersonation - can be windows, linux, darwin
-	Os       string `protobuf:"bytes,5,opt,name=os,proto3" json:"os,omitempty"`
-	Hostname string `protobuf:"bytes,6,opt,name=hostname,proto3" json:"hostname,omitempty"`
+	Os       string `protobuf:"bytes,5,opt,name=os,proto3" json:"os,omitempty" yaml:"os,omitempty"`
+	Hostname string `protobuf:"bytes,6,opt,name=hostname,proto3" json:"hostname,omitempty" yaml:"hostname,omitempty"`
 	// Variables to be added to environment strings.
-	Env []*proto.VQLEnv `protobuf:"bytes,7,rep,name=env,proto3" json:"env,omitempty"`
+	Env []*proto.VQLEnv `protobuf:"bytes,7,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
 	// Disable these plugins and functions (usually for OS specific
 	// things that make no sense on an image).
-	DisabledFunctions []string `protobuf:"bytes,8,rep,name=disabled_functions,json=disabledFunctions,proto3" json:"disabled_functions,omitempty"`
-	DisabledPlugins   []string `protobuf:"bytes,9,rep,name=disabled_plugins,json=disabledPlugins,proto3" json:"disabled_plugins,omitempty"`
+	DisabledFunctions []string `protobuf:"bytes,8,rep,name=disabled_functions,json=disabledFunctions,proto3" json:"disabled_functions,omitempty" yaml:"disabled_functions,omitempty"`
+	DisabledPlugins   []string `protobuf:"bytes,9,rep,name=disabled_plugins,json=disabledPlugins,proto3" json:"disabled_plugins,omitempty" yaml:"disabled_plugins,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -4785,9 +4785,9 @@ type Security struct {
 	// directories. If you want to disable access to the server's
 	// filesystem you can set this to a non existent directory,
 	// e.g. /nonexistent/ .
-	AllowedFileAccessorPrefix []string `protobuf:"bytes,1,rep,name=allowed_file_accessor_prefix,json=allowedFileAccessorPrefix,proto3" json:"allowed_file_accessor_prefix,omitempty"`
+	AllowedFileAccessorPrefix []string `protobuf:"bytes,1,rep,name=allowed_file_accessor_prefix,json=allowedFileAccessorPrefix,proto3" json:"allowed_file_accessor_prefix,omitempty" yaml:"allowed_file_accessor_prefix,omitempty"`
 	// Deny takes precedent over allow.
-	DeniedFileAccessorPrefix []string `protobuf:"bytes,59,rep,name=denied_file_accessor_prefix,json=deniedFileAccessorPrefix,proto3" json:"denied_file_accessor_prefix,omitempty"`
+	DeniedFileAccessorPrefix []string `protobuf:"bytes,59,rep,name=denied_file_accessor_prefix,json=deniedFileAccessorPrefix,proto3" json:"denied_file_accessor_prefix,omitempty" yaml:"denied_file_accessor_prefix,omitempty"`
 	// A list of prefixes allowed for the fs accessor. All other
 	// prefixes will be rejected. The default is:
 	// - artifact_definitions
@@ -4800,20 +4800,20 @@ type Security struct {
 	// - server_artifacts_logs
 	//
 	// to allow all access set this to "/"
-	AllowedFsAccessorPrefix []string `protobuf:"bytes,2,rep,name=allowed_fs_accessor_prefix,json=allowedFsAccessorPrefix,proto3" json:"allowed_fs_accessor_prefix,omitempty"`
-	DeniedFsAccessorPrefix  []string `protobuf:"bytes,60,rep,name=denied_fs_accessor_prefix,json=deniedFsAccessorPrefix,proto3" json:"denied_fs_accessor_prefix,omitempty"`
+	AllowedFsAccessorPrefix []string `protobuf:"bytes,2,rep,name=allowed_fs_accessor_prefix,json=allowedFsAccessorPrefix,proto3" json:"allowed_fs_accessor_prefix,omitempty" yaml:"allowed_fs_accessor_prefix,omitempty"`
+	DeniedFsAccessorPrefix  []string `protobuf:"bytes,60,rep,name=denied_fs_accessor_prefix,json=deniedFsAccessorPrefix,proto3" json:"denied_fs_accessor_prefix,omitempty" yaml:"denied_fs_accessor_prefix,omitempty"`
 	// If these are set we enforce VQL to only have the specified
 	// allowed VQL plugins and functions. This is a way to harden the
 	// server by removing potentially sensitive functionality to allow
 	// only approved VQL plugins to run.
-	AllowedPlugins   []string `protobuf:"bytes,10,rep,name=allowed_plugins,json=allowedPlugins,proto3" json:"allowed_plugins,omitempty"`
-	AllowedFunctions []string `protobuf:"bytes,11,rep,name=allowed_functions,json=allowedFunctions,proto3" json:"allowed_functions,omitempty"`
-	AllowedAccessors []string `protobuf:"bytes,12,rep,name=allowed_accessors,json=allowedAccessors,proto3" json:"allowed_accessors,omitempty"`
+	AllowedPlugins   []string `protobuf:"bytes,10,rep,name=allowed_plugins,json=allowedPlugins,proto3" json:"allowed_plugins,omitempty" yaml:"allowed_plugins,omitempty"`
+	AllowedFunctions []string `protobuf:"bytes,11,rep,name=allowed_functions,json=allowedFunctions,proto3" json:"allowed_functions,omitempty" yaml:"allowed_functions,omitempty"`
+	AllowedAccessors []string `protobuf:"bytes,12,rep,name=allowed_accessors,json=allowedAccessors,proto3" json:"allowed_accessors,omitempty" yaml:"allowed_accessors,omitempty"`
 	// Alternatively, it might be easier to deny specific plugins and
 	// functions.
-	DeniedPlugins   []string `protobuf:"bytes,54,rep,name=denied_plugins,json=deniedPlugins,proto3" json:"denied_plugins,omitempty"`
-	DeniedFunctions []string `protobuf:"bytes,55,rep,name=denied_functions,json=deniedFunctions,proto3" json:"denied_functions,omitempty"`
-	DeniedAccessors []string `protobuf:"bytes,58,rep,name=denied_accessors,json=deniedAccessors,proto3" json:"denied_accessors,omitempty"`
+	DeniedPlugins   []string `protobuf:"bytes,54,rep,name=denied_plugins,json=deniedPlugins,proto3" json:"denied_plugins,omitempty" yaml:"denied_plugins,omitempty"`
+	DeniedFunctions []string `protobuf:"bytes,55,rep,name=denied_functions,json=deniedFunctions,proto3" json:"denied_functions,omitempty" yaml:"denied_functions,omitempty"`
+	DeniedAccessors []string `protobuf:"bytes,58,rep,name=denied_accessors,json=deniedAccessors,proto3" json:"denied_accessors,omitempty" yaml:"denied_accessors,omitempty"`
 	// When the server is in lockdown mode the following permissions
 	// will be denied (Even for administrators).
 	// The default list is:
@@ -4825,34 +4825,34 @@ type Security struct {
 	// - FILESYSTEM_READ
 	// - MACHINE_STATE
 	// - NETWORK
-	LockdownDeniedPermissions []string `protobuf:"bytes,32,rep,name=lockdown_denied_permissions,json=lockdownDeniedPermissions,proto3" json:"lockdown_denied_permissions,omitempty"`
+	LockdownDeniedPermissions []string `protobuf:"bytes,32,rep,name=lockdown_denied_permissions,json=lockdownDeniedPermissions,proto3" json:"lockdown_denied_permissions,omitempty" yaml:"lockdown_denied_permissions,omitempty"`
 	// Default expiry of certificate issuances (default 365 days)
-	CertificateValidityDays int64 `protobuf:"varint,33,opt,name=certificate_validity_days,json=certificateValidityDays,proto3" json:"certificate_validity_days,omitempty"`
+	CertificateValidityDays int64 `protobuf:"varint,33,opt,name=certificate_validity_days,json=certificateValidityDays,proto3" json:"certificate_validity_days,omitempty" yaml:"certificate_validity_days,omitempty"`
 	// Normally the inventory service attempts to download tools in
 	// its own but if this is set, we prevent any external access.
-	DisableInventoryServiceExternalAccess bool `protobuf:"varint,34,opt,name=disable_inventory_service_external_access,json=disableInventoryServiceExternalAccess,proto3" json:"disable_inventory_service_external_access,omitempty"`
+	DisableInventoryServiceExternalAccess bool `protobuf:"varint,34,opt,name=disable_inventory_service_external_access,json=disableInventoryServiceExternalAccess,proto3" json:"disable_inventory_service_external_access,omitempty" yaml:"disable_inventory_service_external_access,omitempty"`
 	//  1. If it starts with env:// the secret will be taken from an
 	//     Environment variable.
 	//  2. If empty the secret is taken from obfuscation_nonce (which
 	//     by default is the hash of the private key).
 	//
 	// In future further methods may be implemented (e.g. EKMS).
-	SecretsDek string `protobuf:"bytes,3,opt,name=secrets_dek,json=secretsDek,proto3" json:"secrets_dek,omitempty"`
+	SecretsDek string `protobuf:"bytes,3,opt,name=secrets_dek,json=secretsDek,proto3" json:"secrets_dek,omitempty" yaml:"secrets_dek,omitempty"`
 	// This controls VQL plugins that may accept secrets as well full
 	// parameters. If this flag is set, those plugins will refuse to
 	// accept direct parameters, instead only accepting a secret
 	// name. This allows the admin to control exactly how these
 	// plugins work without disabling them completely.
-	VqlMustUseSecrets bool `protobuf:"varint,5,opt,name=vql_must_use_secrets,json=vqlMustUseSecrets,proto3" json:"vql_must_use_secrets,omitempty"`
+	VqlMustUseSecrets bool `protobuf:"varint,5,opt,name=vql_must_use_secrets,json=vqlMustUseSecrets,proto3" json:"vql_must_use_secrets,omitempty" yaml:"vql_must_use_secrets,omitempty"`
 	// Prevent VQL from having access to these environment
 	// variables. Environment Vars sometimes may contain secrets and
 	// confidential information.
-	ShadowedEnvVars []string `protobuf:"bytes,4,rep,name=shadowed_env_vars,json=shadowedEnvVars,proto3" json:"shadowed_env_vars,omitempty"`
+	ShadowedEnvVars []string `protobuf:"bytes,4,rep,name=shadowed_env_vars,json=shadowedEnvVars,proto3" json:"shadowed_env_vars,omitempty" yaml:"shadowed_env_vars,omitempty"`
 	// Clients can include labels baked into their configuration file
 	// (See `Client.labels` ).  The below regex controls which labels
 	// are accepted. By default a regex is not specified, meaning that
 	// clients may not label themselves.
-	ClientSelfLabelsRegex string `protobuf:"bytes,62,opt,name=client_self_labels_regex,json=clientSelfLabelsRegex,proto3" json:"client_self_labels_regex,omitempty"`
+	ClientSelfLabelsRegex string `protobuf:"bytes,62,opt,name=client_self_labels_regex,json=clientSelfLabelsRegex,proto3" json:"client_self_labels_regex,omitempty" yaml:"client_self_labels_regex,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -5008,67 +5008,67 @@ func (x *Security) GetClientSelfLabelsRegex() string {
 
 type Config struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
-	Version  *Version               `protobuf:"bytes,8,opt,name=version,proto3" json:"version,omitempty"`
-	Client   *ClientConfig          `protobuf:"bytes,1,opt,name=Client,proto3" json:"Client,omitempty"`
-	API      *APIConfig             `protobuf:"bytes,2,opt,name=API,proto3" json:"API,omitempty"`
-	GUI      *GUIConfig             `protobuf:"bytes,3,opt,name=GUI,proto3" json:"GUI,omitempty"`
-	CA       *CAConfig              `protobuf:"bytes,4,opt,name=CA,proto3" json:"CA,omitempty"`
-	Frontend *FrontendConfig        `protobuf:"bytes,5,opt,name=Frontend,proto3" json:"Frontend,omitempty"`
+	Version  *Version               `protobuf:"bytes,8,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
+	Client   *ClientConfig          `protobuf:"bytes,1,opt,name=Client,proto3" json:"Client,omitempty" yaml:"Client,omitempty"`
+	API      *APIConfig             `protobuf:"bytes,2,opt,name=API,proto3" json:"API,omitempty" yaml:"API,omitempty"`
+	GUI      *GUIConfig             `protobuf:"bytes,3,opt,name=GUI,proto3" json:"GUI,omitempty" yaml:"GUI,omitempty"`
+	CA       *CAConfig              `protobuf:"bytes,4,opt,name=CA,proto3" json:"CA,omitempty" yaml:"CA,omitempty"`
+	Frontend *FrontendConfig        `protobuf:"bytes,5,opt,name=Frontend,proto3" json:"Frontend,omitempty" yaml:"Frontend,omitempty"`
 	// A list of possible frontends to use. When deployed in
 	// multi-frontend configuration we select on those and populate
 	// the Frontend field above.
-	ExtraFrontends []*FrontendConfig `protobuf:"bytes,31,rep,name=ExtraFrontends,proto3" json:"ExtraFrontends,omitempty"`
-	Datastore      *DatastoreConfig  `protobuf:"bytes,6,opt,name=Datastore,proto3" json:"Datastore,omitempty"`
+	ExtraFrontends []*FrontendConfig `protobuf:"bytes,31,rep,name=ExtraFrontends,proto3" json:"ExtraFrontends,omitempty" yaml:"ExtraFrontends,omitempty"`
+	Datastore      *DatastoreConfig  `protobuf:"bytes,6,opt,name=Datastore,proto3" json:"Datastore,omitempty" yaml:"Datastore,omitempty"`
 	// Deprecated - Should not appear in new configs and will be
 	// ignored. It is only here for backwards compatibility.
 	//
 	// Deprecated: Marked as deprecated in config.proto.
-	Writeback *Writeback `protobuf:"bytes,9,opt,name=Writeback,proto3" json:"Writeback,omitempty"`
+	Writeback *Writeback `protobuf:"bytes,9,opt,name=Writeback,proto3" json:"Writeback,omitempty" yaml:"Writeback,omitempty"`
 	// Deprecated - Mail plugin setting are now provided by args.
-	Mail *MailConfig `protobuf:"bytes,11,opt,name=Mail,proto3" json:"Mail,omitempty"`
+	Mail *MailConfig `protobuf:"bytes,11,opt,name=Mail,proto3" json:"Mail,omitempty" yaml:"Mail,omitempty"`
 	// Server specific logging configuration
-	Logging *LoggingConfig `protobuf:"bytes,23,opt,name=Logging,proto3" json:"Logging,omitempty"`
+	Logging *LoggingConfig `protobuf:"bytes,23,opt,name=Logging,proto3" json:"Logging,omitempty" yaml:"Logging,omitempty"`
 	// Minion specific overrides
-	Minion            *MinionConfig     `protobuf:"bytes,40,opt,name=Minion,proto3" json:"Minion,omitempty"`
-	Verbose           bool              `protobuf:"varint,20,opt,name=verbose,proto3" json:"verbose,omitempty"`
-	AutocertCertCache string            `protobuf:"bytes,22,opt,name=autocert_cert_cache,json=autocertCertCache,proto3" json:"autocert_cert_cache,omitempty"`
-	Monitoring        *MonitoringConfig `protobuf:"bytes,25,opt,name=Monitoring,proto3" json:"Monitoring,omitempty"`
-	ApiConfig         *ApiClientConfig  `protobuf:"bytes,26,opt,name=api_config,json=apiConfig,proto3" json:"api_config,omitempty"`
-	Autoexec          *AutoExecConfig   `protobuf:"bytes,28,opt,name=autoexec,proto3" json:"autoexec,omitempty"`
-	ServerType        string            `protobuf:"bytes,30,opt,name=server_type,json=serverType,proto3" json:"server_type,omitempty"`
+	Minion            *MinionConfig     `protobuf:"bytes,40,opt,name=Minion,proto3" json:"Minion,omitempty" yaml:"Minion,omitempty"`
+	Verbose           bool              `protobuf:"varint,20,opt,name=verbose,proto3" json:"verbose,omitempty" yaml:"verbose,omitempty"`
+	AutocertCertCache string            `protobuf:"bytes,22,opt,name=autocert_cert_cache,json=autocertCertCache,proto3" json:"autocert_cert_cache,omitempty" yaml:"autocert_cert_cache,omitempty"`
+	Monitoring        *MonitoringConfig `protobuf:"bytes,25,opt,name=Monitoring,proto3" json:"Monitoring,omitempty" yaml:"Monitoring,omitempty"`
+	ApiConfig         *ApiClientConfig  `protobuf:"bytes,26,opt,name=api_config,json=apiConfig,proto3" json:"api_config,omitempty" yaml:"api_config,omitempty"`
+	Autoexec          *AutoExecConfig   `protobuf:"bytes,28,opt,name=autoexec,proto3" json:"autoexec,omitempty" yaml:"autoexec,omitempty"`
+	ServerType        string            `protobuf:"bytes,30,opt,name=server_type,json=serverType,proto3" json:"server_type,omitempty" yaml:"server_type,omitempty"`
 	// If set we obfuscate VQL to the clients using this key. If not
 	// set this is set to the hash of the Frontend.PrivateKey.
-	ObfuscationNonce string `protobuf:"bytes,32,opt,name=obfuscation_nonce,json=obfuscationNonce,proto3" json:"obfuscation_nonce,omitempty"`
+	ObfuscationNonce string `protobuf:"bytes,32,opt,name=obfuscation_nonce,json=obfuscationNonce,proto3" json:"obfuscation_nonce,omitempty" yaml:"obfuscation_nonce,omitempty"`
 	// Various defaults can be changed here (usually not needed).
-	Defaults *Defaults `protobuf:"bytes,33,opt,name=defaults,proto3" json:"defaults,omitempty"`
+	Defaults *Defaults `protobuf:"bytes,33,opt,name=defaults,proto3" json:"defaults,omitempty" yaml:"defaults,omitempty"`
 	// The Operating System of the analysis target. Only useful in conjunction
 	// with the `device' parameter in case the host's operating system differs
 	// from the operating system used on the device. DEPRECATED!
-	AnalysisTarget string `protobuf:"bytes,34,opt,name=analysis_target,json=analysisTarget,proto3" json:"analysis_target,omitempty"`
+	AnalysisTarget string `protobuf:"bytes,34,opt,name=analysis_target,json=analysisTarget,proto3" json:"analysis_target,omitempty" yaml:"analysis_target,omitempty"`
 	// host's own file system.
-	Remappings []*RemappingConfig `protobuf:"bytes,35,rep,name=remappings,proto3" json:"remappings,omitempty"`
+	Remappings []*RemappingConfig `protobuf:"bytes,35,rep,name=remappings,proto3" json:"remappings,omitempty" yaml:"remappings,omitempty"`
 	// These should **not** be set by the user - they are tags
 	// internally that mark each org's config object. They should
 	// definitely not be set on the client's config because the client
 	// does not know or use its own org id.
-	OrgId         string `protobuf:"bytes,36,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
-	OrgName       string `protobuf:"bytes,37,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty"`
-	OrgRedirected bool   `protobuf:"varint,43,opt,name=org_redirected,json=orgRedirected,proto3" json:"org_redirected,omitempty"`
-	DebugMode     bool   `protobuf:"varint,41,opt,name=debug_mode,json=debugMode,proto3" json:"debug_mode,omitempty"`
+	OrgId         string `protobuf:"bytes,36,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty" yaml:"org_id,omitempty"`
+	OrgName       string `protobuf:"bytes,37,opt,name=org_name,json=orgName,proto3" json:"org_name,omitempty" yaml:"org_name,omitempty"`
+	OrgRedirected bool   `protobuf:"varint,43,opt,name=org_redirected,json=orgRedirected,proto3" json:"org_redirected,omitempty" yaml:"org_redirected,omitempty"`
+	DebugMode     bool   `protobuf:"varint,41,opt,name=debug_mode,json=debugMode,proto3" json:"debug_mode,omitempty" yaml:"debug_mode,omitempty"`
 	// The services that will run at initialization. Note this is not
 	// set in the config file by the user but is propagated from the
 	// startup code.
-	Services *ServerServicesConfig `protobuf:"bytes,38,opt,name=services,proto3" json:"services,omitempty"`
+	Services *ServerServicesConfig `protobuf:"bytes,38,opt,name=services,proto3" json:"services,omitempty" yaml:"services,omitempty"`
 	// Specifies various security related configuration options for
 	// the server.
-	Security *Security `protobuf:"bytes,42,opt,name=security,proto3" json:"security,omitempty"`
+	Security *Security `protobuf:"bytes,42,opt,name=security,proto3" json:"security,omitempty" yaml:"security,omitempty"`
 	// The Velociraptor server may be placed into "lockdown"
 	// mode. While in lockdown mode certain permissions are denied -
 	// even for administrators. This additional protection mode helps
 	// to mitigate the case when a Velociraptor administrator's
 	// account is compromised. The server can be taken out of lockdown
 	// mode by setting lockdown to false and restarting the server.
-	Lockdown      bool `protobuf:"varint,39,opt,name=lockdown,proto3" json:"lockdown,omitempty"`
+	Lockdown      bool `protobuf:"varint,39,opt,name=lockdown,proto3" json:"lockdown,omitempty" yaml:"lockdown,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

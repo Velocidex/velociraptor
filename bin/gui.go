@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Velocidex/yaml/v2"
 	errors "github.com/go-errors/errors"
 	proto "google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -20,6 +19,7 @@ import (
 	vsurvey "www.velocidex.com/golang/velociraptor/tools/survey"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 var (

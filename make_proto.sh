@@ -87,3 +87,9 @@ for i in  $CWD/api/proto/ ; do
     # the files.
     sed -i -e '1h;2,$H;$!d;g' -re 's|// versions.+// source|// source|' $i/*.pb.go
 done
+
+# These messages are read from YAML using their protobuf-generated JSON names.
+sed -i -E -f scripts/proto_yaml_tags.sed \
+    config/proto/config.pb.go artifacts/proto/artifact.pb.go \
+    actions/proto/vql.pb.go api/proto/completions.pb.go \
+    api/proto/notebooks.pb.go api/proto/flows.pb.go flows/proto/artifact_collector.pb.go

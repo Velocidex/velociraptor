@@ -21,8 +21,8 @@ const (
 
 type ArtifactEnv struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty" yaml:"key,omitempty"`
+	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty" yaml:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -73,9 +73,9 @@ func (x *ArtifactEnv) GetValue() string {
 
 type ColumnType struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -133,19 +133,19 @@ func (x *ColumnType) GetDescription() string {
 
 type ArtifactParameter struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
-	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Default     string                 `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitempty"`
-	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	Type        string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty"`
+	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Default     string                 `protobuf:"bytes,2,opt,name=default,proto3" json:"default,omitempty" yaml:"default,omitempty"`
+	Description string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
+	Type        string                 `protobuf:"bytes,4,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	// For type = choice
-	Choices      []string `protobuf:"bytes,6,rep,name=choices,proto3" json:"choices,omitempty"`
-	FriendlyName string   `protobuf:"bytes,5,opt,name=friendly_name,json=friendlyName,proto3" json:"friendly_name,omitempty"`
+	Choices      []string `protobuf:"bytes,6,rep,name=choices,proto3" json:"choices,omitempty" yaml:"choices,omitempty"`
+	FriendlyName string   `protobuf:"bytes,5,opt,name=friendly_name,json=friendlyName,proto3" json:"friendly_name,omitempty" yaml:"friendly_name,omitempty"`
 	// For type = string
-	ValidatingRegex string `protobuf:"bytes,7,opt,name=validating_regex,json=validatingRegex,proto3" json:"validating_regex,omitempty"`
+	ValidatingRegex string `protobuf:"bytes,7,opt,name=validating_regex,json=validatingRegex,proto3" json:"validating_regex,omitempty" yaml:"validating_regex,omitempty"`
 	// For type = artifactset
-	ArtifactType string `protobuf:"bytes,8,opt,name=artifact_type,json=artifactType,proto3" json:"artifact_type,omitempty"`
+	ArtifactType string `protobuf:"bytes,8,opt,name=artifact_type,json=artifactType,proto3" json:"artifact_type,omitempty" yaml:"artifact_type,omitempty"`
 	// For type = artifactset;
-	Sources       bool `protobuf:"varint,9,opt,name=sources,proto3" json:"sources,omitempty"`
+	Sources       bool `protobuf:"varint,9,opt,name=sources,proto3" json:"sources,omitempty" yaml:"sources,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -245,11 +245,11 @@ func (x *ArtifactParameter) GetSources() bool {
 
 type NotebookSourceCell struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Template      string                 `protobuf:"bytes,1,opt,name=template,proto3" json:"template,omitempty"`
-	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
-	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty"`
-	Output        string                 `protobuf:"bytes,5,opt,name=output,proto3" json:"output,omitempty"`
-	Env           []*ArtifactEnv         `protobuf:"bytes,3,rep,name=env,proto3" json:"env,omitempty"`
+	Template      string                 `protobuf:"bytes,1,opt,name=template,proto3" json:"template,omitempty" yaml:"template,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
+	Name          string                 `protobuf:"bytes,4,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Output        string                 `protobuf:"bytes,5,opt,name=output,proto3" json:"output,omitempty" yaml:"output,omitempty"`
+	Env           []*ArtifactEnv         `protobuf:"bytes,3,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -321,14 +321,14 @@ func (x *NotebookSourceCell) GetEnv() []*ArtifactEnv {
 
 type ArtifactSource struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
-	Name         string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty"`
-	Description  string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	Precondition string                 `protobuf:"bytes,1,opt,name=precondition,proto3" json:"precondition,omitempty"`
-	Query        string                 `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty"`
+	Name         string                 `protobuf:"bytes,3,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Description  string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
+	Precondition string                 `protobuf:"bytes,1,opt,name=precondition,proto3" json:"precondition,omitempty" yaml:"precondition,omitempty"`
+	Query        string                 `protobuf:"bytes,6,opt,name=query,proto3" json:"query,omitempty" yaml:"query,omitempty"`
 	// Deprecated - use query above for new artifacts.
-	Queries []string `protobuf:"bytes,2,rep,name=queries,proto3" json:"queries,omitempty"`
+	Queries []string `protobuf:"bytes,2,rep,name=queries,proto3" json:"queries,omitempty" yaml:"queries,omitempty"`
 	// Notebook cells that will be added as part of the source.
-	Notebook      []*NotebookSourceCell `protobuf:"bytes,5,rep,name=notebook,proto3" json:"notebook,omitempty"`
+	Notebook      []*NotebookSourceCell `protobuf:"bytes,5,rep,name=notebook,proto3" json:"notebook,omitempty" yaml:"notebook,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -410,12 +410,12 @@ type Report struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Each report type will be handled differently. Read about the
 	// different types in reporting.go
-	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	Type string `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	// If specified we only allow the report to take this long.
-	Timeout       uint64               `protobuf:"varint,4,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	Name          string               `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty"`
-	Template      string               `protobuf:"bytes,2,opt,name=template,proto3" json:"template,omitempty"`
-	Parameters    []*ArtifactParameter `protobuf:"bytes,3,rep,name=parameters,proto3" json:"parameters,omitempty"`
+	Timeout       uint64               `protobuf:"varint,4,opt,name=timeout,proto3" json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	Name          string               `protobuf:"bytes,5,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Template      string               `protobuf:"bytes,2,opt,name=template,proto3" json:"template,omitempty" yaml:"template,omitempty"`
+	Parameters    []*ArtifactParameter `protobuf:"bytes,3,rep,name=parameters,proto3" json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -487,14 +487,14 @@ func (x *Report) GetParameters() []*ArtifactParameter {
 
 type Artifact struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
 	// Aliases are other names by which the same artifact is known
-	Aliases             []string `protobuf:"bytes,21,rep,name=aliases,proto3" json:"aliases,omitempty"`
-	Description         string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
-	Author              string   `protobuf:"bytes,12,opt,name=author,proto3" json:"author,omitempty"`
-	Reference           []string `protobuf:"bytes,5,rep,name=reference,proto3" json:"reference,omitempty"`
-	References          []string `protobuf:"bytes,23,rep,name=references,proto3" json:"references,omitempty"`
-	RequiredPermissions []string `protobuf:"bytes,13,rep,name=required_permissions,json=requiredPermissions,proto3" json:"required_permissions,omitempty"`
+	Aliases             []string `protobuf:"bytes,21,rep,name=aliases,proto3" json:"aliases,omitempty" yaml:"aliases,omitempty"`
+	Description         string   `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
+	Author              string   `protobuf:"bytes,12,opt,name=author,proto3" json:"author,omitempty" yaml:"author,omitempty"`
+	Reference           []string `protobuf:"bytes,5,rep,name=reference,proto3" json:"reference,omitempty" yaml:"reference,omitempty"`
+	References          []string `protobuf:"bytes,23,rep,name=references,proto3" json:"references,omitempty" yaml:"references,omitempty"`
+	RequiredPermissions []string `protobuf:"bytes,13,rep,name=required_permissions,json=requiredPermissions,proto3" json:"required_permissions,omitempty" yaml:"required_permissions,omitempty"`
 	// A list of permissions implied by this artifact. This is used by
 	// the artifact writer to declare what additional permissions the
 	// artifact provides over the permissions provided by the user.
@@ -515,50 +515,50 @@ type Artifact struct {
 	//
 	// This field is only used to ensure the static analysis engine
 	// that the implied permission is properly controlled.
-	ImpliedPermissions []string `protobuf:"bytes,28,rep,name=implied_permissions,json=impliedPermissions,proto3" json:"implied_permissions,omitempty"`
+	ImpliedPermissions []string `protobuf:"bytes,28,rep,name=implied_permissions,json=impliedPermissions,proto3" json:"implied_permissions,omitempty" yaml:"implied_permissions,omitempty"`
 	// If this is specified, we run this artifact as the named user,
 	// with that user's ACL token. This is similar to the Unix suid
 	// mechanism or the Windows impersonation mechanism in that it
 	// allows artifact writers to craft a curated set of powerful
 	// artifacts that can be run by low privileged users in a
 	// controlled way.
-	Impersonate string `protobuf:"bytes,27,opt,name=impersonate,proto3" json:"impersonate,omitempty"`
+	Impersonate string `protobuf:"bytes,27,opt,name=impersonate,proto3" json:"impersonate,omitempty" yaml:"impersonate,omitempty"`
 	// Default resource limits.
-	Resources *Resources `protobuf:"bytes,19,opt,name=resources,proto3" json:"resources,omitempty"`
+	Resources *Resources `protobuf:"bytes,19,opt,name=resources,proto3" json:"resources,omitempty" yaml:"resources,omitempty"`
 	// An optional list of tool descriptions. These are only used to
 	// initialize Velociraptor if there is no previous tool
 	// definition. It will not override existing tools. The user may
 	// override the tool name in order to control where it will be
 	// downloaded from.
-	Tools []*Tool `protobuf:"bytes,15,rep,name=tools,proto3" json:"tools,omitempty"`
+	Tools []*Tool `protobuf:"bytes,15,rep,name=tools,proto3" json:"tools,omitempty" yaml:"tools,omitempty"`
 	// If set here this applies to all sources.
-	Precondition string               `protobuf:"bytes,8,opt,name=precondition,proto3" json:"precondition,omitempty"`
-	Parameters   []*ArtifactParameter `protobuf:"bytes,3,rep,name=parameters,proto3" json:"parameters,omitempty"`
+	Precondition string               `protobuf:"bytes,8,opt,name=precondition,proto3" json:"precondition,omitempty" yaml:"precondition,omitempty"`
+	Parameters   []*ArtifactParameter `protobuf:"bytes,3,rep,name=parameters,proto3" json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	// Unfortunately we can not use enum due to limitations in
 	// yaml->json->protobuf conversion.
-	Type    string            `protobuf:"bytes,10,opt,name=type,proto3" json:"type,omitempty"`
-	Sources []*ArtifactSource `protobuf:"bytes,4,rep,name=sources,proto3" json:"sources,omitempty"`
-	Imports []string          `protobuf:"bytes,17,rep,name=imports,proto3" json:"imports,omitempty"`
-	Export  string            `protobuf:"bytes,18,opt,name=export,proto3" json:"export,omitempty"`
-	Reports []*Report         `protobuf:"bytes,11,rep,name=reports,proto3" json:"reports,omitempty"`
+	Type    string            `protobuf:"bytes,10,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
+	Sources []*ArtifactSource `protobuf:"bytes,4,rep,name=sources,proto3" json:"sources,omitempty" yaml:"sources,omitempty"`
+	Imports []string          `protobuf:"bytes,17,rep,name=imports,proto3" json:"imports,omitempty" yaml:"imports,omitempty"`
+	Export  string            `protobuf:"bytes,18,opt,name=export,proto3" json:"export,omitempty" yaml:"export,omitempty"`
+	Reports []*Report         `protobuf:"bytes,11,rep,name=reports,proto3" json:"reports,omitempty" yaml:"reports,omitempty"`
 	// A list of column type description. These provide the GUI a hint
 	// of how to render the columns.
-	ColumnTypes []*ColumnType `protobuf:"bytes,16,rep,name=column_types,json=columnTypes,proto3" json:"column_types,omitempty"`
+	ColumnTypes []*ColumnType `protobuf:"bytes,16,rep,name=column_types,json=columnTypes,proto3" json:"column_types,omitempty" yaml:"column_types,omitempty"`
 	// Internal use only
-	Raw string `protobuf:"bytes,7,opt,name=raw,proto3" json:"raw,omitempty"`
+	Raw string `protobuf:"bytes,7,opt,name=raw,proto3" json:"raw,omitempty" yaml:"raw,omitempty"`
 	// Artifact was already compiled.
-	Compiled bool `protobuf:"varint,14,opt,name=compiled,proto3" json:"compiled,omitempty"`
+	Compiled bool `protobuf:"varint,14,opt,name=compiled,proto3" json:"compiled,omitempty" yaml:"compiled,omitempty"`
 	// The artifact is considered built in and can not be overriden by
 	// the GUI
-	BuiltIn bool `protobuf:"varint,20,opt,name=built_in,json=builtIn,proto3" json:"built_in,omitempty"`
+	BuiltIn bool `protobuf:"varint,20,opt,name=built_in,json=builtIn,proto3" json:"built_in,omitempty" yaml:"built_in,omitempty"`
 	// The artifact is built into the Velociraptor binary.
-	CompiledIn bool `protobuf:"varint,24,opt,name=compiled_in,json=compiledIn,proto3" json:"compiled_in,omitempty"`
-	IsAlias    bool `protobuf:"varint,22,opt,name=is_alias,json=isAlias,proto3" json:"is_alias,omitempty"`
+	CompiledIn bool `protobuf:"varint,24,opt,name=compiled_in,json=compiledIn,proto3" json:"compiled_in,omitempty" yaml:"compiled_in,omitempty"`
+	IsAlias    bool `protobuf:"varint,22,opt,name=is_alias,json=isAlias,proto3" json:"is_alias,omitempty" yaml:"is_alias,omitempty"`
 	// Artifact is inherited from the root org.
-	IsInherited bool `protobuf:"varint,26,opt,name=is_inherited,json=isInherited,proto3" json:"is_inherited,omitempty"`
+	IsInherited bool `protobuf:"varint,26,opt,name=is_inherited,json=isInherited,proto3" json:"is_inherited,omitempty" yaml:"is_inherited,omitempty"`
 	// Not read from the artifact definition but it is managed by the
 	// repository.
-	Metadata      *ArtifactMetadata `protobuf:"bytes,25,opt,name=metadata,proto3" json:"metadata,omitempty"`
+	Metadata      *ArtifactMetadata `protobuf:"bytes,25,opt,name=metadata,proto3" json:"metadata,omitempty" yaml:"metadata,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -777,8 +777,8 @@ func (x *Artifact) GetMetadata() *ArtifactMetadata {
 
 type ArtifactDescriptors struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*Artifact            `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	Tags          []string               `protobuf:"bytes,2,rep,name=tags,proto3" json:"tags,omitempty"`
+	Items         []*Artifact            `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
+	Tags          []string               `protobuf:"bytes,2,rep,name=tags,proto3" json:"tags,omitempty" yaml:"tags,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -832,9 +832,9 @@ func (x *ArtifactDescriptors) GetTags() []string {
 type ArtifactMetadata struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Do not show this artifact in the GUI search screen.
-	Hidden        bool     `protobuf:"varint,1,opt,name=hidden,proto3" json:"hidden,omitempty"`
-	Basic         bool     `protobuf:"varint,2,opt,name=basic,proto3" json:"basic,omitempty"`
-	Tags          []string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty"`
+	Hidden        bool     `protobuf:"varint,1,opt,name=hidden,proto3" json:"hidden,omitempty" yaml:"hidden,omitempty"`
+	Basic         bool     `protobuf:"varint,2,opt,name=basic,proto3" json:"basic,omitempty" yaml:"basic,omitempty"`
+	Tags          []string `protobuf:"bytes,3,rep,name=tags,proto3" json:"tags,omitempty" yaml:"tags,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -892,7 +892,7 @@ func (x *ArtifactMetadata) GetTags() []string {
 
 type ArtifactMetadataStorage struct {
 	state         protoimpl.MessageState       `protogen:"open.v1"`
-	Metadata      map[string]*ArtifactMetadata `protobuf:"bytes,1,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Metadata      map[string]*ArtifactMetadata `protobuf:"bytes,1,rep,name=metadata,proto3" json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -936,72 +936,72 @@ func (x *ArtifactMetadataStorage) GetMetadata() map[string]*ArtifactMetadata {
 
 type Tool struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
 	// The URL to fetch the tool from when we upload it the first
 	// time, or when we update.
-	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	Url string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty" yaml:"url,omitempty"`
 	// A transform to apply when downloading the tool contents. Currently:
 	// 1. Empty string - no transform applied.
 	// 2. "gunzip" - The tool will be decompressed using the gunzip algorithm.
-	DownloadTransform string `protobuf:"bytes,19,opt,name=download_transform,json=downloadTransform,proto3" json:"download_transform,omitempty"`
+	DownloadTransform string `protobuf:"bytes,19,opt,name=download_transform,json=downloadTransform,proto3" json:"download_transform,omitempty" yaml:"download_transform,omitempty"`
 	// As an alternative to a url we allow scrapping of GitHub
 	// releases using the github API. NOTE: When this method is
 	// specified, the file will always be served locally.
-	GithubProject    string `protobuf:"bytes,9,opt,name=github_project,json=githubProject,proto3" json:"github_project,omitempty"`
-	GithubAssetRegex string `protobuf:"bytes,10,opt,name=github_asset_regex,json=githubAssetRegex,proto3" json:"github_asset_regex,omitempty"`
+	GithubProject    string `protobuf:"bytes,9,opt,name=github_project,json=githubProject,proto3" json:"github_project,omitempty" yaml:"github_project,omitempty"`
+	GithubAssetRegex string `protobuf:"bytes,10,opt,name=github_asset_regex,json=githubAssetRegex,proto3" json:"github_asset_regex,omitempty" yaml:"github_asset_regex,omitempty"`
 	// If set, the tool will be served locally from the filestore path
 	// - otherwise the endpoint will download the file by itself from
 	// the url above.
-	ServeLocally bool `protobuf:"varint,3,opt,name=serve_locally,json=serveLocally,proto3" json:"serve_locally,omitempty"`
+	ServeLocally bool `protobuf:"varint,3,opt,name=serve_locally,json=serveLocally,proto3" json:"serve_locally,omitempty" yaml:"serve_locally,omitempty"`
 	// This is set when an admin explicitly overrides a tool. If this
 	// is set we will not update the tool definition when upgrading
 	// server versions.
-	AdminOverride bool `protobuf:"varint,7,opt,name=admin_override,json=adminOverride,proto3" json:"admin_override,omitempty"`
+	AdminOverride bool `protobuf:"varint,7,opt,name=admin_override,json=adminOverride,proto3" json:"admin_override,omitempty" yaml:"admin_override,omitempty"`
 	// Hex encoded sha256 hash of the expected hash of the file. When
 	// the server downloads the file it will check against the
 	// expected hash and refuse to download an incorrect hash.  This
 	// is a way to pin the dependency into the artifact definition to
 	// protect against supply side attacks.
-	ExpectedHash string `protobuf:"bytes,15,opt,name=expected_hash,json=expectedHash,proto3" json:"expected_hash,omitempty"`
+	ExpectedHash string `protobuf:"bytes,15,opt,name=expected_hash,json=expectedHash,proto3" json:"expected_hash,omitempty" yaml:"expected_hash,omitempty"`
 	// Specify a version for the tool. This allows multiple versions
 	// of the same tool to be used at the same time.
-	Version string `protobuf:"bytes,16,opt,name=version,proto3" json:"version,omitempty"`
+	Version string `protobuf:"bytes,16,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
 	// If set on a request we refresh the hash by downloading the file again.
-	Materialize bool `protobuf:"varint,11,opt,name=materialize,proto3" json:"materialize,omitempty"`
+	Materialize bool `protobuf:"varint,11,opt,name=materialize,proto3" json:"materialize,omitempty" yaml:"materialize,omitempty"`
 	// The artifact this definition came from.
-	Artifact string `protobuf:"bytes,13,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Artifact string `protobuf:"bytes,13,opt,name=artifact,proto3" json:"artifact,omitempty" yaml:"artifact,omitempty"`
 	// A filestore path where the file can be downloaded from - if
 	// served locally. This can be provided by the caller to AddTool()
 	// after they uploaded the file to the filestore through some
 	// other mechanism. Note this path is relative to the /public/
 	// directory.
-	FilestorePath string `protobuf:"bytes,4,opt,name=filestore_path,json=filestorePath,proto3" json:"filestore_path,omitempty"`
+	FilestorePath string `protobuf:"bytes,4,opt,name=filestore_path,json=filestorePath,proto3" json:"filestore_path,omitempty" yaml:"filestore_path,omitempty"`
 	// The URL we serve the tool from when we serve locally. If this
 	// is empty we just let the endpoint download its own tool from
 	// the url above.
-	ServeUrl string `protobuf:"bytes,8,opt,name=serve_url,json=serveUrl,proto3" json:"serve_url,omitempty"`
+	ServeUrl string `protobuf:"bytes,8,opt,name=serve_url,json=serveUrl,proto3" json:"serve_url,omitempty" yaml:"serve_url,omitempty"`
 	// More recent velociraptor servers allow multiple URLs to be
 	// tried for the tool download. This helps in situations where the
 	// server is not reachable from some networks.
-	ServeUrls []string `protobuf:"bytes,18,rep,name=serve_urls,json=serveUrls,proto3" json:"serve_urls,omitempty"`
+	ServeUrls []string `protobuf:"bytes,18,rep,name=serve_urls,json=serveUrls,proto3" json:"serve_urls,omitempty" yaml:"serve_urls,omitempty"`
 	// Only valid for local dummy inventory.
-	ServePath string `protobuf:"bytes,12,opt,name=serve_path,json=servePath,proto3" json:"serve_path,omitempty"`
+	ServePath string `protobuf:"bytes,12,opt,name=serve_path,json=servePath,proto3" json:"serve_path,omitempty" yaml:"serve_path,omitempty"`
 	// The name of the cached file on the endpoint. This file will
 	// persist and can be accessed again if this tool is needed in
 	// future. If the file is missing (or has the wrong hash), then it
 	// will be downloaded again.
-	Filename string `protobuf:"bytes,5,opt,name=filename,proto3" json:"filename,omitempty"`
+	Filename string `protobuf:"bytes,5,opt,name=filename,proto3" json:"filename,omitempty" yaml:"filename,omitempty"`
 	// Hex encoded sha256 hash of the file. Endpoints will check this
 	// hash against their fetched file to ensure it was correctly
 	// transferred.
-	Hash string `protobuf:"bytes,6,opt,name=hash,proto3" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,6,opt,name=hash,proto3" json:"hash,omitempty" yaml:"hash,omitempty"`
 	// When we attempted to download the file, and the hash did not
 	// match the expected hash, we record the actual hash here. The
 	// user can then opt for trusting this hash in the GUI which will
 	// copy it into the expected hash and clear this hash.
-	InvalidHash string `protobuf:"bytes,17,opt,name=invalid_hash,json=invalidHash,proto3" json:"invalid_hash,omitempty"`
+	InvalidHash string `protobuf:"bytes,17,opt,name=invalid_hash,json=invalidHash,proto3" json:"invalid_hash,omitempty" yaml:"invalid_hash,omitempty"`
 	// Additional versions of this tool.
-	Versions      []*Tool `protobuf:"bytes,14,rep,name=versions,proto3" json:"versions,omitempty"`
+	Versions      []*Tool `protobuf:"bytes,14,rep,name=versions,proto3" json:"versions,omitempty" yaml:"versions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1172,8 +1172,8 @@ func (x *Tool) GetVersions() []*Tool {
 // Keep track of all the third party tools we know about.
 type ThirdParty struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Tools         []*Tool                `protobuf:"bytes,1,rep,name=tools,proto3" json:"tools,omitempty"`
-	Version       uint64                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	Tools         []*Tool                `protobuf:"bytes,1,rep,name=tools,proto3" json:"tools,omitempty" yaml:"tools,omitempty"`
+	Version       uint64                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1225,17 +1225,17 @@ func (x *ThirdParty) GetVersion() uint64 {
 type Resources struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Default timeout for this artifact
-	Timeout      uint64  `protobuf:"varint,1,opt,name=timeout,proto3" json:"timeout,omitempty"`
-	OpsPerSecond float32 `protobuf:"fixed32,4,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty"`
-	CpuLimit     float32 `protobuf:"fixed32,5,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty"`
-	IopsLimit    float32 `protobuf:"fixed32,6,opt,name=iops_limit,json=iopsLimit,proto3" json:"iops_limit,omitempty"`
+	Timeout      uint64  `protobuf:"varint,1,opt,name=timeout,proto3" json:"timeout,omitempty" yaml:"timeout,omitempty"`
+	OpsPerSecond float32 `protobuf:"fixed32,4,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty" yaml:"ops_per_second,omitempty"`
+	CpuLimit     float32 `protobuf:"fixed32,5,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty" yaml:"cpu_limit,omitempty"`
+	IopsLimit    float32 `protobuf:"fixed32,6,opt,name=iops_limit,json=iopsLimit,proto3" json:"iops_limit,omitempty" yaml:"iops_limit,omitempty"`
 	// Default resource use for the entire collection.
-	MaxRows        uint64 `protobuf:"varint,2,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
-	MaxUploadBytes uint64 `protobuf:"varint,3,opt,name=max_upload_bytes,json=maxUploadBytes,proto3" json:"max_upload_bytes,omitempty"`
+	MaxRows        uint64 `protobuf:"varint,2,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty" yaml:"max_rows,omitempty"`
+	MaxUploadBytes uint64 `protobuf:"varint,3,opt,name=max_upload_bytes,json=maxUploadBytes,proto3" json:"max_upload_bytes,omitempty" yaml:"max_upload_bytes,omitempty"`
 	// Batching control
-	MaxBatchWait       uint64 `protobuf:"varint,7,opt,name=max_batch_wait,json=maxBatchWait,proto3" json:"max_batch_wait,omitempty"`
-	MaxBatchRows       uint64 `protobuf:"varint,8,opt,name=max_batch_rows,json=maxBatchRows,proto3" json:"max_batch_rows,omitempty"`
-	MaxBatchRowsBuffer uint64 `protobuf:"varint,9,opt,name=max_batch_rows_buffer,json=maxBatchRowsBuffer,proto3" json:"max_batch_rows_buffer,omitempty"`
+	MaxBatchWait       uint64 `protobuf:"varint,7,opt,name=max_batch_wait,json=maxBatchWait,proto3" json:"max_batch_wait,omitempty" yaml:"max_batch_wait,omitempty"`
+	MaxBatchRows       uint64 `protobuf:"varint,8,opt,name=max_batch_rows,json=maxBatchRows,proto3" json:"max_batch_rows,omitempty" yaml:"max_batch_rows,omitempty"`
+	MaxBatchRowsBuffer uint64 `protobuf:"varint,9,opt,name=max_batch_rows_buffer,json=maxBatchRowsBuffer,proto3" json:"max_batch_rows_buffer,omitempty" yaml:"max_batch_rows_buffer,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }

@@ -25,9 +25,9 @@ const (
 type VQLRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The obfuscated name of the artifact this query came from.
-	Name string `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty"`
+	Name string `protobuf:"bytes,2,opt,name=Name,proto3" json:"Name,omitempty" yaml:"Name,omitempty"`
 	// The compiled VQL query to evaluate on the endpoint.
-	VQL           string `protobuf:"bytes,1,opt,name=VQL,proto3" json:"VQL,omitempty"`
+	VQL           string `protobuf:"bytes,1,opt,name=VQL,proto3" json:"VQL,omitempty" yaml:"VQL,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -78,9 +78,9 @@ func (x *VQLRequest) GetVQL() string {
 
 type VQLEnv struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
-	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
-	Comment       string                 `protobuf:"bytes,3,opt,name=comment,proto3" json:"comment,omitempty"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty" yaml:"key,omitempty"`
+	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty" yaml:"value,omitempty"`
+	Comment       string                 `protobuf:"bytes,3,opt,name=comment,proto3" json:"comment,omitempty" yaml:"comment,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -141,42 +141,42 @@ func (x *VQLEnv) GetComment() string {
 type VQLCollectorArgs struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Number of this request compared to the entire collection.
-	QueryId      int64 `protobuf:"varint,32,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	TotalQueries int64 `protobuf:"varint,33,opt,name=total_queries,json=totalQueries,proto3" json:"total_queries,omitempty"`
+	QueryId      int64 `protobuf:"varint,32,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty" yaml:"query_id,omitempty"`
+	TotalQueries int64 `protobuf:"varint,33,opt,name=total_queries,json=totalQueries,proto3" json:"total_queries,omitempty" yaml:"total_queries,omitempty"`
 	// If set we ignore any requests older than this.
-	Expiry uint64 `protobuf:"varint,34,opt,name=expiry,proto3" json:"expiry,omitempty"`
+	Expiry uint64 `protobuf:"varint,34,opt,name=expiry,proto3" json:"expiry,omitempty" yaml:"expiry,omitempty"`
 	// If this is specified we run this query first and if it returns
 	// any rows we continue with the real query.
-	Precondition string `protobuf:"bytes,29,opt,name=precondition,proto3" json:"precondition,omitempty"`
+	Precondition string `protobuf:"bytes,29,opt,name=precondition,proto3" json:"precondition,omitempty" yaml:"precondition,omitempty"`
 	// The principal that created this request - only sent when
 	// scheduling the server so the server may keep track on who ran
 	// each query.
-	Principal string `protobuf:"bytes,28,opt,name=principal,proto3" json:"principal,omitempty"`
+	Principal string `protobuf:"bytes,28,opt,name=principal,proto3" json:"principal,omitempty" yaml:"principal,omitempty"`
 	// The effective ACLs that will be used for this query. This is
 	// usually set by the artifact's suid field.
-	EffectivePrincipal string        `protobuf:"bytes,38,opt,name=effective_principal,json=effectivePrincipal,proto3" json:"effective_principal,omitempty"`
-	Env                []*VQLEnv     `protobuf:"bytes,3,rep,name=env,proto3" json:"env,omitempty"`
-	Query              []*VQLRequest `protobuf:"bytes,2,rep,name=Query,proto3" json:"Query,omitempty"`
-	MaxRow             uint64        `protobuf:"varint,4,opt,name=max_row,json=maxRow,proto3" json:"max_row,omitempty"`
+	EffectivePrincipal string        `protobuf:"bytes,38,opt,name=effective_principal,json=effectivePrincipal,proto3" json:"effective_principal,omitempty" yaml:"effective_principal,omitempty"`
+	Env                []*VQLEnv     `protobuf:"bytes,3,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
+	Query              []*VQLRequest `protobuf:"bytes,2,rep,name=Query,proto3" json:"Query,omitempty" yaml:"Query,omitempty"`
+	MaxRow             uint64        `protobuf:"varint,4,opt,name=max_row,json=maxRow,proto3" json:"max_row,omitempty" yaml:"max_row,omitempty"`
 	// If the row buffer size gets above this size we send the payload
 	// anyway. This is a fairer measure than max_rows of how large the
 	// payload is likely to be before compression because rows come in
 	// all different sizes. Default value is 5mb to match the typical
 	// max_upload_bytes
-	MaxRowBufferSize uint64 `protobuf:"varint,37,opt,name=max_row_buffer_size,json=maxRowBufferSize,proto3" json:"max_row_buffer_size,omitempty"`
-	MaxWait          uint64 `protobuf:"varint,6,opt,name=max_wait,json=maxWait,proto3" json:"max_wait,omitempty"`
+	MaxRowBufferSize uint64 `protobuf:"varint,37,opt,name=max_row_buffer_size,json=maxRowBufferSize,proto3" json:"max_row_buffer_size,omitempty" yaml:"max_row_buffer_size,omitempty"`
+	MaxWait          uint64 `protobuf:"varint,6,opt,name=max_wait,json=maxWait,proto3" json:"max_wait,omitempty" yaml:"max_wait,omitempty"`
 	// This is deprecated in favor of the below limits.
-	OpsPerSecond    float32           `protobuf:"fixed32,24,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty"`
-	CpuLimit        float32           `protobuf:"fixed32,30,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty"`
-	IopsLimit       float32           `protobuf:"fixed32,31,opt,name=iops_limit,json=iopsLimit,proto3" json:"iops_limit,omitempty"`
-	ProgressTimeout float32           `protobuf:"fixed32,36,opt,name=progress_timeout,json=progressTimeout,proto3" json:"progress_timeout,omitempty"`
-	Artifacts       []*proto.Artifact `protobuf:"bytes,5,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
-	Timeout         uint64            `protobuf:"varint,25,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	OpsPerSecond    float32           `protobuf:"fixed32,24,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty" yaml:"ops_per_second,omitempty"`
+	CpuLimit        float32           `protobuf:"fixed32,30,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty" yaml:"cpu_limit,omitempty"`
+	IopsLimit       float32           `protobuf:"fixed32,31,opt,name=iops_limit,json=iopsLimit,proto3" json:"iops_limit,omitempty" yaml:"iops_limit,omitempty"`
+	ProgressTimeout float32           `protobuf:"fixed32,36,opt,name=progress_timeout,json=progressTimeout,proto3" json:"progress_timeout,omitempty" yaml:"progress_timeout,omitempty"`
+	Artifacts       []*proto.Artifact `protobuf:"bytes,5,rep,name=artifacts,proto3" json:"artifacts,omitempty" yaml:"artifacts,omitempty"`
+	Timeout         uint64            `protobuf:"varint,25,opt,name=timeout,proto3" json:"timeout,omitempty" yaml:"timeout,omitempty"`
 	// How often to heart beat progress (default 30 sec)
-	Heartbeat uint64   `protobuf:"varint,27,opt,name=heartbeat,proto3" json:"heartbeat,omitempty"`
-	Tools     []string `protobuf:"bytes,26,rep,name=tools,proto3" json:"tools,omitempty"`
+	Heartbeat uint64   `protobuf:"varint,27,opt,name=heartbeat,proto3" json:"heartbeat,omitempty" yaml:"heartbeat,omitempty"`
+	Tools     []string `protobuf:"bytes,26,rep,name=tools,proto3" json:"tools,omitempty" yaml:"tools,omitempty"`
 	// Used only for API based calls
-	OrgId         string `protobuf:"bytes,35,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgId         string `protobuf:"bytes,35,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty" yaml:"org_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -353,8 +353,8 @@ func (x *VQLCollectorArgs) GetOrgId() string {
 
 type VQLTypeMap struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Column        string                 `protobuf:"bytes,1,opt,name=column,proto3" json:"column,omitempty"`
-	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Column        string                 `protobuf:"bytes,1,opt,name=column,proto3" json:"column,omitempty" yaml:"column,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -406,28 +406,28 @@ func (x *VQLTypeMap) GetType() string {
 type VQLResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// DEPRECATED: Response is encoded in a json array of rows.
-	Response string `protobuf:"bytes,1,opt,name=Response,proto3" json:"Response,omitempty"`
+	Response string `protobuf:"bytes,1,opt,name=Response,proto3" json:"Response,omitempty" yaml:"Response,omitempty"`
 	// Response is encoded as line delimited JSON.
-	JSONLResponse          string `protobuf:"bytes,10,opt,name=JSONLResponse,proto3" json:"JSONLResponse,omitempty"`
-	CompressedJsonResponse []byte `protobuf:"bytes,15,opt,name=CompressedJsonResponse,proto3" json:"CompressedJsonResponse,omitempty"`
+	JSONLResponse          string `protobuf:"bytes,10,opt,name=JSONLResponse,proto3" json:"JSONLResponse,omitempty" yaml:"JSONLResponse,omitempty"`
+	CompressedJsonResponse []byte `protobuf:"bytes,15,opt,name=CompressedJsonResponse,proto3" json:"CompressedJsonResponse,omitempty" yaml:"CompressedJsonResponse,omitempty"`
 	// If uncompressed_size > 0 then the above JSONLResponse is
 	// compressed and this field contains the uncompressed size.
-	UncompressedSize uint64 `protobuf:"varint,13,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty"`
+	UncompressedSize uint64 `protobuf:"varint,13,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty" yaml:"uncompressed_size,omitempty"`
 	// The offset in the file stream of the uncompressed JSONLResponse
 	// buffer.
-	ByteOffset uint64        `protobuf:"varint,14,opt,name=byte_offset,json=byteOffset,proto3" json:"byte_offset,omitempty"`
-	Columns    []string      `protobuf:"bytes,2,rep,name=Columns,proto3" json:"Columns,omitempty"`
-	Types      []*VQLTypeMap `protobuf:"bytes,8,rep,name=types,proto3" json:"types,omitempty"`
-	QueryId    uint64        `protobuf:"varint,5,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty"`
-	Part       uint64        `protobuf:"varint,6,opt,name=part,proto3" json:"part,omitempty"`
-	Query      *VQLRequest   `protobuf:"bytes,3,opt,name=Query,proto3" json:"Query,omitempty"`
-	Timestamp  uint64        `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	TotalRows  uint64        `protobuf:"varint,7,opt,name=total_rows,json=totalRows,proto3" json:"total_rows,omitempty"`
+	ByteOffset uint64        `protobuf:"varint,14,opt,name=byte_offset,json=byteOffset,proto3" json:"byte_offset,omitempty" yaml:"byte_offset,omitempty"`
+	Columns    []string      `protobuf:"bytes,2,rep,name=Columns,proto3" json:"Columns,omitempty" yaml:"Columns,omitempty"`
+	Types      []*VQLTypeMap `protobuf:"bytes,8,rep,name=types,proto3" json:"types,omitempty" yaml:"types,omitempty"`
+	QueryId    uint64        `protobuf:"varint,5,opt,name=query_id,json=queryId,proto3" json:"query_id,omitempty" yaml:"query_id,omitempty"`
+	Part       uint64        `protobuf:"varint,6,opt,name=part,proto3" json:"part,omitempty" yaml:"part,omitempty"`
+	Query      *VQLRequest   `protobuf:"bytes,3,opt,name=Query,proto3" json:"Query,omitempty" yaml:"Query,omitempty"`
+	Timestamp  uint64        `protobuf:"varint,4,opt,name=timestamp,proto3" json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
+	TotalRows  uint64        `protobuf:"varint,7,opt,name=total_rows,json=totalRows,proto3" json:"total_rows,omitempty" yaml:"total_rows,omitempty"`
 	// Row count where query started.
-	QueryStartRow uint64 `protobuf:"varint,11,opt,name=query_start_row,json=queryStartRow,proto3" json:"query_start_row,omitempty"`
-	Log           string `protobuf:"bytes,9,opt,name=log,proto3" json:"log,omitempty"`
+	QueryStartRow uint64 `protobuf:"varint,11,opt,name=query_start_row,json=queryStartRow,proto3" json:"query_start_row,omitempty" yaml:"query_start_row,omitempty"`
+	Log           string `protobuf:"bytes,9,opt,name=log,proto3" json:"log,omitempty" yaml:"log,omitempty"`
 	// Used only for server-server comms
-	OrgId         string `protobuf:"bytes,12,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	OrgId         string `protobuf:"bytes,12,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty" yaml:"org_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -573,7 +573,7 @@ func (x *VQLResponse) GetOrgId() string {
 // a more sane structure.
 type User struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty"`
+	Username      string                 `protobuf:"bytes,1,opt,name=username,proto3" json:"username,omitempty" yaml:"username,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -617,8 +617,8 @@ func (x *User) GetUsername() string {
 
 type VQLEventTable struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Event         []*VQLCollectorArgs    `protobuf:"bytes,1,rep,name=event,proto3" json:"event,omitempty"`
-	Version       uint64                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty"`
+	Event         []*VQLCollectorArgs    `protobuf:"bytes,1,rep,name=event,proto3" json:"event,omitempty" yaml:"event,omitempty"`
+	Version       uint64                 `protobuf:"varint,2,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -669,40 +669,40 @@ func (x *VQLEventTable) GetVersion() uint64 {
 
 type ClientInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	Hostname      string                 `protobuf:"bytes,3,opt,name=hostname,proto3" json:"hostname,omitempty"`
-	Fqdn          string                 `protobuf:"bytes,4,opt,name=fqdn,proto3" json:"fqdn,omitempty"`
-	System        string                 `protobuf:"bytes,5,opt,name=system,proto3" json:"system,omitempty"`
-	Release       string                 `protobuf:"bytes,6,opt,name=release,proto3" json:"release,omitempty"`
-	Architecture  string                 `protobuf:"bytes,7,opt,name=architecture,proto3" json:"architecture,omitempty"`
-	IpAddress     string                 `protobuf:"bytes,10,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty"`
-	Ping          uint64                 `protobuf:"varint,11,opt,name=ping,proto3" json:"ping,omitempty"`
-	PingTime      string                 `protobuf:"bytes,19,opt,name=ping_time,json=pingTime,proto3" json:"ping_time,omitempty"`
-	ClientVersion string                 `protobuf:"bytes,12,opt,name=client_version,json=clientVersion,proto3" json:"client_version,omitempty"`
-	ClientName    string                 `protobuf:"bytes,13,opt,name=client_name,json=clientName,proto3" json:"client_name,omitempty"`
-	FirstSeenAt   uint64                 `protobuf:"varint,20,opt,name=first_seen_at,json=firstSeenAt,proto3" json:"first_seen_at,omitempty"`
-	BuildTime     string                 `protobuf:"bytes,24,opt,name=build_time,json=buildTime,proto3" json:"build_time,omitempty"`
-	BuildUrl      string                 `protobuf:"bytes,25,opt,name=build_url,json=buildUrl,proto3" json:"build_url,omitempty"`
-	InstallTime   uint64                 `protobuf:"varint,26,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty"`
-	Labels        []string               `protobuf:"bytes,15,rep,name=labels,proto3" json:"labels,omitempty"`
-	MacAddresses  []string               `protobuf:"bytes,22,rep,name=mac_addresses,json=macAddresses,proto3" json:"mac_addresses,omitempty"`
+	ClientId      string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
+	Hostname      string                 `protobuf:"bytes,3,opt,name=hostname,proto3" json:"hostname,omitempty" yaml:"hostname,omitempty"`
+	Fqdn          string                 `protobuf:"bytes,4,opt,name=fqdn,proto3" json:"fqdn,omitempty" yaml:"fqdn,omitempty"`
+	System        string                 `protobuf:"bytes,5,opt,name=system,proto3" json:"system,omitempty" yaml:"system,omitempty"`
+	Release       string                 `protobuf:"bytes,6,opt,name=release,proto3" json:"release,omitempty" yaml:"release,omitempty"`
+	Architecture  string                 `protobuf:"bytes,7,opt,name=architecture,proto3" json:"architecture,omitempty" yaml:"architecture,omitempty"`
+	IpAddress     string                 `protobuf:"bytes,10,opt,name=ip_address,json=ipAddress,proto3" json:"ip_address,omitempty" yaml:"ip_address,omitempty"`
+	Ping          uint64                 `protobuf:"varint,11,opt,name=ping,proto3" json:"ping,omitempty" yaml:"ping,omitempty"`
+	PingTime      string                 `protobuf:"bytes,19,opt,name=ping_time,json=pingTime,proto3" json:"ping_time,omitempty" yaml:"ping_time,omitempty"`
+	ClientVersion string                 `protobuf:"bytes,12,opt,name=client_version,json=clientVersion,proto3" json:"client_version,omitempty" yaml:"client_version,omitempty"`
+	ClientName    string                 `protobuf:"bytes,13,opt,name=client_name,json=clientName,proto3" json:"client_name,omitempty" yaml:"client_name,omitempty"`
+	FirstSeenAt   uint64                 `protobuf:"varint,20,opt,name=first_seen_at,json=firstSeenAt,proto3" json:"first_seen_at,omitempty" yaml:"first_seen_at,omitempty"`
+	BuildTime     string                 `protobuf:"bytes,24,opt,name=build_time,json=buildTime,proto3" json:"build_time,omitempty" yaml:"build_time,omitempty"`
+	BuildUrl      string                 `protobuf:"bytes,25,opt,name=build_url,json=buildUrl,proto3" json:"build_url,omitempty" yaml:"build_url,omitempty"`
+	InstallTime   uint64                 `protobuf:"varint,26,opt,name=install_time,json=installTime,proto3" json:"install_time,omitempty" yaml:"install_time,omitempty"`
+	Labels        []string               `protobuf:"bytes,15,rep,name=labels,proto3" json:"labels,omitempty" yaml:"labels,omitempty"`
+	MacAddresses  []string               `protobuf:"bytes,22,rep,name=mac_addresses,json=macAddresses,proto3" json:"mac_addresses,omitempty" yaml:"mac_addresses,omitempty"`
 	// A hint if tasks are available. This does not have to be
 	// accurate - checking the task queue will yield the correct
 	// tasks.
-	HasTasks              bool   `protobuf:"varint,27,opt,name=has_tasks,json=hasTasks,proto3" json:"has_tasks,omitempty"`
-	LastInterrogateFlowId string `protobuf:"bytes,16,opt,name=last_interrogate_flow_id,json=lastInterrogateFlowId,proto3" json:"last_interrogate_flow_id,omitempty"`
+	HasTasks              bool   `protobuf:"varint,27,opt,name=has_tasks,json=hasTasks,proto3" json:"has_tasks,omitempty" yaml:"has_tasks,omitempty"`
+	LastInterrogateFlowId string `protobuf:"bytes,16,opt,name=last_interrogate_flow_id,json=lastInterrogateFlowId,proto3" json:"last_interrogate_flow_id,omitempty" yaml:"last_interrogate_flow_id,omitempty"`
 	// This can be a customized artifact that is compatible with
 	// Generic.Client.Info
-	LastInterrogateArtifactName string `protobuf:"bytes,21,opt,name=last_interrogate_artifact_name,json=lastInterrogateArtifactName,proto3" json:"last_interrogate_artifact_name,omitempty"`
-	LastHuntTimestamp           uint64 `protobuf:"varint,17,opt,name=last_hunt_timestamp,json=lastHuntTimestamp,proto3" json:"last_hunt_timestamp,omitempty"`
-	LastEventTableVersion       uint64 `protobuf:"varint,18,opt,name=last_event_table_version,json=lastEventTableVersion,proto3" json:"last_event_table_version,omitempty"`
-	LabelsTimestamp             uint64 `protobuf:"varint,23,opt,name=labels_timestamp,json=labelsTimestamp,proto3" json:"labels_timestamp,omitempty"`
+	LastInterrogateArtifactName string `protobuf:"bytes,21,opt,name=last_interrogate_artifact_name,json=lastInterrogateArtifactName,proto3" json:"last_interrogate_artifact_name,omitempty" yaml:"last_interrogate_artifact_name,omitempty"`
+	LastHuntTimestamp           uint64 `protobuf:"varint,17,opt,name=last_hunt_timestamp,json=lastHuntTimestamp,proto3" json:"last_hunt_timestamp,omitempty" yaml:"last_hunt_timestamp,omitempty"`
+	LastEventTableVersion       uint64 `protobuf:"varint,18,opt,name=last_event_table_version,json=lastEventTableVersion,proto3" json:"last_event_table_version,omitempty" yaml:"last_event_table_version,omitempty"`
+	LabelsTimestamp             uint64 `protobuf:"varint,23,opt,name=labels_timestamp,json=labelsTimestamp,proto3" json:"labels_timestamp,omitempty" yaml:"labels_timestamp,omitempty"`
 	// A List of flows that are currently in flight and their last
 	// update epoch time.
-	InFlightFlows map[string]int64 `protobuf:"bytes,28,rep,name=in_flight_flows,json=inFlightFlows,proto3" json:"in_flight_flows,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	InFlightFlows map[string]int64 `protobuf:"bytes,28,rep,name=in_flight_flows,json=inFlightFlows,proto3" json:"in_flight_flows,omitempty" yaml:"in_flight_flows,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
 	// A list of indexed metadata fields. These are not all metadata
 	// fields, only the ones that are important enough to be indexed.
-	Metadata      map[string]string `protobuf:"bytes,29,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Metadata      map[string]string `protobuf:"bytes,29,rep,name=metadata,proto3" json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

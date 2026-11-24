@@ -8,10 +8,10 @@ import (
 	"reflect"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/file_store/csv"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 	vql_subsystem "www.velocidex.com/golang/velociraptor/vql"
 	"www.velocidex.com/golang/vfilter"
 	"www.velocidex.com/golang/vfilter/arg_parser"
@@ -73,7 +73,12 @@ func _encode(
 		return utils.ToString(item)
 
 	case "yaml":
-		serialized, err := yaml.Marshal(item)
+		value, err := yamlValue(item, 0)
+		if err != nil {
+			scope.Log("%v: %v", name, err)
+			return vfilter.Null{}
+		}
+		serialized, err := yaml.Marshal(value)
 		if err != nil {
 			scope.Log("%v: %v", name, err)
 			return vfilter.Null{}

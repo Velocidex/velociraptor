@@ -22,9 +22,9 @@ const (
 
 type ContainerMemberStats struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	Name             string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	UncompressedSize uint64                 `protobuf:"varint,2,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty"`
-	CompressedSize   uint64                 `protobuf:"varint,3,opt,name=compressed_size,json=compressedSize,proto3" json:"compressed_size,omitempty"`
+	Name             string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	UncompressedSize uint64                 `protobuf:"varint,2,opt,name=uncompressed_size,json=uncompressedSize,proto3" json:"uncompressed_size,omitempty" yaml:"uncompressed_size,omitempty"`
+	CompressedSize   uint64                 `protobuf:"varint,3,opt,name=compressed_size,json=compressedSize,proto3" json:"compressed_size,omitempty" yaml:"compressed_size,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
@@ -84,28 +84,28 @@ func (x *ContainerMemberStats) GetCompressedSize() uint64 {
 type ContainerStats struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Seconds since epoch
-	Timestamp          uint64 `protobuf:"varint,8,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
-	TotalUploadedFiles uint64 `protobuf:"varint,1,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty"`
-	TotalUploadedBytes uint64 `protobuf:"varint,2,opt,name=total_uploaded_bytes,json=totalUploadedBytes,proto3" json:"total_uploaded_bytes,omitempty"`
+	Timestamp          uint64 `protobuf:"varint,8,opt,name=timestamp,proto3" json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
+	TotalUploadedFiles uint64 `protobuf:"varint,1,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty" yaml:"total_uploaded_files,omitempty"`
+	TotalUploadedBytes uint64 `protobuf:"varint,2,opt,name=total_uploaded_bytes,json=totalUploadedBytes,proto3" json:"total_uploaded_bytes,omitempty" yaml:"total_uploaded_bytes,omitempty"`
 	// Total number of bytes written to the container. NOTE: Due to
 	// caching this number can increase substantially before the
 	// container size actually changes so this is a better measure of
 	// progress than the compressed size.
-	TotalUncompressedBytes uint64 `protobuf:"varint,3,opt,name=total_uncompressed_bytes,json=totalUncompressedBytes,proto3" json:"total_uncompressed_bytes,omitempty"`
-	TotalCompressedBytes   uint64 `protobuf:"varint,4,opt,name=total_compressed_bytes,json=totalCompressedBytes,proto3" json:"total_compressed_bytes,omitempty"`
-	TotalContainerFiles    uint64 `protobuf:"varint,5,opt,name=total_container_files,json=totalContainerFiles,proto3" json:"total_container_files,omitempty"`
+	TotalUncompressedBytes uint64 `protobuf:"varint,3,opt,name=total_uncompressed_bytes,json=totalUncompressedBytes,proto3" json:"total_uncompressed_bytes,omitempty" yaml:"total_uncompressed_bytes,omitempty"`
+	TotalCompressedBytes   uint64 `protobuf:"varint,4,opt,name=total_compressed_bytes,json=totalCompressedBytes,proto3" json:"total_compressed_bytes,omitempty" yaml:"total_compressed_bytes,omitempty"`
+	TotalContainerFiles    uint64 `protobuf:"varint,5,opt,name=total_container_files,json=totalContainerFiles,proto3" json:"total_container_files,omitempty" yaml:"total_container_files,omitempty"`
 	// The hash of the written container - this is only populated
 	// **after** the container is closed.
-	Hash string `protobuf:"bytes,6,opt,name=hash,proto3" json:"hash,omitempty"`
+	Hash string `protobuf:"bytes,6,opt,name=hash,proto3" json:"hash,omitempty" yaml:"hash,omitempty"`
 	// Total number of seconds taken to compress.
-	TotalDuration uint64 `protobuf:"varint,9,opt,name=total_duration,json=totalDuration,proto3" json:"total_duration,omitempty"`
+	TotalDuration uint64 `protobuf:"varint,9,opt,name=total_duration,json=totalDuration,proto3" json:"total_duration,omitempty" yaml:"total_duration,omitempty"`
 	// Where the file can be downloaded from the filestore
-	Components []string `protobuf:"bytes,7,rep,name=components,proto3" json:"components,omitempty"`
-	Type       string   `protobuf:"bytes,10,opt,name=type,proto3" json:"type,omitempty"`
-	Error      string   `protobuf:"bytes,11,opt,name=error,proto3" json:"error,omitempty"`
+	Components []string `protobuf:"bytes,7,rep,name=components,proto3" json:"components,omitempty" yaml:"components,omitempty"`
+	Type       string   `protobuf:"bytes,10,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
+	Error      string   `protobuf:"bytes,11,opt,name=error,proto3" json:"error,omitempty" yaml:"error,omitempty"`
 	// A string representation of the file path
-	VfsPath       string                  `protobuf:"bytes,12,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
-	ActiveMembers []*ContainerMemberStats `protobuf:"bytes,13,rep,name=active_members,json=activeMembers,proto3" json:"active_members,omitempty"`
+	VfsPath       string                  `protobuf:"bytes,12,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty" yaml:"vfs_path,omitempty"`
+	ActiveMembers []*ContainerMemberStats `protobuf:"bytes,13,rep,name=active_members,json=activeMembers,proto3" json:"active_members,omitempty" yaml:"active_members,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -233,14 +233,14 @@ func (x *ContainerStats) GetActiveMembers() []*ContainerMemberStats {
 
 type AvailableDownloadFile struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	Path  string                 `protobuf:"bytes,5,opt,name=path,proto3" json:"path,omitempty"`
+	Name  string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	Path  string                 `protobuf:"bytes,5,opt,name=path,proto3" json:"path,omitempty" yaml:"path,omitempty"`
 	// Deprecated things are now stored in the stats.
-	Type          string          `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
-	Complete      bool            `protobuf:"varint,2,opt,name=complete,proto3" json:"complete,omitempty"`
-	Size          uint64          `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	Date          string          `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty"`
-	Stats         *ContainerStats `protobuf:"bytes,8,opt,name=stats,proto3" json:"stats,omitempty"`
+	Type          string          `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
+	Complete      bool            `protobuf:"varint,2,opt,name=complete,proto3" json:"complete,omitempty" yaml:"complete,omitempty"`
+	Size          uint64          `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty" yaml:"size,omitempty"`
+	Date          string          `protobuf:"bytes,4,opt,name=date,proto3" json:"date,omitempty" yaml:"date,omitempty"`
+	Stats         *ContainerStats `protobuf:"bytes,8,opt,name=stats,proto3" json:"stats,omitempty" yaml:"stats,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -326,7 +326,7 @@ func (x *AvailableDownloadFile) GetStats() *ContainerStats {
 
 type AvailableDownloads struct {
 	state         protoimpl.MessageState   `protogen:"open.v1"`
-	Files         []*AvailableDownloadFile `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty"`
+	Files         []*AvailableDownloadFile `protobuf:"bytes,1,rep,name=files,proto3" json:"files,omitempty" yaml:"files,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -370,8 +370,8 @@ func (x *AvailableDownloads) GetFiles() []*AvailableDownloadFile {
 
 type FlowDetails struct {
 	state              protoimpl.MessageState          `protogen:"open.v1"`
-	Context            *proto.ArtifactCollectorContext `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty"`
-	AvailableDownloads *AvailableDownloads             `protobuf:"bytes,16,opt,name=available_downloads,json=availableDownloads,proto3" json:"available_downloads,omitempty"`
+	Context            *proto.ArtifactCollectorContext `protobuf:"bytes,1,opt,name=context,proto3" json:"context,omitempty" yaml:"context,omitempty"`
+	AvailableDownloads *AvailableDownloads             `protobuf:"bytes,16,opt,name=available_downloads,json=availableDownloads,proto3" json:"available_downloads,omitempty" yaml:"available_downloads,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -426,9 +426,9 @@ func (x *FlowDetails) GetAvailableDownloads() *AvailableDownloads {
 // artifacts - they only interprect raw VQL as compiled by the server.
 type ApiFlowRequestDetails struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*proto1.VeloMessage  `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	FlowId        string                 `protobuf:"bytes,3,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	Items         []*proto1.VeloMessage  `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
+	ClientId      string                 `protobuf:"bytes,2,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
+	FlowId        string                 `protobuf:"bytes,3,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty" yaml:"flow_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -486,7 +486,7 @@ func (x *ApiFlowRequestDetails) GetFlowId() string {
 
 type ApiFlowResultDetails struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*proto1.VeloMessage  `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*proto1.VeloMessage  `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -530,7 +530,7 @@ func (x *ApiFlowResultDetails) GetItems() []*proto1.VeloMessage {
 
 type ApiFlowLogDetails struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*proto1.LogMessage   `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	Items         []*proto1.LogMessage   `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -574,18 +574,18 @@ func (x *ApiFlowLogDetails) GetItems() []*proto1.LogMessage {
 
 type ApiFlowRequest struct {
 	state           protoimpl.MessageState `protogen:"open.v1"`
-	ClientId        string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	FlowId          string                 `protobuf:"bytes,2,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
-	Offset          uint64                 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty"`
-	Count           uint64                 `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty"`
-	IncludeArchived bool                   `protobuf:"varint,5,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty"`
+	ClientId        string                 `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
+	FlowId          string                 `protobuf:"bytes,2,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty" yaml:"flow_id,omitempty"`
+	Offset          uint64                 `protobuf:"varint,3,opt,name=offset,proto3" json:"offset,omitempty" yaml:"offset,omitempty"`
+	Count           uint64                 `protobuf:"varint,4,opt,name=count,proto3" json:"count,omitempty" yaml:"count,omitempty"`
+	IncludeArchived bool                   `protobuf:"varint,5,opt,name=include_archived,json=includeArchived,proto3" json:"include_archived,omitempty" yaml:"include_archived,omitempty"`
 	// Include the full request - can be very large.
-	IncludeFullRequest bool `protobuf:"varint,7,opt,name=include_full_request,json=includeFullRequest,proto3" json:"include_full_request,omitempty"`
+	IncludeFullRequest bool `protobuf:"varint,7,opt,name=include_full_request,json=includeFullRequest,proto3" json:"include_full_request,omitempty" yaml:"include_full_request,omitempty"`
 	// If this is specified we truncate each parameter to keep the
 	// request small.
-	IncludeTruncatedRequest bool `protobuf:"varint,8,opt,name=include_truncated_request,json=includeTruncatedRequest,proto3" json:"include_truncated_request,omitempty"`
+	IncludeTruncatedRequest bool `protobuf:"varint,8,opt,name=include_truncated_request,json=includeTruncatedRequest,proto3" json:"include_truncated_request,omitempty" yaml:"include_truncated_request,omitempty"`
 	// If specified we only return flows that collected this artifact.
-	Artifact      string `protobuf:"bytes,6,opt,name=artifact,proto3" json:"artifact,omitempty"`
+	Artifact      string `protobuf:"bytes,6,opt,name=artifact,proto3" json:"artifact,omitempty" yaml:"artifact,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -678,8 +678,8 @@ func (x *ApiFlowRequest) GetArtifact() string {
 
 type ApiFlowResponse struct {
 	state         protoimpl.MessageState            `protogen:"open.v1"`
-	Total         uint64                            `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty"`
-	Items         []*proto.ArtifactCollectorContext `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty"`
+	Total         uint64                            `protobuf:"varint,1,opt,name=total,proto3" json:"total,omitempty" yaml:"total,omitempty"`
+	Items         []*proto.ArtifactCollectorContext `protobuf:"bytes,2,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

@@ -25,9 +25,9 @@ import (
 	"os"
 	"strings"
 
-	"github.com/Velocidex/yaml/v2"
 	errors "github.com/go-errors/errors"
 	"software.sslmate.com/src/go-pkcs12"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"

@@ -1,8 +1,8 @@
 package assets
 
 import (
-	"github.com/Velocidex/yaml/v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 // Loads the api description from the embedded asset

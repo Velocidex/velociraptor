@@ -99,7 +99,7 @@ func (ArtifactCollectorContext_State) EnumDescriptor() ([]byte, []int) {
 
 type ArtifactParameters struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Env           []*proto.VQLEnv        `protobuf:"bytes,3,rep,name=env,proto3" json:"env,omitempty"`
+	Env           []*proto.VQLEnv        `protobuf:"bytes,3,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -143,14 +143,14 @@ func (x *ArtifactParameters) GetEnv() []*proto.VQLEnv {
 
 type ArtifactSpec struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	Artifact   string                 `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty"`
-	Parameters *ArtifactParameters    `protobuf:"bytes,2,opt,name=parameters,proto3" json:"parameters,omitempty"`
+	Artifact   string                 `protobuf:"bytes,1,opt,name=artifact,proto3" json:"artifact,omitempty" yaml:"artifact,omitempty"`
+	Parameters *ArtifactParameters    `protobuf:"bytes,2,opt,name=parameters,proto3" json:"parameters,omitempty" yaml:"parameters,omitempty"`
 	// Batching control applies to this artifact only
-	CpuLimit           float32 `protobuf:"fixed32,10,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty"`
-	MaxBatchWait       uint64  `protobuf:"varint,7,opt,name=max_batch_wait,json=maxBatchWait,proto3" json:"max_batch_wait,omitempty"`
-	MaxBatchRows       uint64  `protobuf:"varint,8,opt,name=max_batch_rows,json=maxBatchRows,proto3" json:"max_batch_rows,omitempty"`
-	MaxBatchRowsBuffer uint64  `protobuf:"varint,9,opt,name=max_batch_rows_buffer,json=maxBatchRowsBuffer,proto3" json:"max_batch_rows_buffer,omitempty"`
-	Timeout            uint64  `protobuf:"varint,11,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	CpuLimit           float32 `protobuf:"fixed32,10,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty" yaml:"cpu_limit,omitempty"`
+	MaxBatchWait       uint64  `protobuf:"varint,7,opt,name=max_batch_wait,json=maxBatchWait,proto3" json:"max_batch_wait,omitempty" yaml:"max_batch_wait,omitempty"`
+	MaxBatchRows       uint64  `protobuf:"varint,8,opt,name=max_batch_rows,json=maxBatchRows,proto3" json:"max_batch_rows,omitempty" yaml:"max_batch_rows,omitempty"`
+	MaxBatchRowsBuffer uint64  `protobuf:"varint,9,opt,name=max_batch_rows_buffer,json=maxBatchRowsBuffer,proto3" json:"max_batch_rows_buffer,omitempty" yaml:"max_batch_rows_buffer,omitempty"`
+	Timeout            uint64  `protobuf:"varint,11,opt,name=timeout,proto3" json:"timeout,omitempty" yaml:"timeout,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
@@ -236,51 +236,51 @@ func (x *ArtifactSpec) GetTimeout() uint64 {
 
 type ArtifactCollectorArgs struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
-	Creator string                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty"`
+	Creator string                 `protobuf:"bytes,1,opt,name=creator,proto3" json:"creator,omitempty" yaml:"creator,omitempty"`
 	// This is an arbitrary object attached to the request that
 	// provides context by the creator. For example it may be used to
 	// store a signature of the request by the creator's key.
-	UserData string `protobuf:"bytes,30,opt,name=user_data,json=userData,proto3" json:"user_data,omitempty"`
-	ClientId string `protobuf:"bytes,3,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	FlowId   string `protobuf:"bytes,31,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	UserData string `protobuf:"bytes,30,opt,name=user_data,json=userData,proto3" json:"user_data,omitempty" yaml:"user_data,omitempty"`
+	ClientId string `protobuf:"bytes,3,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
+	FlowId   string `protobuf:"bytes,31,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty" yaml:"flow_id,omitempty"`
 	// If set we send an urgent request to the client.
-	Urgent bool `protobuf:"varint,21,opt,name=urgent,proto3" json:"urgent,omitempty"`
+	Urgent bool `protobuf:"varint,21,opt,name=urgent,proto3" json:"urgent,omitempty" yaml:"urgent,omitempty"`
 	// This object is a summary of the full object.
-	Summary bool `protobuf:"varint,33,opt,name=summary,proto3" json:"summary,omitempty"`
+	Summary bool `protobuf:"varint,33,opt,name=summary,proto3" json:"summary,omitempty" yaml:"summary,omitempty"`
 	// Old way of specifying the artifacts consist of shared
 	// parameters within a list of artifacts (i.e. all artifacts share
 	// same scope).
-	Artifacts []string `protobuf:"bytes,2,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
+	Artifacts []string `protobuf:"bytes,2,rep,name=artifacts,proto3" json:"artifacts,omitempty" yaml:"artifacts,omitempty"`
 	// New way of specifying artifacts.
-	Specs []*ArtifactSpec `protobuf:"bytes,24,rep,name=specs,proto3" json:"specs,omitempty"`
+	Specs []*ArtifactSpec `protobuf:"bytes,24,rep,name=specs,proto3" json:"specs,omitempty" yaml:"specs,omitempty"`
 	// Artifact collection limits.
-	CpuLimit        float32 `protobuf:"fixed32,25,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty"`
-	IopsLimit       float32 `protobuf:"fixed32,26,opt,name=iops_limit,json=iopsLimit,proto3" json:"iops_limit,omitempty"`
-	ProgressTimeout float32 `protobuf:"fixed32,27,opt,name=progress_timeout,json=progressTimeout,proto3" json:"progress_timeout,omitempty"`
+	CpuLimit        float32 `protobuf:"fixed32,25,opt,name=cpu_limit,json=cpuLimit,proto3" json:"cpu_limit,omitempty" yaml:"cpu_limit,omitempty"`
+	IopsLimit       float32 `protobuf:"fixed32,26,opt,name=iops_limit,json=iopsLimit,proto3" json:"iops_limit,omitempty" yaml:"iops_limit,omitempty"`
+	ProgressTimeout float32 `protobuf:"fixed32,27,opt,name=progress_timeout,json=progressTimeout,proto3" json:"progress_timeout,omitempty" yaml:"progress_timeout,omitempty"`
 	// Resource limits on this collection.
-	Timeout uint64 `protobuf:"varint,7,opt,name=timeout,proto3" json:"timeout,omitempty"`
+	Timeout uint64 `protobuf:"varint,7,opt,name=timeout,proto3" json:"timeout,omitempty" yaml:"timeout,omitempty"`
 	// Total number of rows we allow to collect. Client will abort the
 	// flow if this is exceeded.
-	MaxRows uint64 `protobuf:"varint,22,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty"`
-	MaxLogs uint64 `protobuf:"varint,32,opt,name=max_logs,json=maxLogs,proto3" json:"max_logs,omitempty"`
+	MaxRows uint64 `protobuf:"varint,22,opt,name=max_rows,json=maxRows,proto3" json:"max_rows,omitempty" yaml:"max_rows,omitempty"`
+	MaxLogs uint64 `protobuf:"varint,32,opt,name=max_logs,json=maxLogs,proto3" json:"max_logs,omitempty" yaml:"max_logs,omitempty"`
 	// Total bytes allowed to upload. Client will abort the collection
 	// when exceeded. This might result is a partial file upload. It
 	// is possible to exceed the limit a bit.
-	MaxUploadBytes uint64 `protobuf:"varint,23,opt,name=max_upload_bytes,json=maxUploadBytes,proto3" json:"max_upload_bytes,omitempty"`
+	MaxUploadBytes uint64 `protobuf:"varint,23,opt,name=max_upload_bytes,json=maxUploadBytes,proto3" json:"max_upload_bytes,omitempty" yaml:"max_upload_bytes,omitempty"`
 	// Request a trace of the collection on the endpoint, will upload
 	// a snapshot every trace seconds.
-	TraceFreqSec         uint64 `protobuf:"varint,29,opt,name=trace_freq_sec,json=traceFreqSec,proto3" json:"trace_freq_sec,omitempty"`
-	AllowCustomOverrides bool   `protobuf:"varint,8,opt,name=allow_custom_overrides,json=allowCustomOverrides,proto3" json:"allow_custom_overrides,omitempty"`
+	TraceFreqSec         uint64 `protobuf:"varint,29,opt,name=trace_freq_sec,json=traceFreqSec,proto3" json:"trace_freq_sec,omitempty" yaml:"trace_freq_sec,omitempty"`
+	AllowCustomOverrides bool   `protobuf:"varint,8,opt,name=allow_custom_overrides,json=allowCustomOverrides,proto3" json:"allow_custom_overrides,omitempty" yaml:"allow_custom_overrides,omitempty"`
 	// The maximum time in seconds the client will batch log messages
 	// before forwarding them to the server. If this is 0, no updates
 	// will be sent until he very end of the query.
-	LogBatchTime uint64 `protobuf:"varint,28,opt,name=log_batch_time,json=logBatchTime,proto3" json:"log_batch_time,omitempty"`
+	LogBatchTime uint64 `protobuf:"varint,28,opt,name=log_batch_time,json=logBatchTime,proto3" json:"log_batch_time,omitempty" yaml:"log_batch_time,omitempty"`
 	// This is a private field - Callers can not set it.
-	CompiledCollectorArgs []*proto.VQLCollectorArgs `protobuf:"bytes,20,rep,name=compiled_collector_args,json=compiledCollectorArgs,proto3" json:"compiled_collector_args,omitempty"`
+	CompiledCollectorArgs []*proto.VQLCollectorArgs `protobuf:"bytes,20,rep,name=compiled_collector_args,json=compiledCollectorArgs,proto3" json:"compiled_collector_args,omitempty" yaml:"compiled_collector_args,omitempty"`
 	// Do not schedule the flow - only write it.
-	DoNotSchedule bool `protobuf:"varint,34,opt,name=DoNotSchedule,proto3" json:"DoNotSchedule,omitempty"`
+	DoNotSchedule bool `protobuf:"varint,34,opt,name=DoNotSchedule,proto3" json:"DoNotSchedule,omitempty" yaml:"DoNotSchedule,omitempty"`
 	// DEPRECATED:
-	OpsPerSecond  float32 `protobuf:"fixed32,6,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty"`
+	OpsPerSecond  float32 `protobuf:"fixed32,6,opt,name=ops_per_second,json=opsPerSecond,proto3" json:"ops_per_second,omitempty" yaml:"ops_per_second,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -464,8 +464,8 @@ func (x *ArtifactCollectorArgs) GetOpsPerSecond() float32 {
 
 type ArtifactCollectorResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
-	Request       *ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty"`
+	FlowId        string                 `protobuf:"bytes,1,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty" yaml:"flow_id,omitempty"`
+	Request       *ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=request,proto3" json:"request,omitempty" yaml:"request,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -516,13 +516,13 @@ func (x *ArtifactCollectorResponse) GetRequest() *ArtifactCollectorArgs {
 
 type ArtifactUploadedFileInfo struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	Name       string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	VfsPath    string                 `protobuf:"bytes,2,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
-	Size       uint64                 `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
-	StoredSize uint64                 `protobuf:"varint,4,opt,name=stored_size,json=storedSize,proto3" json:"stored_size,omitempty"`
-	Components []string               `protobuf:"bytes,5,rep,name=components,proto3" json:"components,omitempty"`
+	Name       string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	VfsPath    string                 `protobuf:"bytes,2,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty" yaml:"vfs_path,omitempty"`
+	Size       uint64                 `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty" yaml:"size,omitempty"`
+	StoredSize uint64                 `protobuf:"varint,4,opt,name=stored_size,json=storedSize,proto3" json:"stored_size,omitempty" yaml:"stored_size,omitempty"`
+	Components []string               `protobuf:"bytes,5,rep,name=components,proto3" json:"components,omitempty" yaml:"components,omitempty"`
 	// idx for index files.
-	Type          string `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
+	Type          string `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -607,7 +607,7 @@ func (x *ArtifactUploadedFileInfo) GetType() string {
 // when a collection is updated.
 type PingContext struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	ActiveTime    uint64                 `protobuf:"varint,1,opt,name=active_time,json=activeTime,proto3" json:"active_time,omitempty"`
+	ActiveTime    uint64                 `protobuf:"varint,1,opt,name=active_time,json=activeTime,proto3" json:"active_time,omitempty" yaml:"active_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -653,55 +653,55 @@ func (x *PingContext) GetActiveTime() uint64 {
 // all aspects of a collection.
 type ArtifactCollectorContext struct {
 	state     protoimpl.MessageState `protogen:"open.v1"`
-	ClientId  string                 `protobuf:"bytes,27,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
-	SessionId string                 `protobuf:"bytes,13,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
-	Request   *ArtifactCollectorArgs `protobuf:"bytes,11,opt,name=request,proto3" json:"request,omitempty"`
+	ClientId  string                 `protobuf:"bytes,27,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
+	SessionId string                 `protobuf:"bytes,13,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty" yaml:"session_id,omitempty"`
+	Request   *ArtifactCollectorArgs `protobuf:"bytes,11,opt,name=request,proto3" json:"request,omitempty" yaml:"request,omitempty"`
 	// When a flow is relaunched, we store the old requests in this
 	// parameter. Relaunching a flow is not common but can be done in
 	// order to fetch new data but still keep the data in the same
 	// flow.
-	PreviousFlows []*ArtifactCollectorContext `protobuf:"bytes,38,rep,name=previous_flows,json=previousFlows,proto3" json:"previous_flows,omitempty"`
+	PreviousFlows []*ArtifactCollectorContext `protobuf:"bytes,38,rep,name=previous_flows,json=previousFlows,proto3" json:"previous_flows,omitempty" yaml:"previous_flows,omitempty"`
 	// If an error occurs this is the backtrace.
-	Backtrace string `protobuf:"bytes,1,opt,name=backtrace,proto3" json:"backtrace,omitempty"`
+	Backtrace string `protobuf:"bytes,1,opt,name=backtrace,proto3" json:"backtrace,omitempty" yaml:"backtrace,omitempty"`
 	// When the collection was created.
-	CreateTime uint64 `protobuf:"varint,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty"`
-	StartTime  uint64 `protobuf:"varint,18,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	CreateTime uint64 `protobuf:"varint,3,opt,name=create_time,json=createTime,proto3" json:"create_time,omitempty" yaml:"create_time,omitempty"`
+	StartTime  uint64 `protobuf:"varint,18,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time,omitempty"`
 	// Last time this collection was active (receiving data).
-	ActiveTime   uint64 `protobuf:"varint,17,opt,name=active_time,json=activeTime,proto3" json:"active_time,omitempty"`
-	InflightTime uint64 `protobuf:"varint,36,opt,name=inflight_time,json=inflightTime,proto3" json:"inflight_time,omitempty"`
+	ActiveTime   uint64 `protobuf:"varint,17,opt,name=active_time,json=activeTime,proto3" json:"active_time,omitempty" yaml:"active_time,omitempty"`
+	InflightTime uint64 `protobuf:"varint,36,opt,name=inflight_time,json=inflightTime,proto3" json:"inflight_time,omitempty" yaml:"inflight_time,omitempty"`
 	// A total count of files uploaded by this query.  This is now
 	// tracked on the client and synced to the server so the server
 	// does not need to keep track of it.
-	TotalUploadedFiles         uint64 `protobuf:"varint,23,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty"`
-	TotalExpectedUploadedBytes uint64 `protobuf:"varint,25,opt,name=total_expected_uploaded_bytes,json=totalExpectedUploadedBytes,proto3" json:"total_expected_uploaded_bytes,omitempty"`
-	TotalUploadedBytes         uint64 `protobuf:"varint,26,opt,name=total_uploaded_bytes,json=totalUploadedBytes,proto3" json:"total_uploaded_bytes,omitempty"`
-	TotalCollectedRows         uint64 `protobuf:"varint,28,opt,name=total_collected_rows,json=totalCollectedRows,proto3" json:"total_collected_rows,omitempty"`
-	TotalLogs                  uint64 `protobuf:"varint,32,opt,name=total_logs,json=totalLogs,proto3" json:"total_logs,omitempty"`
-	TotalRequests              int64  `protobuf:"varint,35,opt,name=total_requests,json=totalRequests,proto3" json:"total_requests,omitempty"`
-	OutstandingRequests        int64  `protobuf:"varint,31,opt,name=outstanding_requests,json=outstandingRequests,proto3" json:"outstanding_requests,omitempty"`
-	TransactionsOutstanding    uint64 `protobuf:"varint,37,opt,name=transactions_outstanding,json=transactionsOutstanding,proto3" json:"transactions_outstanding,omitempty"`
+	TotalUploadedFiles         uint64 `protobuf:"varint,23,opt,name=total_uploaded_files,json=totalUploadedFiles,proto3" json:"total_uploaded_files,omitempty" yaml:"total_uploaded_files,omitempty"`
+	TotalExpectedUploadedBytes uint64 `protobuf:"varint,25,opt,name=total_expected_uploaded_bytes,json=totalExpectedUploadedBytes,proto3" json:"total_expected_uploaded_bytes,omitempty" yaml:"total_expected_uploaded_bytes,omitempty"`
+	TotalUploadedBytes         uint64 `protobuf:"varint,26,opt,name=total_uploaded_bytes,json=totalUploadedBytes,proto3" json:"total_uploaded_bytes,omitempty" yaml:"total_uploaded_bytes,omitempty"`
+	TotalCollectedRows         uint64 `protobuf:"varint,28,opt,name=total_collected_rows,json=totalCollectedRows,proto3" json:"total_collected_rows,omitempty" yaml:"total_collected_rows,omitempty"`
+	TotalLogs                  uint64 `protobuf:"varint,32,opt,name=total_logs,json=totalLogs,proto3" json:"total_logs,omitempty" yaml:"total_logs,omitempty"`
+	TotalRequests              int64  `protobuf:"varint,35,opt,name=total_requests,json=totalRequests,proto3" json:"total_requests,omitempty" yaml:"total_requests,omitempty"`
+	OutstandingRequests        int64  `protobuf:"varint,31,opt,name=outstanding_requests,json=outstandingRequests,proto3" json:"outstanding_requests,omitempty" yaml:"outstanding_requests,omitempty"`
+	TransactionsOutstanding    uint64 `protobuf:"varint,37,opt,name=transactions_outstanding,json=transactionsOutstanding,proto3" json:"transactions_outstanding,omitempty" yaml:"transactions_outstanding,omitempty"`
 	// We expect the next response from the client to have this id.
-	NextResponseId uint64 `protobuf:"varint,30,opt,name=next_response_id,json=nextResponseId,proto3" json:"next_response_id,omitempty"`
+	NextResponseId uint64 `protobuf:"varint,30,opt,name=next_response_id,json=nextResponseId,proto3" json:"next_response_id,omitempty" yaml:"next_response_id,omitempty"`
 	// Total time the query took to run on the client (reported by the
 	// client's status message at the end of the query).
-	ExecutionDuration int64                          `protobuf:"varint,29,opt,name=execution_duration,json=executionDuration,proto3" json:"execution_duration,omitempty"`
-	State             ArtifactCollectorContext_State `protobuf:"varint,14,opt,name=state,proto3,enum=proto.ArtifactCollectorContext_State" json:"state,omitempty"`
-	Status            string                         `protobuf:"bytes,15,opt,name=status,proto3" json:"status,omitempty"`
+	ExecutionDuration int64                          `protobuf:"varint,29,opt,name=execution_duration,json=executionDuration,proto3" json:"execution_duration,omitempty" yaml:"execution_duration,omitempty"`
+	State             ArtifactCollectorContext_State `protobuf:"varint,14,opt,name=state,proto3,enum=proto.ArtifactCollectorContext_State" json:"state,omitempty" yaml:"state,omitempty"`
+	Status            string                         `protobuf:"bytes,15,opt,name=status,proto3" json:"status,omitempty" yaml:"status,omitempty"`
 	// Some of the collected artifacts may not have results.
-	ArtifactsWithResults []string `protobuf:"bytes,22,rep,name=artifacts_with_results,json=artifactsWithResults,proto3" json:"artifacts_with_results,omitempty"`
+	ArtifactsWithResults []string `protobuf:"bytes,22,rep,name=artifacts_with_results,json=artifactsWithResults,proto3" json:"artifacts_with_results,omitempty" yaml:"artifacts_with_results,omitempty"`
 	// Keep detailed track of each query status.
-	QueryStats []*proto1.VeloStatus `protobuf:"bytes,34,rep,name=query_stats,json=queryStats,proto3" json:"query_stats,omitempty"`
+	QueryStats []*proto1.VeloStatus `protobuf:"bytes,34,rep,name=query_stats,json=queryStats,proto3" json:"query_stats,omitempty" yaml:"query_stats,omitempty"`
 	// Uploads are now permanently stored in a json file. This field is
 	// never serialized - it is just a place holder during processing.
-	UploadedFiles []*ArtifactUploadedFileInfo `protobuf:"bytes,24,rep,name=uploaded_files,json=uploadedFiles,proto3" json:"uploaded_files,omitempty"`
+	UploadedFiles []*ArtifactUploadedFileInfo `protobuf:"bytes,24,rep,name=uploaded_files,json=uploadedFiles,proto3" json:"uploaded_files,omitempty" yaml:"uploaded_files,omitempty"`
 	// DEPRECATED: Not considered any more as clients report the end
 	// of the flow in FlowStats.flow_complete field.
-	UserNotified bool `protobuf:"varint,16,opt,name=user_notified,json=userNotified,proto3" json:"user_notified,omitempty"`
+	UserNotified bool `protobuf:"varint,16,opt,name=user_notified,json=userNotified,proto3" json:"user_notified,omitempty" yaml:"user_notified,omitempty"`
 	// Logs are stored in their own CSV file. This is just a
 	// placeholder during processing.
-	Logs          []*proto1.LogMessage `protobuf:"bytes,20,rep,name=logs,proto3" json:"logs,omitempty"`
-	Dirty         bool                 `protobuf:"varint,2,opt,name=dirty,proto3" json:"dirty,omitempty"`
-	TotalLoads    uint64               `protobuf:"varint,33,opt,name=total_loads,json=totalLoads,proto3" json:"total_loads,omitempty"`
+	Logs          []*proto1.LogMessage `protobuf:"bytes,20,rep,name=logs,proto3" json:"logs,omitempty" yaml:"logs,omitempty"`
+	Dirty         bool                 `protobuf:"varint,2,opt,name=dirty,proto3" json:"dirty,omitempty" yaml:"dirty,omitempty"`
+	TotalLoads    uint64               `protobuf:"varint,33,opt,name=total_loads,json=totalLoads,proto3" json:"total_loads,omitempty" yaml:"total_loads,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -935,8 +935,8 @@ func (x *ArtifactCollectorContext) GetTotalLoads() uint64 {
 // Artifacts to collect for each label.
 type LabelEvents struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty"`
-	Artifacts     *ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=artifacts,proto3" json:"artifacts,omitempty"`
+	Label         string                 `protobuf:"bytes,1,opt,name=label,proto3" json:"label,omitempty" yaml:"label,omitempty"`
+	Artifacts     *ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=artifacts,proto3" json:"artifacts,omitempty" yaml:"artifacts,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -989,7 +989,7 @@ type GetClientMonitoringStateRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Show the compiled monitoring table from the point of view of
 	// this client.
-	ClientId      string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	ClientId      string `protobuf:"bytes,1,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1034,12 +1034,12 @@ func (x *GetClientMonitoringStateRequest) GetClientId() string {
 // This is stored in the ArtifactCollector state.
 type ClientEventTable struct {
 	state   protoimpl.MessageState `protogen:"open.v1"`
-	Version uint64                 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	Version uint64                 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
 	// Artifacts to collect from ALL clients.
-	Artifacts   *ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=artifacts,proto3" json:"artifacts,omitempty"`
-	LabelEvents []*LabelEvents         `protobuf:"bytes,3,rep,name=label_events,json=labelEvents,proto3" json:"label_events,omitempty"`
+	Artifacts   *ArtifactCollectorArgs `protobuf:"bytes,2,opt,name=artifacts,proto3" json:"artifacts,omitempty" yaml:"artifacts,omitempty"`
+	LabelEvents []*LabelEvents         `protobuf:"bytes,3,rep,name=label_events,json=labelEvents,proto3" json:"label_events,omitempty" yaml:"label_events,omitempty"`
 	// populated for GetClientMonitoringState()
-	ClientMessage *proto1.VeloMessage `protobuf:"bytes,4,opt,name=client_message,json=clientMessage,proto3" json:"client_message,omitempty"`
+	ClientMessage *proto1.VeloMessage `protobuf:"bytes,4,opt,name=client_message,json=clientMessage,proto3" json:"client_message,omitempty" yaml:"client_message,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1104,9 +1104,9 @@ func (x *ClientEventTable) GetClientMessage() *proto1.VeloMessage {
 
 type UploadedFileInfo struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	VfsPath       string                 `protobuf:"bytes,2,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty"`
-	Size          uint64                 `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
+	VfsPath       string                 `protobuf:"bytes,2,opt,name=vfs_path,json=vfsPath,proto3" json:"vfs_path,omitempty" yaml:"vfs_path,omitempty"`
+	Size          uint64                 `protobuf:"varint,3,opt,name=size,proto3" json:"size,omitempty" yaml:"size,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
