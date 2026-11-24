@@ -4,7 +4,7 @@ import { Dialog as RDialog } from 'radix-ui';
 import { useHistory } from 'react-router-dom';
 import {
   Crosshair, LayoutDashboard, Monitor, BookOpen, Package, Server, Radio, Users, KeyRound, Plus,
-  Moon, Sun, Search, CornerDownLeft,
+  Moon, Sun, Search, CornerDownLeft, Zap, FolderTree, History, UserPlus, FilePlus2,
 } from 'lucide-react';
 import { useArtifactSearch, useClientNameSuggest, useHunts, useTraits } from '../lib/queries';
 import { clientStatus, timeAgo } from '../lib/format';
@@ -29,7 +29,7 @@ export default function CommandPalette({ open, onOpenChange, dark }: {
 }) {
   const history = useHistory();
   const { traits, updateTraits } = useTraits();
-  const { setClient } = useSelectedClient();
+  const { client: selClient, setClient } = useSelectedClient();
   const [q, setQ] = useState('');
   const dq = useDebounced(q.trim(), 150);
   const { data: hunts = [] } = useHunts(false);
@@ -86,6 +86,23 @@ export default function CommandPalette({ open, onOpenChange, dark }: {
                 <Command.Group heading="Actions">
                   <Command.Item value="new-hunt" onSelect={() => go('/hunts?new=1')} className={itemCls}>
                     <Plus /> New hunt
+                  </Command.Item>
+                  {selClient?.client_id && selClient.client_id !== 'server' && <>
+                    <Command.Item value="collect-client" onSelect={() => go(`/collected/${selClient.client_id}?new=1`)} className={itemCls}>
+                      <Zap /> Collect from {selClient.os_info?.hostname || selClient.client_id}
+                    </Command.Item>
+                    <Command.Item value="client-collections" onSelect={() => go(`/collected/${selClient.client_id}`)} className={itemCls}>
+                      <History /> Collections on {selClient.os_info?.hostname || selClient.client_id}
+                    </Command.Item>
+                    <Command.Item value="client-files" onSelect={() => go(`/vfs/${selClient.client_id}/`)} className={itemCls}>
+                      <FolderTree /> Browse files on {selClient.os_info?.hostname || selClient.client_id}
+                    </Command.Item>
+                  </>}
+                  <Command.Item value="new-artifact" onSelect={() => go('/artifacts?new=1')} className={itemCls}>
+                    <FilePlus2 /> New artifact
+                  </Command.Item>
+                  <Command.Item value="new-user" onSelect={() => go('/users?add=1')} className={itemCls}>
+                    <UserPlus /> Add a user
                   </Command.Item>
                   <Command.Item value="theme" onSelect={() => {
                     onOpenChange(false);

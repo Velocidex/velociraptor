@@ -16,7 +16,19 @@ export default function CodeEditor({ value, onChange, mode = 'yaml', readOnly = 
           if (minLines) ace.setOption('minLines', minLines);
           if (maxLines) ace.setOption('maxLines', maxLines);
           ace.renderer.setShowPrintMargin(false);
-          if (readOnly) ace.renderer.$cursorLayer.element.style.display = 'none';
+          // Absolute line numbers always: the user's saved Ace prefs
+          // (e.g. vim mode) can switch on relative numbers, which read
+          // as 6,5,4...1,7 in a viewer.
+          const fix = () => {
+            ace.setOption('relativeLineNumbers', false);
+            if (readOnly) {
+              ace.setOption('highlightActiveLine', false);
+              ace.setOption('highlightGutterLine', false);
+              ace.renderer.$cursorLayer.element.style.display = 'none';
+            }
+          };
+          fix();
+          setTimeout(fix, 0);
         }}
       />
     </div>

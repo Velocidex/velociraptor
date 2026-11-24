@@ -15,6 +15,7 @@ const ClientOverview = lazy(() => import('../pages/host/ClientOverview'));
 const ArtifactsPage = lazy(() => import('../pages/artifacts/ArtifactsPage'));
 const FileBrowser = lazy(() => import('../pages/vfs/FileBrowser'));
 const CollectionsPage = lazy(() => import('../pages/collections/CollectionsPage'));
+const UsersPage = lazy(() => import('../pages/users/UsersPage'));
 const LegacyRoutes = lazy(() => import('./LegacyRoutes.jsx'));
 
 function PageFallback() {
@@ -87,6 +88,9 @@ export default function AppShell() {
                 </Route>
                 <Route path="/collected/:client_id/:flow_id?/:tab?">
                   <CollectionsPage />
+                </Route>
+                <Route path="/users/:user?">
+                  <UsersPage />
                 </Route>
                 <Route path="/classic" exact>
                   <Redirect to="/classic/hunts" />

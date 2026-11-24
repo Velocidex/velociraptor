@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
-import { Monitor, Tag, TagsIcon, X, ExternalLink, CircleHelp } from 'lucide-react';
+import { Monitor, Tag, TagsIcon, X, ExternalLink, CircleHelp, Zap, FolderTree, History } from 'lucide-react';
 import { useClientSearch, useLabelClients, usePermission } from '../../lib/queries';
 import type { ApiClient } from '../../lib/types';
 import { clientStatus, fmtNum, fmtTime, timeAgo, toNum } from '../../lib/format';
@@ -131,9 +131,9 @@ export default function ClientsPage() {
             exportName="clients"
             inspector={false}
             onRowClick={open}
-            columns={['Select', 'Status', 'Hostname', 'ClientId', 'OS', 'Release', 'Labels', 'LastSeen', 'LastIP', 'Version', 'FirstSeen']}
-            columnLabels={{ Select: '', ClientId: 'Client ID', LastSeen: 'Last seen', LastIP: 'Last IP', FirstSeen: 'First seen', Status: '' }}
-            columnWidths={{ Select: 36, Status: 36, Hostname: 220, ClientId: 170, OS: 90, Release: 160, Labels: 220, LastSeen: 120, LastIP: 130, Version: 90, FirstSeen: 120 }}
+            columns={['Select', 'Status', 'Hostname', 'Actions', 'ClientId', 'OS', 'Release', 'Labels', 'LastSeen', 'LastIP', 'Version', 'FirstSeen']}
+            columnLabels={{ Actions: '', Select: '', ClientId: 'Client ID', LastSeen: 'Last seen', LastIP: 'Last IP', FirstSeen: 'First seen', Status: '' }}
+            columnWidths={{ Actions: 96, Select: 36, Status: 36, Hostname: 220, ClientId: 170, OS: 90, Release: 160, Labels: 220, LastSeen: 120, LastIP: 130, Version: 90, FirstSeen: 120 }}
             headerRenderers={{
               Select: () => (
                 <Checkbox checked={allChecked} indeterminate={checked.size > 0 && !allChecked} label="Select all"
@@ -162,6 +162,24 @@ export default function ClientsPage() {
                 </Tooltip>
               ),
               Hostname: v => <span className="tw:font-medium">{String(v) || <span className="tw:text-faint">unknown</span>}</span>,
+              Actions: (_v, r) => {
+                const c = r._client as ApiClient;
+                const go = (path: string) => (e: { stopPropagation: () => void }) => {
+                  e.stopPropagation();
+                  setClient(c);
+                  history.push(path);
+                };
+                return (
+                  <span className="tw:flex tw:gap-0.5">
+                    <IconButton size="xs" label="Collect an artifact" icon={<Zap className="tw:size-3.5" />}
+                      onClick={go(`/collected/${c.client_id}?new=1`)} />
+                    <IconButton size="xs" label="Collections" icon={<History className="tw:size-3.5" />}
+                      onClick={go(`/collected/${c.client_id}`)} />
+                    <IconButton size="xs" label="Browse files" icon={<FolderTree className="tw:size-3.5" />}
+                      onClick={go(`/vfs/${c.client_id}/`)} />
+                  </span>
+                );
+              },
               ClientId: v => <Mono className="tw:text-muted">{String(v)}</Mono>,
               Labels: v => (
                 <span className="tw:flex tw:gap-1">

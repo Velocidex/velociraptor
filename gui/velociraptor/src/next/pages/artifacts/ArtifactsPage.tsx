@@ -2,7 +2,7 @@
 // parameters, VQL), then collect or hunt with it in one click. Custom
 // artifacts can be created, edited and deleted here.
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import {
@@ -55,6 +55,13 @@ export default function ArtifactsPage() {
   const [kind, setKind] = useState<ArtifactKind>('');
   const [customOnly, setCustomOnly] = useState(false);
   const [editor, setEditor] = useState<null | { name?: string; template?: string }>(null);
+  const location = useLocation();
+  useEffect(() => {
+    if (new URLSearchParams(location.search).get('new') === '1') {
+      setEditor({});
+      history.replace(location.pathname);
+    }
+  }, [location.search]); // eslint-disable-line react-hooks/exhaustive-deps
   const searchRef = useRef<HTMLInputElement>(null);
 
   const list = useMemo(() => {

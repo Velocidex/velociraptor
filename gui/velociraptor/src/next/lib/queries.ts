@@ -733,3 +733,83 @@ export async function vfsRefresh(clientId: string, components: string[], depth =
 export async function vfsDownload(clientId: string, accessor: string, components: string[]) {
   return api.post<{ flow_id?: string }>('v1/VFSDownloadFile', { client_id: clientId, accessor, components });
 }
+
+// --------------------------------------------------------------- Users
+
+export interface GlobalUser {
+  name: string;
+  orgs?: { id: string; name: string }[];
+  stats?: { last_active_time?: string; last_ip_address?: string };
+  locked?: boolean;
+}
+
+export interface UserRoles {
+  name: string;
+  org: string;
+  org_name?: string;
+  roles?: string[];
+  permissions?: string[];
+  effective_permissions?: string[];
+  all_roles?: string[];
+  all_permissions?: string[];
+}
+
+export function useGlobalUsers() {
+  return useQuery({
+    queryKey: ['global-users'],
+    queryFn: ({ signal }) => api.get<{ users?: GlobalUser[] }>('v1/GetGlobalUsers', {}, signal),
+    select: d => [...(d.users ?? [])].sort((a, b) => a.name.localeCompare(b.name)),
+  });
+}
+
+export function useUserRoles(name: string | undefined, org: string | undefined) {
+  return useQuery({
+    queryKey: ['user-roles', name, org],
+    enabled: !!name && !!org,
+    queryFn: ({ signal }) => api.get<UserRoles>('v1/GetUserRoles', { name, org }, signal),
+  });
+}
+
+export function useSetUserRoles() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { name: string; org: string; roles: string[]; permissions: string[] }) =>
+      api.post('v1/SetUserRoles', p),
+    onMutate: async p => {
+      const key = ['user-roles', p.name, p.org];
+      const prev = qc.getQueryData<UserRoles>(key);
+      if (prev) qc.setQueryData(key, { ...prev, roles: p.roles, permissions: p.permissions });
+      return { prev, key };
+    },
+    onError: (_e, _p, ctx) => { if (ctx?.prev) qc.setQueryData(ctx.key, ctx.prev); },
+    onSettled: (_d, _e, p) => {
+      qc.invalidateQueries({ queryKey: ['user-roles', p.name] });
+      qc.invalidateQueries({ queryKey: ['global-users'] });
+    },
+  });
+}
+
+export function useCreateUser() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { name: string; orgs: string[]; roles: string[] }) =>
+      api.post('v1/CreateUser', { ...p, add_new_user: true }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['global-users'] }),
+  });
+}
+
+// Grant an existing user access to more orgs.
+export function useAddUserOrgs() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { name: string; orgs: string[]; roles: string[] }) =>
+      api.post('v1/CreateUser', { ...p, add_new_user: false }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['global-users'] }),
+  });
+}
+
+export function useSetPassword() {
+  return useMutation({
+    mutationFn: (p: { username: string; password: string }) => api.post('v1/SetPassword', p),
+  });
+}

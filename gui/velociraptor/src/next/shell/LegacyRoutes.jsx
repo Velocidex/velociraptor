@@ -45,7 +45,7 @@ export default function LegacyRoutes({ client, setClient }) {
           <Route path="/classic/artifacts/:artifact?/:action?">
             <ArtifactInspector client={client} />
           </Route>
-          <Route path="/users/:user?" component={UserInspector} />
+          <Route path="/classic/users/:user?" component={UserInspector} />
           <Route path="/classic/host/:client_id([^/]{7,})/:action?">
             <ClientSetterFromRoute client={client} setClient={setClient} />
             <VeloHostInfo client={client} setClient={setClient} />
