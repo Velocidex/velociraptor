@@ -157,6 +157,27 @@ var (
 			"skip_verify":             "FALSE",
 		},
 	}, {
+		TypeName:    constants.KAFKA_CREDS,
+		Description: "Brokers and credentials to be used in kafka_upload() calls.",
+		Verifier:    "x=>x.brokers",
+		Fields: []string{
+			"brokers",
+			"sasl_mechanism",
+			"username",
+			"password",
+			"use_tls",
+			"root_ca",
+			"skip_verify",
+			"client_cert",
+			"client_key",
+		},
+		Template: map[string]string{
+			"brokers":        "# Add brokers one per line\n# kafka1.example.com:9093\n",
+			"sasl_mechanism": "SCRAM-SHA-256",
+			"use_tls":        "TRUE",
+			"skip_verify":    "FALSE",
+		},
+	}, {
 		TypeName:    constants.SMTP_CREDS,
 		Verifier:    "x=>x.server && x.server_port",
 		Description: "Credentials to be used in mail() plugin.",

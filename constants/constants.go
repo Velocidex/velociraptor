@@ -206,6 +206,7 @@ const (
 	ELASTIC_CREDS       = "Elastic Creds"
 	ADX_CREDS           = "ADX Creds"
 	AZURE_MONITOR_CREDS = "Azure Monitor Creds"
+	KAFKA_CREDS         = "Kafka Creds"
 	SMTP_CREDS          = "SMTP Creds"
 	EXECVE_SECRET       = "Execve Secrets"
 

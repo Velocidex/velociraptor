@@ -1,0 +1,142 @@
+name: Kafka.Events.Upload
+author: Wes Lambert - @therealwlambert
+description: |
+  Streams event artifacts to Kafka as they happen, using kafka_upload().
+
+  Covers both kinds of event data:
+
+  * **Client events** (CLIENT_EVENT artifacts running in client
+    monitoring, e.g. Generic.Client.Stats). Each row carries the
+    ClientId of the endpoint that produced it.
+  * **Server events** (SERVER_EVENT artifacts, e.g. Server.Audit.Logs).
+    ClientId is "server".
+
+  Every record is JSON, keyed by ClientId (so each endpoint's events
+  stay in order on one partition), and gets these columns and headers:
+
+  * `Artifact`: the event artifact the row came from
+  * `ArtifactType`: `client_event` or `server_event`
+  * `ClientId`, `OrgId`
+
+  Records go to `<TopicPrefix>.client_event` or
+  `<TopicPrefix>.server_event`. Consumers can route further on the
+  `Artifact` header without parsing the payload.
+
+  Completed collections and hunt results are a different path; see
+  Kafka.Flows.Upload.
+
+  ## Requirements
+
+  This artifact needs the `kafka_upload()` plugin, which is only
+  compiled into Velociraptor builds made with the `sumo` build tag (the
+  official Docker image, or a release binary with `sumo` in its name).
+  Standard builds do not include it.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: Brokers
+    description: Comma separated Kafka brokers (host:port). Used only when KafkaSecret is empty.
+    default: localhost:9092
+  - name: TopicPrefix
+    default: velociraptor
+  - name: ClientArtifactsToWatch
+    type: artifactset
+    artifact_type: CLIENT_EVENT
+    default: |
+      Artifact
+      Generic.Client.Stats
+  - name: ServerArtifactsToWatch
+    type: artifactset
+    artifact_type: SERVER_EVENT
+    default: |
+      Artifact
+      Server.Audit.Logs
+  - name: ChunkSize
+    type: int
+    description: Rows per Kafka batch.
+    default: 500
+  - name: WaitTime
+    type: int
+    description: Maximum seconds to buffer rows before sending.
+    default: 2
+  - name: Compression
+    type: choices
+    default: zstd
+    choices:
+      - zstd
+      - lz4
+      - snappy
+      - gzip
+      - none
+  - name: KeyField
+    description: |
+      Column used as the Kafka record key. Kafka keeps records with the
+      same key on one partition, in order, so the default keeps each
+      endpoint's events together and in sequence. Any column works, for
+      example `Artifact`, `ArtifactType`, `ClientId` or `OrgId`, or a column of the forwarded artifact. Leave
+      empty for no key, which spreads records evenly across partitions
+      with no ordering. Rows without the column are sent with no key.
+      Compacted topics (cleanup.policy=compact) need a key on every record.
+    default: ClientId
+  - name: KafkaSecret
+    description: |
+      Name of a "Kafka Creds" secret holding the brokers and credentials
+      (SASL, TLS). When set, Brokers is ignored. Leave empty only for an
+      unauthenticated test broker.
+  - name: StallWarning
+    type: int
+    description: Seconds between warnings while a batch waits for Kafka.
+    default: 60
+
+sources:
+  - precondition: |
+      SELECT * FROM info()
+      WHERE version(plugin="kafka_upload") >= 1
+
+    query: |
+      // kafka_upload() only exists in 'sumo' builds. Server monitoring
+      // does not evaluate the precondition above, so also log an
+      // actionable message rather than a bare "plugin not found".
+      LET _ <= if(condition=NOT version(plugin="kafka_upload"),
+          then=log(level="ERROR", dedup=-1,
+                   message="Kafka.Events.Upload requires a Velociraptor " +
+                     "build with the 'sumo' tag (the official Docker image, " +
+                     "or a release binary with 'sumo' in its name)."))
+
+      // Never forward our own result rows, or we'd feed ourselves.
+      LET artifacts_to_watch = SELECT * FROM chain(
+        a={SELECT Artifact, "client_event" AS Kind FROM ClientArtifactsToWatch},
+        b={SELECT Artifact, "server_event" AS Kind FROM ServerArtifactsToWatch})
+      WHERE NOT Artifact =~ "^Kafka[.]"
+        AND log(message="Forwarding %v (%v) to Kafka", args=[Artifact, Kind], dedup=-1)
+
+      LET s = scope()
+      LET org_id <= org().id
+
+      LET events = SELECT * FROM foreach(
+          row=artifacts_to_watch,
+          async=TRUE,   // Event queries never end, so run them in parallel.
+          query={
+             SELECT *,
+                    Artifact,
+                    Kind AS ArtifactType,
+                    s.ClientId || "server" AS ClientId,
+                    org_id AS OrgId,
+                    TopicPrefix + "." + Kind AS _topic
+             FROM watch_monitoring(artifact=Artifact)
+          })
+
+      // hold=TRUE: never drop telemetry. Kafka outages are waited out
+      // while Velociraptor spools new events to disk.
+      SELECT * FROM kafka_upload(
+          query=events,
+          brokers=split(string=Brokers, sep=" *, *"),
+          key_field=KeyField,
+          header_fields=["Artifact", "ArtifactType", "ClientId", "OrgId"],
+          chunk_size=ChunkSize,
+          wait_time=WaitTime,
+          compression=Compression,
+          secret=KafkaSecret,
+          hold=TRUE,
+          stall_warning=StallWarning)
