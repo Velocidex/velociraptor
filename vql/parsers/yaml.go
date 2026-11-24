@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/Velocidex/ordereddict"
-	"go.yaml.in/yaml/v4"
+	"github.com/Velocidex/yaml/v2"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/json"
@@ -57,20 +57,15 @@ func (self ParseYamlFunction) Call(
 		return nil
 	}
 
-	// Load the YAML as nodes so mappings can be traversed in source order.
-	var parsed yaml.Node
-	err = yaml.Load(data, &parsed,
-		yaml.WithV2Defaults(),
-		yaml.WithSingleDocument())
+	// Unmarshal the YAML in such a way that we maintain the order
+	// of keys.
+	var parsed yaml.MapSlice
+	err = yaml.Unmarshal(data, &parsed)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
-	result, err := yamlToDict(&parsed)
-	if err != nil {
-		scope.Log("parse_yaml: %v", err)
-		return nil
-	}
+	result := yamlToDict(parsed)
 	result_dict, ok := result.(*ordereddict.Dict)
 	if len(arg.Schema) == 0 || !ok {
 		return result
@@ -97,47 +92,31 @@ func (self ParseYamlFunction) Call(
 	return result_dict
 }
 
-func yamlToDict(node *yaml.Node) (interface{}, error) {
-	switch node.Kind {
-	case yaml.DocumentNode:
-		if len(node.Content) == 0 {
-			return nil, nil
-		}
-		return yamlToDict(node.Content[0])
-
-	case yaml.MappingNode:
+func yamlToDict(item interface{}) interface{} {
+	switch t := item.(type) {
+	case yaml.MapSlice:
 		res := ordereddict.NewDict()
-		for i := 0; i+1 < len(node.Content); i += 2 {
+		for _, v := range t {
 			// We require keys to be strings since this is a JSON
 			// requirement.
-			keyNode := node.Content[i]
-			if keyNode.Tag != "!!str" {
+			key, ok := v.Key.(string)
+			if !ok {
 				continue
 			}
 
-			value, err := yamlToDict(node.Content[i+1])
-			if err != nil {
-				return nil, err
-			}
-			res.Set(keyNode.Value, value)
+			res.Set(key, yamlToDict(v.Value))
 		}
-		return res, nil
+		return res
 
-	case yaml.SequenceNode:
+	case []interface{}:
 		res := []interface{}{}
-		for _, child := range node.Content {
-			value, err := yamlToDict(child)
-			if err != nil {
-				return nil, err
-			}
-			res = append(res, value)
+		for _, v := range t {
+			res = append(res, yamlToDict(v))
 		}
-		return res, nil
+		return res
 
 	default:
-		var result interface{}
-		err := node.Load(&result, yaml.WithV2Defaults())
-		return result, err
+		return item
 	}
 }
 

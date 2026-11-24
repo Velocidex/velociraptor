@@ -3,7 +3,7 @@ package utils
 import (
 	"fmt"
 
-	"go.yaml.in/yaml/v4"
+	"github.com/Velocidex/yaml/v2"
 )
 
 // The yaml library is flakey and can sometimes crash on invalid
@@ -17,9 +17,5 @@ func YamlUnmarshalStrict(data []byte, target interface{}) (err error) {
 		}
 	}()
 
-	return yaml.Load(data, target,
-		yaml.WithV2Defaults(),
-		yaml.WithKnownFields(),
-		yaml.WithUniqueKeys(),
-		yaml.WithSingleDocument())
+	return yaml.UnmarshalStrict(data, target)
 }

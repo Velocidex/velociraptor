@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
+	"github.com/Velocidex/yaml/v2"
 	"google.golang.org/protobuf/proto"
 	"www.velocidex.com/golang/velociraptor/artifacts/assets"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
@@ -20,7 +21,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/paths/artifacts"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/utils"
-	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 type RepositoryManager struct {

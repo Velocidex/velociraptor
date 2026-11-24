@@ -12,6 +12,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Velocidex/yaml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
@@ -23,7 +24,6 @@ import (
 	"www.velocidex.com/golang/velociraptor/third_party/zip"
 	"www.velocidex.com/golang/velociraptor/utils"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
-	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 var (

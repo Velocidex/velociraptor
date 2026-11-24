@@ -23,8 +23,8 @@ const (
 
 type ReformatVQLMessage struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Vql           string                 `protobuf:"bytes,1,opt,name=vql,proto3" json:"vql,omitempty" yaml:"vql,omitempty"`
-	Artifact      string                 `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty" yaml:"artifact,omitempty"`
+	Vql           string                 `protobuf:"bytes,1,opt,name=vql,proto3" json:"vql,omitempty"`
+	Artifact      string                 `protobuf:"bytes,2,opt,name=artifact,proto3" json:"artifact,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -75,8 +75,8 @@ func (x *ReformatVQLMessage) GetArtifact() string {
 
 type Env struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty" yaml:"key,omitempty"`
-	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty" yaml:"value,omitempty"`
+	Key           string                 `protobuf:"bytes,1,opt,name=key,proto3" json:"key,omitempty"`
+	Value         string                 `protobuf:"bytes,2,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -127,9 +127,9 @@ func (x *Env) GetValue() string {
 
 type NotebookExportRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	NotebookId    string                 `protobuf:"bytes,1,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty" yaml:"notebook_id,omitempty"`
-	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
-	PreferredName string                 `protobuf:"bytes,3,opt,name=preferred_name,json=preferredName,proto3" json:"preferred_name,omitempty" yaml:"preferred_name,omitempty"`
+	NotebookId    string                 `protobuf:"bytes,1,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	PreferredName string                 `protobuf:"bytes,3,opt,name=preferred_name,json=preferredName,proto3" json:"preferred_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -188,22 +188,22 @@ func (x *NotebookExportRequest) GetPreferredName() string {
 // Message sent to the notebook processor ro request a cell recalc.
 type NotebookCellRequest struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
-	NotebookId        string                 `protobuf:"bytes,1,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty" yaml:"notebook_id,omitempty"`
-	CellId            string                 `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty" yaml:"cell_id,omitempty"`
-	Version           string                 `protobuf:"bytes,12,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
-	AvailableVersions []string               `protobuf:"bytes,13,rep,name=available_versions,json=availableVersions,proto3" json:"available_versions,omitempty" yaml:"available_versions,omitempty"`
-	Input             string                 `protobuf:"bytes,3,opt,name=input,proto3" json:"input,omitempty" yaml:"input,omitempty"`
-	Output            string                 `protobuf:"bytes,14,opt,name=output,proto3" json:"output,omitempty" yaml:"output,omitempty"`
-	Name              string                 `protobuf:"bytes,11,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
-	Offset            uint64                 `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty" yaml:"offset,omitempty"`
-	Count             uint64                 `protobuf:"varint,5,opt,name=count,proto3" json:"count,omitempty" yaml:"count,omitempty"`
-	Type              string                 `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
-	CurrentlyEditing  bool                   `protobuf:"varint,8,opt,name=currently_editing,json=currentlyEditing,proto3" json:"currently_editing,omitempty" yaml:"currently_editing,omitempty"`
-	Env               []*Env                 `protobuf:"bytes,9,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
-	IncludeUploads    bool                   `protobuf:"varint,10,opt,name=include_uploads,json=includeUploads,proto3" json:"include_uploads,omitempty" yaml:"include_uploads,omitempty"`
-	IncludeTimelines  bool                   `protobuf:"varint,16,opt,name=include_timelines,json=includeTimelines,proto3" json:"include_timelines,omitempty" yaml:"include_timelines,omitempty"`
+	NotebookId        string                 `protobuf:"bytes,1,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
+	CellId            string                 `protobuf:"bytes,2,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
+	Version           string                 `protobuf:"bytes,12,opt,name=version,proto3" json:"version,omitempty"`
+	AvailableVersions []string               `protobuf:"bytes,13,rep,name=available_versions,json=availableVersions,proto3" json:"available_versions,omitempty"`
+	Input             string                 `protobuf:"bytes,3,opt,name=input,proto3" json:"input,omitempty"`
+	Output            string                 `protobuf:"bytes,14,opt,name=output,proto3" json:"output,omitempty"`
+	Name              string                 `protobuf:"bytes,11,opt,name=name,proto3" json:"name,omitempty"`
+	Offset            uint64                 `protobuf:"varint,4,opt,name=offset,proto3" json:"offset,omitempty"`
+	Count             uint64                 `protobuf:"varint,5,opt,name=count,proto3" json:"count,omitempty"`
+	Type              string                 `protobuf:"bytes,6,opt,name=type,proto3" json:"type,omitempty"`
+	CurrentlyEditing  bool                   `protobuf:"varint,8,opt,name=currently_editing,json=currentlyEditing,proto3" json:"currently_editing,omitempty"`
+	Env               []*Env                 `protobuf:"bytes,9,rep,name=env,proto3" json:"env,omitempty"`
+	IncludeUploads    bool                   `protobuf:"varint,10,opt,name=include_uploads,json=includeUploads,proto3" json:"include_uploads,omitempty"`
+	IncludeTimelines  bool                   `protobuf:"varint,16,opt,name=include_timelines,json=includeTimelines,proto3" json:"include_timelines,omitempty"`
 	// If this is set schedule the calculation syncronously.
-	Sync          bool `protobuf:"varint,15,opt,name=sync,proto3" json:"sync,omitempty" yaml:"sync,omitempty"`
+	Sync          bool `protobuf:"varint,15,opt,name=sync,proto3" json:"sync,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -345,13 +345,13 @@ func (x *NotebookCellRequest) GetSync() bool {
 
 type NotebookContext struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
-	HuntId        string                 `protobuf:"bytes,2,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty" yaml:"hunt_id,omitempty"`
-	FlowId        string                 `protobuf:"bytes,3,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty" yaml:"flow_id,omitempty"`
-	ClientId      string                 `protobuf:"bytes,4,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty" yaml:"client_id,omitempty"`
-	EventArtifact string                 `protobuf:"bytes,5,opt,name=event_artifact,json=eventArtifact,proto3" json:"event_artifact,omitempty" yaml:"event_artifact,omitempty"`
-	StartTime     int64                  `protobuf:"varint,6,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty" yaml:"start_time,omitempty"`
-	EndTime       int64                  `protobuf:"varint,7,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty" yaml:"end_time,omitempty"`
+	Type          string                 `protobuf:"bytes,1,opt,name=type,proto3" json:"type,omitempty"`
+	HuntId        string                 `protobuf:"bytes,2,opt,name=hunt_id,json=huntId,proto3" json:"hunt_id,omitempty"`
+	FlowId        string                 `protobuf:"bytes,3,opt,name=flow_id,json=flowId,proto3" json:"flow_id,omitempty"`
+	ClientId      string                 `protobuf:"bytes,4,opt,name=client_id,json=clientId,proto3" json:"client_id,omitempty"`
+	EventArtifact string                 `protobuf:"bytes,5,opt,name=event_artifact,json=eventArtifact,proto3" json:"event_artifact,omitempty"`
+	StartTime     int64                  `protobuf:"varint,6,opt,name=start_time,json=startTime,proto3" json:"start_time,omitempty"`
+	EndTime       int64                  `protobuf:"varint,7,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -438,45 +438,45 @@ func (x *NotebookContext) GetEndTime() int64 {
 // Represents an entire notebook.
 type NotebookMetadata struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
-	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
-	Description string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
-	Creator     string                 `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty" yaml:"creator,omitempty"`
+	Name        string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Creator     string                 `protobuf:"bytes,3,opt,name=creator,proto3" json:"creator,omitempty"`
 	// Type of notebook - Hunt, Flow or empty for default.
-	Context *NotebookContext `protobuf:"bytes,16,opt,name=context,proto3" json:"context,omitempty" yaml:"context,omitempty"`
+	Context *NotebookContext `protobuf:"bytes,16,opt,name=context,proto3" json:"context,omitempty"`
 	// A list of usernames that have access to this notebook.
-	Collaborators []string `protobuf:"bytes,12,rep,name=collaborators,proto3" json:"collaborators,omitempty" yaml:"collaborators,omitempty"`
+	Collaborators []string `protobuf:"bytes,12,rep,name=collaborators,proto3" json:"collaborators,omitempty"`
 	// A list of NOTEBOOK artifacts to create the notebook with.
-	Artifacts []string `protobuf:"bytes,20,rep,name=artifacts,proto3" json:"artifacts,omitempty" yaml:"artifacts,omitempty"`
+	Artifacts []string `protobuf:"bytes,20,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
 	// Each notebook template can be passed parameters
-	Specs []*proto.ArtifactSpec `protobuf:"bytes,21,rep,name=specs,proto3" json:"specs,omitempty" yaml:"specs,omitempty"`
+	Specs []*proto.ArtifactSpec `protobuf:"bytes,21,rep,name=specs,proto3" json:"specs,omitempty"`
 	// Notebooks can have typed parameters which are injected into
 	// every cell.
-	Parameters []*proto1.ArtifactParameter `protobuf:"bytes,22,rep,name=parameters,proto3" json:"parameters,omitempty" yaml:"parameters,omitempty"`
+	Parameters []*proto1.ArtifactParameter `protobuf:"bytes,22,rep,name=parameters,proto3" json:"parameters,omitempty"`
 	// These queries will be run before each cell is evaluated in
 	// order to set up the parameters.
-	Requests []*proto2.VQLCollectorArgs `protobuf:"bytes,23,rep,name=requests,proto3" json:"requests,omitempty" yaml:"requests,omitempty"`
+	Requests []*proto2.VQLCollectorArgs `protobuf:"bytes,23,rep,name=requests,proto3" json:"requests,omitempty"`
 	// If this is set, the notebook is public.
-	Public       bool  `protobuf:"varint,13,opt,name=public,proto3" json:"public,omitempty" yaml:"public,omitempty"`
-	CreatedTime  int64 `protobuf:"varint,4,opt,name=created_time,json=createdTime,proto3" json:"created_time,omitempty" yaml:"created_time,omitempty"`
-	ModifiedTime int64 `protobuf:"varint,5,opt,name=modified_time,json=modifiedTime,proto3" json:"modified_time,omitempty" yaml:"modified_time,omitempty"`
+	Public       bool  `protobuf:"varint,13,opt,name=public,proto3" json:"public,omitempty"`
+	CreatedTime  int64 `protobuf:"varint,4,opt,name=created_time,json=createdTime,proto3" json:"created_time,omitempty"`
+	ModifiedTime int64 `protobuf:"varint,5,opt,name=modified_time,json=modifiedTime,proto3" json:"modified_time,omitempty"`
 	// A strictly incrementing version of this notebook.
-	Version    int64  `protobuf:"varint,24,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
-	NotebookId string `protobuf:"bytes,7,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty" yaml:"notebook_id,omitempty"`
+	Version    int64  `protobuf:"varint,24,opt,name=version,proto3" json:"version,omitempty"`
+	NotebookId string `protobuf:"bytes,7,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
 	// Deprecated
-	Cells              []string            `protobuf:"bytes,6,rep,name=cells,proto3" json:"cells,omitempty" yaml:"cells,omitempty"`
-	CellMetadata       []*NotebookCell     `protobuf:"bytes,11,rep,name=cell_metadata,json=cellMetadata,proto3" json:"cell_metadata,omitempty" yaml:"cell_metadata,omitempty"`
-	LatestCellId       string              `protobuf:"bytes,8,opt,name=latest_cell_id,json=latestCellId,proto3" json:"latest_cell_id,omitempty" yaml:"latest_cell_id,omitempty"`
-	Hidden             bool                `protobuf:"varint,9,opt,name=hidden,proto3" json:"hidden,omitempty" yaml:"hidden,omitempty"`
-	AvailableDownloads *AvailableDownloads `protobuf:"bytes,10,opt,name=available_downloads,json=availableDownloads,proto3" json:"available_downloads,omitempty" yaml:"available_downloads,omitempty"`
-	AvailableUploads   *AvailableDownloads `protobuf:"bytes,18,opt,name=available_uploads,json=availableUploads,proto3" json:"available_uploads,omitempty" yaml:"available_uploads,omitempty"`
+	Cells              []string            `protobuf:"bytes,6,rep,name=cells,proto3" json:"cells,omitempty"`
+	CellMetadata       []*NotebookCell     `protobuf:"bytes,11,rep,name=cell_metadata,json=cellMetadata,proto3" json:"cell_metadata,omitempty"`
+	LatestCellId       string              `protobuf:"bytes,8,opt,name=latest_cell_id,json=latestCellId,proto3" json:"latest_cell_id,omitempty"`
+	Hidden             bool                `protobuf:"varint,9,opt,name=hidden,proto3" json:"hidden,omitempty"`
+	AvailableDownloads *AvailableDownloads `protobuf:"bytes,10,opt,name=available_downloads,json=availableDownloads,proto3" json:"available_downloads,omitempty"`
+	AvailableUploads   *AvailableDownloads `protobuf:"bytes,18,opt,name=available_uploads,json=availableUploads,proto3" json:"available_uploads,omitempty"`
 	// These environment variables will be populated into each
 	// notebook cell in this notebook.
-	Env         []*Env               `protobuf:"bytes,14,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
-	Timelines   []string             `protobuf:"bytes,15,rep,name=timelines,proto3" json:"timelines,omitempty" yaml:"timelines,omitempty"`
-	ColumnTypes []*proto1.ColumnType `protobuf:"bytes,17,rep,name=column_types,json=columnTypes,proto3" json:"column_types,omitempty" yaml:"column_types,omitempty"`
+	Env         []*Env               `protobuf:"bytes,14,rep,name=env,proto3" json:"env,omitempty"`
+	Timelines   []string             `protobuf:"bytes,15,rep,name=timelines,proto3" json:"timelines,omitempty"`
+	ColumnTypes []*proto1.ColumnType `protobuf:"bytes,17,rep,name=column_types,json=columnTypes,proto3" json:"column_types,omitempty"`
 	// Cells that are not immediately included but may be included by
 	// the GUI as suggestions.
-	Suggestions   []*NotebookCellRequest `protobuf:"bytes,19,rep,name=suggestions,proto3" json:"suggestions,omitempty" yaml:"suggestions,omitempty"`
+	Suggestions   []*NotebookCellRequest `protobuf:"bytes,19,rep,name=suggestions,proto3" json:"suggestions,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -681,7 +681,7 @@ func (x *NotebookMetadata) GetSuggestions() []*NotebookCellRequest {
 
 type Notebooks struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*NotebookMetadata    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
+	Items         []*NotebookMetadata    `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -725,30 +725,30 @@ func (x *Notebooks) GetItems() []*NotebookMetadata {
 
 type NotebookCell struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
-	NotebookId string                 `protobuf:"bytes,16,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty" yaml:"notebook_id,omitempty"`
-	Input      string                 `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty" yaml:"input,omitempty"`
-	Output     string                 `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty" yaml:"output,omitempty"`
+	NotebookId string                 `protobuf:"bytes,16,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
+	Input      string                 `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty"`
+	Output     string                 `protobuf:"bytes,2,opt,name=output,proto3" json:"output,omitempty"`
 	// A short summary of the notebook cell.
-	Summary  string   `protobuf:"bytes,17,opt,name=summary,proto3" json:"summary,omitempty" yaml:"summary,omitempty"`
-	Data     string   `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty" yaml:"data,omitempty"`
-	CellId   string   `protobuf:"bytes,4,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty" yaml:"cell_id,omitempty"`
-	Messages []string `protobuf:"bytes,5,rep,name=messages,proto3" json:"messages,omitempty" yaml:"messages,omitempty"`
+	Summary  string   `protobuf:"bytes,17,opt,name=summary,proto3" json:"summary,omitempty"`
+	Data     string   `protobuf:"bytes,3,opt,name=data,proto3" json:"data,omitempty"`
+	CellId   string   `protobuf:"bytes,4,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
+	Messages []string `protobuf:"bytes,5,rep,name=messages,proto3" json:"messages,omitempty"`
 	// True if there are more messages than are included in the
 	// messages field above.
-	MoreMessages bool `protobuf:"varint,12,opt,name=more_messages,json=moreMessages,proto3" json:"more_messages,omitempty" yaml:"more_messages,omitempty"`
+	MoreMessages bool `protobuf:"varint,12,opt,name=more_messages,json=moreMessages,proto3" json:"more_messages,omitempty"`
 	// Last modified time.
-	Timestamp int64 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty" yaml:"timestamp,omitempty"`
+	Timestamp int64 `protobuf:"varint,6,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
 	// A monotonic incremented version of this cell.
-	Version  int64 `protobuf:"varint,18,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
-	Duration int64 `protobuf:"varint,10,opt,name=duration,proto3" json:"duration,omitempty" yaml:"duration,omitempty"`
+	Version  int64 `protobuf:"varint,18,opt,name=version,proto3" json:"version,omitempty"`
+	Duration int64 `protobuf:"varint,10,opt,name=duration,proto3" json:"duration,omitempty"`
 	// The type of this cell.
-	Type              string   `protobuf:"bytes,7,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
-	CurrentlyEditing  bool     `protobuf:"varint,8,opt,name=currently_editing,json=currentlyEditing,proto3" json:"currently_editing,omitempty" yaml:"currently_editing,omitempty"`
-	Calculating       bool     `protobuf:"varint,9,opt,name=calculating,proto3" json:"calculating,omitempty" yaml:"calculating,omitempty"`
-	Env               []*Env   `protobuf:"bytes,11,rep,name=env,proto3" json:"env,omitempty" yaml:"env,omitempty"`
-	Error             string   `protobuf:"bytes,13,opt,name=error,proto3" json:"error,omitempty" yaml:"error,omitempty"`
-	CurrentVersion    string   `protobuf:"bytes,14,opt,name=current_version,json=currentVersion,proto3" json:"current_version,omitempty" yaml:"current_version,omitempty"`
-	AvailableVersions []string `protobuf:"bytes,15,rep,name=available_versions,json=availableVersions,proto3" json:"available_versions,omitempty" yaml:"available_versions,omitempty"`
+	Type              string   `protobuf:"bytes,7,opt,name=type,proto3" json:"type,omitempty"`
+	CurrentlyEditing  bool     `protobuf:"varint,8,opt,name=currently_editing,json=currentlyEditing,proto3" json:"currently_editing,omitempty"`
+	Calculating       bool     `protobuf:"varint,9,opt,name=calculating,proto3" json:"calculating,omitempty"`
+	Env               []*Env   `protobuf:"bytes,11,rep,name=env,proto3" json:"env,omitempty"`
+	Error             string   `protobuf:"bytes,13,opt,name=error,proto3" json:"error,omitempty"`
+	CurrentVersion    string   `protobuf:"bytes,14,opt,name=current_version,json=currentVersion,proto3" json:"current_version,omitempty"`
+	AvailableVersions []string `protobuf:"bytes,15,rep,name=available_versions,json=availableVersions,proto3" json:"available_versions,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -911,12 +911,12 @@ func (x *NotebookCell) GetAvailableVersions() []string {
 
 type NotebookFileUploadRequest struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
-	Data                string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty" yaml:"data,omitempty"`
-	Filename            string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty" yaml:"filename,omitempty"`
-	DisableAttachmentId bool                   `protobuf:"varint,6,opt,name=disable_attachment_id,json=disableAttachmentId,proto3" json:"disable_attachment_id,omitempty" yaml:"disable_attachment_id,omitempty"`
-	Components          []string               `protobuf:"bytes,4,rep,name=components,proto3" json:"components,omitempty" yaml:"components,omitempty"`
-	NotebookId          string                 `protobuf:"bytes,3,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty" yaml:"notebook_id,omitempty"`
-	CellId              string                 `protobuf:"bytes,5,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty" yaml:"cell_id,omitempty"`
+	Data                string                 `protobuf:"bytes,1,opt,name=data,proto3" json:"data,omitempty"`
+	Filename            string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`
+	DisableAttachmentId bool                   `protobuf:"varint,6,opt,name=disable_attachment_id,json=disableAttachmentId,proto3" json:"disable_attachment_id,omitempty"`
+	Components          []string               `protobuf:"bytes,4,rep,name=components,proto3" json:"components,omitempty"`
+	NotebookId          string                 `protobuf:"bytes,3,opt,name=notebook_id,json=notebookId,proto3" json:"notebook_id,omitempty"`
+	CellId              string                 `protobuf:"bytes,5,opt,name=cell_id,json=cellId,proto3" json:"cell_id,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
 }
@@ -995,9 +995,9 @@ func (x *NotebookFileUploadRequest) GetCellId() string {
 
 type NotebookFileUploadResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty" yaml:"url,omitempty"`
-	Filename      string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty" yaml:"filename,omitempty"`
-	MimeType      string                 `protobuf:"bytes,3,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty" yaml:"mime_type,omitempty"`
+	Url           string                 `protobuf:"bytes,1,opt,name=url,proto3" json:"url,omitempty"`
+	Filename      string                 `protobuf:"bytes,2,opt,name=filename,proto3" json:"filename,omitempty"`
+	MimeType      string                 `protobuf:"bytes,3,opt,name=mime_type,json=mimeType,proto3" json:"mime_type,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }

@@ -20,11 +20,11 @@ const (
 
 type ArgDescriptor struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
-	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
-	Repeated      bool                   `protobuf:"varint,4,opt,name=repeated,proto3" json:"repeated,omitempty" yaml:"repeated,omitempty"`
-	Required      bool                   `protobuf:"varint,5,opt,name=required,proto3" json:"required,omitempty" yaml:"required,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Type          string                 `protobuf:"bytes,2,opt,name=type,proto3" json:"type,omitempty"`
+	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Repeated      bool                   `protobuf:"varint,4,opt,name=repeated,proto3" json:"repeated,omitempty"`
+	Required      bool                   `protobuf:"varint,5,opt,name=required,proto3" json:"required,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -96,15 +96,15 @@ func (x *ArgDescriptor) GetRequired() bool {
 
 type Completion struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty" yaml:"name,omitempty"`
-	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty" yaml:"description,omitempty"`
-	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty" yaml:"type,omitempty"`
-	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty" yaml:"version,omitempty"`
-	Args          []*ArgDescriptor       `protobuf:"bytes,4,rep,name=args,proto3" json:"args,omitempty" yaml:"args,omitempty"`
-	Category      string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty" yaml:"category,omitempty"`
-	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" yaml:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
-	Platforms     []string               `protobuf:"bytes,8,rep,name=platforms,proto3" json:"platforms,omitempty" yaml:"platforms,omitempty"`
-	FreeFormArgs  bool                   `protobuf:"varint,9,opt,name=free_form_args,json=freeFormArgs,proto3" json:"free_form_args,omitempty" yaml:"free_form_args,omitempty"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Type          string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Version       uint64                 `protobuf:"varint,6,opt,name=version,proto3" json:"version,omitempty"`
+	Args          []*ArgDescriptor       `protobuf:"bytes,4,rep,name=args,proto3" json:"args,omitempty"`
+	Category      string                 `protobuf:"bytes,5,opt,name=category,proto3" json:"category,omitempty"`
+	Metadata      map[string]string      `protobuf:"bytes,7,rep,name=metadata,proto3" json:"metadata,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
+	Platforms     []string               `protobuf:"bytes,8,rep,name=platforms,proto3" json:"platforms,omitempty"`
+	FreeFormArgs  bool                   `protobuf:"varint,9,opt,name=free_form_args,json=freeFormArgs,proto3" json:"free_form_args,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -204,7 +204,7 @@ func (x *Completion) GetFreeFormArgs() bool {
 
 type KeywordCompletions struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*Completion          `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty" yaml:"items,omitempty"`
+	Items         []*Completion          `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
