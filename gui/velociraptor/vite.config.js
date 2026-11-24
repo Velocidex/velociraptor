@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import tailwindcss from '@tailwindcss/vite';
 import viteCompression from 'vite-plugin-compression';
 import eslint from 'vite-plugin-eslint';
 
@@ -15,6 +16,19 @@ export default defineConfig({
         chunkSizeWarningLimit: 10000000,
         sourcemap: false,
         rollupOptions: {
+            output: {
+                // Keep big, rarely changing libraries in their own
+                // chunks so they cache well between releases.
+                manualChunks(id) {
+                    if (id.includes('node_modules/ace-builds')) return 'vendor-ace';
+                    if (id.includes('node_modules/recharts') ||
+                        id.includes('node_modules/d3-')) return 'vendor-charts';
+                    if (id.includes('node_modules/react-dom') ||
+                        id.includes('node_modules/react/') ||
+                        id.includes('node_modules/scheduler')) return 'vendor-react';
+                    return undefined;
+                },
+            },
             onwarn(warning, warn) {
                 // Pointless warning we cant do anything about.
                 if (warning.code === "MODULE_LEVEL_DIRECTIVE") {
@@ -39,7 +53,7 @@ export default defineConfig({
         preserveSymlinks: true,
     },
     plugins: [
-      // …
+      tailwindcss(),
       react({
         // Use React plugin in all *.jsx and *.tsx files
         include: '**/*.{jsx,tsx}',

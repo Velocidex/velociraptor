@@ -573,3 +573,21 @@ export default class UserLabel extends React.Component {
         );
     }
 };
+
+// Used by the new UI shell: shows only the settings dialog, reusing the
+// settings logic above.
+export class UserSettingsModal extends UserLabel {
+    static propTypes = {
+        setClient: PropTypes.func.isRequired,
+        onClose: PropTypes.func.isRequired,
+    };
+
+    render() {
+        return (
+            <UserSettingsDialogWithRouter
+              setClient={this.props.setClient}
+              setSetting={this.setSettings}
+              onClose={this.props.onClose} />
+        );
+    }
+}

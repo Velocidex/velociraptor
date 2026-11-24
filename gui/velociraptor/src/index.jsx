@@ -2,12 +2,10 @@ import './css/_variables.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import './css/index.css';
-import App from './App';
+import Root from './next/Root';
 import * as serviceWorker from './serviceWorker';
-
-import {HashRouter} from "react-router-dom";
 
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
@@ -59,12 +57,7 @@ library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
             faListOl,
            );
 
-ReactDOM.render(
-    <HashRouter>
-        <App />
-    </HashRouter>,
-    document.getElementById('root')
-);
+createRoot(document.getElementById('root')).render(<Root />);
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

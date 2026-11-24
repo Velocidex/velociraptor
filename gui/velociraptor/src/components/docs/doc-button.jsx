@@ -66,7 +66,7 @@ class Admonition extends Component {
 }
 
 
-class HelpDialog extends Component {
+export class HelpDialog extends Component {
     static propTypes = {
         onClose: PropTypes.func.isRequired,
     }

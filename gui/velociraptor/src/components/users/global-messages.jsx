@@ -13,7 +13,7 @@ import {CancelToken} from 'axios';
 
 import "./global-messages.css";
 
-class ShowGlobalMessages extends Component {
+export class ShowGlobalMessages extends Component {
     static contextType = UserConfig;
 
     static propTypes = {

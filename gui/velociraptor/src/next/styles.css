@@ -1,0 +1,263 @@
+/*
+ * Design system for the new UI.
+ *
+ * Tailwind runs with the "tw" prefix (classes look like tw:flex,
+ * tw:hover:bg-hover) so it can never collide with Bootstrap classes
+ * still used by the legacy screens. Preflight is skipped for the
+ * same reason: Bootstrap's reboot already normalises elements.
+ *
+ * Colours are semantic tokens backed by CSS variables, so a single
+ * class (tw:bg-panel) works in both light and dark mode.
+ */
+@import "tailwindcss/theme.css" layer(theme) prefix(tw);
+/* Utilities are unlayered and !important: the legacy Bootstrap and
+   theme CSS is unlayered and uses element selectors scoped to the body
+   theme class (e.g. ".veloci-light a"), which would otherwise beat
+   single-class utilities. Utilities only ever appear on new UI
+   elements, so this cannot affect legacy screens. */
+@import "tailwindcss/utilities.css" important;
+
+@source "./";
+
+@custom-variant dark (&:where(.rx-dark, .rx-dark *));
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
+    "Noto Sans", "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "Iosevka Term", ui-monospace, SFMono-Regular, Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  --color-canvas: var(--rx-canvas);
+  --color-panel: var(--rx-panel);
+  --color-raised: var(--rx-raised);
+  --color-hover: var(--rx-hover);
+  --color-active: var(--rx-active);
+  --color-line: var(--rx-line);
+  --color-line-strong: var(--rx-line-strong);
+  --color-fg: var(--rx-fg);
+  --color-muted: var(--rx-muted);
+  --color-faint: var(--rx-faint);
+  --color-accent: var(--rx-accent);
+  --color-accent-fg: var(--rx-accent-fg);
+  --color-accent-soft: var(--rx-accent-soft);
+  --color-ok: var(--rx-ok);
+  --color-ok-soft: var(--rx-ok-soft);
+  --color-warn: var(--rx-warn);
+  --color-warn-soft: var(--rx-warn-soft);
+  --color-bad: var(--rx-bad);
+  --color-bad-soft: var(--rx-bad-soft);
+  --color-info: var(--rx-info);
+  --color-info-soft: var(--rx-info-soft);
+  --color-sidebar: var(--rx-sidebar);
+
+  --text-2xs: 0.6875rem;
+  --text-2xs--line-height: 1rem;
+
+  --animate-fade-in: rx-fade-in 120ms ease-out;
+  --animate-pop-in: rx-pop-in 140ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes rx-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes rx-pop-in {
+  from { opacity: 0; transform: translate(-50%, -48%) scale(0.97); }
+  to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+}
+
+:root, .rx-light {
+  --rx-canvas: #f6f7f9;
+  --rx-panel: #ffffff;
+  --rx-raised: #ffffff;
+  --rx-hover: #f0f2f5;
+  --rx-active: #e6eaf0;
+  --rx-line: #e3e6eb;
+  --rx-line-strong: #cfd4dc;
+  --rx-fg: #14171c;
+  --rx-muted: #5b6472;
+  --rx-faint: #8a93a1;
+  --rx-accent: #4f46e5;
+  --rx-accent-fg: #ffffff;
+  --rx-accent-soft: #eef0ff;
+  --rx-ok: #15803d;
+  --rx-ok-soft: #e8f6ec;
+  --rx-warn: #b45309;
+  --rx-warn-soft: #fdf3e3;
+  --rx-bad: #c81e1e;
+  --rx-bad-soft: #fdecec;
+  --rx-info: #0369a1;
+  --rx-info-soft: #e6f3fa;
+  --rx-sidebar: #fbfbfc;
+  --rx-shadow: 0 1px 2px rgb(16 24 40 / 0.04), 0 1px 3px rgb(16 24 40 / 0.06);
+  --rx-shadow-lg: 0 12px 32px -8px rgb(16 24 40 / 0.18), 0 4px 8px -4px rgb(16 24 40 / 0.08);
+  color-scheme: light;
+}
+
+.rx-dark {
+  --rx-canvas: #0d0f13;
+  --rx-panel: #14171c;
+  --rx-raised: #1a1e24;
+  --rx-hover: #1e232a;
+  --rx-active: #262c35;
+  --rx-line: #252a32;
+  --rx-line-strong: #343b46;
+  --rx-fg: #e7eaee;
+  --rx-muted: #9aa3b1;
+  --rx-faint: #6b7482;
+  --rx-accent: #818cf8;
+  --rx-accent-fg: #0d0f13;
+  --rx-accent-soft: #23264a;
+  --rx-ok: #4ade80;
+  --rx-ok-soft: #12291b;
+  --rx-warn: #fbbf24;
+  --rx-warn-soft: #2d2410;
+  --rx-bad: #f87171;
+  --rx-bad-soft: #321616;
+  --rx-info: #38bdf8;
+  --rx-info-soft: #0f2534;
+  --rx-sidebar: #101318;
+  --rx-shadow: 0 1px 2px rgb(0 0 0 / 0.4);
+  --rx-shadow-lg: 0 16px 40px -8px rgb(0 0 0 / 0.6), 0 4px 8px -4px rgb(0 0 0 / 0.4);
+  color-scheme: dark;
+}
+
+/* Root of everything rendered by the new UI. */
+.rx {
+  font-family: var(--tw-font-sans);
+  letter-spacing: normal;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--rx-fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Undo Bootstrap reboot / legacy theme defaults inside new screens.
+   Selectors have element-level specificity (0,0,1) and this file loads
+   after the legacy CSS, so they beat Bootstrap's reboot. They never
+   apply inside legacy screens hosted by the shell. */
+:where(.rx) h1:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h2:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h3:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h4:not(:where(.rx-legacy-host *, .rx-legacy-inline *)),
+:where(.rx) h5:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h6:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) p:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) dl:not(:where(.rx-legacy-host *, .rx-legacy-inline *)),
+:where(.rx) dd:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) ul:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) ol:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) figure:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) pre:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  margin: 0;
+}
+:where(.rx) h1:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h2:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h3:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h4:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h5:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) h6:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  font-size: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  color: inherit;
+}
+:where(.rx) ul:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) ol:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  padding: 0;
+  list-style: none;
+}
+/* Legacy themes style dl, pre and code via ".theme el" (0,1,1). */
+.rx dl:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  font-family: inherit;
+}
+.rx pre:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), .rx code:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  font-family: var(--tw-font-mono);
+  font-size: inherit;
+  color: inherit;
+}
+/* Legacy themes colour every link via ".theme a" (0,1,1). */
+.rx a:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  color: inherit;
+  text-decoration: none;
+}
+:where(.rx) button:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  letter-spacing: inherit;
+}
+:where(.rx) button:disabled:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  cursor: default;
+}
+:where(.rx) input:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) select:not(:where(.rx-legacy-host *, .rx-legacy-inline *)), :where(.rx) textarea:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  font: inherit;
+  color: inherit;
+  letter-spacing: inherit;
+}
+:where(.rx) label:not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  margin: 0;
+}
+:where(.rx) :where(*, ::before, ::after):not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  box-sizing: border-box;
+  border-width: 0;
+  border-style: solid;
+  border-color: var(--rx-line);
+}
+:where(.rx) :where(:focus-visible):not(:where(.rx-legacy-host *, .rx-legacy-inline *)) {
+  outline: 2px solid var(--rx-accent);
+  outline-offset: 1px;
+}
+.rx ::selection {
+  background: var(--rx-accent-soft);
+}
+
+/* Legacy screens keep their own typography. */
+.rx-legacy-host, .rx-legacy-inline {
+  font-family: var(--font-family-sans-serif);
+  font-size: var(--font-size-base, 14px);
+  letter-spacing: 0.4px;
+  line-height: 1.5;
+  color: var(--color-foreground);
+}
+
+.rx-shadow { box-shadow: var(--rx-shadow); }
+.rx-shadow-lg { box-shadow: var(--rx-shadow-lg); }
+
+/* Thin scrollbars everywhere in the new UI. */
+.rx * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rx-line-strong) transparent;
+}
+
+.rx-num { font-variant-numeric: tabular-nums; }
+
+/* Legacy screens are mounted inside the new shell's main area. The
+   legacy CSS positions #content absolutely under a 50px navbar; we
+   pin it to the main panel instead. */
+.rx-legacy-host {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+}
+.rx-legacy-host #content {
+  position: absolute;
+  inset: 0;
+  margin-left: 0;
+  min-width: 0;
+  overflow: auto;
+}
+
+/* Skeleton shimmer */
+.rx-skeleton {
+  background: linear-gradient(90deg, var(--rx-hover) 0%, var(--rx-active) 50%, var(--rx-hover) 100%);
+  background-size: 200% 100%;
+  animation: rx-shimmer 1.2s ease-in-out infinite;
+  border-radius: 4px;
+}
+@keyframes rx-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+/* cmdk */
+.rx [cmdk-item][data-selected="true"] {
+  background: var(--rx-hover);
+}
+.rx [cmdk-group-heading] {
+  padding: 8px 12px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rx-faint);
+}
