@@ -133,6 +133,7 @@ require (
 	go.lsp.dev/protocol v1.0.2-0.20260831102204-fd045959937f
 	go.lsp.dev/uri v1.0.1
 	go.starlark.net v0.0.0-20230925163745-10651d5192ab
+	go.yaml.in/yaml/v4 v4.0.0
 	golang.org/x/crypto v0.59.0
 	golang.org/x/mod v0.43.0
 	golang.org/x/net v0.63.0
@@ -147,7 +148,6 @@ require (
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v2 v2.4.0
-	gopkg.in/yaml.v3 v3.0.1
 	howett.net/plist v1.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20261007074225-6bf21c30f7fe
@@ -358,6 +358,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260724162435-b2f20204f0df // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.71 // indirect
 	www.velocidex.com/golang/binparsergen v0.1.1-0.20240404114946-8f66c7cf586e // indirect
