@@ -61,11 +61,11 @@ export default function LegacyRoutes({ client, setClient }) {
               node={currentNode}
               vfs_path={undefined} />
           </Route>
-          <Route path="/collected/:client_id([^/]{7,})/:flow_id?/:tab?/:params_json?">
+          <Route path="/classic/collected/:client_id([^/]{7,})/:flow_id?/:tab?/:params_json?">
             <ClientSetterFromRoute client={client} setClient={setClient} />
             <ClientFlowsView client={client} />
           </Route>
-          <Route path="/collected/server/:flow_id?/:tab?">
+          <Route path="/classic/collected/server/:flow_id?/:tab?">
             <ServerFlowsView />
           </Route>
           <Route path="/notebooks/:notebook_id?/:artifact?/:params_json?">

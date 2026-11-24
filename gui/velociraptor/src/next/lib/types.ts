@@ -24,8 +24,24 @@ export interface AvailableDownloadFile {
   size?: Num;
   date?: string;
   complete?: boolean;
-  stats?: { total_compressed_bytes?: Num; total_uncompressed_bytes?: Num; error?: string };
+  stats?: ContainerStats;
   components?: string[];
+}
+
+export interface ContainerStats {
+  timestamp?: Num;
+  total_uploaded_files?: Num;
+  total_uploaded_bytes?: Num;
+  total_uncompressed_bytes?: Num;
+  total_compressed_bytes?: Num;
+  total_container_files?: Num;
+  hash?: string;
+  total_duration?: Num;
+  components?: string[];
+  type?: string;
+  error?: string;
+  vfs_path?: string;
+  active_members?: { name?: string; uncompressed_size?: Num; compressed_size?: Num }[];
 }
 
 export interface ArtifactParameter {
@@ -154,6 +170,25 @@ export interface Flow {
   artifacts_with_results?: string[];
   status?: string;
   backtrace?: string;
+  total_logs?: Num;
+  total_expected_uploaded_bytes?: Num;
+  execution_duration?: Num;
+  outstanding_requests?: Num;
+  query_stats?: {
+    status?: string;
+    error_message?: string;
+    duration?: Num;
+    names_with_response?: string[];
+    result_rows?: Num;
+    uploaded_files?: Num;
+    uploaded_bytes?: Num;
+    log_rows?: Num;
+  }[];
+}
+
+export interface FlowDetails {
+  context?: Flow;
+  available_downloads?: { files?: AvailableDownloadFile[] };
 }
 
 export interface UserTraits {

@@ -1,34 +1,40 @@
-import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
   Play, Square, Copy, Pencil, MoreHorizontal, Download, RefreshCw, Archive, Trash2, ExternalLink,
-  Users, CircleCheck, CircleX, Loader, Rows3, HardDrive, FileArchive, BookOpen, Table2, LayoutList, TriangleAlert,
-  Lock,
+  Users, CircleCheck, CircleX, Loader, Rows3, HardDrive, BookOpen, Table2, LayoutList, TriangleAlert,
+  FileDown, FolderArchive,
 } from 'lucide-react';
 import {
   useArchiveHunts, useDeleteHunts, useHunt, useHuntErrors, useHuntFlows, useHuntResults, useModifyHunt,
-  usePermission, usePrepareHuntDownload, useStartHunts, useStopHunts, useArtifactDefinitions, useTraits,
+  usePermission, useStartHunts, useStopHunts, useArtifactDefinitions, useHuntUploads,
+  HUNT_UPLOADS_MAX_FLOWS,
 } from '../../lib/queries';
 import type { Hunt, AvailableDownloadFile } from '../../lib/types';
 import { fmtBytes, fmtNum, fmtTime, timeAgo, toNum, fmtDuration } from '../../lib/format';
-import { href } from '../../lib/api';
 import {
   Badge, Button, Card, CardHeader, ConfirmDialog, CopyButton, EmptyState, IconButton, Menu, MenuContent,
-  MenuItem, MenuLabel, MenuSeparator, MenuTrigger, Mono, Select, Skeleton, Spinner, Switch, Tabs, Tooltip,
+  MenuItem, MenuSeparator, MenuTrigger, Mono, Select, Skeleton, Spinner, Tabs, Tooltip,
 } from '../../ui/primitives';
 import { DataTable } from '../../ui/DataTable';
 import type { Row } from '../../lib/table';
 import { effectiveState, HuntStateBadge, huntCounts, huntTitle } from './HuntBits';
 import EditHuntDialog from './EditHuntDialog';
+import { ClientLink, FlowLink } from '../evidence/links';
+import ExportHuntDialog from '../evidence/ExportHuntDialog';
+import { ArchiveList, useArchiveReadyToast } from '../evidence/ArchiveList';
+import { promoteColumns, UploadsTable, withUploadCells } from '../evidence/UploadLink';
+import { FlowDownloadButton } from '../evidence/FlowExportButton';
+import { archiveState } from '../../lib/downloads';
 
 const LegacyHuntNotebook = lazy(() => import('./LegacyHuntNotebook.jsx'));
 
-type TabKey = 'overview' | 'results' | 'clients' | 'errors' | 'notebook';
+type TabKey = 'overview' | 'results' | 'clients' | 'files' | 'exports' | 'errors' | 'notebook';
 
 function normalizeTab(t: string | undefined): TabKey {
   switch (t) {
-    case 'results': case 'clients': case 'errors': case 'notebook': return t;
+    case 'results': case 'clients': case 'files': case 'exports': case 'errors': case 'notebook': return t;
     default: return 'overview';
   }
 }
@@ -42,6 +48,7 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
   const active = normalizeTab(tab);
   const canHunt = usePermission('start_hunt');
   const [editOpen, setEditOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
   const [confirm, setConfirm] = useState<null | 'archive' | 'delete' | 'stop'>(null);
 
   const startHunts = useStartHunts();
@@ -55,6 +62,11 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
   const errorRows = useMemo(
     () => (errors?.rows ?? []).filter(r => r.Status === 'ERROR' || (r.Error && r.Error !== '')),
     [errors]);
+  const archives: AvailableDownloadFile[] = useMemo(
+    () => hunt?.stats?.available_downloads?.files ?? [], [hunt?.stats?.available_downloads]);
+  // Exports started from this page download themselves when ready.
+  const autoDownload = useRef(new Set<string>());
+  useArchiveReadyToast(archives, autoDownload);
 
   if (isLoading && !hunt) {
     return (
@@ -122,6 +134,8 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
               <Button variant="secondary" icon={<Square className="tw:size-3.5" />} disabled={!canHunt}
                 onClick={() => setConfirm('stop')}>Stop</Button>
             )}
+            <Button variant={canStart ? 'secondary' : 'primary'} icon={<Download className="tw:size-3.5" />}
+              onClick={() => setExportOpen(true)}>Export</Button>
             <Button variant="secondary" icon={<Copy className="tw:size-3.5" />} disabled={!canHunt}
               onClick={() => onCopy(hunt)}>Copy</Button>
             <IconButton label="Edit" variant="secondary" icon={<Pencil className="tw:size-3.5" />}
@@ -155,7 +169,7 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
             onClick={() => setTab('errors')} />
           <MiniStat icon={<Loader />} label="In progress" value={fmtNum(c.running)} tone={c.running ? 'accent' : undefined} />
           <MiniStat icon={<Rows3 />} label="Rows" value={fmtNum(c.rows)} onClick={() => setTab('results')} />
-          <MiniStat icon={<HardDrive />} label="Uploaded" value={fmtBytes(c.bytes)} />
+          <MiniStat icon={<HardDrive />} label="Files collected" value={fmtBytes(c.bytes)} onClick={() => setTab('files')} />
         </div>
       </div>
 
@@ -163,14 +177,19 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
         { value: 'overview', label: 'Overview', icon: <LayoutList /> },
         { value: 'results', label: 'Results', icon: <Table2 />, count: c.rows ? fmtNum(c.rows) : undefined },
         { value: 'clients', label: 'Clients', icon: <Users />, count: flows ? fmtNum(flows.total || flows.rows.length) : undefined },
+        { value: 'files', label: 'Files', icon: <FileDown />, count: c.bytes ? fmtBytes(c.bytes) : undefined },
+        { value: 'exports', label: 'Exports', icon: <FolderArchive />,
+          count: archives.some(f => archiveState(f) === 'preparing') ? <Spinner className="tw:size-3" /> : archives.length || undefined },
         { value: 'errors', label: 'Errors', icon: <TriangleAlert />, count: errorRows.length || undefined },
         { value: 'notebook', label: 'Notebook', icon: <BookOpen /> },
       ]} />
 
       <div className="tw:flex-1 tw:min-h-0 tw:flex tw:flex-col tw:bg-panel">
-        {active === 'overview' && <OverviewTab hunt={hunt} />}
+        {active === 'overview' && <OverviewTab hunt={hunt} onExport={() => setExportOpen(true)} onTab={setTab} />}
         {active === 'results' && <ResultsTab hunt={hunt} />}
         {active === 'clients' && <ClientsTab huntId={huntId} rows={flows?.rows} columns={flows?.columns} loading={!flows} />}
+        {active === 'files' && <FilesTab huntId={huntId} flows={flows?.rows} onExport={() => setExportOpen(true)} />}
+        {active === 'exports' && <ExportsTab files={archives} onExport={() => setExportOpen(true)} />}
         {active === 'errors' && <ErrorsTab rows={errorRows} loading={!errors} />}
         {active === 'notebook' && (
           <div className="tw:flex-1 tw:min-h-0 tw:overflow-auto tw:relative">
@@ -182,6 +201,8 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
       </div>
 
       {editOpen && <EditHuntDialog hunt={hunt} open={editOpen} onOpenChange={setEditOpen} />}
+      {exportOpen && <ExportHuntDialog hunt={hunt} open={exportOpen} onOpenChange={setExportOpen}
+        onStarted={() => { autoDownload.current.add('*'); setTab('exports'); }} />}
 
       <ConfirmDialog open={confirm === 'stop'} onOpenChange={v => !v && setConfirm(null)}
         title="Stop this hunt?" confirmLabel="Stop hunt" loading={stopHunts.isPending}
@@ -225,7 +246,7 @@ function MiniStat({ icon, label, value, tone, onClick }: {
 
 // ------------------------------------------------------------ Overview
 
-function OverviewTab({ hunt }: { hunt: Hunt }) {
+function OverviewTab({ hunt, onExport, onTab }: { hunt: Hunt; onExport: () => void; onTab: (t: string) => void }) {
   const req = hunt.start_request ?? {};
   const artifacts = req.artifacts ?? hunt.artifacts ?? [];
   const { data: defs } = useArtifactDefinitions(artifacts);
@@ -278,7 +299,7 @@ function OverviewTab({ hunt }: { hunt: Hunt }) {
               })}
             </div>
           </Card>
-          <Downloads hunt={hunt} />
+          <EvidenceCard hunt={hunt} onExport={onExport} onTab={onTab} />
         </div>
 
         <div className="tw:space-y-4">
@@ -324,65 +345,80 @@ function Def({ label, children }: { label: string; children: React.ReactNode }) 
   );
 }
 
-function Downloads({ hunt }: { hunt: Hunt }) {
-  const prepare = usePrepareHuntDownload();
-  const { traits } = useTraits();
-  const [lock, setLock] = useState(false);
+function EvidenceCard({ hunt, onExport, onTab }: { hunt: Hunt; onExport: () => void; onTab: (t: string) => void }) {
   const files: AvailableDownloadFile[] = hunt.stats?.available_downloads?.files ?? [];
-  const hasPassword = !!traits?.default_password;
-
-  const start = (kind: 'all' | 'summary-json' | 'summary-csv') => {
-    prepare.mutate({ hunt_id: hunt.hunt_id, kind, password: lock ? traits?.default_password : '' }, {
-      onSuccess: () => toast.success('Preparing download. It will appear below when ready.'),
-      onError: e => toast.error((e as Error).message),
-    });
-  };
-
+  const c = huntCounts(hunt);
+  const latest = [...files].sort((a, b) => toNum(b.stats?.timestamp) - toNum(a.stats?.timestamp)).slice(0, 2);
   return (
     <Card>
-      <CardHeader title="Downloads" subtitle="Export collected data as a zip"
-        actions={
-          <div className="tw:flex tw:items-center tw:gap-2">
-            {hasPassword && (
-              <Tooltip content="Protect the zip with your default password">
-                <span><Switch checked={lock} onChange={setLock} label={<Lock className="tw:size-3.5 tw:text-muted" />} /></span>
-              </Tooltip>
-            )}
-            <Menu>
-              <MenuTrigger asChild>
-                <Button size="sm" icon={<Download className="tw:size-3.5" />} loading={prepare.isPending}>Prepare download</Button>
-              </MenuTrigger>
-              <MenuContent>
-                <MenuLabel>Export</MenuLabel>
-                <MenuItem onSelect={() => start('all')}>Full download (all files)</MenuItem>
-                <MenuItem onSelect={() => start('summary-csv')}>Summary only (CSV)</MenuItem>
-                <MenuItem onSelect={() => start('summary-json')}>Summary only (JSON)</MenuItem>
-              </MenuContent>
-            </Menu>
-          </div>
-        } />
-      {files.length === 0 ? (
-        <div className="tw:px-4 tw:py-5 tw:text-xs tw:text-faint">No downloads prepared yet.</div>
-      ) : (
-        <div className="tw:divide-y tw:divide-line">
-          {files.map(f => (
-            <div key={f.path || f.name} className="tw:flex tw:items-center tw:gap-3 tw:px-4 tw:py-2.5">
-              <FileArchive className="tw:size-4 tw:text-faint" />
-              <div className="tw:min-w-0 tw:flex-1">
-                {f.complete
-                  ? <a className="tw:text-[13px] tw:font-medium tw:text-accent tw:hover:underline tw:break-all"
-                    href={href(`/api/v1/DownloadVFSFile`, { fs_components: f.components, vfs_path: f.name })}>{f.name}</a>
-                  : <span className="tw:text-[13px] tw:text-muted tw:break-all">{f.name}</span>}
-                <div className="tw:text-2xs tw:text-faint">{f.date}</div>
-              </div>
-              {f.complete
-                ? <span className="tw:text-xs tw:text-muted rx-num">{fmtBytes(f.size)}</span>
-                : <Badge tone="info"><Spinner className="tw:size-3" /> Preparing</Badge>}
-            </div>
-          ))}
-        </div>
+      <CardHeader title="Evidence" subtitle="Everything this hunt collected, ready to take away"
+        actions={<Button size="sm" variant="primary" icon={<Download className="tw:size-3.5" />} onClick={onExport}>Export…</Button>} />
+      <div className="tw:grid tw:grid-cols-3 tw:divide-x tw:divide-line tw:border-b tw:border-line">
+        <EvidenceStat label="Result rows" value={fmtNum(c.rows)} onClick={() => onTab('results')} />
+        <EvidenceStat label="Files collected" value={fmtBytes(c.bytes)} onClick={() => onTab('files')} />
+        <EvidenceStat label="Clients with results" value={fmtNum(c.withResults)} onClick={() => onTab('clients')} />
+      </div>
+      <ArchiveList files={latest}
+        empty={<div className="tw:px-4 tw:py-4 tw:text-xs tw:text-faint">No exports yet. Use <b className="tw:font-medium tw:text-muted">Export</b> to package results and files into a zip.</div>} />
+      {files.length > latest.length && (
+        <button type="button" onClick={() => onTab('exports')}
+          className="tw:w-full tw:border-t tw:border-line tw:px-4 tw:py-2 tw:text-left tw:text-xs tw:font-medium tw:text-accent tw:hover:bg-hover">
+          All {files.length} exports
+        </button>
       )}
     </Card>
+  );
+}
+
+function EvidenceStat({ label, value, onClick }: { label: string; value: string; onClick: () => void }) {
+  return (
+    <button type="button" onClick={onClick} className="tw:px-4 tw:py-3 tw:text-left tw:hover:bg-hover">
+      <div className="tw:text-2xs tw:text-muted">{label}</div>
+      <div className="tw:text-[15px] tw:font-semibold rx-num">{value}</div>
+    </button>
+  );
+}
+
+// --------------------------------------------------------------- Files
+
+function FilesTab({ huntId, flows, onExport }: { huntId: string; flows: Row[] | undefined; onExport: () => void }) {
+  const q = useHuntUploads(huntId, flows, true);
+  const rows = q.data?.rows ?? [];
+  const total = rows.reduce((a, r) => a + toNum(r.file_size as number), 0);
+  return (
+    <UploadsTable
+      rows={rows}
+      loading={q.isLoading || flows === undefined}
+      storageKey="hunt-files"
+      exportName={`${huntId}-files`}
+      showHost
+      toolbar={
+        <div className="tw:flex tw:items-center tw:gap-2 tw:text-xs tw:text-muted">
+          {q.isFetching && <Spinner className="tw:size-3.5" />}
+          {q.data && <span><b className="tw:text-fg rx-num">{fmtNum(rows.length)}</b> files · {fmtBytes(total)} from {fmtNum(new Set(rows.map(r => r.ClientId)).size)} client{new Set(rows.map(r => r.ClientId)).size === 1 ? '' : 's'}</span>}
+          {q.data?.truncated && <Badge tone="warn">Showing the first {HUNT_UPLOADS_MAX_FLOWS} clients. Export for everything.</Badge>}
+        </div>
+      }
+      toolbarRight={<Button size="sm" variant="secondary" icon={<Download className="tw:size-3.5" />} onClick={onExport}>Export all as zip</Button>}
+    />
+  );
+}
+
+// ------------------------------------------------------------- Exports
+
+function ExportsTab({ files, onExport }: { files: AvailableDownloadFile[]; onExport: () => void }) {
+  return (
+    <div className="tw:flex-1 tw:overflow-auto tw:bg-canvas tw:p-5">
+      <Card className="tw:max-w-[960px]">
+        <CardHeader title="Exports" subtitle="Zip archives prepared from this hunt. They are kept on the server until the hunt is deleted."
+          actions={<Button size="sm" variant="primary" icon={<Download className="tw:size-3.5" />} onClick={onExport}>New export…</Button>} />
+        <ArchiveList files={files} empty={
+          <EmptyState icon={<FolderArchive />} title="No exports yet"
+            action={<Button variant="primary" icon={<Download className="tw:size-3.5" />} onClick={onExport}>Export hunt…</Button>}>
+            Package every client’s results and collected files into one zip, or just the combined result tables.
+          </EmptyState>} />
+      </Card>
+    </div>
   );
 }
 
@@ -398,6 +434,8 @@ function ResultsTab({ hunt }: { hunt: Hunt }) {
   const q = useHuntResults(hunt.hunt_id, source);
   const rows = useMemo(() => q.data?.pages.flatMap(p => p.rows) ?? [], [q.data]);
   const columns = q.data?.pages[0]?.columns;
+  const uploadRenderers = useMemo(() => withUploadCells(columns, rows, {}), [columns, rows]);
+  const ordered = useMemo(() => promoteColumns(columns, Object.keys(uploadRenderers)), [columns, uploadRenderers]);
 
   if (!sources.length) {
     return <EmptyState title="This hunt has no artifact sources" />;
@@ -407,7 +445,7 @@ function ResultsTab({ hunt }: { hunt: Hunt }) {
     <DataTable
       key={source}
       rows={rows}
-      columns={columns}
+      columns={ordered}
       loading={q.isLoading}
       hasMore={q.hasNextPage}
       loadingMore={q.isFetchingNextPage}
@@ -415,6 +453,7 @@ function ResultsTab({ hunt }: { hunt: Hunt }) {
       storageKey={`hunt-results:${source}`}
       exportName={`${hunt.hunt_id}-${source?.replace(/[^\w.-]+/g, '_')}`}
       renderers={{
+        ...uploadRenderers,
         ClientId: v => <ClientLink id={String(v ?? '')} />,
         FlowId: (v, r) => <FlowLink clientId={String(r.ClientId ?? '')} flowId={String(v ?? '')} />,
       }}
@@ -436,21 +475,7 @@ function ResultsTab({ hunt }: { hunt: Hunt }) {
   );
 }
 
-export function ClientLink({ id, hostname }: { id: string; hostname?: string }) {
-  if (!id) return null;
-  return (
-    <Link to={`/host/${id}`} onClick={e => e.stopPropagation()}
-      className="tw:font-mono tw:text-[12px] tw:text-accent tw:hover:underline">{hostname || id}</Link>
-  );
-}
-
-export function FlowLink({ clientId, flowId }: { clientId: string; flowId: string }) {
-  if (!flowId) return null;
-  return (
-    <Link to={`/collected/${clientId}/${flowId}`} onClick={e => e.stopPropagation()}
-      className="tw:font-mono tw:text-[12px] tw:text-accent tw:hover:underline">{flowId}</Link>
-  );
-}
+export { ClientLink, FlowLink };
 
 const flowStateTone = (s: string) =>
   s === 'FINISHED' ? 'ok' : s === 'ERROR' ? 'bad' : s === 'RUNNING' || s === 'IN_PROGRESS' ? 'accent' : 'neutral';
@@ -463,13 +488,17 @@ function ClientsTab({ huntId, rows = [], columns, loading }: {
   return (
     <DataTable
       rows={rows}
-      columns={columns}
+      columns={columns?.length ? ['Actions', ...columns] : columns}
       loading={loading}
       storageKey="hunt-clients"
       exportName={`${huntId}-clients`}
       inspector={false}
-      columnLabels={{ ClientId: 'Client', StartedTime: 'Started', TotalBytes: 'Uploaded', TotalRows: 'Rows' }}
+      columnLabels={{ ClientId: 'Client', StartedTime: 'Started', TotalBytes: 'Files', TotalRows: 'Rows', Actions: '' }}
+      columnWidths={{ Actions: 56 }}
       renderers={{
+        Actions: (_v, r) => r.State === 'FINISHED' || toNum(r.TotalRows as number) > 0 || toNum(r.TotalBytes as number) > 0
+          ? <FlowDownloadButton compact clientId={String(r.ClientId ?? '')} flowId={String(r.FlowId ?? '')} />
+          : null,
         ClientId: (v, r) => <ClientLink id={String(v ?? '')} hostname={undefined} key={String(r.ClientId)} />,
         Hostname: v => <span className="tw:font-medium">{String(v ?? '')}</span>,
         FlowId: (v, r) => <FlowLink clientId={String(r.ClientId ?? '')} flowId={String(v ?? '')} />,

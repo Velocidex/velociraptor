@@ -6,12 +6,13 @@ import { toast } from 'sonner';
 import { Dialog as RDialog } from 'radix-ui';
 import {
   Check, ChevronDown, ChevronRight, Package, Plus, RotateCcw, Search, Target, Users, X, Settings2, Play, Pause,
+  Monitor, Server,
 } from 'lucide-react';
 import {
   useArtifactDefinitions, useArtifactSearch, useCreateHunt, useEstimateHunt, useHuntTags, useTraits,
-  type CreateHuntRequest,
+  useCollectArtifact, type CreateHuntRequest,
 } from '../../lib/queries';
-import type { ArtifactDescriptor, ArtifactParameterDef, Hunt, HuntCondition } from '../../lib/types';
+import type { ArtifactCollectorArgs, ArtifactDescriptor, ArtifactParameterDef, Hunt, HuntCondition } from '../../lib/types';
 import { fmtNum, toNum } from '../../lib/format';
 import {
   Badge, Button, cn, Field, Input, Kbd, Segmented, Select, Spinner, Switch, Textarea, Tooltip,
@@ -35,14 +36,19 @@ function firstLine(s: string | undefined): string {
   return (s ?? '').trim().split('\n')[0] ?? '';
 }
 
-export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt }: {
-  open: boolean; onOpenChange: (v: boolean) => void; onCreated: (huntId?: string) => void; baseHunt?: Hunt;
+// With `target` set the same form collects from a single client (or the
+// server) instead of creating a hunt.
+export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt, target, baseRequest }: {
+  open: boolean; onOpenChange: (v: boolean) => void; onCreated: (id?: string) => void; baseHunt?: Hunt;
+  target?: { clientId: string; label?: string }; baseRequest?: ArtifactCollectorArgs;
 }) {
+  const isCollection = !!target;
+  const isServer = target?.clientId === 'server';
   const { traits } = useTraits();
   const expiryHours = toNum(traits?.customizations?.hunt_expiry_hours) || 24 * 7;
 
   // -------------------------------------------------------- State
-  const base = baseHunt?.start_request;
+  const base = baseHunt?.start_request ?? baseRequest;
   const [selected, setSelected] = useState<string[]>(base?.artifacts ?? baseHunt?.artifacts ?? []);
   const [params, setParams] = useState<Params>(() => {
     const p: Params = {};
@@ -69,16 +75,17 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
   const [urgent, setUrgent] = useState(!!base?.urgent);
   const [orgIds, setOrgIds] = useState<string[]>(baseHunt?.org_ids ?? []);
   const [startNow, setStartNow] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(isCollection);
   const [expanded, setExpanded] = useState<string | null>(null);
 
   // ------------------------------------------------------ Queries
   const [search, setSearch] = useState('');
   const dsearch = useDebounced(search.trim(), 150);
-  const { data: matches = [], isFetching: searching } = useArtifactSearch(dsearch, 'CLIENT', open);
+  const { data: matches = [], isFetching: searching } = useArtifactSearch(dsearch, isServer ? 'SERVER' : 'CLIENT', open);
   const { data: defs } = useArtifactDefinitions(selected);
   const { data: allTags = [] } = useHuntTags();
   const create = useCreateHunt();
+  const collect = useCollectArtifact();
 
   const condition: HuntCondition = useMemo(() => {
     const c: HuntCondition = {};
@@ -87,7 +94,7 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
     if (excludeLabels.length) c.excluded_labels = { label: excludeLabels };
     return c;
   }, [mode, includeLabels, excludeLabels, os]);
-  const estimate = useEstimateHunt(condition, lastActive, open);
+  const estimate = useEstimateHunt(condition, lastActive, open && !isCollection);
 
   // Expand the first artifact with parameters by default.
   useEffect(() => {
@@ -148,10 +155,21 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
   const expDate = fromLocalInput(expires);
   const expInPast = !!expDate && expDate.getTime() < Date.now();
   const missingLabels = mode === 'labels' && includeLabels.length === 0;
-  const canSubmit = selected.length > 0 && !expInPast && !missingLabels;
+  const canSubmit = isCollection ? selected.length > 0 : selected.length > 0 && !expInPast && !missingLabels;
 
   const submit = () => {
     if (!canSubmit) return;
+    if (target) {
+      const { start_request } = buildRequest();
+      collect.mutate({ ...start_request, client_id: target.clientId }, {
+        onSuccess: r => {
+          toast.success(`Collecting from ${target.label || target.clientId}`);
+          onCreated(r?.flow_id);
+        },
+        onError: e => toast.error((e as Error).message),
+      });
+      return;
+    }
     create.mutate(buildRequest(), {
       onSuccess: r => {
         toast.success(startNow ? 'Hunt created and started' : 'Hunt created (paused). Start it when ready.');
@@ -179,11 +197,17 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
           {/* Header */}
           <div className="tw:flex tw:items-center tw:gap-3 tw:px-5 tw:h-14 tw:border-b tw:border-line tw:shrink-0">
             <span className="tw:flex tw:size-8 tw:items-center tw:justify-center tw:rounded-lg tw:bg-accent-soft tw:text-accent">
-              <Target className="tw:size-4" />
+              {isServer ? <Server className="tw:size-4" /> : isCollection ? <Monitor className="tw:size-4" /> : <Target className="tw:size-4" />}
             </span>
             <div className="tw:flex-1">
-              <RDialog.Title className="tw:text-[15px] tw:font-semibold">{baseHunt ? 'Copy hunt' : 'New hunt'}</RDialog.Title>
-              <div className="tw:text-2xs tw:text-faint">Collect artifacts from many clients at once</div>
+              <RDialog.Title className="tw:text-[15px] tw:font-semibold">
+                {isCollection
+                  ? <>{baseRequest ? 'Collect again' : 'New collection'} on <span className="tw:text-accent">{isServer ? 'the server' : target?.label || target?.clientId}</span></>
+                  : baseHunt ? 'Copy hunt' : 'New hunt'}
+              </RDialog.Title>
+              <div className="tw:text-2xs tw:text-faint">
+                {isServer ? 'Run server artifacts' : isCollection ? 'Collect artifacts and files from this one client' : 'Collect artifacts from many clients at once'}
+              </div>
             </div>
             <RDialog.Close className="tw:p-1.5 tw:rounded tw:text-faint tw:hover:bg-hover tw:hover:text-fg" aria-label="Close">
               <X className="tw:size-4" />
@@ -197,7 +221,7 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
                 <div className="tw:relative">
                   <Search className="tw:absolute tw:left-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:size-3.5 tw:text-faint" />
                   <Input autoFocus value={search} onChange={e => setSearch(e.target.value)}
-                    placeholder="Search client artifacts…" className="tw:pl-8" />
+                    placeholder={isServer ? 'Search server artifacts…' : 'Search client artifacts…'} className="tw:pl-8" />
                   {searching && <Spinner className="tw:absolute tw:right-2.5 tw:top-1/2 tw:-translate-y-1/2 tw:size-3.5" />}
                 </div>
               </div>
@@ -235,7 +259,7 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
                   <SectionTitle icon={<Package />} title="Artifacts" hint={selected.length ? `${selected.length} selected` : 'Pick at least one artifact on the left'} />
                   {selected.length === 0 && (
                     <div className="tw:rounded-lg tw:border tw:border-dashed tw:border-line-strong tw:p-6 tw:text-center tw:text-xs tw:text-faint">
-                      Search and select artifacts to collect from each client.
+                      {isServer ? 'Search and select server artifacts to run.' : isCollection ? 'Search and select artifacts to collect from this client.' : 'Search and select artifacts to collect from each client.'}
                     </div>
                   )}
                   {selected.map(name => (
@@ -250,7 +274,7 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
                 </section>
 
                 {/* Targeting */}
-                <section className="tw:space-y-3">
+                {!isCollection && <section className="tw:space-y-3">
                   <SectionTitle icon={<Users />} title="Targeting" />
                   <div className="tw:flex tw:items-center tw:gap-3 tw:flex-wrap">
                     <Segmented size="md" value={mode} onChange={setMode} options={[
@@ -306,12 +330,12 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
                       </div>
                     </Field>
                   )}
-                </section>
+                </section>}
 
                 {/* Details */}
                 <section className="tw:space-y-3">
-                  <SectionTitle icon={<Settings2 />} title="Details" />
-                  <div className="tw:grid tw:grid-cols-2 tw:gap-3">
+                  <SectionTitle icon={<Settings2 />} title={isCollection ? 'Limits' : 'Details'} />
+                  {!isCollection && <div className="tw:grid tw:grid-cols-2 tw:gap-3">
                     <Field label="Description" className="tw:col-span-2">
                       <Input value={description} onChange={e => setDescription(e.target.value)}
                         placeholder={autoDescription || 'What is this hunt looking for?'} />
@@ -322,13 +346,13 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
                     <Field label="Expires" hint={expInPast ? <span className="tw:text-bad">Expiry is in the past</span> : `Default is ${expiryHours / 24} days`}>
                       <Input type="datetime-local" value={expires} onChange={e => setExpires(e.target.value)} />
                     </Field>
-                  </div>
+                  </div>}
 
-                  <button type="button" onClick={() => setShowAdvanced(!showAdvanced)}
+                  {!isCollection && <button type="button" onClick={() => setShowAdvanced(!showAdvanced)}
                     className="tw:flex tw:items-center tw:gap-1 tw:text-xs tw:font-medium tw:text-muted tw:hover:text-fg">
                     {showAdvanced ? <ChevronDown className="tw:size-3.5" /> : <ChevronRight className="tw:size-3.5" />}
                     Resource limits
-                  </button>
+                  </button>}
                   {showAdvanced && (
                     <div className="tw:grid tw:grid-cols-2 tw:md:grid-cols-4 tw:gap-3">
                       <Field label="Timeout (s)"><Input type="number" min={0} value={timeout} onChange={e => setTimeoutS(e.target.value)} placeholder="600" /></Field>
@@ -347,16 +371,16 @@ export default function NewHuntDialog({ open, onOpenChange, onCreated, baseHunt 
 
           {/* Footer */}
           <div className="tw:flex tw:items-center tw:gap-3 tw:px-5 tw:h-16 tw:border-t tw:border-line tw:shrink-0 tw:bg-canvas/50 tw:rounded-b-xl">
-            <Switch checked={startNow} onChange={setStartNow}
-              label={<span className="tw:text-[13px]">Start immediately <span className="tw:text-faint">(otherwise created paused for review)</span></span>} />
+            {!isCollection && <Switch checked={startNow} onChange={setStartNow}
+              label={<span className="tw:text-[13px]">Start immediately <span className="tw:text-faint">(otherwise created paused for review)</span></span>} />}
             <div className="tw:ml-auto tw:flex tw:items-center tw:gap-2">
               <span className="tw:text-2xs tw:text-faint tw:hidden tw:lg:flex tw:items-center tw:gap-1"><Kbd>Ctrl</Kbd><Kbd>Enter</Kbd></span>
               <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Tooltip content={!selected.length ? 'Select at least one artifact' : missingLabels ? 'Add at least one label' : expInPast ? 'Expiry is in the past' : ''}>
+              <Tooltip content={!selected.length ? 'Select at least one artifact' : isCollection ? '' : missingLabels ? 'Add at least one label' : expInPast ? 'Expiry is in the past' : ''}>
                 <span>
-                  <Button variant="primary" disabled={!canSubmit} loading={create.isPending} onClick={submit}
-                    icon={startNow ? <Play className="tw:size-3.5" /> : <Pause className="tw:size-3.5" />}>
-                    {startNow ? 'Create and start hunt' : 'Create hunt'}
+                  <Button variant="primary" disabled={!canSubmit} loading={create.isPending || collect.isPending} onClick={submit}
+                    icon={startNow || isCollection ? <Play className="tw:size-3.5" /> : <Pause className="tw:size-3.5" />}>
+                    {isCollection ? 'Collect now' : startNow ? 'Create and start hunt' : 'Create hunt'}
                   </Button>
                 </span>
               </Tooltip>

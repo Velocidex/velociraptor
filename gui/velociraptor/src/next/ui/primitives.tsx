@@ -417,7 +417,7 @@ export function MenuLabel({ children }: { children: React.ReactNode }) {
 
 export function Tabs({ value, onValueChange, tabs, className, right }: {
   value: string; onValueChange: (v: string) => void; className?: string; right?: React.ReactNode;
-  tabs: { value: string; label: React.ReactNode; count?: number | string; icon?: React.ReactNode }[];
+  tabs: { value: string; label: React.ReactNode; count?: React.ReactNode; icon?: React.ReactNode }[];
 }) {
   return (
     <RTabs.Root value={value} onValueChange={onValueChange}>

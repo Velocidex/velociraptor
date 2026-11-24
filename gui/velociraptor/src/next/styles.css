@@ -261,3 +261,12 @@
   letter-spacing: 0.04em;
   color: var(--rx-faint);
 }
+
+/* Indeterminate progress bar used while exports are prepared. */
+.rx-indeterminate {
+  animation: rx-indeterminate 1.2s ease-in-out infinite;
+}
+@keyframes rx-indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}

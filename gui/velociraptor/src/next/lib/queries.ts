@@ -11,10 +11,11 @@ import {
 } from '@tanstack/react-query';
 import UserConfig from '../../components/core/user.jsx';
 import * as api from './api';
-import { parseTable, type ParsedTable } from './table';
+import { parseTable, type ParsedTable, type Row } from './table';
 import { toNum } from './format';
+import { archiveState } from './downloads';
 import type {
-  ApiClient, ArtifactCollectorArgs, ArtifactDescriptor, GetArtifactsResponse,
+  ApiClient, ArtifactCollectorArgs, FlowDetails, ArtifactDescriptor, GetArtifactsResponse,
   Hunt, HuntCondition, HuntStats, ListHuntsResponse, SearchClientsResponse,
   TableResponse, UserTraits,
 } from './types';
@@ -83,7 +84,9 @@ export function useHunt(huntId: string | undefined) {
       hunt_id: huntId,
       include_request: true,
     }, signal),
-    refetchInterval: POLL.fast,
+    // Poll quickly while an export is being prepared so progress is live.
+    refetchInterval: q => (q.state.data?.stats?.available_downloads?.files ?? [])
+      .some(f => archiveState(f) === 'preparing') ? 1_500 : POLL.fast,
   });
 }
 
@@ -450,5 +453,145 @@ export function useServerHealth(rangeSec: number) {
     refetchInterval: POLL.normal,
     placeholderData: keepPreviousData,
     retry: false,
+  });
+}
+
+
+// ----------------------------------------------------------- Exports
+
+export interface HuntExportOptions {
+  hunt_id: string;
+  only_combined_hunt?: boolean;
+  json_format?: boolean;
+  csv_format?: boolean;
+  password?: string;
+}
+
+export function useExportHunt() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: HuntExportOptions) => api.post('v1/CreateDownload', { password: '', ...p }),
+    onSettled: (_d, _e, p) => qc.invalidateQueries({ queryKey: ['hunt', p.hunt_id] }),
+  });
+}
+
+export function useExportFlow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { client_id: string; flow_id: string; password?: string; expand_sparse?: boolean }) =>
+      api.post('v1/CreateDownload', { password: '', ...p }),
+    onSettled: (_d, _e, p) => qc.invalidateQueries({ queryKey: ['flow', p.client_id, p.flow_id] }),
+  });
+}
+
+// ------------------------------------------------------------- Flows
+
+export function useFlow(clientId: string | undefined, flowId: string | undefined, opts?: { fast?: boolean }) {
+  return useQuery({
+    queryKey: ['flow', clientId, flowId],
+    enabled: !!clientId && !!flowId,
+    queryFn: ({ signal }) => api.get<FlowDetails>('v1/GetFlowDetails', { client_id: clientId, flow_id: flowId }, signal),
+    refetchInterval: q => {
+      const d = q.state.data;
+      const preparing = (d?.available_downloads?.files ?? []).some(f => archiveState(f) === 'preparing');
+      if (preparing || opts?.fast) return 1_500;
+      const st = d?.context?.state;
+      return st === 'RUNNING' || st === 'IN_PROGRESS' || st === 'WAITING' ? 2_500 : POLL.slow;
+    },
+  });
+}
+
+export function useClientFlowList(clientId: string | undefined, rows = 500) {
+  return useQuery({
+    queryKey: ['client-flow-list', clientId, rows],
+    enabled: !!clientId,
+    queryFn: ({ signal }) => emptyIfNotFound(api.get<TableResponse>('v1/GetClientFlows', {
+      client_id: clientId, start_row: 0, rows, count: rows, offset: 0,
+    }, signal)),
+    select: parseTable,
+    refetchInterval: POLL.fast,
+    placeholderData: keepPreviousData,
+  });
+}
+
+export function useFlowTable(clientId: string | undefined, flowId: string | undefined,
+  kind: { type: 'uploads' | 'log' } | { artifact: string | undefined }, live = false) {
+  const key = 'type' in kind ? kind.type : `artifact:${kind.artifact}`;
+  return useInfiniteQuery({
+    queryKey: ['flow-table', clientId, flowId, key],
+    enabled: !!clientId && !!flowId && ('type' in kind || !!kind.artifact),
+    initialPageParam: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      const resp = await emptyIfNotFound(api.get<TableResponse>('v1/GetTable', {
+        client_id: clientId, flow_id: flowId, ...kind, start_row: pageParam, rows: RESULTS_PAGE,
+      }, signal));
+      return { ...parseTable(resp), offset: pageParam as number };
+    },
+    getNextPageParam: (last: ParsedTable & { offset: number }) =>
+      last.rows.length < RESULTS_PAGE ? undefined : last.offset + last.rows.length,
+    refetchInterval: live ? 3_000 : false,
+  });
+}
+
+export function useCollectArtifact() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (req: ArtifactCollectorArgs & { client_id: string }) =>
+      api.post<{ flow_id?: string }>('v1/CollectArtifact', req),
+    onSettled: (_d, _e, p) => {
+      qc.invalidateQueries({ queryKey: ['client-flow-list', p.client_id] });
+      qc.invalidateQueries({ queryKey: ['client-flows', p.client_id] });
+    },
+  });
+}
+
+export function useCancelFlow() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { client_id: string; flow_id: string }) => api.post('v1/CancelFlow', p),
+    onSettled: (_d, _e, p) => {
+      qc.invalidateQueries({ queryKey: ['flow', p.client_id, p.flow_id] });
+      qc.invalidateQueries({ queryKey: ['client-flow-list', p.client_id] });
+    },
+  });
+}
+
+// All files uploaded across a hunt. The server has no hunt-wide uploads
+// table, so we read each collection's uploads table (only collections that
+// uploaded something) with bounded concurrency.
+export const HUNT_UPLOADS_MAX_FLOWS = 500;
+
+export function useHuntUploads(huntId: string | undefined, flows: Row[] | undefined, enabled: boolean) {
+  const withFiles = (flows ?? []).filter(f => toNum(f.TotalBytes as number) > 0);
+  const sig = withFiles.map(f => `${f.FlowId}:${f.TotalBytes}`).join(',');
+  return useQuery({
+    queryKey: ['hunt-uploads', huntId, sig],
+    enabled: enabled && !!huntId && flows !== undefined,
+    placeholderData: keepPreviousData,
+    staleTime: 15_000,
+    queryFn: async ({ signal }) => {
+      const todo = withFiles.slice(0, HUNT_UPLOADS_MAX_FLOWS);
+      const out: Row[] = [];
+      let i = 0;
+      const worker = async () => {
+        while (i < todo.length) {
+          const f = todo[i++];
+          const clientId = String(f.ClientId ?? '');
+          const flowId = String(f.FlowId ?? '');
+          try {
+            const t = parseTable(await emptyIfNotFound(api.get<TableResponse>('v1/GetTable', {
+              client_id: clientId, flow_id: flowId, type: 'uploads', start_row: 0, rows: 10000,
+            }, signal)));
+            for (const r of t.rows) {
+              out.push({ Hostname: f.Hostname, ClientId: clientId, FlowId: flowId, ...r });
+            }
+          } catch (e) {
+            if (signal.aborted) throw e;
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: 6 }, worker));
+      return { rows: out, truncated: withFiles.length > todo.length, flowsWithFiles: withFiles.length };
+    },
   });
 }
