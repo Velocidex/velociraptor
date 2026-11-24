@@ -270,3 +270,23 @@
   0% { transform: translateX(-100%); }
   100% { transform: translateX(300%); }
 }
+
+/* Embedded Ace editors in the new UI. */
+.rx-code .velo-ace-editor { padding: 0; height: 100%; }
+.rx-code .ace_editor { font-size: 12.5px; border-radius: 6px; }
+.rx-code.rx-code-fill, .rx-code.rx-code-fill .velo-ace-editor, .rx-code.rx-code-fill .ace_editor { height: 100% !important; }
+
+/* Rendered Markdown */
+.rx .rx-md { font-size: 13px; line-height: 1.65; color: var(--rx-fg); }
+.rx .rx-md > * + * { margin-top: 0.7em; }
+.rx .rx-md p, .rx .rx-md ul, .rx .rx-md ol { margin-bottom: 0; }
+.rx .rx-md ul { list-style: disc; padding-left: 1.4em; }
+.rx .rx-md ol { list-style: decimal; padding-left: 1.4em; }
+.rx .rx-md li + li { margin-top: 0.25em; }
+.rx .rx-md h1, .rx .rx-md h2, .rx .rx-md h3, .rx .rx-md h4 { font-weight: 600; font-size: 14px; margin-top: 1.2em; }
+.rx .rx-md code { font-family: var(--tw-font-mono); font-size: 12px; background: var(--rx-hover); padding: 1px 4px; border-radius: 4px; }
+.rx .rx-md pre { background: var(--rx-canvas); border: 1px solid var(--rx-line); padding: 10px 12px; border-radius: 6px; overflow-x: auto; }
+.rx .rx-md pre code { background: transparent; padding: 0; }
+.rx .rx-md a { color: var(--rx-accent); text-decoration: underline; }
+.rx .rx-md table { border-collapse: collapse; font-size: 12px; }
+.rx .rx-md th, .rx .rx-md td { border: 1px solid var(--rx-line); padding: 4px 8px; }

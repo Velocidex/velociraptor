@@ -11,6 +11,9 @@ import { ErrorBoundary } from './ErrorBoundary';
 const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
 const HuntsPage = lazy(() => import('../pages/hunts/HuntsPage'));
 const ClientsPage = lazy(() => import('../pages/clients/ClientsPage'));
+const ClientOverview = lazy(() => import('../pages/host/ClientOverview'));
+const ArtifactsPage = lazy(() => import('../pages/artifacts/ArtifactsPage'));
+const FileBrowser = lazy(() => import('../pages/vfs/FileBrowser'));
 const CollectionsPage = lazy(() => import('../pages/collections/CollectionsPage'));
 const LegacyRoutes = lazy(() => import('./LegacyRoutes.jsx'));
 
@@ -72,6 +75,15 @@ export default function AppShell() {
                 </Route>
                 <Route path="/search/:query?">
                   <ClientsPage />
+                </Route>
+                <Route path="/host/:client_id(C\.[^/]+)/:action?">
+                  <ClientOverview />
+                </Route>
+                <Route path="/vfs/:client_id/:vfs_path(.*)?">
+                  <FileBrowser />
+                </Route>
+                <Route path="/artifacts/:artifact?/:action?">
+                  <ArtifactsPage />
                 </Route>
                 <Route path="/collected/:client_id/:flow_id?/:tab?">
                   <CollectionsPage />

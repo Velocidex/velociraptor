@@ -42,18 +42,18 @@ export default function LegacyRoutes({ client, setClient }) {
           <Route path="/secrets/">
             <SecretManager />
           </Route>
-          <Route path="/artifacts/:artifact?/:action?">
+          <Route path="/classic/artifacts/:artifact?/:action?">
             <ArtifactInspector client={client} />
           </Route>
           <Route path="/users/:user?" component={UserInspector} />
-          <Route path="/host/:client_id([^/]{7,})/:action?">
+          <Route path="/classic/host/:client_id([^/]{7,})/:action?">
             <ClientSetterFromRoute client={client} setClient={setClient} />
             <VeloHostInfo client={client} setClient={setClient} />
           </Route>
           <Route path="/host/:client_id(server)/:action?">
             <ServerInfo />
           </Route>
-          <Route path="/vfs/:client_id/:vfs_path(.*)">
+          <Route path="/classic/vfs/:client_id/:vfs_path(.*)">
             <ClientSetterFromRoute client={client} setClient={setClient} />
             <VFSViewer client={client}
               selectedRow={{}}

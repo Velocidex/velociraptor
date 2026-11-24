@@ -595,3 +595,141 @@ export function useHuntUploads(huntId: string | undefined, flows: Row[] | undefi
     },
   });
 }
+
+// ---------------------------------------------------------- Client info
+
+export function useClientMetadata(clientId: string | undefined) {
+  return useQuery({
+    queryKey: ['client-metadata', clientId],
+    enabled: !!clientId && clientId !== 'server',
+    queryFn: ({ signal }) => api.get<{ items?: { key: string; value: string }[] }>(`v1/GetClientMetadata/${clientId}`, {}, signal),
+    select: d => d.items ?? [],
+  });
+}
+
+export function useSetClientMetadata() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { client_id: string; add: { key: string; value: string }[]; remove: string[] }) =>
+      api.post('v1/SetClientMetadata', p),
+    onSettled: (_d, _e, p) => qc.invalidateQueries({ queryKey: ['client-metadata', p.client_id] }),
+  });
+}
+
+// Which of these artifact names exist on this server.
+export function useExistingArtifacts(names: string[]) {
+  return useQuery({
+    queryKey: ['artifact-exists', [...names].sort()],
+    enabled: names.length > 0,
+    queryFn: ({ signal }) => api.post<GetArtifactsResponse>('v1/GetArtifacts', {
+      names, number_of_results: names.length, fields: { name: true, description: true },
+    }, signal),
+    select: d => new Map((d.items ?? []).map(a => [a.name, a])),
+    staleTime: 5 * 60_000,
+  });
+}
+
+// Collect one artifact with simple parameters.
+export async function runArtifact(clientId: string, artifact: string, params: Record<string, string> = {}, urgent = false) {
+  return api.post<{ flow_id?: string }>('v1/CollectArtifact', {
+    client_id: clientId,
+    artifacts: [artifact],
+    specs: [{ artifact, parameters: { env: Object.entries(params).map(([key, value]) => ({ key, value })) } }],
+    urgent,
+  });
+}
+
+// ----------------------------------------------------------- Artifacts
+
+export type ArtifactKind = '' | 'client' | 'server' | 'client_event' | 'server_event' | 'notebook';
+
+export function useArtifactCatalog() {
+  return useQuery({
+    queryKey: ['artifact-catalog'],
+    queryFn: ({ signal }) => api.post<GetArtifactsResponse>('v1/GetArtifacts', {
+      search_term: '', number_of_results: 5000,
+      fields: { name: true, type: true, built_in: true, description: true },
+    }, signal),
+    select: d => d.items ?? [],
+    staleTime: 60_000,
+  });
+}
+
+export function useArtifactFile(name: string | undefined) {
+  return useQuery({
+    queryKey: ['artifact-file', name],
+    enabled: !!name,
+    queryFn: ({ signal }) => api.get<{ artifact?: string }>('v1/GetArtifactFile', { name }, signal),
+    select: d => d.artifact ?? '',
+  });
+}
+
+export interface SetArtifactResult { errors?: string[]; warnings?: string[]; error?: boolean; error_message?: string }
+
+export function useSetArtifactFile() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { artifact: string; op: 'CHECK_AND_SET' | 'SET' | 'DELETE' | 'CHECK' }) =>
+      api.post<SetArtifactResult>('v1/SetArtifactFile', p),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['artifact-catalog'] });
+      qc.invalidateQueries({ queryKey: ['artifact-defs'] });
+      qc.invalidateQueries({ queryKey: ['artifact-file'] });
+      qc.invalidateQueries({ queryKey: ['artifact-search'] });
+    },
+  });
+}
+
+// ----------------------------------------------------------------- VFS
+
+export interface VfsEntry {
+  Name: string;
+  Mode?: string;
+  Size?: number;
+  _OSPath?: string;
+  _Components?: string[];
+  _Accessor?: string;
+}
+
+export function useVfsDir(clientId: string | undefined, components: string[]) {
+  return useQuery({
+    queryKey: ['vfs-dir', clientId, components],
+    enabled: !!clientId,
+    queryFn: async ({ signal }) => {
+      const r = await api.get<{ Response?: string; flow_id?: string }>(`v1/VFSListDirectory/${clientId}`, { vfs_components: components }, signal);
+      let entries: VfsEntry[] = [];
+      try { entries = JSON.parse(r.Response || '[]') ?? []; } catch { entries = []; }
+      return { entries, flowId: r.flow_id };
+    },
+    staleTime: 10_000,
+  });
+}
+
+export function useVfsStat(clientId: string | undefined, components: string[]) {
+  return useQuery({
+    queryKey: ['vfs-stat', clientId, components],
+    enabled: !!clientId && components.length > 0,
+    queryFn: ({ signal }) => api.get<{ timestamp?: string; download_version?: string; flow_id?: string; total_rows?: string; artifact?: string }>(
+      'v1/VFSStatDirectory', { client_id: clientId, vfs_components: components }, signal).catch(() => ({} as { timestamp?: string; download_version?: string; flow_id?: string; total_rows?: string; artifact?: string })),
+  });
+}
+
+export function useVfsFiles(clientId: string | undefined, components: string[], flowId: string | undefined, version: string) {
+  return useQuery({
+    queryKey: ['vfs-files', clientId, components, flowId, version],
+    enabled: !!clientId && !!flowId,
+    queryFn: async ({ signal }) => parseTable(await emptyIfNotFound(api.get<TableResponse>('v1/VFSListDirectoryFiles', {
+      client_id: clientId, flow_id: flowId, artifact: 'System.VFS.ListDirectory/Listing',
+      vfs_components: components, start_row: 0, rows: 20000,
+    }, signal))),
+    placeholderData: keepPreviousData,
+  });
+}
+
+export async function vfsRefresh(clientId: string, components: string[], depth = 0) {
+  return api.post<{ flow_id?: string }>('v1/VFSRefreshDirectory', { client_id: clientId, vfs_components: components, depth });
+}
+
+export async function vfsDownload(clientId: string, accessor: string, components: string[]) {
+  return api.post<{ flow_id?: string }>('v1/VFSDownloadFile', { client_id: clientId, accessor, components });
+}

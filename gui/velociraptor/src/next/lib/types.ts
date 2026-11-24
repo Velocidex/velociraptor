@@ -146,8 +146,14 @@ export interface ArtifactDescriptor {
   type?: string;
   author?: string;
   parameters?: ArtifactParameterDef[];
-  sources?: { name?: string; query?: string }[];
+  sources?: { name?: string; query?: string; description?: string; precondition?: string }[];
   built_in?: boolean;
+  compiled_in?: boolean;
+  precondition?: string;
+  references?: string[];
+  tools?: { name?: string; url?: string; github_project?: string; serve_locally?: boolean }[];
+  export?: string;
+  column_types?: { name: string; type: string }[];
   required_permissions?: string[];
   resources?: { timeout?: Num; max_rows?: Num; max_upload_bytes?: Num; cpu_limit?: number };
 }
