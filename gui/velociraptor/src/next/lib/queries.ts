@@ -631,10 +631,21 @@ export function useExistingArtifacts(names: string[]) {
 
 // Collect one artifact with simple parameters.
 export async function runArtifact(clientId: string, artifact: string, params: Record<string, string> = {}, urgent = false) {
+  return runArtifacts(clientId, [artifact], { [artifact]: params }, urgent);
+}
+
+// Collect several artifacts in one flow. `params` maps an artifact name to
+// its parameter values; artifacts without an entry use their defaults.
+export async function runArtifacts(
+  clientId: string, artifacts: string[], params: Record<string, Record<string, string>> = {}, urgent = false,
+) {
   return api.post<{ flow_id?: string }>('v1/CollectArtifact', {
     client_id: clientId,
-    artifacts: [artifact],
-    specs: [{ artifact, parameters: { env: Object.entries(params).map(([key, value]) => ({ key, value })) } }],
+    artifacts,
+    specs: artifacts.map(artifact => ({
+      artifact,
+      parameters: { env: Object.entries(params[artifact] ?? {}).map(([key, value]) => ({ key, value })) },
+    })),
     urgent,
   });
 }

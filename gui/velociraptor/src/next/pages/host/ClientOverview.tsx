@@ -6,10 +6,11 @@ import { toast } from 'sonner';
 import {
   Activity, Cpu, ExternalLink, FolderTree, History, Info, Monitor, MoreHorizontal, Network, Plus, RefreshCw,
   ShieldAlert, ShieldCheck, Tags, Trash2, Users, Zap, Clock, Globe, KeyRound, ListTree, Terminal, Save,
+  Download, HardDrive, PlayCircle,
 } from 'lucide-react';
 import {
   useClient, useClientFlowList, useClientMetadata, useExistingArtifacts, useLabelClients, useSetClientMetadata,
-  runArtifact, usePermission,
+  runArtifact, runArtifacts, usePermission,
 } from '../../lib/queries';
 import type { ApiClient } from '../../lib/types';
 import { clientStatus, fmtBytes, fmtCompact, fmtTime, timeAgo, toNum } from '../../lib/format';
@@ -20,6 +21,7 @@ import {
 import { TagInput } from '../hunts/TagInput';
 import { FlowStateBadge } from '../collections/FlowDetail';
 import { useSelectedClient } from '../../shell/client-context';
+import { MftWindowDialog, type MftWindow } from './MftWindowDialog';
 
 const NewHuntDialog = lazy(() => import('../hunts/NewHuntDialog'));
 
@@ -36,9 +38,35 @@ const QUARANTINE: Record<OS, string> = {
   other: '',
 };
 
-interface Quick { artifact: string; label: string; icon: React.ReactNode; hint: string }
+// A quick triage tile collects one artifact, or several in a single flow
+// via `bundle`. `askWindow` opens the MFT time window picker first.
+interface Quick {
+  artifact: string; label: string; icon: React.ReactNode; hint: string;
+  bundle?: string[]; askWindow?: boolean;
+}
+const artifactsOf = (q: Quick): string[] => q.bundle ?? [q.artifact];
+
 const QUICK: Record<OS, Quick[]> = {
   windows: [
+    {
+      artifact: 'Windows.Applications.Chrome.History', label: 'Browser history', icon: <Globe />,
+      hint: 'Visited URLs from Chrome, Edge, Brave and Firefox',
+      bundle: ['Windows.Applications.Chrome.History', 'Windows.Applications.Firefox.History'],
+    },
+    {
+      artifact: 'Windows.Applications.Chrome.Downloads', label: 'Downloads history', icon: <Download />,
+      hint: 'Browser downloads plus files marked as downloaded (Zone.Identifier)',
+      bundle: ['Windows.Applications.Chrome.Downloads', 'Windows.Applications.Firefox.Downloads', 'Windows.Analysis.EvidenceOfDownload'],
+    },
+    {
+      artifact: 'Windows.Forensics.Prefetch', label: 'Recently run programs', icon: <PlayCircle />,
+      hint: 'Prefetch, Amcache, ShimCache, BAM and UserAssist',
+      bundle: ['Windows.Forensics.Prefetch', 'Windows.Forensics.Amcache', 'Windows.Registry.AppCompatCache', 'Windows.Forensics.Bam', 'Windows.Registry.UserAssist'],
+    },
+    {
+      artifact: 'Windows.NTFS.MFT', label: 'MFT (time window)', icon: <HardDrive />,
+      hint: 'File system entries changed inside a time window you pick', askWindow: true,
+    },
     { artifact: 'Windows.System.Pslist', label: 'Processes', icon: <Cpu />, hint: 'Running processes with hashes and signers' },
     { artifact: 'Windows.Network.Netstat', label: 'Network connections', icon: <Network />, hint: 'Open sockets and owning processes' },
     { artifact: 'Windows.Sys.Users', label: 'Users', icon: <Users />, hint: 'Local and domain user profiles' },
@@ -80,6 +108,7 @@ export default function ClientOverview() {
   const [collectOpen, setCollectOpen] = useState(false);
   const [quarantineOpen, setQuarantineOpen] = useState(false);
   const [running, setRunning] = useState<string | null>(null);
+  const [mftOpen, setMftOpen] = useState(false);
   const label = useLabelClients();
   const canCollect = usePermission('collect_client');
 
@@ -89,7 +118,7 @@ export default function ClientOverview() {
 
   const os = osOf(client);
   const quick = useMemo(() => [...QUICK[os], ...GENERIC], [os]);
-  const names = useMemo(() => [...quick.map(q => q.artifact), QUARANTINE[os]].filter(Boolean), [quick, os]);
+  const names = useMemo(() => [...quick.flatMap(artifactsOf), QUARANTINE[os]].filter(Boolean), [quick, os]);
   const { data: existing } = useExistingArtifacts(names);
 
   if (isLoading) {
@@ -114,6 +143,21 @@ export default function ClientOverview() {
         action: r.flow_id ? { label: 'Open', onClick: () => history.push(`/collected/${clientId}/${r.flow_id}`) } : undefined,
       });
       return r.flow_id;
+    } catch (e) {
+      toast.error((e as Error).message);
+    } finally {
+      setRunning(null);
+    }
+  };
+
+  // Runs a quick triage tile. Bundles skip artifacts this server lacks.
+  const runQuick = async (q: Quick, params: Record<string, Record<string, string>> = {}) => {
+    const arts = artifactsOf(q).filter(a => !existing || existing.has(a));
+    if (arts.length === 0) return;
+    setRunning(q.artifact);
+    try {
+      const r = await runArtifacts(clientId, arts, params, true);
+      if (r.flow_id) history.push(`/collected/${clientId}/${r.flow_id}`);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -194,18 +238,18 @@ export default function ClientOverview() {
         <Card className="tw:xl:col-span-3">
           <CardHeader icon={<Zap className="tw:size-4" />} title="Quick triage" subtitle="One click collects from this host. Results open in Collections." />
           <div className="tw:grid tw:grid-cols-2 tw:md:grid-cols-3 tw:xl:grid-cols-5 tw:gap-2 tw:p-3">
-            {quick.filter(q => !existing || existing.has(q.artifact)).map(q => (
+            {quick.filter(q => !existing || artifactsOf(q).some(a => existing.has(a))).map(q => (
               <button key={q.artifact} type="button" disabled={!canCollect || running === q.artifact}
-                onClick={async () => {
-                  const id = await collect(q.artifact, undefined, true);
-                  if (id) history.push(`/collected/${clientId}/${id}`);
-                }}
+                title={artifactsOf(q).join('\n')}
+                onClick={() => (q.askWindow ? setMftOpen(true) : runQuick(q))}
                 className="tw:group tw:flex tw:items-start tw:gap-2.5 tw:rounded-lg tw:border tw:border-line tw:bg-canvas/50 tw:p-3 tw:text-left tw:transition-colors tw:hover:border-accent tw:hover:bg-accent-soft tw:disabled:opacity-50">
                 <span className="tw:flex tw:text-faint tw:group-hover:text-accent tw:[&>svg]:size-4 tw:mt-0.5">{q.icon}</span>
                 <span className="tw:min-w-0">
                   <span className="tw:block tw:text-[13px] tw:font-medium">{q.label}</span>
                   <span className="tw:block tw:text-2xs tw:text-muted tw:line-clamp-2">{q.hint}</span>
-                  <span className="tw:block tw:mt-1 tw:font-mono tw:text-[10.5px] tw:text-faint tw:truncate">{q.artifact}</span>
+                  <span className="tw:block tw:mt-1 tw:font-mono tw:text-[10.5px] tw:text-faint tw:truncate">
+                    {q.artifact}{q.bundle && q.bundle.length > 1 && ` +${q.bundle.length - 1}`}
+                  </span>
                 </span>
               </button>
             ))}
@@ -246,6 +290,14 @@ export default function ClientOverview() {
           <NewHuntDialog open={collectOpen} onOpenChange={setCollectOpen} target={{ clientId, label: hostname }}
             onCreated={id => { setCollectOpen(false); if (id) history.push(`/collected/${clientId}/${id}`); }} />
         </Suspense>
+      )}
+      {mftOpen && (
+        <MftWindowDialog hostname={hostname} onClose={() => setMftOpen(false)}
+          onConfirm={async (w: MftWindow) => {
+            const mft = quick.find(q => q.askWindow);
+            if (mft) await runQuick(mft, { [mft.artifact]: { ...w } });
+            setMftOpen(false);
+          }} />
       )}
       {quarantineOpen && (
         <QuarantineDialog hostname={hostname} onClose={() => setQuarantineOpen(false)}

@@ -1,0 +1,81 @@
+name: Windows.Applications.Chrome.Downloads
+description: |
+  Enumerates download records (source URL, saved path, size, state and
+  timestamps) from Chrome/Edge/Brave/Vivaldi/Opera `History` databases.
+
+  Chromium based browsers keep downloads in the `downloads` and
+  `downloads_url_chains` tables of the same `History` SQLite database
+  that holds browsing history. The last entry of the URL chain is the
+  final URL the file was fetched from after redirects.
+
+parameters:
+  - name: historyGlobs
+    default: \AppData\{Local,Roaming}\{Google\Chrome\User Data,Microsoft\Edge\User Data,BraveSoftware\Brave-Browser\User Data,Vivaldi\User Data,Opera Software\Opera*Stable}\*\History
+  - name: downloadsSQLQuery
+    default: |
+      SELECT D.id AS id,
+             D.target_path AS target_path,
+             D.current_path AS current_path,
+             D.start_time AS start_time,
+             D.end_time AS end_time,
+             D.received_bytes AS received_bytes,
+             D.total_bytes AS total_bytes,
+             CASE D.state
+                WHEN 0 THEN 'InProgress'
+                WHEN 1 THEN 'Complete'
+                WHEN 2 THEN 'Cancelled'
+                WHEN 3 THEN 'Interrupted'
+                WHEN 4 THEN 'Interrupted'
+                ELSE 'Unknown'
+             END AS state,
+             D.danger_type AS danger_type,
+             D.opened AS opened,
+             D.referrer AS referrer,
+             D.mime_type AS mime_type,
+             (SELECT C.url FROM downloads_url_chains AS C
+               WHERE C.id = D.id
+               ORDER BY C.chain_index DESC LIMIT 1) AS url
+      FROM downloads AS D
+  - name: userRegex
+    default: .
+    type: regex
+  - name: URLRegex
+    default: .
+    type: regex
+
+precondition: SELECT OS From info() where OS = 'windows'
+
+sources:
+  - query: |
+        // linter: symbol_mask_warn:url
+
+        LET history_files = SELECT * from foreach(
+          row={
+             SELECT Uid, Name AS User,
+                    expand(path=Directory) AS HomeDirectory
+             FROM Artifact.Windows.Sys.Users()
+             WHERE Name =~ userRegex
+          },
+          query={
+             SELECT User, OSPath, Mtime
+             FROM glob(globs=historyGlobs, root=HomeDirectory)
+          })
+
+        SELECT * FROM foreach(row=history_files,
+          query={
+            SELECT User,
+                   timestamp(winfiletime=start_time * 10) AS start_time,
+                   if(condition=end_time > 0,
+                      then=timestamp(winfiletime=end_time * 10)) AS end_time,
+                   url AS download_url,
+                   target_path,
+                   received_bytes, total_bytes,
+                   state, danger_type, opened,
+                   referrer, mime_type,
+                   id AS download_id,
+                   OSPath
+            FROM sqlite(
+              file=OSPath,
+              query=downloadsSQLQuery)
+          })
+          WHERE download_url =~ URLRegex
