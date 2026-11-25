@@ -81,12 +81,9 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 				return utils.StatusToError(err)
 			}
 
-			if grpc_result.Data == nil || len(grpc_result.Data) == 0 {
-				return io.EOF
-			}
-
 			if to_read > int64(len(grpc_result.Data)) {
 				to_read = int64(len(grpc_result.Data))
+				err = io.EOF
 			}
 
 			// Copy the data into the buffer
@@ -96,11 +93,6 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 			}
 			total_read += int(to_read)
 			mu.Unlock()
-
-			// A short read must be at the end of file.
-			if to_read < buf_size {
-				err = io.EOF
-			}
 
 			return err
 		}))
