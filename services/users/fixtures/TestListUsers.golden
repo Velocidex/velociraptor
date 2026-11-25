@@ -57,6 +57,12 @@
    ]
   },
   {
+   "name": "AdminO2"
+  },
+  {
+   "name": "OrgAdmin"
+  },
+  {
    "name": "UserO1",
    "orgs": [
     {
@@ -64,6 +70,9 @@
      "id": "O1"
     }
    ]
+  },
+  {
+   "name": "UserO2"
   }
  ],
  "AdminO1 ListUsers": [

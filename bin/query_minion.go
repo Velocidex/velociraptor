@@ -36,6 +36,7 @@ func installMinionMode(
 	config_obj.Services.FrontendServer = true
 	config_obj.Services.InventoryService = true
 	config_obj.Services.ServerArtifacts = true
+	config_obj.Services.SchedulerService = true
 	config_obj.Services.IndexServer = true
 	config_obj.Frontend.IsMinion = true
 

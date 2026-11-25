@@ -112,7 +112,7 @@ func (self *DirectoryFileStore) ListDirectory(dirname api.FSPathSpec) (
 
 		var name_type api.PathType
 		if fileinfo.IsDir() {
-			name_type = api.PATH_TYPE_DATASTORE_DIRECTORY
+			name_type = api.PATH_TYPE_FILESTORE_DIRECTORY
 
 		} else if untyped {
 			name_type = api.PATH_TYPE_FILESTORE_ANY

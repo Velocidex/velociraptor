@@ -30,3 +30,8 @@ debug.test*
 artifacts/testdata/server/hunts/H.*
 artifacts/testdata/server/users/
 build/packages/
+
+
+bin/rsrc_windows_386.syso
+bin/rsrc_windows_amd64.syso
+docs/winres/winres.json

@@ -109,6 +109,11 @@ func doClientRPM() error {
 		*client_rpm_command_output = "."
 	}
 
+	output, err := filepath.Abs(*client_rpm_command_output)
+	if err != nil {
+		return err
+	}
+
 	// By default it should be set to A
 	if *rpm_command_release == "" {
 		*rpm_command_release = "A"
@@ -121,7 +126,7 @@ func doClientRPM() error {
 		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Release", *rpm_command_release).
-			Set("Output", *client_rpm_command_output).
+			Set("Output", output).
 			Set("BinaryToPackage", *client_rpm_command_binary).
 			Set("ConfigPath", abs_config_path),
 	}
@@ -195,6 +200,11 @@ func doServerRPM() error {
 		*server_rpm_command_output = "."
 	}
 
+	output, err := filepath.Abs(*server_rpm_command_output)
+	if err != nil {
+		return err
+	}
+
 	// By default it should be set to A
 	if *rpm_command_release == "" {
 		*rpm_command_release = "A"
@@ -207,7 +217,7 @@ func doServerRPM() error {
 		Logger:     log.New(logger, "", 0),
 		Env: ordereddict.NewDict().
 			Set("Release", *rpm_command_release).
-			Set("Output", *server_rpm_command_output).
+			Set("Output", output).
 			Set("BinaryToPackage", *server_rpm_command_binary).
 			Set("ConfigPath", abs_config_path).
 			Set("ServiceUser", *server_rpm_command_user).

@@ -155,7 +155,8 @@ func (self *ACLManager) GetPolicy(
 	if pres {
 		return proto.Clone(cache.policy).(*acl_proto.ApiClientACL), nil
 	}
-	return nil, utils.NotFoundError
+	return nil, utils.Wrap(utils.NotFoundError,
+		"ACLs for user %v not found", principal)
 }
 
 // GetEffectivePolicy expands any roles in the policy object to
