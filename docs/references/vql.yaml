@@ -5743,6 +5743,100 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: kafka_upload
+  description: |
+    Upload rows to a Kafka topic.
+
+    Rows from `query` are batched (`chunk_size`, `wait_time`) and
+    produced to `topic`, or to each row's `_topic` column, as JSON
+    records. `key_field` picks the column used as the record key, so
+    all rows with the same key (e.g. `ClientId`) land on one partition
+    in order. Brokers and credentials are best kept in a secret of type
+    `Kafka Creds`.
+
+    With `hold=TRUE` batches are never dropped: when the brokers are
+    unreachable the plugin waits for them, with a periodic warning,
+    while Velociraptor buffers the event queue to disk. Use it in
+    monitoring artifacts.
+
+    Emits one row per batch with `Sent`, `Failed` and `Error`.
+  type: Plugin
+  version: 1
+  args:
+  - name: query
+    type: StoredQuery
+    description: Source for rows to upload.
+    required: true
+  - name: brokers
+    type: string
+    description: 'Seed brokers (host:port). Required unless a secret supplies them.'
+    repeated: true
+  - name: secret
+    type: string
+    description: Name of a 'Kafka Creds' secret supplying brokers and authentication.
+  - name: topic
+    type: string
+    description: Topic to produce to. If unset, each row must carry a _topic column.
+  - name: key_field
+    type: string
+    description: Row column used as the record key; decides the partition (e.g. ClientId).
+  - name: chunk_size
+    type: int64
+    description: Rows per batch (default 1000).
+  - name: wait_time
+    type: int64
+    description: Maximum seconds to buffer before flushing (default 2).
+  - name: timeout
+    type: int64
+    description: Seconds to wait for a batch to be acknowledged before failing it (default 30). Ignored when hold is set.
+  - name: hold
+    type: bool
+    description: 'Never drop records: wait for the broker indefinitely instead of failing batches after timeout. Recommended for monitoring artifacts.'
+  - name: stall_warning
+    type: int64
+    description: Log a warning every this many seconds while a batch waits for the broker (default 60, negative disables).
+  - name: compression
+    type: string
+    description: none, gzip, snappy, lz4 or zstd (default zstd).
+  - name: headers
+    type: ordereddict.Dict
+    description: Static headers added to every record.
+  - name: header_fields
+    type: string
+    description: Row columns copied into per-record headers (they stay in the payload too), e.g. Artifact, ClientId.
+    repeated: true
+  - name: client_id
+    type: string
+    description: Kafka client id (default velociraptor).
+  - name: use_tls
+    type: bool
+    description: Connect to the brokers over TLS.
+  - name: root_ca
+    type: string
+    description: PEM CA certificate(s) to trust in addition to the system pool.
+  - name: skip_verify
+    type: bool
+    description: Disable TLS certificate verification.
+  - name: client_cert
+    type: string
+    description: PEM client certificate to present to the brokers (mutual TLS). Needs client_key and use_tls.
+  - name: client_key
+    type: string
+    description: PEM private key for client_cert (unencrypted PKCS#1, PKCS#8 or EC).
+  - name: sasl_mechanism
+    type: string
+    description: PLAIN, SCRAM-SHA-256 or SCRAM-SHA-512.
+  - name: username
+    type: string
+    description: SASL username.
+  - name: password
+    type: string
+    description: SASL password.
+  metadata:
+    permissions: NETWORK
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: killkillkill
   description: |
     Sends a kill message to the client and forces a restart - this is very aggressive!

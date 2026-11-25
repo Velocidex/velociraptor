@@ -1,0 +1,145 @@
+name: Kafka.Flows.Upload
+author: Wes Lambert - @therealwlambert
+description: |
+  Sends the results of completed collections to Kafka, using
+  kafka_upload().
+
+  This is the path for CLIENT and SERVER artifacts that are collected
+  (one-off collections and hunts), as opposed to event artifacts,
+  which Kafka.Events.Upload streams continuously.
+
+  It watches System.Flow.Completion. For every finished flow it looks
+  up the flow, then reads each artifact source that produced rows and
+  sends those rows to `<TopicPrefix>.collection`. Hunt results arrive
+  this way too: each client's part of a hunt completes as its own flow
+  (flow id F.<id>.H for hunt H.<id>), and `HuntId` is set on those rows.
+
+  Every record is JSON keyed by ClientId and carries `Artifact`,
+  `ArtifactType` (`collection`), `ClientId`, `FlowId`, `HuntId` (hunts
+  only), `Creator` (the user who launched it) and `OrgId`, which are
+  also set as Kafka headers. Server collections have ClientId "server".
+
+  Only result rows are sent. Uploaded files stay in the datastore.
+
+  ## Requirements
+
+  This artifact needs the `kafka_upload()` plugin, which is only
+  compiled into Velociraptor builds made with the `sumo` build tag (the
+  official Docker image, or a release binary with `sumo` in its name).
+  Standard builds do not include it.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: Brokers
+    description: Comma separated Kafka brokers (host:port). Used only when KafkaSecret is empty.
+    default: localhost:9092
+  - name: TopicPrefix
+    default: velociraptor
+  - name: ArtifactNameRegex
+    type: regex
+    default: .
+    description: Only forward artifact sources whose name matches.
+  - name: ChunkSize
+    type: int
+    default: 1000
+  - name: WaitTime
+    type: int
+    default: 2
+  - name: Compression
+    type: choices
+    default: zstd
+    choices:
+      - zstd
+      - lz4
+      - snappy
+      - gzip
+      - none
+  - name: KeyField
+    description: |
+      Column used as the Kafka record key. Kafka keeps records with the
+      same key on one partition, in order, so the default keeps each
+      endpoint's events together and in sequence. Any column works, for
+      example `Artifact`, `ArtifactType`, `ClientId`, `FlowId`, `HuntId`, `Creator` or `OrgId`, or a column of the forwarded artifact. Leave
+      empty for no key, which spreads records evenly across partitions
+      with no ordering. Rows without the column are sent with no key.
+      Compacted topics (cleanup.policy=compact) need a key on every record.
+    default: ClientId
+  - name: KafkaSecret
+    description: |
+      Name of a "Kafka Creds" secret holding the brokers and credentials
+      (SASL, TLS). When set, Brokers is ignored. Leave empty only for an
+      unauthenticated test broker.
+  - name: StallWarning
+    type: int
+    description: Seconds between warnings while a batch waits for Kafka.
+    default: 60
+
+sources:
+  - precondition: |
+      SELECT * FROM info()
+      WHERE version(plugin="kafka_upload") >= 1
+
+    query: |
+      // kafka_upload() only exists in 'sumo' builds. Server monitoring
+      // does not evaluate the precondition above, so also log an
+      // actionable message rather than a bare "plugin not found".
+      LET _ <= if(condition=NOT version(plugin="kafka_upload"),
+          then=log(level="ERROR", dedup=-1,
+                   message="Kafka.Flows.Upload requires a Velociraptor " +
+                     "build with the 'sumo' tag (the official Docker image, " +
+                     "or a release binary with 'sumo' in its name)."))
+
+      LET org_id <= org().id
+
+      // Newer servers may send the completion event without the full
+      // flow object, so look the flow up from its id.
+      LET completions = SELECT ClientId,
+             FlowId || Flow.session_id AS FlowId
+        FROM watch_monitoring(artifact="System.Flow.Completion")
+
+      LET finished_flows = SELECT ClientId, FlowId,
+             get_flow(client_id=ClientId, flow_id=FlowId) AS FlowObj
+        FROM completions
+
+      LET documents = SELECT * FROM foreach(row=finished_flows,
+          query={
+             SELECT * FROM foreach(
+                 row=FlowObj.artifacts_with_results,
+                 query={
+                    SELECT * FROM if(
+                       condition=_value =~ ArtifactNameRegex,
+                       then={
+                          SELECT *,
+                                 _value AS Artifact,
+                                 "collection" AS ArtifactType,
+                                 ClientId, FlowId,
+                                 FlowObj.request.creator AS Creator,
+                                 // Hunt flows are named F.<id>.H for hunt H.<id>,
+                                 // the same mapping as utils.ExtractHuntId.
+                                 if(condition=FlowId =~ "^F[.].+[.]H$",
+                                    then=regex_replace(source=FlowId,
+                                       re="^F[.](.+)[.]H$", replace="H.${1}")) AS HuntId,
+                                 org_id AS OrgId,
+                                 TopicPrefix + ".collection" AS _topic
+                          FROM source(client_id=ClientId,
+                                      flow_id=FlowId,
+                                      artifact=_value)
+                       })
+                 })
+          })
+
+      // hold=TRUE: never drop telemetry. Kafka outages are waited out
+      // while Velociraptor spools new events to disk.
+      SELECT * FROM kafka_upload(
+          query=documents,
+          brokers=split(string=Brokers, sep=" *, *"),
+          key_field=KeyField,
+          header_fields=["Artifact", "ArtifactType", "ClientId",
+                         "FlowId", "HuntId", "Creator", "OrgId"],
+          chunk_size=ChunkSize,
+          wait_time=WaitTime,
+          compression=Compression,
+          secret=KafkaSecret,
+          hold=TRUE,
+          stall_warning=StallWarning)
