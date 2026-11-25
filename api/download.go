@@ -654,7 +654,7 @@ func downloadFileStore(
 
 			// Read the first buffer for mime detection.
 			n, err := fd.Read(buf)
-			if err != nil {
+			if err != nil && err != io.EOF {
 				returnError(config_obj, w, 404, err)
 				return
 			}
@@ -1016,11 +1016,11 @@ func streamZipFile(
 
 	for {
 		n, err := file.Read(buf)
-		if n == 0 || err == io.EOF {
+		if n == 0 {
 			break
 		}
 
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return err
 		}
 

@@ -2,6 +2,7 @@ package networking
 
 import (
 	"context"
+	"io"
 	"net"
 	"strings"
 	"time"
@@ -108,7 +109,7 @@ func (self NetcatPlugin) connectOnce(
 	offset := 0
 	for {
 		n, err := conn.Read(buf[offset:])
-		if err != nil {
+		if err != nil && err != io.EOF {
 			return
 		}
 

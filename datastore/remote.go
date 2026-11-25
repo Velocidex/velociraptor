@@ -176,10 +176,11 @@ func (self *RemoteDataStore) _SetSubjectWithCompletion(
 		}
 	}()
 
+	// Convert all calls to synchronous because it is safer.
 	_, err = conn.SetSubject(ctx, &api_proto.DataRequest{
 		OrgId: config_obj.OrgId,
 		Data:  value,
-		Sync:  completion != nil,
+		Sync:  true,
 		Pathspec: &api_proto.DSPathSpec{
 			Components: urn.Components(),
 			PathType:   int64(urn.Type()),

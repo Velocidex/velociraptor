@@ -138,6 +138,7 @@ func (self *ApiServer) FSStat(
 		Type:       int64(child_pathspec.Type()),
 		Mode:       uint32(stat.Mode()),
 		ModTime:    uint64(stat.ModTime().UnixNano()),
+		Size:       stat.Size(),
 	}, nil
 }
 

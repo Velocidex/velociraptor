@@ -45,7 +45,11 @@ func (self *ServerArtifactWorker) ProcessUpdateRequest(
 		return nil, err
 	}
 
-	go collection_context.StartRefresh()
+	wg := &sync.WaitGroup{}
+	defer wg.Wait()
+
+	wg.Add(1)
+	go collection_context.StartRefresh(wg)
 
 	defer collection_context.Close(ctx)
 

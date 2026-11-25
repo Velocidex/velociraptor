@@ -3,6 +3,7 @@ package sql
 import (
 	"context"
 	"errors"
+	"io"
 	"os"
 	"strings"
 	"sync"
@@ -382,7 +383,7 @@ func checkSQLiteHeader(scope vfilter.Scope,
 
 	header := make([]byte, 12)
 	_, err = file.Read(header)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return false, err
 	}
 

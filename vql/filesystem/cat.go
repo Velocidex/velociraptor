@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/go-errors/errors"
 	"www.velocidex.com/golang/velociraptor/accessors"
 	"www.velocidex.com/golang/velociraptor/acls"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -94,11 +93,11 @@ func (self CatPlugin) Call(
 		for {
 			buffer := make([]byte, arg.Chunk)
 			n, err := fd.Read(buffer)
-			if errors.Is(err, io.EOF) || n == 0 {
+			if n == 0 {
 				return
 			}
 
-			if err != nil {
+			if err != nil && err != io.EOF {
 				scope.Log("cat: %v", err)
 				return
 			}

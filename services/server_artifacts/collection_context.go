@@ -214,7 +214,9 @@ func (self *contextManager) GetContext() *flows_proto.ArtifactCollectorContext {
 
 // Starts a go routine which saves the context state so the GUI can
 // monitor progress.
-func (self *contextManager) StartRefresh() {
+func (self *contextManager) StartRefresh(wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	for {
 		select {
 		case <-self.sub_ctx.Done():
