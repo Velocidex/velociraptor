@@ -41,6 +41,13 @@ const buttonSizes: Record<ButtonSize, string> = {
   md: 'tw:h-8 tw:px-3 tw:text-[13px] tw:gap-2',
 };
 
+// Icons passed without an explicit size get one that fits the button.
+const iconSizes: Record<ButtonSize, string> = {
+  xs: 'tw:[&>svg:not([class*=size-])]:size-3',
+  sm: 'tw:[&>svg:not([class*=size-])]:size-3.5',
+  md: 'tw:[&>svg:not([class*=size-])]:size-4',
+};
+
 // Square, icon-only buttons. Kept separate because utilities are
 // !important, so conflicting padding classes cannot be overridden.
 const squareSizes: Record<ButtonSize, string> = {
@@ -66,7 +73,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
       className={cn(
         'tw:inline-flex tw:items-center tw:justify-center tw:rounded-md tw:font-medium tw:whitespace-nowrap',
         'tw:transition-colors tw:select-none tw:disabled:opacity-50 tw:disabled:pointer-events-none',
-        buttonVariants[variant], square ? squareSizes[size] : buttonSizes[size], className)}
+        buttonVariants[variant], square ? squareSizes[size] : buttonSizes[size], iconSizes[size], className)}
       {...rest}
     >
       {loading ? <Loader2 className="tw:size-3.5 tw:animate-spin" /> : icon}
@@ -130,7 +137,7 @@ export function CardHeader({ title, subtitle, actions, className, icon }: {
 }) {
   return (
     <div className={cn('tw:flex tw:items-center tw:gap-3 tw:px-4 tw:h-11 tw:border-b tw:border-line', className)}>
-      {icon && <span className="tw:text-faint">{icon}</span>}
+      {icon && <span className="tw:text-faint tw:flex tw:[&>svg:not([class*=size-])]:size-4">{icon}</span>}
       <div className="tw:min-w-0 tw:flex-1">
         <h3 className="tw:text-[13px] tw:font-semibold tw:truncate">{title}</h3>
         {subtitle && <div className="tw:text-2xs tw:text-faint tw:truncate">{subtitle}</div>}

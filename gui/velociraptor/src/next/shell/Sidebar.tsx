@@ -23,7 +23,7 @@ interface Item {
 
 function remembered(key: string, prefix: string): string {
   const v = getItem(key);
-  return v ? `${prefix}/${v}` : prefix;
+  return v ? `${prefix}/${encodeURIComponent(v)}` : prefix;
 }
 
 function NavItem({ item, collapsed }: { item: Item; collapsed: boolean }) {

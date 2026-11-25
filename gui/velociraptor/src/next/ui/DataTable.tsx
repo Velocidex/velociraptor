@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import type { Row } from '../lib/table';
 import { toCSV, downloadText } from '../lib/table';
-import { cellToString, fmtNum } from '../lib/format';
+import { cellToString, fmtNum, fmtTime } from '../lib/format';
 import {
   Button, cn, CopyButton, EmptyState, IconButton, Menu, MenuContent, MenuItem, MenuLabel,
   MenuSeparator, MenuTrigger, SearchInput, Skeleton,
@@ -30,6 +30,8 @@ export interface DataTableProps {
   columnLabels?: Record<string, string>;
   headerRenderers?: Record<string, () => React.ReactNode>;
   hiddenColumns?: string[];
+  // Underscore columns are hidden by default; these stay visible.
+  shownColumns?: string[];
   loading?: boolean;
   total?: number;
   hasMore?: boolean;
@@ -72,7 +74,15 @@ function saveState(key: string | undefined, value: unknown) {
   }
 }
 
-export function DefaultCell({ value }: { value: unknown }) {
+const TIME_COL = /(^_ts$|time|timestamp|date|_at$)/i;
+
+// Epoch numbers in a time-named column read as dates: 1.7e9 (s) up to
+// 1.7e18 (ns) all land in 2001-2286.
+function looksLikeEpoch(v: number): boolean {
+  return (v > 1e9 && v < 1e10) || (v > 1e12 && v < 1e13) || (v > 1e15 && v < 1e16) || (v > 1e18 && v < 1e19);
+}
+
+export function DefaultCell({ value, column }: { value: unknown; column?: string }) {
   if (value === null || value === undefined || value === '') {
     return <span className="tw:text-faint">–</span>;
   }
@@ -80,6 +90,12 @@ export function DefaultCell({ value }: { value: unknown }) {
     return <span className={value ? 'tw:text-ok' : 'tw:text-faint'}>{String(value)}</span>;
   }
   if (typeof value === 'number') {
+    if (column && TIME_COL.test(column) && looksLikeEpoch(value)) {
+      return <span className="tw:text-muted tw:whitespace-nowrap" title={String(value)}>{fmtTime(value)}</span>;
+    }
+    if (!Number.isInteger(value)) {
+      return <span className="rx-num" title={String(value)}>{Number(value.toFixed(Math.abs(value) < 1 ? 4 : 2))}</span>;
+    }
     return <span className="rx-num">{value}</span>;
   }
   if (typeof value === 'object') {
@@ -90,6 +106,8 @@ export function DefaultCell({ value }: { value: unknown }) {
 }
 
 function guessWidth(col: string, rows: Row[]): number {
+  const first = rows.find(r => r[col] !== null && r[col] !== undefined)?.[col];
+  if (typeof first === 'number' && TIME_COL.test(col) && looksLikeEpoch(first)) return 172;
   let max = col.length * 7.5 + 36;
   for (let i = 0; i < Math.min(rows.length, 50); i++) {
     const s = cellToString(rows[i][col]);
@@ -119,7 +137,7 @@ export function DataTable(props: DataTableProps) {
 
   const defaultHidden = useMemo(() => {
     const v: VisibilityState = {};
-    for (const c of columnNames) if (c.startsWith('_')) v[c] = false;
+    for (const c of columnNames) if (c.startsWith('_') && !props.shownColumns?.includes(c)) v[c] = false;
     for (const c of props.hiddenColumns ?? []) v[c] = false;
     return v;
   }, [columnNames, props.hiddenColumns]);
@@ -169,7 +187,7 @@ export function DataTable(props: DataTableProps) {
     cell: ctx => {
       const r = renderersRef.current[name];
       const v = ctx.getValue();
-      return r ? r(v, ctx.row.original) : <DefaultCell value={v} />;
+      return r ? r(v, ctx.row.original) : <DefaultCell value={v} column={name} />;
     },
   // eslint-disable-next-line react-hooks/exhaustive-deps
   })), [columnNames, rows.length === 0]);

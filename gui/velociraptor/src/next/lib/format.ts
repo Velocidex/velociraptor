@@ -73,15 +73,27 @@ function userTimezone(): string | undefined {
   return tz || undefined;
 }
 
-export function fmtTime(v: Num | Date | null): string {
-  const d = v instanceof Date ? v : toDate(v);
-  if (!d) return '';
-  try {
-    return new Intl.DateTimeFormat(undefined, {
+// Building an Intl formatter is expensive; tables call this per cell.
+const timeFormatters = new Map<string, Intl.DateTimeFormat>();
+function timeFormatter(tz: string | undefined): Intl.DateTimeFormat {
+  const key = tz ?? '';
+  let f = timeFormatters.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat(undefined, {
       year: 'numeric', month: 'short', day: '2-digit',
       hour: '2-digit', minute: '2-digit', second: '2-digit',
-      hour12: false, timeZone: userTimezone(),
-    }).format(d);
+      hour12: false, timeZone: tz,
+    });
+    timeFormatters.set(key, f);
+  }
+  return f;
+}
+
+export function fmtTime(v: Num | Date | null): string {
+  const d = v instanceof Date ? v : toDate(v);
+  if (!d || Number.isNaN(d.getTime())) return '';
+  try {
+    return timeFormatter(userTimezone()).format(d);
   } catch {
     return d.toISOString();
   }

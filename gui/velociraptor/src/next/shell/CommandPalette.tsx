@@ -101,6 +101,9 @@ export default function CommandPalette({ open, onOpenChange, dark }: {
                   <Command.Item value="new-artifact" onSelect={() => go('/artifacts?new=1')} className={itemCls}>
                     <FilePlus2 /> New artifact
                   </Command.Item>
+                  <Command.Item value="new-notebook" onSelect={() => go('/notebooks?new=1')} className={itemCls}>
+                    <BookOpen /> New notebook
+                  </Command.Item>
                   <Command.Item value="new-user" onSelect={() => go('/users?add=1')} className={itemCls}>
                     <UserPlus /> Add a user
                   </Command.Item>

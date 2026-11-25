@@ -290,3 +290,10 @@
 .rx .rx-md a { color: var(--rx-accent); text-decoration: underline; }
 .rx .rx-md table { border-collapse: collapse; font-size: 12px; }
 .rx .rx-md th, .rx .rx-md td { border: 1px solid var(--rx-line); padding: 4px 8px; }
+.rx-masked { -webkit-text-security: disc; }
+
+/* Notebook cell output: tables sit flush with the cell edges. */
+.rx-cell-output > .panel:first-child { margin-top: -0.75rem; }
+.rx-cell-output > .panel:last-child { margin-bottom: -0.75rem; }
+.rx-cell-output .panel { margin-left: 0; margin-right: 0; padding: 0; border: 0; background: transparent; }
+.rx-cell-output > :first-child, .rx-cell-output > .panel:first-child > :first-child { margin-top: 0; }

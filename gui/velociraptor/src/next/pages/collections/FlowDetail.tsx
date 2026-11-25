@@ -1,10 +1,10 @@
 // One collection: what was asked for, what came back (results, files,
 // logs) and how to take it away (zip exports).
-import { useEffect, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { toast } from 'sonner';
 import {
-  Ban, CircleAlert, Clock, Download, ExternalLink, FileDown, FolderArchive, LayoutList, Logs, MoreHorizontal, RefreshCw,
+  Ban, BookOpen, CircleAlert, Clock, Download, ExternalLink, FileDown, FolderArchive, LayoutList, Logs, MoreHorizontal, RefreshCw,
   Rows3, RotateCcw, ScrollText, Table2,
 } from 'lucide-react';
 import { useCancelFlow, useFlow, useFlowTable, useArtifactDefinitions } from '../../lib/queries';
@@ -20,9 +20,11 @@ import { DataTable } from '../../ui/DataTable';
 import { ArchiveList } from '../evidence/ArchiveList';
 import { promoteColumns, UploadsTable, withUploadCells } from '../evidence/UploadLink';
 
-type TabKey = 'overview' | 'results' | 'files' | 'logs';
+type TabKey = 'overview' | 'results' | 'files' | 'logs' | 'notebook';
+
+const FlowNotebook = lazy(() => import('../notebooks/NotebooksPage').then(m => ({ default: m.NotebookView })));
 const normalizeTab = (t?: string): TabKey =>
-  t === 'results' || t === 'files' || t === 'logs' ? t : 'overview';
+  t === 'results' || t === 'files' || t === 'logs' || t === 'notebook' ? t : 'overview';
 
 const RUNNING = new Set(['RUNNING', 'IN_PROGRESS', 'WAITING', 'UNSET']);
 
@@ -123,6 +125,7 @@ export default function FlowDetail({ clientId, flowId, tab, hostname, onCollectA
         { value: 'results', label: 'Results', icon: <Table2 />, count: rows ? fmtNum(rows) : undefined },
         { value: 'files', label: 'Files', icon: <FileDown />, count: files ? fmtNum(files) : undefined },
         { value: 'logs', label: 'Logs', icon: <Logs />, count: logs ? fmtNum(logs) : undefined },
+        { value: 'notebook', label: 'Notebook', icon: <BookOpen /> },
       ]} />
 
       <div className="tw:flex-1 tw:min-h-0 tw:flex tw:flex-col tw:bg-panel">
@@ -130,6 +133,14 @@ export default function FlowDetail({ clientId, flowId, tab, hostname, onCollectA
         {active === 'results' && <Results clientId={clientId} flow={flow} live={running} />}
         {active === 'files' && <Files clientId={clientId} flowId={flowId} live={running} onExport={exportZip} />}
         {active === 'logs' && <LogsTab clientId={clientId} flowId={flowId} live={running} />}
+        {active === 'notebook' && (
+          <div className="tw:flex-1 tw:min-h-0 tw:flex tw:bg-canvas">
+            <Suspense fallback={null}>
+              <FlowNotebook key={flowId} id={`N.${flowId}-${clientId}`} embedded
+                create={{ name: `Notebook for Collection ${flowId}` }} />
+            </Suspense>
+          </div>
+        )}
       </div>
 
       <ConfirmDialog open={confirmCancel} onOpenChange={setConfirmCancel} danger

@@ -28,7 +28,7 @@ import { promoteColumns, UploadsTable, withUploadCells } from '../evidence/Uploa
 import { FlowDownloadButton } from '../evidence/FlowExportButton';
 import { archiveState } from '../../lib/downloads';
 
-const LegacyHuntNotebook = lazy(() => import('./LegacyHuntNotebook.jsx'));
+const HuntNotebook = lazy(() => import('../notebooks/NotebooksPage').then(m => ({ default: m.NotebookView })));
 
 type TabKey = 'overview' | 'results' | 'clients' | 'files' | 'exports' | 'errors' | 'notebook';
 
@@ -192,9 +192,10 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
         {active === 'exports' && <ExportsTab files={archives} onExport={() => setExportOpen(true)} />}
         {active === 'errors' && <ErrorsTab rows={errorRows} loading={!errors} />}
         {active === 'notebook' && (
-          <div className="tw:flex-1 tw:min-h-0 tw:overflow-auto tw:relative">
+          <div className="tw:flex-1 tw:min-h-0 tw:flex tw:relative tw:bg-canvas">
             <Suspense fallback={<div className="tw:p-6"><Spinner /></div>}>
-              <LegacyHuntNotebook hunt={hunt} />
+              <HuntNotebook id={`N.${huntId}`} embedded
+                create={{ name: `Notebook for Hunt ${huntId}`, description: hunt.hunt_description || 'This is a notebook for processing a hunt.' }} />
             </Suspense>
           </div>
         )}

@@ -18,15 +18,19 @@ export default defineConfig({
         rollupOptions: {
             output: {
                 // Keep big, rarely changing libraries in their own
-                // chunks so they cache well between releases.
-                manualChunks(id) {
-                    if (id.includes('node_modules/ace-builds')) return 'vendor-ace';
-                    if (id.includes('node_modules/recharts') ||
-                        id.includes('node_modules/d3-')) return 'vendor-charts';
-                    if (id.includes('node_modules/react-dom') ||
-                        id.includes('node_modules/react/') ||
-                        id.includes('node_modules/scheduler')) return 'vendor-react';
-                    return undefined;
+                // chunks so they cache well between releases. React and
+                // the small helpers it shares with recharts get the top
+                // priority so the charts chunk is only fetched by pages
+                // that draw charts.
+                codeSplitting: {
+                    groups: [
+                        { name: 'vendor-react', priority: 30,
+                          test: /node_modules[\\/](react|react-dom|scheduler|prop-types|react-is|clsx|tiny-invariant|object-assign)[\\/]/ },
+                        { name: 'vendor-lodash', priority: 20, test: /node_modules[\\/]lodash[\\/]/ },
+                        { name: 'vendor-ace', priority: 10, test: /node_modules[\\/]ace-builds[\\/]/ },
+                        { name: 'vendor-charts', priority: 10,
+                          test: /node_modules[\\/](recharts|recharts-scale|d3-[a-z-]+|victory-vendor|decimal\.js-light|react-smooth|fast-equals|eventemitter3)[\\/]/ },
+                    ],
                 },
             },
             onwarn(warning, warn) {

@@ -16,6 +16,9 @@ const ArtifactsPage = lazy(() => import('../pages/artifacts/ArtifactsPage'));
 const FileBrowser = lazy(() => import('../pages/vfs/FileBrowser'));
 const CollectionsPage = lazy(() => import('../pages/collections/CollectionsPage'));
 const UsersPage = lazy(() => import('../pages/users/UsersPage'));
+const SecretsPage = lazy(() => import('../pages/secrets/SecretsPage'));
+const EventsPage = lazy(() => import('../pages/events/EventsPage'));
+const NotebooksPage = lazy(() => import('../pages/notebooks/NotebooksPage'));
 const LegacyRoutes = lazy(() => import('./LegacyRoutes.jsx'));
 
 function PageFallback() {
@@ -91,6 +94,15 @@ export default function AppShell() {
                 </Route>
                 <Route path="/users/:user?">
                   <UsersPage />
+                </Route>
+                <Route path="/secrets/:type?">
+                  <SecretsPage />
+                </Route>
+                <Route path={['/events/:client_id(server)/:artifact?', '/events/:client_id(C\.[^/]+)/:artifact?']}>
+                  <EventsPage />
+                </Route>
+                <Route path="/notebooks/:notebook_id?" exact>
+                  <NotebooksPage />
                 </Route>
                 <Route path="/classic" exact>
                   <Redirect to="/classic/hunts" />

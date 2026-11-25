@@ -1,0 +1,53 @@
+// FontAwesome icons used by legacy components. Imported only by the
+// lazily loaded chunks that render legacy code, so the new UI's first
+// load does not carry the icon set.
+import { library } from '@fortawesome/fontawesome-svg-core';
+import { faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
+         faSearch, faSpinner,  faSearchPlus, faFolderOpen, faHistory,
+         faTasks, faTerminal, faCompress, faExpand, faEyeSlash, faStop, faExclamation,
+         faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
+         faSort, faSortUp, faSortDown, faPause, faPlay, faCopy,
+         faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
+         faBinoculars, faUpload, faExternalLinkAlt, faTags, faTimes, faFolder,
+         faSignOutAlt, faBroom, faPaperPlane, faEdit, faChevronDown, faFileDownload,
+         faEraser, faFileCsv, faFileImport, faMinus, faForward, faCalendarAlt,
+         faCompressAlt, faBackward, faMedkit, faVirusSlash, faBookmark, faHeart,
+         faFileCode, faFlag, faTrashAlt, faClock, faLock, faLockOpen, faCloud,
+         faCloudDownloadAlt, faUserEdit, faFilter, faSortAlphaUp, faSortAlphaDown,
+         faInfo, faBug, faUser, faList, faIndent, faTextHeight, faBars,
+         faUserLargeSlash, faTriangleExclamation, faCircle, faAnglesLeft, faMaximize,
+         faMinimize, faNoteSticky, faArrowsUpDown, faBan, faFileExport,
+         faCircleExclamation, faTable, faHouse, faRotateLeft, faRotateRight,
+         faChevronRight, faEllipsis, faLayerGroup, faBullseye, faPersonRunning,
+         faQuestion, faCalendarPlus, faForwardFast, faBackwardFast, faSliders,
+         faRepeat, faBorderAll, faBell, faCircleQuestion, faLightbulb, faBomb,
+         faAngleDown, faAngleUp, faListOl,
+       } from '@fortawesome/free-solid-svg-icons';
+
+import { faSquare, faSquareCheck, faSquareMinus,
+       } from '@fortawesome/free-regular-svg-icons';
+
+library.add(faHome, faCrosshairs, faWrench, faEye, faServer, faBook, faLaptop,
+            faSearch, faSpinner, faSearchPlus, faTasks, faTerminal,
+            faCompress, faExpand, faEyeSlash, faStop, faExclamation,
+            faColumns, faDownload, faSync, faCheck, faHourglass, faArchive,
+            faSort, faSortUp, faSortDown, faPause, faPlay, faCopy,
+            faWindowClose, faPencilAlt, faArrowUp, faArrowDown, faPlus, faSave, faTrash,
+            faFolderOpen , faHistory, faBinoculars, faUpload, faExternalLinkAlt,
+            faTags, faTimes, faFolder, faSignOutAlt, faBroom, faPaperPlane, faEdit,
+            faChevronDown, faFileDownload, faEraser, faFileCsv, faFileImport, faMinus,
+            faForward, faCalendarAlt, faCompressAlt, faBackward, faMedkit, faVirusSlash,
+            faBookmark, faHeart, faFileCode, faFlag, faTrashAlt, faClock, faLock, faLockOpen,
+            faCloud, faCloudDownloadAlt, faUserEdit, faFilter, faBug,
+            faSortAlphaUp, faSortAlphaDown, faInfo, faUser, faList, faIndent,
+            faTextHeight, faBars, faUserLargeSlash, faTriangleExclamation,
+            faCircle, faAnglesLeft, faMaximize, faMinimize, faNoteSticky,
+            faArrowsUpDown, faBan, faFileExport, faCircleExclamation,
+            faTable, faHouse, faRotateLeft, faRotateRight, faChevronRight,
+            faEllipsis, faLayerGroup, faBullseye, faPersonRunning, faQuestion,
+            faCalendarPlus, faForwardFast, faBackwardFast, faSquareCheck,
+            faSquare, faSquareMinus, faSliders, faRepeat, faBorderAll, faBell,
+            faCircleQuestion, faLightbulb, faBomb, faAngleDown, faAngleUp,
+            faListOl,
+           );
+

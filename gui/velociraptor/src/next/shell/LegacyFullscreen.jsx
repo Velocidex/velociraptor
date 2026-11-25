@@ -7,6 +7,7 @@ import FullScreenNotebook from '../../components/notebooks/full_notebook.jsx';
 import FullScreenHuntNotebook from '../../components/hunts/hunt-full-notebook.jsx';
 import FullScreenFlowNotebook from '../../components/flows/flow-full-notebook.jsx';
 import { ShellViewerFullScreen } from '../../components/clients/shell-viewer.jsx';
+import './legacy-icons.js';
 
 export default function LegacyFullscreen() {
   return (

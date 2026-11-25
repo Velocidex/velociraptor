@@ -4,6 +4,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import '../../shell/legacy-styles.js';
 import HuntNotebook from '../../../components/hunts/hunt-notebook.jsx';
+import '../../shell/legacy-icons.js';
 
 export default function LegacyHuntNotebook({ hunt }) {
   return (

@@ -12,11 +12,11 @@ import {
 import UserConfig from '../../components/core/user.jsx';
 import * as api from './api';
 import { parseTable, type ParsedTable, type Row } from './table';
-import { toNum } from './format';
+import { toDate, toNum } from './format';
 import { archiveState } from './downloads';
 import type {
   ApiClient, ArtifactCollectorArgs, FlowDetails, ArtifactDescriptor, GetArtifactsResponse,
-  Hunt, HuntCondition, HuntStats, ListHuntsResponse, SearchClientsResponse,
+  Hunt, HuntCondition, HuntStats, ListHuntsResponse, SearchClientsResponse, Num,
   TableResponse, UserTraits,
 } from './types';
 
@@ -302,7 +302,7 @@ export function usePrepareHuntDownload() {
 // ----------------------------------------------------------- Artifacts
 
 export function useArtifactSearch(
-  term: string, type: '' | 'CLIENT' | 'SERVER' | 'CLIENT_EVENT' = 'CLIENT', enabled = true) {
+  term: string, type: '' | 'CLIENT' | 'SERVER' | 'CLIENT_EVENT' | 'SERVER_EVENT' = 'CLIENT', enabled = true) {
   return useQuery({
     queryKey: ['artifact-search', type, term],
     enabled,
@@ -811,5 +811,325 @@ export function useAddUserOrgs() {
 export function useSetPassword() {
   return useMutation({
     mutationFn: (p: { username: string; password: string }) => api.post('v1/SetPassword', p),
+  });
+}
+
+// ------------------------------------------------------------- Secrets
+
+export interface SecretDefinition {
+  type_name: string;
+  description?: string;
+  verifier?: string;
+  fields?: string[];
+  template?: Record<string, string>;
+  secret_names?: string[];
+  built_in?: boolean;
+}
+
+export interface SecretInfo {
+  name: string;
+  type_name: string;
+  users?: string[];
+  orgs?: string[];
+  visible_to_all_orgs?: boolean;
+}
+
+export function useSecretDefinitions() {
+  return useQuery({
+    queryKey: ['secret-defs'],
+    queryFn: ({ signal }) => api.get<{ items?: SecretDefinition[] }>('v1/GetSecretDefinitions', {}, signal),
+    select: d => d.items ?? [],
+  });
+}
+
+export function useSecret(typeName: string | undefined, name: string | undefined) {
+  return useQuery({
+    queryKey: ['secret', typeName, name],
+    enabled: !!typeName && !!name,
+    queryFn: ({ signal }) => api.get<SecretInfo>('v1/GetSecret', { type_name: typeName, name }, signal),
+  });
+}
+
+export function useAddSecret() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: { name: string; type_name: string; secret: Record<string, string> }) => api.post('v1/AddSecret', p),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['secret-defs'] }),
+  });
+}
+
+export function useModifySecret() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (p: {
+      type_name: string; name: string; delete?: boolean; add_users?: string[]; remove_users?: string[];
+      visible_to_all_orgs?: boolean;
+    }) => api.post('v1/ModifySecret', p),
+    onSettled: (_d, _e, p) => {
+      qc.invalidateQueries({ queryKey: ['secret-defs'] });
+      qc.invalidateQueries({ queryKey: ['secret', p.type_name, p.name] });
+    },
+  });
+}
+
+// ------------------------------------------------------ Event monitoring
+
+export interface EventLogInfo { artifact: string; row_timestamps?: Num[]; log_timestamps?: Num[] }
+
+export function useEventArtifacts(clientId: string | undefined) {
+  return useQuery({
+    queryKey: ['event-artifacts', clientId],
+    enabled: !!clientId,
+    queryFn: ({ signal }) => api.post<{ logs?: EventLogInfo[] }>('v1/ListAvailableEventResults', { client_id: clientId }, signal),
+    select: d => d.logs ?? [],
+    refetchInterval: POLL.slow,
+  });
+}
+
+export function useEventDays(clientId: string | undefined, artifact: string | undefined) {
+  return useQuery({
+    queryKey: ['event-days', clientId, artifact],
+    enabled: !!clientId && !!artifact,
+    queryFn: ({ signal }) => api.post<{ logs?: EventLogInfo[] }>('v1/ListAvailableEventResults',
+      { client_id: clientId, artifact }, signal),
+    select: d => ({
+      rows: (d.logs?.[0]?.row_timestamps ?? []).map(toNum),
+      logs: (d.logs?.[0]?.log_timestamps ?? []).map(toNum),
+    }),
+    refetchInterval: POLL.slow,
+  });
+}
+
+const EVENT_PAGE = 2000;
+
+// Event tables are indexed by time, not row number: page forward from the
+// last row's timestamp and drop the rows of that second already shown.
+export function useEventTable(clientId: string | undefined, artifact: string | undefined,
+  range: { start: number; end: number }, logs: boolean, live: boolean) {
+  const server = clientId === 'server';
+  const type = logs ? (server ? 'SERVER_EVENT_LOGS' : 'CLIENT_EVENT_LOGS') : (server ? 'SERVER_EVENT' : 'CLIENT_EVENT');
+  return useInfiniteQuery({
+    queryKey: ['event-table', clientId, artifact, type, range.start, range.end],
+    enabled: !!clientId && !!artifact,
+    initialPageParam: { start: range.start, skip: 0 },
+    queryFn: async ({ pageParam, signal }) => {
+      const p = pageParam as { start: number; skip: number };
+      const resp = await emptyIfNotFound(api.get<TableResponse>('v1/GetTable', {
+        client_id: clientId, artifact, type, start_time: p.start, end_time: range.end, rows: EVENT_PAGE + p.skip,
+      }, signal));
+      const t = parseTable(resp);
+      const full = t.rows.length >= EVENT_PAGE + p.skip;
+      const rows = t.rows.slice(p.skip);
+      const tsOf = (r: Row) => Math.floor((toDate((r._ts ?? r.Timestamp ?? r.client_time) as Num)?.getTime() ?? 0) / 1000);
+      let next: { start: number; skip: number } | undefined;
+      if (full && rows.length) {
+        const last = tsOf(rows[rows.length - 1]);
+        const sameSecond = t.rows.filter(r => tsOf(r) === last).length;
+        next = last > p.start ? { start: last, skip: sameSecond } : { start: p.start, skip: p.skip + rows.length };
+      }
+      return { ...t, rows, next };
+    },
+    getNextPageParam: last => last.next,
+    refetchInterval: live ? POLL.normal : false,
+  });
+}
+
+export interface MonitoringSpec { artifact: string; parameters?: { env?: { key: string; value: string }[] } }
+export interface MonitoringTable { artifacts?: string[]; specs?: MonitoringSpec[]; [k: string]: unknown }
+export interface ClientMonitoringState {
+  artifacts?: MonitoringTable;
+  label_events?: { label: string; artifacts?: MonitoringTable }[];
+  [k: string]: unknown;
+}
+
+export function useMonitoringState(server: boolean) {
+  return useQuery({
+    queryKey: ['monitoring-state', server ? 'server' : 'client'],
+    queryFn: ({ signal }) => server
+      ? api.get<MonitoringTable>('v1/GetServerMonitoringState', {}, signal).then(t => ({ artifacts: t } as ClientMonitoringState))
+      : api.get<ClientMonitoringState>('v1/GetClientMonitoringState', {}, signal),
+  });
+}
+
+export function useSetMonitoringState(server: boolean) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (s: ClientMonitoringState) => server
+      ? api.post('v1/SetServerMonitoringState', s.artifacts ?? {})
+      : api.post('v1/SetClientMonitoringState', s),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: ['monitoring-state'] });
+      qc.invalidateQueries({ queryKey: ['event-artifacts'] });
+    },
+  });
+}
+
+// ------------------------------------------------------------ Notebooks
+
+export interface NotebookCellMeta {
+  cell_id: string;
+  summary?: string;
+  type?: string;
+  timestamp?: Num;
+  current_version?: string;
+  available_versions?: string[];
+  calculating?: boolean;
+}
+
+export interface Notebook {
+  notebook_id: string;
+  name?: string;
+  description?: string;
+  creator?: string;
+  created_time?: Num;
+  modified_time?: Num;
+  collaborators?: string[];
+  public?: boolean;
+  hidden?: boolean;
+  artifacts?: string[];
+  specs?: unknown[];
+  cell_metadata?: NotebookCellMeta[];
+  suggestions?: { name?: string; type?: string; input?: string; env?: { key: string; value: string }[] }[];
+  available_downloads?: { files?: import('./types').AvailableDownloadFile[] };
+  version?: Num;
+  [k: string]: unknown;
+}
+
+export interface NotebookCell {
+  notebook_id?: string;
+  cell_id: string;
+  input?: string;
+  output?: string;
+  type?: string;
+  messages?: string[];
+  calculating?: boolean;
+  error?: string;
+  env?: { key: string; value: string }[];
+  timestamp?: Num;
+  duration?: Num;
+  current_version?: string;
+  available_versions?: string[];
+  more_messages?: boolean;
+}
+
+export function useNotebookList() {
+  return useQuery({
+    queryKey: ['notebook-list'],
+    queryFn: ({ signal }) => emptyIfNotFound(api.get<TableResponse>('v1/GetTable', { type: 'NOTEBOOKS', start_row: 0, rows: 2000 }, signal)),
+    select: d => parseTable(d).rows,
+    refetchInterval: POLL.slow,
+  });
+}
+
+export function useNotebook(id: string | undefined, opts: { uploads?: boolean } = {}) {
+  return useQuery({
+    queryKey: ['notebook', id, !!opts.uploads],
+    enabled: !!id,
+    queryFn: ({ signal }) => api.get<{ items?: Notebook[] }>('v1/GetNotebooks',
+      { notebook_id: id, include_uploads: opts.uploads || undefined }, signal),
+    select: d => d.items?.[0],
+    refetchInterval: q => {
+      const nb = q.state.data?.items?.[0];
+      if (nb?.cell_metadata?.some(c => c.calculating)) return 1_500;
+      const files = nb?.available_downloads?.files ?? [];
+      if (files.some(f => archiveState(f) === 'preparing')) return 1_500;
+      return POLL.fast;
+    },
+  });
+}
+
+export function useNotebookCell(notebookId: string, cellId: string, version: string | undefined) {
+  return useQuery({
+    queryKey: ['notebook-cell', notebookId, cellId, version],
+    queryFn: ({ signal }) => api.get<NotebookCell>('v1/GetNotebookCell', { notebook_id: notebookId, cell_id: cellId, version }, signal),
+    refetchInterval: q => (q.state.data?.calculating ? 1_000 : false),
+    staleTime: 60_000,
+  });
+}
+
+function useNotebookInvalidate() {
+  const qc = useQueryClient();
+  return (id?: string) => {
+    qc.invalidateQueries({ queryKey: ['notebook', id] });
+    qc.invalidateQueries({ queryKey: ['notebook-list'] });
+  };
+}
+
+export function useNewNotebook() {
+  const inv = useNotebookInvalidate();
+  return useMutation({
+    mutationFn: (p: Partial<Notebook>) => api.post<Notebook>('v1/NewNotebook', p),
+    onSettled: () => inv(),
+  });
+}
+
+export function useUpdateNotebook() {
+  const qc = useQueryClient();
+  const inv = useNotebookInvalidate();
+  return useMutation({
+    mutationFn: (nb: Notebook) => api.post<Notebook>('v1/UpdateNotebook', nb),
+    onMutate: nb => {
+      // Optimistic for reorder/delete of cells.
+      qc.setQueriesData<{ items?: Notebook[] }>({ queryKey: ['notebook', nb.notebook_id] },
+        d => (d?.items?.length ? { ...d, items: [{ ...d.items[0], ...nb }] } : d));
+    },
+    onSettled: (_d, _e, nb) => inv(nb.notebook_id),
+  });
+}
+
+export function useDeleteNotebook() {
+  const inv = useNotebookInvalidate();
+  return useMutation({
+    mutationFn: (nb: Notebook) => api.post('v1/DeleteNotebook', { ...nb, hidden: true }),
+    onSettled: () => inv(),
+  });
+}
+
+export function useNewNotebookCell() {
+  const inv = useNotebookInvalidate();
+  return useMutation({
+    mutationFn: (p: { notebook_id: string; cell_id: string; type: string; input: string; env?: { key: string; value: string }[] }) =>
+      api.post<Notebook>('v1/NewNotebookCell', p),
+    onSettled: (_d, _e, p) => inv(p.notebook_id),
+  });
+}
+
+export function useUpdateNotebookCell() {
+  const qc = useQueryClient();
+  const inv = useNotebookInvalidate();
+  return useMutation({
+    mutationFn: (p: { notebook_id: string; cell_id: string; type: string; input: string; env?: { key: string; value: string }[] }) =>
+      api.post<NotebookCell>('v1/UpdateNotebookCell', { ...p, currently_editing: false }),
+    onSuccess: cell => {
+      if (cell?.cell_id) qc.setQueryData(['notebook-cell', cell.notebook_id, cell.cell_id, cell.current_version], cell);
+    },
+    onSettled: (_d, _e, p) => inv(p.notebook_id),
+  });
+}
+
+export async function notebookCellAction(action: 'CancelNotebookCell' | 'RevertNotebookCell',
+  p: { notebook_id: string; cell_id: string; version?: string }) {
+  return api.post<NotebookCell>(`v1/${action}`, p);
+}
+
+export async function reformatVQL(vql: string): Promise<string> {
+  const r = await api.post<{ vql?: string }>('v1/ReformatVQL', { vql });
+  return r.vql || vql;
+}
+
+export function useNotebookTable(params: Record<string, unknown> | null) {
+  return useInfiniteQuery({
+    queryKey: ['notebook-table', params],
+    enabled: !!params,
+    initialPageParam: 0,
+    queryFn: async ({ pageParam, signal }) => {
+      const resp = await emptyIfNotFound(api.get<TableResponse>('v1/GetTable', {
+        ...params, TableOptions: undefined, start_row: pageParam, rows: RESULTS_PAGE,
+      }, signal));
+      return { ...parseTable(resp), offset: pageParam as number };
+    },
+    getNextPageParam: (last: ParsedTable & { offset: number }) =>
+      last.rows.length < RESULTS_PAGE ? undefined : last.offset + last.rows.length,
+    staleTime: 5 * 60_000,
   });
 }

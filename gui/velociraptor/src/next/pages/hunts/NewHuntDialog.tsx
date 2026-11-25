@@ -402,7 +402,7 @@ function SectionTitle({ icon, title, hint }: { icon: React.ReactNode; title: str
   );
 }
 
-function ArtifactParams({ name, def, values, expanded, onToggle, onChange, onReset, onRemove }: {
+export function ArtifactParams({ name, def, values, expanded, onToggle, onChange, onReset, onRemove }: {
   name: string; def?: ArtifactDescriptor; values: Record<string, string>; expanded: boolean;
   onToggle: () => void; onChange: (k: string, v: string) => void; onReset: () => void; onRemove: () => void;
 }) {

@@ -13,12 +13,12 @@ import './styles.css';
 
 import { UserSettings } from '../components/core/user.jsx';
 import Snackbar from '../components/core/snackbar.jsx';
-import KeyboardHelp from '../components/core/keyboard-help.jsx';
 import SidebarKeyNavigator from '../components/sidebar/hotkeys.jsx';
 
 // Pages shown without the shell (login, logoff, full screen views).
 const LoginPage = lazy(() => import('../components/welcome/login.jsx'));
 const LogoffPage = lazy(() => import('../components/welcome/logoff.jsx'));
+const KeyboardHelp = lazy(() => import('./shell/LegacyKeyboardHelp.jsx'));
 const LegacyFullscreen = lazy(() => import('./shell/LegacyFullscreen.jsx'));
 
 function Shell() {
@@ -36,7 +36,9 @@ function Shell() {
           <AppShell />
         </Route>
       </Switch>
-      <KeyboardHelp />
+      <Suspense fallback={null}>
+        <KeyboardHelp />
+      </Suspense>
       <Snackbar />
     </UserSettings>
   );

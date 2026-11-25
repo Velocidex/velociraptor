@@ -21,6 +21,7 @@ import SecretManager from '../../components/secrets/secrets.jsx';
 import VeloHunts from '../../components/hunts/hunts.jsx';
 import UserDashboard from '../../components/sidebar/user-dashboard.jsx';
 import VeloClientList from '../../components/clients/clients-list.jsx';
+import './legacy-icons.js';
 
 export default function LegacyRoutes({ client, setClient }) {
   const [currentNode, setCurrentNode] = useState({});
@@ -39,7 +40,7 @@ export default function LegacyRoutes({ client, setClient }) {
           <Route path="/classic/search/:query?">
             <VeloClientList setSearch={() => undefined} version={0} query="" setClient={setClient} />
           </Route>
-          <Route path="/secrets/">
+          <Route path="/classic/secrets/">
             <SecretManager />
           </Route>
           <Route path="/classic/artifacts/:artifact?/:action?">
@@ -68,14 +69,14 @@ export default function LegacyRoutes({ client, setClient }) {
           <Route path="/classic/collected/server/:flow_id?/:tab?">
             <ServerFlowsView />
           </Route>
-          <Route path="/notebooks/:notebook_id?/:artifact?/:params_json?">
+          <Route path={["/classic/notebooks/:notebook_id?/:artifact?/:params_json?", "/notebooks/:notebook_id/:artifact/:params_json?"]}>
             <Notebook />
           </Route>
-          <Route path="/events/:client_id([^/]{7,})/:artifact?/:time?">
+          <Route path="/classic/events/:client_id([^/]{7,})/:artifact?/:time?">
             <ClientSetterFromRoute client={client} setClient={setClient} />
             <EventMonitoring client={client} />
           </Route>
-          <Route path="/events/server/:artifact?/:time?">
+          <Route path="/classic/events/server/:artifact?/:time?">
             <EventMonitoring client={{ client_id: '' }} />
           </Route>
           <Route>

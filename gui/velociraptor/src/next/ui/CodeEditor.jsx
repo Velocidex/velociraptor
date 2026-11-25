@@ -2,6 +2,7 @@
 // user preferences) so new screens can use it. Loaded lazily.
 import React from 'react';
 import VeloAce from '../../components/core/ace.jsx';
+import '../shell/legacy-icons.js';
 
 export default function CodeEditor({ value, onChange, mode = 'yaml', readOnly = false, minLines, maxLines, className, focus = false }) {
   return (
