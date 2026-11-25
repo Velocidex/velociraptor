@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"strings"
 	"time"
@@ -205,7 +206,14 @@ func (self *TestSuite) TestCreateAndImportHunt() {
 	// test_utils.GetMemoryFileStore(self.T(), self.ConfigObj).Debug()
 	golden.Set("Imported Flow", self.snapshotHuntFlow())
 
-	goldie.Assert(self.T(), "TestCreateAndImportHunt", json.MustMarshalIndent(golden))
+	goldie.Assert(self.T(), "TestCreateAndImportHunt", self.clearFixture(
+		json.MustMarshalIndent(golden)))
+}
+
+var fixtureCleanRegex = regexp.MustCompile(`\\"Timestamp\\":\d+`)
+
+func (self *TestSuite) clearFixture(in []byte) []byte {
+	return []byte(fixtureCleanRegex.ReplaceAllLiteralString(string(in), `\"Timestamp\":*`))
 }
 
 func (self *TestSuite) snapshotHuntFlow() *ordereddict.Dict {

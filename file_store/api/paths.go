@@ -103,9 +103,15 @@ const (
 	PATH_TYPE_FILESTORE_DB
 	PATH_TYPE_FILESTORE_DB_JSON
 
+	PATH_TYPE_FILESTORE_DIRECTORY
+
 	// Arbitrary extensions.
 	PATH_TYPE_FILESTORE_ANY
 )
+
+func (self PathType) IsDatastoreType() bool {
+	return self <= PATH_TYPE_DATASTORE_UNKNOWN
+}
 
 func (self PathType) String() string {
 	switch self {
@@ -155,6 +161,9 @@ func (self PathType) String() string {
 
 	case PATH_TYPE_FILESTORE_DB_JSON:
 		return "PATH_TYPE_FILESTORE_DB_JSON"
+
+	case PATH_TYPE_FILESTORE_DIRECTORY:
+		return "PATH_TYPE_FILESTORE_DIRECTORY"
 
 	case PATH_TYPE_FILESTORE_ANY:
 		return "PATH_TYPE_FILESTORE_ANY"

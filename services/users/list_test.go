@@ -15,7 +15,9 @@ func (self *UserManagerTestSuite) TestListUsers() {
 	golden := ordereddict.NewDict()
 
 	// OrgAdmin is an org admin at the root org so should see all
-	// users and all their orgs.
+	// users and all their orgs. This should show even users who have
+	// no read permission in the specified org. Org admins can see
+	// **all** users at all times.
 	users_manager := services.GetUserManager()
 	user_list, err := users_manager.ListUsers(
 		self.Ctx, "OrgAdmin", services.LIST_ALL_ORGS)

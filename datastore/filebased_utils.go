@@ -208,6 +208,6 @@ func MkdirAll(
 	dirname api.FSPathSpec) error {
 
 	file_path := AsFilestoreFilename(db, config_obj,
-		dirname.SetType(api.PATH_TYPE_DATASTORE_DIRECTORY))
+		dirname.SetType(api.PATH_TYPE_FILESTORE_DIRECTORY))
 	return os.MkdirAll(file_path, 0700)
 }

@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/services"
+	"www.velocidex.com/golang/velociraptor/utils"
 )
 
 // Raw Datastore access requires the DATASTORE_ACCESS permission. This
@@ -28,7 +29,7 @@ func (self *ApiServer) GetSubject(
 	defer Instrument("GetSubject")()
 
 	filename := getURN(in)
-	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
+	org_config_obj, _, err := CheckDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -56,7 +57,7 @@ func (self *ApiServer) SetSubject(
 
 	defer Instrument("SetSubject")()
 
-	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
+	org_config_obj, _, err := CheckDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -96,7 +97,7 @@ func (self *ApiServer) ListChildren(
 
 	defer Instrument("ListChildren")()
 
-	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
+	org_config_obj, _, err := CheckDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -130,7 +131,7 @@ func (self *ApiServer) DeleteSubject(
 
 	defer Instrument("DeleteSubject")()
 
-	org_config_obj, _, err := checkDataStorePermissions(ctx, in.OrgId, nil)
+	org_config_obj, _, err := CheckDataStorePermissions(ctx, in.OrgId, nil)
 	if err != nil {
 		return nil, Status(self.verbose, err)
 	}
@@ -156,12 +157,23 @@ func getURN(in *api_proto.DataRequest) api.DSPathSpec {
 }
 
 // Check that the user is allowed to access the filestore directly.
-func checkDataStorePermissions(
+func CheckDataStorePermissions(
 	ctx context.Context,
 	org_id string,
 	filename api.FSPathSpec,
 	alternative_permissions ...acls.ACL_PERMISSION) (
 	org_config_obj *config_proto.Config, principal string, err error) {
+
+	if filename != nil {
+		if len(filename.Components()) == 0 {
+			return nil, "", utils.InvalidArgError
+		}
+
+		if filename.Type().IsDatastoreType() {
+			return nil, "", utils.Wrap(utils.InvalidArgError, "Invalid path type")
+		}
+	}
+
 	users := services.GetUserManager()
 	user_record, org_config_obj, err := users.GetUserFromContext(ctx)
 	if err != nil {

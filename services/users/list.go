@@ -118,8 +118,9 @@ func (self *UserManager) ListUsers(
 			})
 		}
 
-		// No orgs are visible - hide the user
-		if len(user_record.Orgs) == 0 {
+		// No orgs are visible - hide the user (org admins should be
+		// able to see everyone though)
+		if !principal_is_org_admin && len(user_record.Orgs) == 0 {
 			continue
 		}
 

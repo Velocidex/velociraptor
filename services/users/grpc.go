@@ -20,7 +20,10 @@ import (
 func (self UserManager) GetUserFromContext(ctx context.Context) (
 	user_record *api_proto.VelociraptorUser, org_config_obj *config_proto.Config, err error) {
 
-	grpc_user_info := GetGRPCUserInfo(self.config_obj, ctx, self.ca_pool)
+	grpc_user_info, err := GetGRPCUserInfo(self.config_obj, ctx, self.ca_pool)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	// If the call comes from the super user we allow it.
 	if grpc_user_info.Name == utils.GetSuperuserName(org_config_obj) {
@@ -91,9 +94,10 @@ func canUserImpersonate(
 	// remote datastore connections such as org redirection.
 	ok, err := services.CheckAccess(config_obj, username,
 		acls.IMPERSONATION,
-		acls.ORG_ADMIN,
+		acls.READ_RESULTS,
 		// Must have API level access
 		acls.API_QUERY)
+
 	return err == nil && ok
 }
 
@@ -101,7 +105,7 @@ func canUserImpersonate(
 func GetGRPCUserInfo(
 	config_obj *config_proto.Config,
 	ctx context.Context,
-	ca_pool *x509.CertPool) *api_proto.VelociraptorUser {
+	ca_pool *x509.CertPool) (*api_proto.VelociraptorUser, error) {
 	result := &api_proto.VelociraptorUser{}
 
 	// Check for remote TLS client certs.
@@ -128,31 +132,37 @@ func GetGRPCUserInfo(
 				// must be trusted to convert web side authentication
 				// to a valid user name which it may pass in the call
 				// context.
-				if canUserImpersonate(config_obj, result.Name) {
-					md, ok := metadata.FromIncomingContext(ctx)
-					if ok {
-						userinfo := md.Get(constants.GRPC_MD_USER)
-						if len(userinfo) == 1 {
+				md, ok := metadata.FromIncomingContext(ctx)
+				if ok {
+					userinfo := md.Get(constants.GRPC_MD_USER)
+
+					// The user is trying to impersonate
+					if len(userinfo) == 1 && userinfo[0] != result.Name {
+						if canUserImpersonate(config_obj, result.Name) {
 							// gRPC metadata can only contain ASCII so
 							// we recover the UTF8 string from there.
 							result = &api_proto.VelociraptorUser{
 								Name: utils.UnQuote(userinfo[0]),
 							}
-						}
 
-						// Corresponds to the Grpc-Metadata-OrgId
-						// header added by api-service.js
-						org_id := md.Get(constants.GRPC_MD_ORG_ID)
-						if len(org_id) == 1 {
-							result.CurrentOrg = org_id[0]
-							if utils.IsRootOrg(result.CurrentOrg) {
-								result.CurrentOrg = ""
+							// Corresponds to the Grpc-Metadata-OrgId
+							// header added by api-service.js
+							org_id := md.Get(constants.GRPC_MD_ORG_ID)
+							if len(org_id) == 1 {
+								result.CurrentOrg = org_id[0]
+								if utils.IsRootOrg(result.CurrentOrg) {
+									result.CurrentOrg = ""
+								}
 							}
+						} else {
+							return nil, utils.Wrap(utils.PermissionDenied,
+								"User %v can not impersonate %v",
+								result.Name, userinfo[0])
 						}
 					}
 				}
 			}
 		}
 	}
-	return result
+	return result, nil
 }

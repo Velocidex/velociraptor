@@ -174,6 +174,7 @@ func (self *MemoryFileStore) StatFile(path api.FSPathSpec) (api.FileInfo, error)
 
 	res := &vtesting.MockFileInfo{
 		Name_:     path.Base(),
+		PathSpec_: path,
 		FullPath_: filename,
 	}
 
@@ -283,7 +284,7 @@ func (self *MemoryFileStore) ListDirectory(root_path api.FSPathSpec) ([]api.File
 			// The next level after root_path
 			name := components[len(root_components)]
 			child := root_path.AddUnsafeChild(name).
-				SetType(api.PATH_TYPE_DATASTORE_DIRECTORY)
+				SetType(api.PATH_TYPE_FILESTORE_DIRECTORY)
 
 			new_child := &vtesting.MockFileInfo{
 				Name_:     child.Base(),

@@ -24,7 +24,6 @@ package main
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -225,7 +224,7 @@ func Release(ctx context.Context) error {
 		return err
 	}
 
-	err = UpdateVersionInfo()
+	err = build.UpdateVersionInfo()
 	if err != nil {
 		return err
 	}
@@ -698,8 +697,6 @@ func musl_exists() bool {
 	return err == nil
 }
 
-// Temporarily manipulate the generated file until
-// https://github.com/UnnoTed/fileb0x/pull/46 goes in.
 func replace_string_in_file(filename string, old string, new string) error {
 	read, err := ioutil.ReadFile(filename)
 	if err != nil {
@@ -757,57 +754,6 @@ func UpdateDependentTools() error {
 
 	_, err = outfd.Write(data)
 	return err
-}
-
-func UpdateVersionInfo() error {
-	read, err := ioutil.ReadFile("docs/winres/winres_template.json")
-	if err != nil {
-		return err
-	}
-
-	v, err := semver.NewVersion(constants.VERSION)
-	if err != nil {
-		return err
-	}
-
-	var prerelease int64
-	prerelease_str := v.Prerelease()
-	if prerelease_str != "" {
-		if !strings.HasPrefix(prerelease_str, "rc") {
-			return errors.New("Prerelease version should start with rc")
-		}
-
-		prerelease, err = strconv.ParseInt(prerelease_str[2:], 0, 0)
-		if err != nil {
-			return errors.New("Prerelease version should start with rc followed by numbers")
-		}
-	}
-
-	version := fmt.Sprintf("%d.%d.%d.%d", v.Major(), v.Minor(),
-		v.Patch(), prerelease)
-	newContents := strings.Replace(string(read), "0.0.0.0", version, -1)
-	err = ioutil.WriteFile("docs/winres/winres.json",
-		[]byte(newContents), 0644)
-	if err != nil {
-		return err
-	}
-
-	command := []string{"make",
-		"--in", "docs/winres/winres.json", "--out", "bin/rsrc"}
-
-	err = sh.Run("go-winres", command...)
-	if err != nil {
-		err = sh.Run(mg.GoCmd(), "install", "github.com/tc-hib/go-winres@d743268d7ea168077ddd443c4240562d4f5e8c3e")
-		if err != nil {
-			return err
-		}
-
-		err = sh.Run("go-winres", command...)
-
-		return err
-	}
-
-	return nil
 }
 
 type Package struct {
@@ -1016,6 +962,12 @@ func Container() error {
 
 func getToolchainCC(
 	ctx context.Context, target string) (string, error) {
+
+	err := build.UpdateVersionInfo()
+	if err != nil {
+		return "", err
+	}
+
 	toolchain_dir_abs, err := filepath.Abs(toolchain_dir)
 	if err != nil {
 		return "", err

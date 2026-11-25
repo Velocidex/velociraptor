@@ -27,13 +27,14 @@ func GetExtensionForDatastore(path_spec DSPathSpec) string {
 func GetExtensionForFilestore(path_spec FSPathSpec) string {
 	t := path_spec.Type()
 
-	switch t {
-	case PATH_TYPE_DATASTORE_PROTO, PATH_TYPE_DATASTORE_JSON:
+	if t.IsDatastoreType() {
 		fmt.Printf("datastore path used for filestore for %v ",
 			path_spec.Components())
 		utils.PrintStack()
 		return ""
+	}
 
+	switch t {
 	case PATH_TYPE_FILESTORE_JSON:
 		return ".json"
 
@@ -69,6 +70,9 @@ func GetExtensionForFilestore(path_spec FSPathSpec) string {
 
 	case PATH_TYPE_FILESTORE_DB_JSON:
 		return ".json.db"
+
+	case PATH_TYPE_FILESTORE_DIRECTORY:
+		return ""
 
 	case PATH_TYPE_FILESTORE_ANY:
 		return ""

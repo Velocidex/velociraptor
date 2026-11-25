@@ -850,11 +850,6 @@ func (self *ApiServer) vfsGetBuffer(
 	length uint32, padding bool, principal string) (
 	*api_proto.VFSFileBuffer, error) {
 
-	err := file_store_accessor.IsFileAccessible(vfs_path)
-	if err != nil {
-		return nil, err
-	}
-
 	file_store_factory, err := getFileStore(ctx, config_obj, principal)
 	if err != nil {
 		return nil, err

@@ -6,7 +6,7 @@
   ],
   "Extension": "",
   "IsDir": true,
-  "Type": "PATH_TYPE_DATASTORE_DIRECTORY",
+  "Type": "PATH_TYPE_FILESTORE_DIRECTORY",
   "AsJSON": "fs:/subdir/Foo"
  },
  {

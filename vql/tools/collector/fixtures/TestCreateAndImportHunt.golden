@@ -12,19 +12,19 @@
   "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 8 bytes",
   "/clients/server/collections/F.1234/logs.json": [
    "",
-   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query AnotherTestArtifact on behalf of user VelociraptorServer\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query TestArtifact on behalf of user VelociraptorServer\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query AnotherTestArtifact execution.\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query TestArtifact execution.\\n\"}"
+   "{\"Timestamp\":*,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"Running query AnotherTestArtifact on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"Running query TestArtifact on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query AnotherTestArtifact execution.\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query TestArtifact execution.\\n\"}"
   ],
   "/clients/server/collections/F.1234/logs.json.index": "Index 56 bytes",
   "/clients/server/collections/F.1234/uploads/data/Hello": "Hello",
   "/hunts/H.1234.json": [
    "",
-   "{\"HuntId\":\"H.1234\",\"ClientId\":\"server\",\"FlowId\":\"F.1234\",\"Timestamp\":10}"
+   "{\"HuntId\":\"H.1234\",\"ClientId\":\"server\",\"FlowId\":\"F.1234\",\"Timestamp\":*}"
   ],
   "/hunts/H.1234.json.index": "Index 8 bytes"
  },
@@ -60,19 +60,19 @@
   "/clients/server/artifacts/TestArtifact/F.1234.json.index": "Index 8 bytes",
   "/clients/server/collections/F.1234/logs.json": [
    "",
-   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query AnotherTestArtifact on behalf of user VelociraptorServer\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Running query TestArtifact on behalf of user VelociraptorServer\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query AnotherTestArtifact execution.\\n\"}",
-   "{\"Timestamp\":10000000,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query TestArtifact execution.\\n\"}"
+   "{\"Timestamp\":*,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":0,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEBUG\",\"message\":\"Query Stats: {\\\"RowsScanned\\\":1,\\\"PluginsCalled\\\":1,\\\"FunctionsCalled\\\":1,\\\"ProtocolSearch\\\":0,\\\"ScopeCopy\\\":3}\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"Running query AnotherTestArtifact on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"Running query TestArtifact on behalf of user VelociraptorServer\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"Uploaded /Hello (5 bytes)\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query AnotherTestArtifact execution.\\n\"}",
+   "{\"Timestamp\":*,\"Level\":\"DEFAULT\",\"message\":\"\\u003cgreen\\u003eStarting\\u003c/\\u003e query TestArtifact execution.\\n\"}"
   ],
   "/clients/server/collections/F.1234/logs.json.index": "Index 56 bytes",
   "/clients/server/collections/F.1234/uploads/data/Hello": "Hello",
   "/hunts/H.1234.json": [
    "",
-   "{\"HuntId\":\"H.1234\",\"ClientId\":\"server\",\"FlowId\":\"F.1234\",\"Timestamp\":10}"
+   "{\"HuntId\":\"H.1234\",\"ClientId\":\"server\",\"FlowId\":\"F.1234\",\"Timestamp\":*}"
   ],
   "/hunts/H.1234.json.index": "Index 8 bytes"
  }
