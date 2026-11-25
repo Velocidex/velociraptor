@@ -73,24 +73,10 @@ func (self KafkaUploadPlugin) Call(ctx context.Context,
 			return
 		}
 
-		var tls_config *tls.Config
-		if arg.UseTLS {
-			// Use Velociraptor's TLS setup so the deployment CA and
-			// the certificate verification policy are honoured.
-			config_obj, ok := artifacts.GetConfig(scope)
-			if !ok {
-				// GetTlsConfig needs a config; like the HTTP
-				// transport, fall back to an empty one.
-				config_obj = &config_proto.ClientConfig{}
-			}
-			tls_config, err = networking.GetTlsConfig(config_obj, arg.RootCA)
-			if err == nil && arg.SkipVerify {
-				err = networking.EnableSkipVerify(tls_config, config_obj)
-			}
-			if err != nil {
-				scope.Log("kafka_upload: %v", err)
-				return
-			}
+		tls_config, err := tlsConfig(scope, arg)
+		if err != nil {
+			scope.Log("kafka_upload: %v", err)
+			return
 		}
 		err = ApplyClientCert(tls_config, arg)
 		if err != nil {
@@ -151,6 +137,26 @@ func mergeSecret(ctx context.Context, scope vfilter.Scope, arg *KafkaUploadArgs)
 	}
 
 	return ApplySecret(arg, s.Data)
+}
+
+// tlsConfig is nil unless use_tls is set. It uses Velociraptor's TLS
+// setup, so the deployment CA and certificate verification policy are
+// honoured. Shared by kafka_upload() and kafka_consume().
+func tlsConfig(scope vfilter.Scope, arg *KafkaUploadArgs) (*tls.Config, error) {
+	if !arg.UseTLS {
+		return nil, nil
+	}
+	config_obj, ok := artifacts.GetConfig(scope)
+	if !ok {
+		// GetTlsConfig needs a config; like the HTTP transport, fall
+		// back to an empty one.
+		config_obj = &config_proto.ClientConfig{}
+	}
+	tls_config, err := networking.GetTlsConfig(config_obj, arg.RootCA)
+	if err == nil && arg.SkipVerify {
+		err = networking.EnableSkipVerify(tls_config, config_obj)
+	}
+	return tls_config, err
 }
 
 func init() {

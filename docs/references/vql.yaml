@@ -5743,6 +5743,89 @@
   - linux_amd64_cgo
   - windows_386_cgo
   - windows_amd64_cgo
+- name: kafka_consume
+  description: |
+    Read records from Kafka topics as rows.
+
+    Each record becomes a row: with `decode="json"` (the default) a
+    JSON object's fields become columns, otherwise the value arrives as
+    text in `Value`. The record's topic, partition, offset, key,
+    timestamp and headers are in `_Topic`, `_Partition`, `_Offset`,
+    `_Key`, `_Time` and `_Headers`.
+
+    With a consumer `group`, records are committed only once they have
+    become rows, so a query that is stopped and restarted resumes where
+    it left off. `start` decides where a new group (or a query without
+    a group) begins. The query runs until cancelled, unless
+    `max_records` or `idle_timeout` stops it.
+
+    Connection settings are the same as `kafka_upload()`, and a
+    `Kafka Creds` secret works for both.
+  type: Plugin
+  version: 1
+  args:
+  - name: topics
+    type: string
+    description: Topics to read. Names starting with ^ are regular expressions (then all must be).
+    required: true
+    repeated: true
+  - name: group
+    type: string
+    description: Consumer group. Records are committed once they have become rows, so a stopped query resumes where it left off. Without a group nothing is committed and every run begins at start.
+  - name: start
+    type: string
+    description: 'Where to begin when the group has no committed position, or with no group: latest (default) or earliest.'
+  - name: decode
+    type: string
+    description: 'json (default): a JSON object''s fields become columns; raw: the value as text in a Value column.'
+  - name: max_records
+    type: int64
+    description: 'Stop after this many records (default: no limit).'
+  - name: idle_timeout
+    type: int64
+    description: 'Stop after this many seconds without a new record (default: never). With a group it counts from when the group assigns partitions, which can take a few seconds.'
+  - name: stall_warning
+    type: int64
+    description: While no records arrive, log the client's last error at most every this many seconds (default 60, negative disables).
+  - name: brokers
+    type: string
+    description: 'Seed brokers (host:port). Required unless a secret supplies them.'
+    repeated: true
+  - name: secret
+    type: string
+    description: Name of a 'Kafka Creds' secret supplying brokers and authentication.
+  - name: client_id
+    type: string
+    description: Kafka client id (default velociraptor).
+  - name: use_tls
+    type: bool
+    description: Connect to the brokers over TLS.
+  - name: root_ca
+    type: string
+    description: PEM CA certificate(s) to trust in addition to the system pool.
+  - name: skip_verify
+    type: bool
+    description: Disable TLS certificate verification.
+  - name: client_cert
+    type: string
+    description: PEM client certificate to present to the brokers (mutual TLS). Needs client_key and use_tls.
+  - name: client_key
+    type: string
+    description: PEM private key for client_cert (unencrypted PKCS#1, PKCS#8 or EC).
+  - name: sasl_mechanism
+    type: string
+    description: PLAIN, SCRAM-SHA-256 or SCRAM-SHA-512.
+  - name: username
+    type: string
+    description: SASL username.
+  - name: password
+    type: string
+    description: SASL password.
+  metadata:
+    permissions: NETWORK
+  platforms:
+  - linux_amd64_cgo
+  - windows_amd64_cgo
 - name: kafka_upload
   description: |
     Upload rows to a Kafka topic.
