@@ -59,7 +59,7 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 
 	var tasks []pond.Task
 
-	for offset := self.offset; offset < self.offset+int64(len(buff)); offset += buf_size {
+	for offset := int64(0); offset < int64(len(buff)); offset += buf_size {
 		tasks = append(tasks, pool.SubmitErr(func() error {
 			to_read := buf_size
 			end_of_buff := int64(len(buff))
@@ -70,7 +70,7 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 
 			grpc_result, err := conn.VFSGetBuffer(ctx,
 				&api_proto.VFSFileBuffer{
-					Offset:     uint64(offset),
+					Offset:     uint64(offset + self.offset),
 					Length:     uint32(to_read),
 					Components: self.filename.Components(),
 					PathType:   int64(self.filename.Type()),
@@ -81,7 +81,7 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 				return utils.StatusToError(err)
 			}
 
-			if grpc_result.Data == nil {
+			if grpc_result.Data == nil || len(grpc_result.Data) == 0 {
 				return io.EOF
 			}
 
@@ -94,7 +94,6 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 			for i := int64(0); i < to_read; i++ {
 				buff[i+offset] = grpc_result.Data[i]
 			}
-			self.offset += int64(to_read)
 			total_read += int(to_read)
 			mu.Unlock()
 
@@ -114,6 +113,8 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 			err = err1
 		}
 	}
+
+	self.offset += int64(total_read)
 
 	return total_read, err
 }
