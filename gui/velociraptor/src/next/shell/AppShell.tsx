@@ -70,7 +70,7 @@ export default function AppShell() {
 
   return (
     <div className="rx tw:fixed tw:inset-0 tw:flex tw:bg-canvas tw:text-fg">
-      {phone && navOpen && <div className="tw:fixed tw:inset-0 tw:z-40 tw:bg-black/40" onClick={() => setNavOpen(false)} />}
+      {phone && navOpen && <div className="tw:fixed tw:inset-0 tw:z-40" style={{ background: "rgb(0 0 0 / 0.45)" }} onClick={() => setNavOpen(false)} />}
       <Sidebar collapsed={collapsed && !phone} onToggle={() => (phone ? setNavOpen(false) : setCollapsed(c => !c))}
         className={phone ? cn('tw:fixed tw:inset-y-0 tw:left-0 tw:z-50 tw:shadow-xl', !navOpen && 'tw:hidden') : undefined} />
       <div className="tw:flex tw:flex-col tw:flex-1 tw:min-w-0">
