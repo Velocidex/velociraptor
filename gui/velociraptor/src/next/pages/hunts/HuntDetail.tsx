@@ -268,7 +268,7 @@ function OverviewTab({ hunt, onExport, onTab }: { hunt: Hunt; onExport: () => vo
 
   return (
     <div className="tw:flex-1 tw:overflow-auto tw:bg-canvas tw:p-5">
-      <div className="tw:grid tw:grid-cols-1 tw:xl:grid-cols-3 tw:gap-4 tw:max-w-[1400px]">
+      <div className="tw:grid tw:grid-cols-1 tw:xl:grid-cols-3 tw:gap-4">
         <div className="tw:xl:col-span-2 tw:space-y-4">
           <Card>
             <CardHeader title="Artifacts" subtitle={`${artifacts.length} artifact${artifacts.length === 1 ? '' : 's'} collected on each client`} />

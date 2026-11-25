@@ -217,7 +217,7 @@ function ArtifactView({ name, onEdit }: { name: string; onEdit: (name?: string, 
   return (
     <div className="tw:flex-1 tw:overflow-auto tw:bg-canvas">
       <div className="tw:bg-panel tw:border-b tw:border-line tw:px-6 tw:py-4">
-        <div className="tw:flex tw:items-start tw:gap-3 tw:max-w-[1200px]">
+        <div className="tw:flex tw:items-start tw:gap-3">
           <div className="tw:min-w-0 tw:flex-1">
             <div className="tw:flex tw:items-center tw:gap-2 tw:flex-wrap">
               <h1 className="tw:font-mono tw:text-lg tw:font-semibold tw:break-all">{a.name}</h1>
@@ -247,7 +247,7 @@ function ArtifactView({ name, onEdit }: { name: string; onEdit: (name?: string, 
         </div>
       </div>
 
-      <div className="tw:p-6 tw:space-y-4 tw:max-w-[1200px]">
+      <div className="tw:p-6 tw:space-y-4">
         {a.description && (
           <Card>
             <Markdown text={a.description.trim()} className="tw:p-4" />

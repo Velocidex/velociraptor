@@ -55,7 +55,7 @@ export default function Dashboard() {
 
   return (
     <div className="tw:flex-1 tw:overflow-y-auto">
-      <div className="tw:max-w-[1440px] tw:mx-auto tw:p-3 tw:md:p-6 tw:space-y-5">
+      <div className="tw:p-3 tw:md:p-6 tw:space-y-5">
         <div className="tw:flex tw:items-end tw:gap-3">
           <div className="tw:flex-1">
             <h1 className="tw:text-xl tw:font-semibold tw:tracking-tight">{greeting()}{traits?.username ? `, ${traits.username}` : ''}</h1>

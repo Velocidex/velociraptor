@@ -194,7 +194,7 @@ function UserDetail({ user }: { user: GlobalUser }) {
   });
 
   return (
-    <div className="tw:max-w-5xl tw:mx-auto tw:p-6 tw:flex tw:flex-col tw:gap-5">
+    <div className="tw:p-3 tw:md:p-6 tw:flex tw:flex-col tw:gap-5">
       <header className="tw:flex tw:items-center tw:gap-4">
         <Avatar name={user.name} className="tw:size-12 tw:text-base" />
         <div className="tw:flex-1 tw:min-w-0">

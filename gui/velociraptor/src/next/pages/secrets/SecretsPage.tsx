@@ -92,7 +92,7 @@ function SecretType({ def }: { def: SecretDefinition }) {
   const [adding, setAdding] = useState<null | { name?: string }>(null);
   const names = def.secret_names ?? [];
   return (
-    <div className="tw:max-w-4xl tw:mx-auto tw:p-6 tw:flex tw:flex-col tw:gap-5">
+    <div className="tw:p-3 tw:md:p-6 tw:flex tw:flex-col tw:gap-5">
       <header className="tw:flex tw:items-start tw:gap-4">
         <div className="tw:size-11 tw:rounded-xl tw:bg-accent-soft tw:text-accent tw:flex tw:items-center tw:justify-center tw:shrink-0">
           <KeyRound className="tw:size-5" />

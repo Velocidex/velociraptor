@@ -181,7 +181,7 @@ function Overview({ flow, archives, onExport, exporting }: {
   const stats = flow.query_stats ?? [];
   return (
     <div className="tw:flex-1 tw:overflow-auto tw:bg-canvas tw:p-5">
-      <div className="tw:grid tw:grid-cols-1 tw:xl:grid-cols-3 tw:gap-4 tw:max-w-[1400px]">
+      <div className="tw:grid tw:grid-cols-1 tw:xl:grid-cols-3 tw:gap-4">
         <div className="tw:xl:col-span-2 tw:space-y-4">
           <Card>
             <CardHeader title="Take it away" subtitle="A zip with every result, log and uploaded file from this collection"

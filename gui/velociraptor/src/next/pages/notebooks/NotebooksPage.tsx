@@ -57,7 +57,7 @@ function NotebookList() {
 
   return (
     <div className="tw:flex-1 tw:overflow-y-auto">
-      <div className="tw:max-w-5xl tw:mx-auto tw:p-6 tw:flex tw:flex-col tw:gap-4">
+      <div className="tw:p-3 tw:md:p-6 tw:flex tw:flex-col tw:gap-4">
         <header className="tw:flex tw:items-center tw:gap-3">
           <div className="tw:flex-1">
             <h1 className="tw:text-xl tw:font-semibold">Notebooks</h1>
@@ -268,7 +268,7 @@ export function NotebookView({ id, embedded, create }: {
       </aside>}
 
       <div className="tw:flex-1 tw:min-w-0 tw:overflow-y-auto" onClick={() => setSelected(null)}>
-        <div className="tw:max-w-5xl tw:mx-auto tw:px-6 tw:py-5 tw:flex tw:flex-col tw:gap-3">
+        <div className="tw:px-6 tw:py-5 tw:flex tw:flex-col tw:gap-3">
           {/* Header */}
           {embedded && nb && (
             <div className="tw:flex tw:items-center tw:gap-2" onClick={e => e.stopPropagation()}>
