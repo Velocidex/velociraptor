@@ -3,12 +3,13 @@ package remote
 import (
 	"context"
 	"io"
+	"sync"
 	"testing"
 
 	"github.com/golang/mock/gomock"
 	"google.golang.org/grpc"
-	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	mock_proto "www.velocidex.com/golang/velociraptor/api/mock"
+	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	"www.velocidex.com/golang/velociraptor/config"
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
@@ -24,19 +25,6 @@ func newTestFileReader(t *testing.T, data []byte, maxRecvSize uint64) (*FileRead
 	configObj := config.GetDefaultConfig()
 	configObj.ApiConfig.MaxGrpcRecvSize = maxRecvSize
 
-	client.EXPECT().VFSGetBuffer(gomock.Any(), gomock.Any()).
-		DoAndReturn(func(_ context.Context, request *api_proto.VFSFileBuffer, _ ...grpc.CallOption) (*api_proto.VFSFileBuffer, error) {
-			start := int(request.Offset)
-			end := start + int(request.Length)
-			if start >= len(data) {
-				return &api_proto.VFSFileBuffer{}, nil
-			}
-			if end > len(data) {
-				end = len(data)
-			}
-			return &api_proto.VFSFileBuffer{Data: append([]byte(nil), data[start:end]...)}, nil
-		}).AnyTimes()
-
 	reader := &FileReader{
 		filename:   path_specs.NewSafeFilestorePath("test", "remote-read").SetType(api.PATH_TYPE_FILESTORE_ANY),
 		ctx:        context.Background(),
@@ -50,7 +38,20 @@ func newTestFileReader(t *testing.T, data []byte, maxRecvSize uint64) (*FileRead
 }
 
 func TestFileReaderReadPartialAndEOF(t *testing.T) {
-	reader, _ := newTestFileReader(t, []byte("hello"), 0)
+	data := []byte("hello")
+	reader, client := newTestFileReader(t, data, 0)
+	client.EXPECT().VFSGetBuffer(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, request *api_proto.VFSFileBuffer, _ ...grpc.CallOption) (*api_proto.VFSFileBuffer, error) {
+			start := int(request.Offset)
+			end := start + int(request.Length)
+			if start >= len(data) {
+				return &api_proto.VFSFileBuffer{}, nil
+			}
+			if end > len(data) {
+				end = len(data)
+			}
+			return &api_proto.VFSFileBuffer{Data: append([]byte(nil), data[start:end]...)}, nil
+		}).AnyTimes()
 
 	buf := make([]byte, 3)
 	n, err := reader.Read(buf)
@@ -78,7 +79,20 @@ func TestFileReaderReadAcrossChunks(t *testing.T) {
 		data[i] = byte(i % 251)
 	}
 
-	reader, _ := newTestFileReader(t, data, maxRecvSize)
+	reader, client := newTestFileReader(t, data, maxRecvSize)
+	client.EXPECT().VFSGetBuffer(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, request *api_proto.VFSFileBuffer, _ ...grpc.CallOption) (*api_proto.VFSFileBuffer, error) {
+			start := int(request.Offset)
+			end := start + int(request.Length)
+			if start >= len(data) {
+				return &api_proto.VFSFileBuffer{}, nil
+			}
+			if end > len(data) {
+				end = len(data)
+			}
+			return &api_proto.VFSFileBuffer{Data: append([]byte(nil), data[start:end]...)}, nil
+		}).AnyTimes()
+
 	buf := make([]byte, len(data))
 	n, err := reader.Read(buf)
 	if err != nil || n != len(data) {
@@ -95,7 +109,31 @@ func TestFileReaderReadAcrossChunks(t *testing.T) {
 }
 
 func TestFileReaderSeek(t *testing.T) {
-	reader, _ := newTestFileReader(t, []byte("0123456789"), 0)
+	data := []byte("0123456789")
+	reader, client := newTestFileReader(t, data, 0)
+	client.EXPECT().VFSGetBuffer(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, request *api_proto.VFSFileBuffer, _ ...grpc.CallOption) (*api_proto.VFSFileBuffer, error) {
+			start := int(request.Offset)
+			end := start + int(request.Length)
+			if start >= len(data) {
+				return &api_proto.VFSFileBuffer{}, nil
+			}
+			if end > len(data) {
+				end = len(data)
+			}
+			return &api_proto.VFSFileBuffer{Data: append([]byte(nil), data[start:end]...)}, nil
+		}).AnyTimes()
+
+	// Seeking from the end issues a stat for the size of the file.
+	client.EXPECT().FSStat(gomock.Any(), gomock.Any()).
+		DoAndReturn(func(_ context.Context, request *api_proto.DataRequest, _ ...grpc.CallOption) (*api_proto.FSFileInfo, error) {
+			return &api_proto.FSFileInfo{
+				Size:       int64(len(data)),
+				Components: reader.filename.Components(),
+				Type:       int64(reader.filename.Type()),
+			}, nil
+		}).AnyTimes()
+
 	buf := make([]byte, 4)
 
 	n, err := reader.Read(buf)
@@ -135,25 +173,31 @@ func TestFileReaderUsesConfiguredAndDefaultChunkSizes(t *testing.T) {
 	tests := []struct {
 		name        string
 		maxRecvSize uint64
-		chunkSize   int
+		dataSize    int
 	}{
 		{
-			name:      "default receive size",
-			chunkSize: constants.GRPC_DEFAULT_TRANSFER_SIZE - 10240,
+			name:     "default receive size",
+			dataSize: constants.GRPC_DEFAULT_TRANSFER_SIZE - 10240,
 		},
 		{
 			name:        "configured receive size",
-				maxRecvSize: 24 * 1024,
-			chunkSize:   24*1024 - 10240,
+			maxRecvSize: 24 * 1024,
+			dataSize:    1024 * 1024,
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			data := make([]byte, tc.chunkSize+1)
+			data := make([]byte, tc.dataSize+1)
 			for i := range data {
 				data[i] = byte(i % 251)
 			}
+
+			maxRecvSize := tc.maxRecvSize
+			if maxRecvSize == 0 {
+				maxRecvSize = constants.GRPC_DEFAULT_TRANSFER_SIZE
+			}
+			maxRecvSize -= 10240
 
 			reader, client := newTestFileReader(t, data, tc.maxRecvSize)
 			var mu sync.Mutex
@@ -170,19 +214,22 @@ func TestFileReaderUsesConfiguredAndDefaultChunkSizes(t *testing.T) {
 						end = len(data)
 					}
 					return &api_proto.VFSFileBuffer{Data: append([]byte(nil), data[start:end]...)}, nil
-				}).Times(2)
+				}).AnyTimes()
 
 			buf := make([]byte, len(data))
 			n, err := reader.Read(buf)
 			if err != nil || n != len(data) {
 				t.Fatalf("Read() = (%d, %v), want (%d, nil)", n, err, len(data))
 			}
-			if len(requestLengths) != 2 {
-				t.Fatalf("made %d requests, want 2", len(requestLengths))
+
+			// The read should be split into smaller chunks that will fit.
+			expected := len(data)/int(maxRecvSize) + 1
+			if len(requestLengths) != expected {
+				t.Fatalf("made %d requests, want %d (%d)", len(requestLengths), expected, maxRecvSize)
 			}
 			for _, length := range requestLengths {
-				if int(length) > tc.chunkSize {
-					t.Fatalf("request length %d exceeds chunk size %d", length, tc.chunkSize)
+				if int(length) > tc.dataSize {
+					t.Fatalf("request length %d exceeds chunk size %d", length, tc.dataSize)
 				}
 			}
 			for i := range data {
