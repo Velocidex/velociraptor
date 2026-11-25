@@ -15,6 +15,7 @@ import {
 import { effectiveState, HuntProgress, HuntStateBadge, huntCounts, huntTitle, type EffectiveState } from './HuntBits';
 import HuntDetail from './HuntDetail';
 import NewHuntDialog from './NewHuntDialog';
+import { MobileBack } from '../../ui/MobileBack';
 
 type Filter = 'all' | 'running' | 'paused' | 'stopped';
 
@@ -192,9 +193,9 @@ export default function HuntsPage() {
   };
 
   return (
-    <div className="tw:flex tw:flex-1 tw:min-h-0">
+    <div className="rx-split tw:flex tw:flex-1 tw:min-h-0" data-detail={hunt_id ? 1 : 0}>
       {/* ------------------------------------------------ List panel */}
-      <section className="tw:w-[400px] tw:shrink-0 tw:flex tw:flex-col tw:border-r tw:border-line tw:bg-panel tw:min-h-0">
+      <section className="rx-split-list tw:w-[400px] tw:shrink-0 tw:flex tw:flex-col tw:border-r tw:border-line tw:bg-panel tw:min-h-0">
         <div className="tw:px-3 tw:pt-3 tw:pb-2 tw:space-y-2.5 tw:border-b tw:border-line">
           <div className="tw:flex tw:items-center tw:gap-2">
             <h1 className="tw:text-[15px] tw:font-semibold tw:flex-1">Hunts</h1>
@@ -300,7 +301,8 @@ export default function HuntsPage() {
       </section>
 
       {/* ---------------------------------------------- Detail panel */}
-      <section className="tw:flex-1 tw:min-w-0 tw:flex tw:flex-col tw:min-h-0">
+      <section className="rx-split-detail tw:flex-1 tw:min-w-0 tw:flex tw:flex-col tw:min-h-0">
+        <MobileBack to="/hunts" label="All hunts" />
         {hunt_id ? (
           <HuntDetail huntId={hunt_id} summary={selected} tab={tab}
             onCopy={h => {

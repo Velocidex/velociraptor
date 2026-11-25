@@ -10,6 +10,7 @@ import { clientStatus, fmtBytes, fmtCompact, timeAgo, toNum } from '../../lib/fo
 import { Button, cn, EmptyState, Input, Skeleton, StatusDot } from '../../ui/primitives';
 import { useSelectedClient } from '../../shell/client-context';
 import FlowDetail, { FlowStateBadge } from './FlowDetail';
+import { MobileBack } from '../../ui/MobileBack';
 
 const NewHuntDialog = lazy(() => import('../hunts/NewHuntDialog'));
 
@@ -55,9 +56,9 @@ export default function CollectionsPage() {
   };
 
   return (
-    <div className="tw:flex tw:flex-1 tw:min-h-0">
+    <div className="rx-split tw:flex tw:flex-1 tw:min-h-0" data-detail={flowId ? 1 : 0}>
       {/* ---------------------------------------------- List */}
-      <div className="tw:w-[380px] tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:min-h-0 tw:bg-panel">
+      <div className="rx-split-list tw:w-[380px] tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:min-h-0 tw:bg-panel">
         <div className="tw:px-4 tw:pt-4 tw:pb-3 tw:space-y-3 tw:border-b tw:border-line">
           <div className="tw:flex tw:items-center tw:gap-2.5">
             <span className="tw:flex tw:size-8 tw:items-center tw:justify-center tw:rounded-lg tw:bg-hover tw:text-muted">
@@ -100,7 +101,8 @@ export default function CollectionsPage() {
       </div>
 
       {/* -------------------------------------------- Detail */}
-      <div className="tw:flex-1 tw:min-w-0 tw:flex tw:flex-col tw:min-h-0">
+      <div className="rx-split-detail tw:flex-1 tw:min-w-0 tw:flex tw:flex-col tw:min-h-0">
+        <MobileBack to={`/collected/${clientId}`} label="All collections" />
         {flowId
           ? <FlowDetail key={flowId} clientId={clientId} flowId={flowId} tab={tab} hostname={hostname}
               onCollectAgain={(f: Flow) => openNew(f.request)} />

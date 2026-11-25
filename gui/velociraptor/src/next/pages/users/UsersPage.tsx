@@ -20,6 +20,7 @@ import {
   Badge, Button, Card, CardHeader, Checkbox, ConfirmDialog, Dialog, EmptyState, Field, Input, Menu, MenuContent,
   MenuItem, MenuLabel, MenuTrigger, SearchInput, Skeleton, Tooltip, cn,
 } from '../../ui/primitives';
+import { MobileBack } from '../../ui/MobileBack';
 
 export const ROLE_INFO: Record<string, { label: string; blurb: string; danger?: boolean }> = {
   reader: {
@@ -118,8 +119,8 @@ export default function UsersPage() {
   const current = users?.find(u => u.name === selected);
 
   return (
-    <div className="tw:flex tw:flex-1 tw:min-h-0">
-      <aside className="tw:w-80 tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:bg-panel">
+    <div className="rx-split tw:flex tw:flex-1 tw:min-h-0" data-detail={selected ? 1 : 0}>
+      <aside className="rx-split-list tw:w-80 tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:bg-panel">
         <div className="tw:p-3 tw:flex tw:flex-col tw:gap-2 tw:border-b tw:border-line">
           <div className="tw:flex tw:items-center tw:gap-2">
             <h1 className="tw:text-[15px] tw:font-semibold tw:flex-1">Users</h1>
@@ -151,7 +152,8 @@ export default function UsersPage() {
           )}
         </div>
       </aside>
-      <main className="tw:flex-1 tw:min-w-0 tw:overflow-y-auto">
+      <main className="rx-split-detail tw:flex-1 tw:min-w-0 tw:overflow-y-auto">
+        <MobileBack to="/users" label="All users" />
         {current ? <UserDetail key={current.name} user={current} /> : (
           <EmptyState className="tw:mt-24" icon={<UsersIcon />} title={selected ? `No user named ${selected}` : 'Select a user'}
             action={<Button icon={<UserPlus />} onClick={() => setAdding(true)}>Add a user</Button>}>

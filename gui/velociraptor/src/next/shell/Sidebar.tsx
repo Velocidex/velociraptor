@@ -53,7 +53,7 @@ function Section({ title, children, collapsed }: { title: string; children: Reac
   );
 }
 
-export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle: () => void }) {
+export default function Sidebar({ collapsed, onToggle, className }: { collapsed: boolean; onToggle: () => void; className?: string }) {
   const { traits } = useTraits();
   const { client, setClient } = useSelectedClient();
   const perms = traits?.Permissions;
@@ -91,7 +91,7 @@ export default function Sidebar({ collapsed, onToggle }: { collapsed: boolean; o
   return (
     <aside className={cn(
       'tw:flex tw:flex-col tw:shrink-0 tw:bg-sidebar tw:border-r tw:border-line tw:transition-[width] tw:duration-150',
-      collapsed ? 'tw:w-14' : 'tw:w-56')}>
+      collapsed ? 'tw:w-14' : 'tw:w-56', className)}>
       <div className={cn('tw:flex tw:items-center tw:h-12 tw:border-b tw:border-line', collapsed ? 'tw:justify-center' : 'tw:px-3 tw:gap-2')}>
         <NavLink to="/dashboard" className="tw:flex tw:items-center tw:gap-2 tw:min-w-0">
           <img src={srcOf(logo)} alt="" className="tw:size-7 tw:shrink-0" />

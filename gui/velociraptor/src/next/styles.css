@@ -297,3 +297,10 @@
 .rx-cell-output > .panel:last-child { margin-bottom: -0.75rem; }
 .rx-cell-output .panel { margin-left: 0; margin-right: 0; padding: 0; border: 0; background: transparent; }
 .rx-cell-output > :first-child, .rx-cell-output > .panel:first-child > :first-child { margin-top: 0; }
+
+/* Phones: list/detail pages show one pane at a time. */
+@media (max-width: 767.98px) {
+  .rx-split > .rx-split-list { width: 100% !important; flex: 1 1 auto !important; border-right: 0 !important; }
+  .rx-split[data-detail="1"] > .rx-split-list { display: none !important; }
+  .rx-split[data-detail="0"] > .rx-split-detail { display: none !important; }
+}

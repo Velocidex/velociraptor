@@ -10,6 +10,11 @@ export function toNum(v: Num | null | boolean): number {
 // or nanoseconds depending on the API. Normalise to a Date by
 // magnitude.
 export function toDate(v: Num | null): Date | null {
+  // ISO strings (timeline and VQL output) parse directly.
+  if (typeof v === 'string' && /^\d{4}-\d\d-\d\d[T ]/.test(v)) {
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? null : d;
+  }
   const n = toNum(v);
   if (!n) return null;
   let ms: number;

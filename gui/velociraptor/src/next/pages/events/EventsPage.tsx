@@ -25,6 +25,7 @@ import {
 import { DataTable } from '../../ui/DataTable';
 import { useSelectedClient } from '../../shell/client-context';
 import { ArtifactParams } from '../hunts/NewHuntDialog';
+import { MobileBack, isPhone } from '../../ui/MobileBack';
 
 const ClientPicker = lazy(() => import('../../ui/ClientPicker'));
 
@@ -79,7 +80,7 @@ export default function EventsPage() {
   const withData = new Set((available ?? []).map(a => a.artifact));
 
   useEffect(() => {
-    if (!artifact && list.length) {
+    if (!artifact && list.length && !isPhone()) {
       const first = list.find(n => withData.has(n)) ?? list[0];
       history.replace(`/events/${clientId}/${encodeURIComponent(first)}`);
     }
@@ -89,8 +90,8 @@ export default function EventsPage() {
   const host = client?.os_info?.hostname || clientId;
 
   return (
-    <div className="tw:flex tw:flex-1 tw:min-h-0">
-      <aside className="tw:w-80 tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:bg-panel">
+    <div className="rx-split tw:flex tw:flex-1 tw:min-h-0" data-detail={rawArtifact ? 1 : 0}>
+      <aside className="rx-split-list tw:w-80 tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:bg-panel">
         <div className="tw:p-3 tw:border-b tw:border-line tw:flex tw:flex-col tw:gap-2">
           <div className="tw:flex tw:items-center tw:gap-2">
             {server ? <Server className="tw:size-4 tw:text-faint" /> : <Radio className="tw:size-4 tw:text-faint" />}
@@ -130,7 +131,8 @@ export default function EventsPage() {
           )}
         </nav>
       </aside>
-      <main className="tw:flex-1 tw:min-w-0 tw:flex tw:flex-col">
+      <main className="rx-split-detail tw:flex-1 tw:min-w-0 tw:flex tw:flex-col">
+        <MobileBack to={`/events/${clientId}`} label="All event artifacts" />
         {artifact
           ? <EventView key={`${clientId}:${artifact}`} clientId={clientId} artifact={artifact} running={running.has(artifact)} />
           : !isLoading && <EmptyState className="tw:mt-24" icon={<Activity />} title="Pick an artifact">
@@ -177,8 +179,8 @@ function EventView({ clientId, artifact, running }: { clientId: string; artifact
   return (
     <>
       <div className="tw:px-5 tw:pt-4 tw:pb-3 tw:border-b tw:border-line tw:flex tw:flex-col tw:gap-3 tw:bg-panel">
-        <div className="tw:flex tw:items-center tw:gap-3">
-          <h2 className="tw:font-mono tw:text-[15px] tw:font-semibold tw:truncate">{artifact}</h2>
+        <div className="tw:flex tw:flex-wrap tw:items-center tw:gap-3">
+          <h2 className="tw:font-mono tw:text-[15px] tw:font-semibold tw:truncate tw:min-w-0">{artifact}</h2>
           {running ? <Badge tone="ok" dot>Running</Badge> : <Badge tone="neutral">Stopped</Badge>}
           <div className="tw:ml-auto tw:flex tw:items-center tw:gap-1.5">
             <Segmented value={mode} onChange={setMode} options={[

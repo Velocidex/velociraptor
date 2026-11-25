@@ -142,13 +142,13 @@ export default function ClientOverview() {
   return (
     <div className="tw:flex-1 tw:overflow-auto tw:bg-canvas">
       {/* ---------------------------------------------------------- Header */}
-      <div className="tw:bg-panel tw:border-b tw:border-line tw:px-6 tw:pt-5 tw:pb-4">
-        <div className="tw:flex tw:items-start tw:gap-4 tw:max-w-[1400px]">
-          <div className={cn('tw:flex tw:size-12 tw:shrink-0 tw:items-center tw:justify-center tw:rounded-xl',
+      <div className="tw:bg-panel tw:border-b tw:border-line tw:px-4 tw:md:px-6 tw:pt-5 tw:pb-4">
+        <div className="tw:flex tw:items-start tw:gap-4 tw:max-w-[1400px] tw:flex-wrap tw:md:flex-nowrap">
+          <div className={cn('tw:hidden tw:sm:flex tw:size-12 tw:shrink-0 tw:items-center tw:justify-center tw:rounded-xl',
             status === 'online' ? 'tw:bg-ok-soft tw:text-ok' : status === 'recent' ? 'tw:bg-warn-soft tw:text-warn' : 'tw:bg-hover tw:text-faint')}>
             <Monitor className="tw:size-6" />
           </div>
-          <div className="tw:min-w-0 tw:flex-1">
+          <div className="tw:min-w-0 tw:flex-1 tw:max-sm:basis-full">
             <div className="tw:flex tw:items-center tw:gap-2.5 tw:flex-wrap">
               <h1 className="tw:text-xl tw:font-semibold tw:truncate">{hostname}</h1>
               <Badge tone={status === 'online' ? 'ok' : status === 'recent' ? 'warn' : 'neutral'} dot>
@@ -168,7 +168,7 @@ export default function ClientOverview() {
               <TagInput value={labels} onChange={setLabels} tone="accent" placeholder="Add labels…" />
             </div>
           </div>
-          <div className="tw:flex tw:items-center tw:gap-1.5 tw:shrink-0">
+          <div className="tw:flex tw:items-center tw:gap-1.5 tw:shrink-0 tw:flex-wrap">
             <Button variant="primary" icon={<Plus className="tw:size-3.5" />} disabled={!canCollect} onClick={() => setCollectOpen(true)}>Collect</Button>
             <Button variant="secondary" icon={<History className="tw:size-3.5" />} onClick={() => history.push(`/collected/${clientId}`)}>Collections</Button>
             <Button variant="secondary" icon={<FolderTree className="tw:size-3.5" />} onClick={() => history.push(`/vfs/${clientId}/`)}>Files</Button>
@@ -189,7 +189,7 @@ export default function ClientOverview() {
         </div>
       </div>
 
-      <div className="tw:p-6 tw:grid tw:grid-cols-1 tw:xl:grid-cols-3 tw:gap-4 tw:max-w-[1400px]">
+      <div className="tw:p-3 tw:md:p-6 tw:grid tw:grid-cols-1 tw:xl:grid-cols-3 tw:gap-4 tw:max-w-[1400px]">
         {/* --------------------------------------------------- Quick triage */}
         <Card className="tw:xl:col-span-3">
           <CardHeader icon={<Zap className="tw:size-4" />} title="Quick triage" subtitle="One click collects from this host. Results open in Collections." />

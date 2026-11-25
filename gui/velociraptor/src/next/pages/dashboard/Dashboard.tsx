@@ -55,7 +55,7 @@ export default function Dashboard() {
 
   return (
     <div className="tw:flex-1 tw:overflow-y-auto">
-      <div className="tw:max-w-[1440px] tw:mx-auto tw:p-6 tw:space-y-5">
+      <div className="tw:max-w-[1440px] tw:mx-auto tw:p-3 tw:md:p-6 tw:space-y-5">
         <div className="tw:flex tw:items-end tw:gap-3">
           <div className="tw:flex-1">
             <h1 className="tw:text-xl tw:font-semibold tw:tracking-tight">{greeting()}{traits?.username ? `, ${traits.username}` : ''}</h1>
@@ -102,8 +102,8 @@ export default function Dashboard() {
                 {recentHunts.map(h => {
                   const c = huntCounts(h);
                   return (
-                    <Link key={h.hunt_id} to={`/hunts/${h.hunt_id}`} className="tw:flex tw:items-center tw:gap-4 tw:px-4 tw:py-3 tw:hover:bg-hover">
-                      <div className="tw:min-w-0 tw:flex-1">
+                    <Link key={h.hunt_id} to={`/hunts/${h.hunt_id}`} className="tw:flex tw:flex-wrap tw:sm:flex-nowrap tw:items-center tw:gap-x-4 tw:gap-y-2 tw:px-4 tw:py-3 tw:hover:bg-hover">
+                      <div className="tw:min-w-0 tw:flex-1 tw:max-sm:basis-full">
                         <div className="tw:flex tw:items-center tw:gap-2">
                           <span className="tw:font-medium tw:text-[13px] tw:truncate">{huntTitle(h)}</span>
                           <HuntStateBadge hunt={h} />
@@ -112,7 +112,7 @@ export default function Dashboard() {
                           {h.hunt_id} · {(h.artifacts ?? []).join(', ')}
                         </div>
                       </div>
-                      <div className="tw:w-48 tw:shrink-0 tw:space-y-1">
+                      <div className="tw:w-48 tw:max-sm:flex-1 tw:shrink-0 tw:space-y-1">
                         <HuntProgress hunt={h} />
                         <div className="tw:flex tw:justify-between tw:text-2xs tw:text-muted rx-num">
                           <span>{fmtNum(c.finished)}/{fmtNum(c.scheduled)} clients</span>

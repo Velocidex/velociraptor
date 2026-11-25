@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { Popover } from 'radix-ui';
 import {
-  Bell, CircleHelp, Command, LogOut, Moon, Settings, Sun, Building2, Keyboard, Check, Monitor,
+  Bell, CircleHelp, Command, Menu as MenuIcon, LogOut, Moon, Settings, Sun, Building2, Keyboard, Check, Monitor,
 } from 'lucide-react';
 import { useClientNameSuggest, useTraits } from '../lib/queries';
 import { href } from '../lib/api';
@@ -119,7 +119,7 @@ function initials(name: string | undefined) {
   return name.slice(0, 2).toUpperCase();
 }
 
-export default function TopBar({ onOpenPalette, dark }: { onOpenPalette: () => void; dark: boolean }) {
+export default function TopBar({ onOpenPalette, dark, onOpenNav }: { onOpenPalette: () => void; dark: boolean; onOpenNav?: () => void }) {
   const ctx = useTraits();
   const { traits, updateTraits } = ctx;
   const { setClient } = useSelectedClient();
@@ -138,7 +138,8 @@ export default function TopBar({ onOpenPalette, dark }: { onOpenPalette: () => v
   const isMac = typeof navigator !== 'undefined' && /Mac/.test(navigator.platform);
 
   return (
-    <header className="tw:flex tw:items-center tw:gap-3 tw:h-12 tw:px-4 tw:border-b tw:border-line tw:bg-panel tw:shrink-0">
+    <header className="tw:flex tw:items-center tw:gap-2 tw:md:gap-3 tw:h-12 tw:px-2 tw:md:px-4 tw:border-b tw:border-line tw:bg-panel tw:shrink-0">
+      {onOpenNav && <IconButton label="Open navigation" onClick={onOpenNav} icon={<MenuIcon className="tw:size-4" />} />}
       <ClientSearch />
 
       <button type="button" onClick={onOpenPalette}
@@ -153,7 +154,7 @@ export default function TopBar({ onOpenPalette, dark }: { onOpenPalette: () => v
           <Menu>
             <MenuTrigger asChild>
               <button type="button" className="tw:flex tw:items-center tw:gap-1.5 tw:h-8 tw:px-2.5 tw:rounded-md tw:text-xs tw:font-medium tw:text-muted tw:hover:bg-hover">
-                <Building2 className="tw:size-3.5" /> {orgName}
+                <Building2 className="tw:size-3.5" /> <span className="tw:hidden tw:sm:inline">{orgName}</span>
               </button>
             </MenuTrigger>
             <MenuContent>
@@ -178,7 +179,7 @@ export default function TopBar({ onOpenPalette, dark }: { onOpenPalette: () => v
           </button>
         </Tooltip>
 
-        <IconButton label="Search documentation" onClick={() => setHelpOpen(true)} icon={<CircleHelp className="tw:size-4" />} />
+        <IconButton label="Search documentation" className="tw:max-sm:hidden" onClick={() => setHelpOpen(true)} icon={<CircleHelp className="tw:size-4" />} />
 
         <IconButton label={dark ? 'Light mode' : 'Dark mode'}
           onClick={() => setTheme(!dark, traits?.ui_settings, updateTraits)}

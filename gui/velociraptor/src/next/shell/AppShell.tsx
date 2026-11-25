@@ -5,8 +5,10 @@ import TopBar from './TopBar';
 import CommandPalette from './CommandPalette';
 import { useSelectedClient } from './client-context';
 import { useThemeSync } from './theme';
-import { Spinner } from '../ui/primitives';
+import { Spinner, cn } from '../ui/primitives';
 import { ErrorBoundary } from './ErrorBoundary';
+import { usePhone } from '../ui/MobileBack';
+import { useLocation } from 'react-router-dom';
 
 const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
 const HuntsPage = lazy(() => import('../pages/hunts/HuntsPage'));
@@ -42,6 +44,10 @@ export default function AppShell() {
   const { client, setClient } = useSelectedClient();
   const [collapsed, setCollapsed] = useState(readCollapsed);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const phone = usePhone();
+  const [navOpen, setNavOpen] = useState(false);
+  const { pathname } = useLocation();
+  useEffect(() => setNavOpen(false), [pathname]);
 
   useEffect(() => {
     try {
@@ -64,9 +70,11 @@ export default function AppShell() {
 
   return (
     <div className="rx tw:fixed tw:inset-0 tw:flex tw:bg-canvas tw:text-fg">
-      <Sidebar collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
+      {phone && navOpen && <div className="tw:fixed tw:inset-0 tw:z-40 tw:bg-black/40" onClick={() => setNavOpen(false)} />}
+      <Sidebar collapsed={collapsed && !phone} onToggle={() => (phone ? setNavOpen(false) : setCollapsed(c => !c))}
+        className={phone ? cn('tw:fixed tw:inset-y-0 tw:left-0 tw:z-50 tw:shadow-xl', !navOpen && 'tw:hidden') : undefined} />
       <div className="tw:flex tw:flex-col tw:flex-1 tw:min-w-0">
-        <TopBar onOpenPalette={() => setPaletteOpen(true)} dark={dark} />
+        <TopBar onOpenPalette={() => setPaletteOpen(true)} dark={dark} onOpenNav={phone ? () => setNavOpen(true) : undefined} />
         <main className="tw:flex tw:flex-col tw:flex-1 tw:min-h-0 tw:relative">
           <ErrorBoundary>
             <Suspense fallback={<PageFallback />}>
@@ -100,6 +108,9 @@ export default function AppShell() {
                 </Route>
                 <Route path={['/events/:client_id(server)/:artifact?', '/events/:client_id(C\.[^/]+)/:artifact?']}>
                   <EventsPage />
+                </Route>
+                <Route path="/events" exact>
+                  <Redirect to="/events/server" />
                 </Route>
                 <Route path="/notebooks/:notebook_id?" exact>
                   <NotebooksPage />

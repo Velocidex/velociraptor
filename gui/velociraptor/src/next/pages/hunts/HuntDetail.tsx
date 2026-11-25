@@ -100,9 +100,9 @@ export default function HuntDetail({ huntId, summary, tab, onCopy }: {
   return (
     <div className="tw:flex tw:flex-col tw:flex-1 tw:min-h-0">
       {/* ------------------------------------------------ Header */}
-      <div className="tw:px-5 tw:pt-4 tw:pb-3 tw:bg-panel">
-        <div className="tw:flex tw:items-start tw:gap-3">
-          <div className="tw:min-w-0 tw:flex-1">
+      <div className="tw:px-4 tw:md:px-5 tw:pt-4 tw:pb-3 tw:bg-panel">
+        <div className="tw:flex tw:flex-wrap tw:sm:flex-nowrap tw:items-start tw:gap-3">
+          <div className="tw:min-w-0 tw:flex-1 tw:max-sm:basis-full">
             <div className="tw:flex tw:items-center tw:gap-2.5">
               <h2 className="tw:text-lg tw:font-semibold tw:truncate">{huntTitle(hunt)}</h2>
               <HuntStateBadge hunt={hunt} />

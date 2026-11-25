@@ -20,9 +20,14 @@ import { DataTable } from '../../ui/DataTable';
 
 const CodeEditor = lazy(() => import('../../ui/CodeEditor.jsx'));
 const LegacyCellOutput = lazy(() => import('./LegacyCellOutput.jsx'));
+const NotebookChart = lazy(() => import('./NotebookChart'));
+const NotebookTimeline = lazy(() => import('./NotebookTimeline'));
+const CHART_TAGS: Record<string, 'line' | 'time' | 'bar' | 'scatter'> = {
+  'notebook-line-chart': 'line', 'notebook-time-chart': 'time', 'notebook-bar-chart': 'bar', 'notebook-scatter-chart': 'scatter',
+};
 
 // Output tags that only the legacy renderer understands.
-const LEGACY_TAGS = /<(notebook-[a-z-]+-chart|velo-line-chart|time-chart|velo-timeline|velo-sigma-editor|velo-tool-viewer|velo-button|grr-[a-z-]+)\b/;
+const LEGACY_TAGS = /<(velo-line-chart|time-chart|velo-timeline(?![^>]*\bname=)|velo-sigma-editor|velo-tool-viewer|velo-button|grr-[a-z-]+)\b/;
 
 export const CELL_TYPES = [
   { value: 'vql', label: 'VQL', icon: <Code2 /> },
@@ -256,13 +261,25 @@ function CellOutput({ cell, notebookId, calculating, onRefresh }: {
           try { params = JSON.parse(decodeURIComponent(n.attribs?.params ?? '')); } catch { /* ignore */ }
           return <CellTable params={params} />;
         }
+        if (n.name && CHART_TAGS[n.name]) {
+          let params: Record<string, unknown> = {};
+          try { params = JSON.parse(decodeURIComponent(n.attribs?.params ?? '')); } catch { /* ignore */ }
+          return <Suspense fallback={<Skeleton className="tw:h-72 tw:my-2" />}><NotebookChart kind={CHART_TAGS[n.name]} params={params} /></Suspense>;
+        }
+        if (n.name === 'velo-timeline' && n.attribs?.name) {
+          return (
+            <Suspense fallback={<Skeleton className="tw:h-72 tw:my-2" />}>
+              <NotebookTimeline notebookId={notebookId} name={decodeURIComponent(n.attribs.name)} />
+            </Suspense>
+          );
+        }
         if (n.name === 'velo-value') {
           return <span className="tw:font-mono">{decodeURIComponent(n.attribs?.value ?? '')}</span>;
         }
         return undefined;
       },
     });
-  }, [out, legacy]);
+  }, [out, legacy, notebookId]);
 
   return (
     <div className="tw:relative">

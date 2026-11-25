@@ -251,7 +251,7 @@ export function NotebookView({ id, embedded, create }: {
         <div className="tw:px-4 tw:pt-3 tw:pb-1 tw:text-2xs tw:font-semibold tw:uppercase tw:tracking-wide tw:text-faint">Outline</div>
         <nav className="tw:flex-1 tw:overflow-y-auto tw:pb-3">
           {cells.map((c, i) => {
-            const t = (c.type ?? 'vql').toLowerCase();
+            const t = (c.type ?? '').toLowerCase();
             return (
               <button key={c.cell_id} onClick={() => {
                 setSelected(c.cell_id);
@@ -260,7 +260,7 @@ export function NotebookView({ id, embedded, create }: {
                 className={cn('tw:w-full tw:flex tw:items-center tw:gap-2 tw:px-4 tw:py-1.5 tw:text-left tw:text-xs tw:hover:bg-hover',
                   selected === c.cell_id ? 'tw:text-accent tw:font-medium' : 'tw:text-muted')}>
                 {t === 'markdown' ? <Type className="tw:size-3 tw:shrink-0" /> : <Code2 className="tw:size-3 tw:shrink-0" />}
-                <span className="tw:truncate">{c.summary || (t === 'markdown' ? 'Note' : `Query ${i + 1}`)}</span>
+                <span className="tw:truncate">{c.summary || (t === 'markdown' ? 'Note' : t === 'vql' ? `Query ${i + 1}` : `Cell ${i + 1}`)}</span>
               </button>
             );
           })}
@@ -298,8 +298,8 @@ export function NotebookView({ id, embedded, create }: {
             </div>
           )}
           {embedded ? (!nb && <Skeleton className="tw:h-40" />) : isLoading || !nb ? <Skeleton className="tw:h-20" /> : (
-            <header className="tw:flex tw:items-start tw:gap-3 tw:mb-2" onClick={e => e.stopPropagation()}>
-              <div className="tw:flex-1 tw:min-w-0">
+            <header className="tw:flex tw:flex-wrap tw:sm:flex-nowrap tw:items-start tw:gap-3 tw:mb-2" onClick={e => e.stopPropagation()}>
+              <div className="tw:flex-1 tw:min-w-0 tw:max-sm:basis-full">
                 <div className="tw:flex tw:items-center tw:gap-2">
                   <h1 className="tw:text-xl tw:font-semibold tw:truncate">{nb.name || nb.notebook_id}</h1>
                   {nb.public ? <Badge tone="info"><Globe className="tw:size-3" />Public</Badge> : <Badge tone="neutral"><Lock className="tw:size-3" />Private</Badge>}

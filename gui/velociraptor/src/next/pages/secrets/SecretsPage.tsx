@@ -17,6 +17,7 @@ import {
   Switch, Textarea, Tooltip, cn,
 } from '../../ui/primitives';
 import { TagInput } from '../hunts/TagInput';
+import { MobileBack, isPhone } from '../../ui/MobileBack';
 
 const MULTILINE = /(^|_)(root_ca|private_key|hostkey|env|extra_headers|extra_params|cookies)$/;
 const SENSITIVE = /(secret|password|token|private_key|api_key|kms_encryption_key)$/;
@@ -41,7 +42,7 @@ export default function SecretsPage() {
   const current = defs?.find(d => d.type_name === type);
 
   useEffect(() => {
-    if (!type && defs?.length) {
+    if (!type && defs?.length && !isPhone()) {
       const first = defs.find(d => d.secret_names?.length) ?? defs[0];
       history.replace(`/secrets/${encodeURIComponent(first.type_name)}`);
     }
@@ -50,8 +51,8 @@ export default function SecretsPage() {
   const total = (defs ?? []).reduce((n, d) => n + (d.secret_names?.length ?? 0), 0);
 
   return (
-    <div className="tw:flex tw:flex-1 tw:min-h-0">
-      <aside className="tw:w-72 tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:bg-panel">
+    <div className="rx-split tw:flex tw:flex-1 tw:min-h-0" data-detail={routeType ? 1 : 0}>
+      <aside className="rx-split-list tw:w-72 tw:shrink-0 tw:border-r tw:border-line tw:flex tw:flex-col tw:bg-panel">
         <div className="tw:p-3 tw:border-b tw:border-line">
           <div className="tw:flex tw:items-center tw:gap-2">
             <h1 className="tw:text-[15px] tw:font-semibold tw:flex-1">Secrets</h1>
@@ -77,7 +78,8 @@ export default function SecretsPage() {
           })}
         </nav>
       </aside>
-      <main className="tw:flex-1 tw:min-w-0 tw:overflow-y-auto">
+      <main className="rx-split-detail tw:flex-1 tw:min-w-0 tw:overflow-y-auto">
+        <MobileBack to="/secrets" label="All secret types" />
         {current ? <SecretType key={current.type_name} def={current} /> : !isLoading && (
           <EmptyState className="tw:mt-24" icon={<KeyRound />} title="Pick a secret type" />
         )}
