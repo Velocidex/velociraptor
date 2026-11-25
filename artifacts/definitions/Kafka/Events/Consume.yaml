@@ -1,0 +1,148 @@
+name: Kafka.Events.Consume
+author: Wes Lambert - @therealwlambert
+description: |
+  Reads records from Kafka topics into Velociraptor as server events,
+  and can start a collection on the host each record names.
+
+  Each record becomes a row: a JSON object's fields become columns,
+  and the record's topic, partition, offset, key, time and headers
+  arrive in `_Topic`, `_Partition`, `_Offset`, `_Key`, `_Time` and
+  `_Headers`. Rows are stored like any server monitoring data, so they
+  can be searched, timelined and alerted on in notebooks.
+
+  A typical use is alert-driven triage: a SIEM or detection pipeline
+  publishes alerts to a topic, this artifact keeps the ones that match
+  `FilterField` / `FilterRegex`, and when `ClientField` and
+  `CollectArtifacts` are set it collects those artifacts from the host
+  in that field (a Velociraptor client ID, or a hostname looked up in
+  the client index). The `Triage` column records the client and flow
+  each collection started. `TriageCooldown` limits this to one
+  collection per host every so many minutes, so an alert storm against
+  one host does not start a collection per alert; records that arrive
+  within the window are still stored, and their `Triage` shows the
+  host as `Skipped: cooldown`.
+
+  The artifact reads as a Kafka consumer group (`Group`), committing
+  records once they are stored, so restarting the server or the
+  artifact resumes where it left off without re-reading or skipping.
+  Use a group name of its own: other readers in the same group would
+  share the records with it.
+
+  Brokers and credentials come from a `Kafka Creds` secret
+  (`KafkaSecret`). `Brokers` is used only when no secret is given.
+
+  ## Requirements
+
+  This artifact needs the `kafka_consume()` plugin, which is only
+  compiled into Velociraptor builds made with the `sumo` build tag (the
+  official Docker image, or a release binary with `sumo` in its name).
+  Standard builds do not include it.
+
+type: SERVER_EVENT
+
+parameters:
+  - name: Topics
+    description: |
+      Topics to read, comma separated. Names starting with ^ are
+      regular expressions (then all must be).
+    default: alerts
+  - name: Group
+    description: Kafka consumer group for this artifact.
+    default: velociraptor-consume
+  - name: Start
+    description: |
+      Where to begin the first time the group runs: latest (only new
+      records) or earliest (everything the topic still holds).
+    type: choices
+    default: latest
+    choices:
+      - latest
+      - earliest
+  - name: FilterField
+    description: |
+      Record field to filter on (dotted names reach into nested JSON,
+      e.g. Rule.Severity). Leave empty to keep every record.
+  - name: FilterRegex
+    description: Keep records whose FilterField matches this regex.
+    type: regex
+    default: .
+  - name: ClientField
+    description: |
+      Record field naming the host to triage: a client ID (C.…) or a
+      hostname. Leave empty to only store records.
+  - name: CollectArtifacts
+    description: |
+      Artifacts to collect from that host, comma separated, e.g.
+      Generic.Client.Info,Windows.System.Pslist. Leave empty to only
+      store records.
+  - name: TriageCooldown
+    description: |
+      Minutes after a collection from a host during which further
+      records naming that host are stored but not triaged again.
+      0 triages every record.
+    type: int
+    default: 10
+  - name: Brokers
+    description: Seed brokers, comma separated. Used only when KafkaSecret is empty.
+    default: localhost:9092
+  - name: KafkaSecret
+    description: Name of a Kafka Creds secret with the brokers and credentials.
+
+sources:
+  - precondition: |
+      SELECT * FROM info()
+      WHERE version(plugin="kafka_consume") >= 1
+
+    query: |
+      // kafka_consume() only exists in 'sumo' builds. Server monitoring
+      // does not evaluate the precondition above, so also log an
+      // actionable message rather than a bare "plugin not found".
+      LET _ <= if(condition=NOT version(plugin="kafka_consume"),
+          then=log(level="ERROR", dedup=-1,
+                   message="Kafka.Events.Consume requires a Velociraptor " +
+                     "build with the 'sumo' tag (the official Docker image, " +
+                     "or a release binary with 'sumo' in its name)."))
+
+      LET topic_list = filter(list=split(sep="\\s*,\\s*", string=Topics), regex=".")
+      LET artifact_list = filter(list=split(sep="\\s*,\\s*", string=CollectArtifacts), regex=".")
+      LET broker_list = filter(list=split(sep="\\s*,\\s*", string=Brokers), regex=".")
+
+      LET _ <= log(message="Reading %v as group %v", args=[topic_list, Group])
+
+      LET records = SELECT * FROM kafka_consume(
+          topics=topic_list, group=Group, start=Start,
+          brokers=broker_list, secret=KafkaSecret)
+        WHERE if(condition=FilterField,
+                 then=str(str=get(member=FilterField)) =~ FilterRegex,
+                 else=TRUE)
+
+      // A client ID is used as is; anything else is looked up as a
+      // hostname in the client index.
+      LET target(name) = SELECT client_id FROM if(
+          condition=name =~ "^C\\.[0-9a-f]{16}$",
+          then={ SELECT name AS client_id FROM scope() },
+          else={ SELECT client_id FROM clients(search="host:" + name) LIMIT 1 })
+
+      // When each host was last triaged, for TriageCooldown. set()
+      // updates this dict in place, so it lasts while the artifact runs.
+      LET cooldown_sec = int(int=TriageCooldown) * 60
+      LET last_triage <= dict()
+
+      LET cooling(client_id) = cooldown_sec > 0 AND
+          now() - get(item=last_triage, field=client_id, default=0) < cooldown_sec
+
+      LET start_triage(client_id) = SELECT client_id AS ClientId,
+          collect_client(client_id=client_id, artifacts=artifact_list).flow_id AS FlowId
+        FROM scope()
+        WHERE set(item=last_triage, field=client_id, value=now())
+
+      LET triage(name) = SELECT * FROM foreach(row=target(name=name), query={
+          SELECT * FROM if(condition=cooling(client_id=client_id),
+            then={ SELECT client_id AS ClientId, "cooldown" AS Skipped FROM scope() },
+            else={ SELECT * FROM start_triage(client_id=client_id) })
+        })
+
+      SELECT *,
+             if(condition=ClientField AND artifact_list,
+                then=triage(name=str(str=get(member=ClientField)))) AS Triage
+      FROM records

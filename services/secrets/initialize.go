@@ -158,7 +158,7 @@ var (
 		},
 	}, {
 		TypeName:    constants.KAFKA_CREDS,
-		Description: "Brokers and credentials to be used in kafka_upload() calls.",
+		Description: "Brokers and credentials to be used in kafka_upload() and kafka_consume() calls.",
 		Verifier:    "x=>x.brokers",
 		Fields: []string{
 			"brokers",
