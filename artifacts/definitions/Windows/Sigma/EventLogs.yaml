@@ -13,6 +13,9 @@ required_permissions:
   - EXECVE
   - FILESYSTEM_WRITE
 
+implied_permissions:
+  - SERVER_ADMIN
+
 parameters:
 - name: EventLogDirectory
   default: C:/Windows/System32/WinEvt/Logs/

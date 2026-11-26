@@ -96,6 +96,18 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 				fmt.Printf("Error with %v: %v\n", artifact_name, err)
 			}
 			assert.True(self.T(), len(state.Errors) == 0)
+
+			// The verifier reports these as warnings, but built in
+			// artifacts should be warning free. Where the diagnostic
+			// is a false positive, or fixing it would change the
+			// artifact's output, suppress it with a `linter:` comment
+			// (e.g. `// linter: symbol_mask_warn:url`).
+			for _, warning := range state.Warnings {
+				fmt.Printf("Warning with %v: %v\n", artifact_name, warning)
+				assert.Fail(self.T(), warning.Error(),
+					"Artifact %v has verifier warnings: fix them or add a `linter:` suppression to the VQL",
+					artifact_name)
+			}
 		}
 	}
 

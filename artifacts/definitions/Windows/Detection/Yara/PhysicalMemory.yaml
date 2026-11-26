@@ -33,6 +33,10 @@ description: |
   ```
 
 type: CLIENT
+
+implied_permissions:
+  - FILESYSTEM_WRITE
+
 parameters:
   - name: ServiceName
     description: Override the name of the driver service to install.

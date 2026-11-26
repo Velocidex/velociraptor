@@ -8,6 +8,7 @@ required_permissions:
 
 implied_permissions:
   - IMPERSONATION
+  - FILESYSTEM_WRITE
 
 parameters:
   - name: Command
