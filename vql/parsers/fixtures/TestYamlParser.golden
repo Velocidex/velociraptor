@@ -12,9 +12,9 @@
   "A": 2,
   "c": {
    "Field1": "X",
-   "Field2": true,
+   "Field2": "Y",
    "Field0": "Z"
   }
  },
- "Case 2": null
+ "Case 2": "Field1 field2"
 }

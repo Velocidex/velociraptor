@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/Velocidex/yaml/v2"
 	"golang.org/x/sys/windows/registry"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 type RegistryWritebackStore struct {

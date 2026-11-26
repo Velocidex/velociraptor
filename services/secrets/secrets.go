@@ -194,7 +194,7 @@ func (self *SecretsService) AddSecret(ctx context.Context,
 		tmp := make(map[string]string)
 		field_val, pres := secret.GetString(yaml_field)
 		if pres {
-			err := yaml.Unmarshal([]byte(field_val), tmp)
+			err := yaml.Unmarshal([]byte(field_val), &tmp)
 			if err != nil {
 				return fmt.Errorf("Unable to verify secret for type %v: "+
 					"While verifying %v: %w", type_name, yaml_field, err)

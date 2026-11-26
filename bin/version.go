@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"runtime/debug"
 
-	"github.com/Velocidex/yaml/v2"
 	"github.com/alecthomas/kingpin/v2"
 	"www.velocidex.com/golang/velociraptor/config"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 var (

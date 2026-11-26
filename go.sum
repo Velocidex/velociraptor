@@ -126,6 +126,8 @@ github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda h1:Q0pdD/aAUCmTv
 github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda/go.mod h1:lBB+XfppHmYxIfnWDszC78x1iMq8088nMnMYQFQovM4=
 github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf h1:nncITcAsfVBs01yg2Z0RJ05Phr6qM+UToxDEzqJ+1yk=
 github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf/go.mod h1:AlPOz69A80YxtZuayEM+w9PYbGhaOOHgm1l92egHlzg=
+github.com/Velocidex/go-yaml/v4 v4.0.0-20261126091409-7a2d92691f19 h1:+ofPm5wyba4OS1z9Wvi6BXk6XzpuDdbJbhd0GrKJAx0=
+github.com/Velocidex/go-yaml/v4 v4.0.0-20261126091409-7a2d92691f19/go.mod h1:aZqd9kCMsGL7AuUv/m/PvWLdg5sjJsZ4oHDEnfPPfY0=
 github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5 h1:27r8y5q7uV1pMrLqIgTrRk1MdtSnDD6zOeCdWclWq44=
 github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=

@@ -86,7 +86,7 @@ import (
 	"strings"
 
 	"github.com/Velocidex/ordereddict"
-	"github.com/Velocidex/yaml/v2"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
@@ -206,7 +206,7 @@ func (self *Secret) UpdateDict(field string, target *ordereddict.Dict) error {
 	res, pres := self.Data.GetString(field)
 	if pres && res != "" {
 		tmp := make(map[string]string)
-		err := yaml.Unmarshal([]byte(res), tmp)
+		err := yaml.Unmarshal([]byte(res), &tmp)
 		if err != nil {
 			return fmt.Errorf("Secret: parsing field %v invalid yaml: %v",
 				field, err)

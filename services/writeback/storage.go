@@ -8,11 +8,11 @@ import (
 	"runtime"
 	"sync"
 
-	"github.com/Velocidex/yaml/v2"
 	"google.golang.org/protobuf/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
 	"www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 type WritebackStorer interface {

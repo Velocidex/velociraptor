@@ -39,7 +39,6 @@ require (
 	github.com/Velocidex/tracee_velociraptor v0.0.0-20260921030823-6d8e34ce73b1
 	github.com/Velocidex/ttlcache/v2 v2.9.1-0.20240517145123-a3f45e86e130
 	github.com/Velocidex/velociraptor-site-search v0.0.0-20260316064028-d30384722e4b
-	github.com/Velocidex/yaml/v2 v2.2.8
 	github.com/Velocidex/yara-x-go v0.0.0-20251010010632-d8eaad9c539c
 	github.com/Velocidex/zip v0.0.0-20251027040802-582e676739bd
 	github.com/VirusTotal/gyp v0.9.1-0.20231202132633-bb35dbf177a6
@@ -147,7 +146,6 @@ require (
 	google.golang.org/grpc/cmd/protoc-gen-go-grpc v1.2.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
-	gopkg.in/yaml.v2 v2.4.0
 	howett.net/plist v1.0.1
 	software.sslmate.com/src/go-pkcs12 v0.2.0
 	www.velocidex.com/golang/evtx v0.2.1-0.20261007074225-6bf21c30f7fe
@@ -183,6 +181,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/PuerkitoBio/goquery v1.8.1 // indirect
 	github.com/RoaringBitmap/roaring/v2 v2.14.5 // indirect
+	github.com/Velocidex/yaml/v2 v2.2.8 // indirect
 	github.com/alecthomas/colour v0.1.0 // indirect
 	github.com/alecthomas/participle v0.7.1 // indirect
 	github.com/alecthomas/repr v0.5.4 // indirect
@@ -358,6 +357,7 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260724162435-b2f20204f0df // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	kernel.org/pub/linux/libs/security/libcap/cap v1.2.71 // indirect
 	kernel.org/pub/linux/libs/security/libcap/psx v1.2.71 // indirect
@@ -375,7 +375,6 @@ require (
 // replace www.velocidex.com/golang/evtx => ../evtx
 // replace www.velocidex.com/golang/go-ese => ../go-ese
 // replace github.com/Velocidex/ordereddict => ../ordereddict
-// replace github.com/Velocidex/yaml/v2 => ../yaml
 // replace www.velocidex.com/golang/go-prefetch => ../go-prefetch
 // replace github.com/Velocidex/go-magic => ../go-magic
 // replace github.com/Velocidex/go-yara => ../go-yara
@@ -410,6 +409,8 @@ require (
 replace github.com/russross/blackfriday/v2 => github.com/Velocidex/blackfriday/v2 v2.0.2-0.20200811050547-4f26a09e2b3b
 
 go 1.27.2
+
+replace go.yaml.in/yaml/v4 => github.com/Velocidex/go-yaml/v4 v4.0.0-20261126091409-7a2d92691f19
 
 // Needed for syntax highlighting VQL. Removes extra fat.
 replace github.com/alecthomas/chroma => github.com/Velocidex/chroma v0.6.8-0.20200418131129-82edc291369c
