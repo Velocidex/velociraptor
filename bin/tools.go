@@ -7,12 +7,12 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/Velocidex/yaml/v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	logging "www.velocidex.com/golang/velociraptor/logging"
 	"www.velocidex.com/golang/velociraptor/services"
 	"www.velocidex.com/golang/velociraptor/startup"
 	"www.velocidex.com/golang/velociraptor/utils"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 var (

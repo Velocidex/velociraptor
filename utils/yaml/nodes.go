@@ -3,7 +3,7 @@ package yaml
 import (
 	"strconv"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v4"
 )
 
 type Node = yaml.Node
@@ -18,6 +18,11 @@ var (
 
 func Unmarshal(in []byte, item interface{}) error {
 	return yaml.Unmarshal(in, item)
+}
+
+// Marshal keeps the compact list indentation used in existing YAML exports.
+func Marshal(item interface{}) ([]byte, error) {
+	return yaml.Dump(item, yaml.WithV2Defaults(), yaml.WithCompactSeqIndent())
 }
 
 type NodeContext struct {

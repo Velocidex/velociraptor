@@ -14,7 +14,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Velocidex/yaml/v2"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"www.velocidex.com/golang/velociraptor/config"
@@ -22,6 +21,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/json"
 	"www.velocidex.com/golang/velociraptor/utils/tempfile"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 var (

@@ -14,7 +14,21 @@ Output: [
       {
        "Err": {
         "Errors": [
-         "line 2: field someweirdfield not found in type proto.Artifact"
+         {
+          "Stage": "constructor",
+          "Message": "field someweirdfield not found in type proto.Artifact",
+          "Mark": {
+           "Index": 0,
+           "Line": 2,
+           "Column": 1
+          },
+          "ContextMark": {
+           "Index": 0,
+           "Line": 0,
+           "Column": 0
+          },
+          "ContextMsg": ""
+         }
         ]
        }
       }
@@ -647,7 +661,7 @@ Output: [
     "name": "BrokenYaml",
     "passed": false,
     "errors": [
-     "(0,0) yaml_error: YAML Error: yaml: unmarshal errors:\n  line 2: field someweirdfield not found in type proto.Artifact"
+     "(0,0) yaml_error: YAML Error: yaml: construct errors: line 2: field someweirdfield not found in type proto.Artifact"
     ],
     "warnings": [],
     "path": "invalid1.yaml"

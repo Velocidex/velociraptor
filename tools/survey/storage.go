@@ -6,9 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Velocidex/yaml/v2"
 	"github.com/charmbracelet/huh"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
 
 var (

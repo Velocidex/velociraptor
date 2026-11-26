@@ -126,6 +126,8 @@ github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda h1:Q0pdD/aAUCmTv
 github.com/Velocidex/go-vhdx v0.0.0-20250511013458-5cba970cdeda/go.mod h1:lBB+XfppHmYxIfnWDszC78x1iMq8088nMnMYQFQovM4=
 github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf h1:nncITcAsfVBs01yg2Z0RJ05Phr6qM+UToxDEzqJ+1yk=
 github.com/Velocidex/go-vmdk v0.0.0-20250505140221-bd4633ce2fbf/go.mod h1:AlPOz69A80YxtZuayEM+w9PYbGhaOOHgm1l92egHlzg=
+github.com/Velocidex/go-yaml/v4 v4.0.0-20261126091409-7a2d92691f19 h1:+ofPm5wyba4OS1z9Wvi6BXk6XzpuDdbJbhd0GrKJAx0=
+github.com/Velocidex/go-yaml/v4 v4.0.0-20261126091409-7a2d92691f19/go.mod h1:aZqd9kCMsGL7AuUv/m/PvWLdg5sjJsZ4oHDEnfPPfY0=
 github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5 h1:27r8y5q7uV1pMrLqIgTrRk1MdtSnDD6zOeCdWclWq44=
 github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5/go.mod h1:5KKwF74avzF4GPZg37NoWfJiDgrBF5ASHH27g1p83zk=
 github.com/Velocidex/grok v0.0.1 h1:bOaqowsW9ecfJISQOM9K47Jk/ID9V945BLfKngUZEjo=
@@ -904,6 +906,8 @@ go.yaml.in/yaml/v2 v2.4.4 h1:tuyd0P+2Ont/d6e2rl3be67goVK4R6deVxCUX5vyPaQ=
 go.yaml.in/yaml/v2 v2.4.4/go.mod h1:gMZqIpDtDqOfM0uNfy0SkpRhvUryYH0Z6wdMYcacYXQ=
 go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=
 go.yaml.in/yaml/v3 v3.0.5/go.mod h1:HVTZu1O7/Vkt2N+BFy8Zza+lnLsABggaTM2ZpNIGuKg=
+go.yaml.in/yaml/v4 v4.0.0 h1:/LG1pNO84Z4l603j/xMn69CcS5OYhMQ/f7l2LoQUGuw=
+go.yaml.in/yaml/v4 v4.0.0/go.mod h1:aZqd9kCMsGL7AuUv/m/PvWLdg5sjJsZ4oHDEnfPPfY0=
 golang.org/x/arch v0.23.0 h1:lKF64A2jF6Zd8L0knGltUnegD62JMFBiCPBmQpToHhg=
 golang.org/x/arch v0.23.0/go.mod h1:dNHoOeKiyja7GTvF9NJS1l3Z2yntpQNzgrjh1cU103A=
 golang.org/x/crypto v0.0.0-20170808112155-b176d7def5d7/go.mod h1:6SG95UA2DQfeDnfUPMdvaQW0Q7yPrPDi9nlGo2tz2b4=
