@@ -2,6 +2,7 @@ package parsers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/Velocidex/ordereddict"
 	"go.yaml.in/yaml/v4"
@@ -66,7 +67,7 @@ func (self ParseYamlFunction) Call(
 		scope.Log("parse_yaml: %v", err)
 		return nil
 	}
-	result, err := yamlToDict(&parsed)
+	result, err := yamlToDict(&parsed, 0)
 	if err != nil {
 		scope.Log("parse_yaml: %v", err)
 		return nil
@@ -97,36 +98,34 @@ func (self ParseYamlFunction) Call(
 	return result_dict
 }
 
-func yamlToDict(node *yaml.Node) (interface{}, error) {
+func yamlToDict(node *yaml.Node, depth int) (interface{}, error) {
+	if depth > 256 {
+		return nil, fmt.Errorf("YAML value exceeds maximum nesting depth")
+	}
 	switch node.Kind {
 	case yaml.DocumentNode:
 		if len(node.Content) == 0 {
 			return nil, nil
 		}
-		return yamlToDict(node.Content[0])
+		return yamlToDict(node.Content[0], depth+1)
+
+	case yaml.AliasNode:
+		if node.Alias == nil {
+			return nil, fmt.Errorf("unresolved YAML alias %q", node.Value)
+		}
+		return yamlToDict(node.Alias, depth+1)
 
 	case yaml.MappingNode:
 		res := ordereddict.NewDict()
-		for i := 0; i+1 < len(node.Content); i += 2 {
-			// We require keys to be strings since this is a JSON
-			// requirement.
-			keyNode := node.Content[i]
-			if keyNode.Tag != "!!str" {
-				continue
-			}
-
-			value, err := yamlToDict(node.Content[i+1])
-			if err != nil {
-				return nil, err
-			}
-			res.Set(keyNode.Value, value)
+		if err := res.UnmarshalYAML(node); err != nil {
+			return nil, err
 		}
 		return res, nil
 
 	case yaml.SequenceNode:
 		res := []interface{}{}
 		for _, child := range node.Content {
-			value, err := yamlToDict(child)
+			value, err := yamlToDict(child, depth+1)
 			if err != nil {
 				return nil, err
 			}

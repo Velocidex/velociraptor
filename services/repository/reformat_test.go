@@ -1,11 +1,13 @@
 package repository
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/Velocidex/ordereddict"
 	"github.com/stretchr/testify/assert"
+	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
 )
 
@@ -106,4 +108,10 @@ func TestReformatMultiple(t *testing.T) {
 		golden.Set(c.name, strings.Split(second, "\n"))
 	}
 	goldie.AssertJson(t, "TestReformat", golden)
+}
+
+func TestReportErrorEmptyRaw(t *testing.T) {
+	sentinel := errors.New("syntax error")
+	err := reportError(sentinel, &artifacts_proto.Artifact{}, "sources.[].query", 0)
+	assert.Equal(t, sentinel, err)
 }

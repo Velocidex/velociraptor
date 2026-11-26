@@ -73,12 +73,7 @@ func _encode(
 		return utils.ToString(item)
 
 	case "yaml":
-		value, err := yamlValue(item, 0)
-		if err != nil {
-			scope.Log("%v: %v", name, err)
-			return vfilter.Null{}
-		}
-		serialized, err := yaml.Marshal(value)
+		serialized, err := yaml.Marshal(item)
 		if err != nil {
 			scope.Log("%v: %v", name, err)
 			return vfilter.Null{}

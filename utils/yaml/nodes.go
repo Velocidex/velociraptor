@@ -36,6 +36,9 @@ type NodeContext struct {
 // document structure and fetches the relevant node.
 func GetYamlNodes(node, parent *yaml.Node,
 	components []string, nodes *[]NodeContext) bool {
+	if node == nil {
+		return false
+	}
 
 	if len(components) == 0 {
 		*nodes = append(*nodes, NodeContext{
@@ -61,10 +64,9 @@ func GetYamlNodes(node, parent *yaml.Node,
 
 	idx, err := strconv.ParseInt(next, 0, 64)
 	if err == nil {
-		// It is not a sequence
+		// It is not a sequence or index is out of range
 		if node.Tag != "!!seq" ||
-			// Sequence too short
-			len(node.Content) < int(idx) {
+			idx < 0 || idx >= int64(len(node.Content)) {
 			return false
 		}
 

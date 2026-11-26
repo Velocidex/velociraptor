@@ -16,6 +16,7 @@ import (
 	"www.velocidex.com/golang/velociraptor/vql/functions"
 	"www.velocidex.com/golang/velociraptor/vql/parsers"
 	"www.velocidex.com/golang/velociraptor/vtesting/goldie"
+	"www.velocidex.com/golang/vfilter"
 
 	_ "www.velocidex.com/golang/velociraptor/accessors/data"
 )
@@ -84,6 +85,18 @@ func (self *ParserTestSuite) TestYAMLSerializeRoundTrip() {
 		string(json.MustMarshalIndent(parse(output.(string)))))
 	self.Nil(parse("rows: ["))
 	self.Nil(parse("rows: [!!int invalid]"))
+	self.Nil(parse("value: &self [*self]"))
+	self.Nil(parse("dup: 1\ndup: 2\n"))
+
+	merged := parse("base: &base\n  z: first\n  a: second\ncopy:\n  <<: *base\n  b: third\nalias_ref: *base\n")
+	self.Require().NotNil(merged)
+	self.Equal("{\n \"base\": {\n  \"z\": \"first\",\n  \"a\": \"second\"\n },\n \"copy\": {\n  \"z\": \"first\",\n  \"a\": \"second\",\n  \"b\": \"third\"\n },\n \"alias_ref\": {\n  \"z\": \"first\",\n  \"a\": \"second\"\n }\n}",
+		string(json.MustMarshalIndent(merged)))
+
+	cyclic := ordereddict.NewDict()
+	cyclic.Set("self", cyclic)
+	self.Equal(vfilter.Null{}, (&functions.EncodeFunction{}).Call(ctx, scope, ordereddict.NewDict().
+		Set("item", cyclic).Set("format", "yaml")))
 	for _, test := range []struct {
 		text string
 		want bool

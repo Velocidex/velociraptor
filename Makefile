@@ -145,7 +145,7 @@ translations:
 	python3 ./scripts/find_i8n_translations.py ./gui/velociraptor/src/components/i8n/
 
 config_check:
-	go run -tags config_check ./docs/references/sample_config/main.go ./docs/references/server.config.yaml
+	go -C ./docs/references/sample_config run -tags config_check ./main.go ../server.config.yaml
 
 deadcode:
 	go run make.go -v deadcode
