@@ -37,7 +37,7 @@ func EnableVirtualTerminalProcessing(stream syscall.Handle, enable bool) error {
 	const ENABLE_VIRTUAL_TERMINAL_PROCESSING uint32 = 0x4
 
 	var mode uint32
-	err := syscall.GetConsoleMode(syscall.Stdout, &mode)
+	err := syscall.GetConsoleMode(stream, &mode)
 	if err != nil {
 		return err
 	}
@@ -72,16 +72,25 @@ func (self *Formatter) Format(entry *logrus.Entry) ([]byte, error) {
 		fmt.Fprintf(b, "%s", serialized)
 	}
 
+	const enableVirtualTerminalProcessing uint32 = 0x4
+
 	// Only print the result to the console, if there is an stderr
 	// map to it.
-	_, pres := self.stderr_map[entry.Level]
-	if pres {
+	writer, pres := self.stderr_map[entry.Level]
+	if pres && writer != nil {
 		if NoColor {
-			fmt.Fprintln(os.Stdout, clearTag(b.String()))
+			fmt.Fprintln(writer, clearTag(b.String()))
 		} else {
-			EnableVirtualTerminalProcessing(syscall.Stdout, true)
-			fmt.Fprintln(os.Stdout, replaceTagWithCode(b.String()))
-			EnableVirtualTerminalProcessing(syscall.Stdout, false)
+			if f, ok := writer.(*os.File); ok {
+				handle := syscall.Handle(f.Fd())
+				var origMode uint32
+				if syscall.GetConsoleMode(handle, &origMode) == nil &&
+					origMode&enableVirtualTerminalProcessing == 0 {
+					EnableVirtualTerminalProcessing(handle, true)
+					defer EnableVirtualTerminalProcessing(handle, false)
+				}
+			}
+			fmt.Fprintln(writer, replaceTagWithCode(b.String()))
 		}
 	}
 

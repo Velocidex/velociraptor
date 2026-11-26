@@ -466,20 +466,26 @@ func TestShowConfigWithMergePatch(t *testing.T) {
 
 	// A temp file for the generated config.
 	config_file, err := tempfile.TempFile("config")
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	defer os.Remove(config_file.Name())
+
+	datastore_dir, err := tempfile.TempDir("datastore")
+	require.NoError(t, err)
+	defer os.RemoveAll(datastore_dir)
 
 	// Write the config to the tmp file
 	config_obj := config.GetDefaultConfig()
 	config_obj.GUI = nil
 	config_obj.Frontend = nil
+	config_obj.Datastore.Location = datastore_dir
+	config_obj.Datastore.FilestoreDirectory = datastore_dir
 	config_obj.Client.CaCertificate = "A"
 	config_obj.Client.Nonce = "A"
 	config_obj.Client.ServerUrls = []string{"https://FirstServer/"}
 
 	serialized, err := json.Marshal(config_obj)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 
 	config_file.Write(serialized)
 	config_file.Close()
@@ -494,16 +500,17 @@ func TestShowConfigWithMergePatch(t *testing.T) {
 		"--patch",
 		`[{"op": "add", "path": "/Client/server_urls/0", "value": "https://SomeServer/"}]`,
 	)
-	out, err := cmd.Output()
-	if err != nil {
-		fmt.Println(string(err.(*exec.ExitError).Stderr))
-	}
-	require.NoError(t, err, string(out))
+	var stdout, stderr bytes.Buffer
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	require.NoError(t, err, "stdout:\n%s\nstderr:\n%s", stdout.String(), stderr.String())
+	require.Contains(t, stderr.String(), "[INFO]")
 
 	// Try to load it now.
 	new_config := &config_proto.Config{}
-	err = yaml.Unmarshal(out, new_config)
-	assert.NoError(t, err)
+	err = yaml.Unmarshal(stdout.Bytes(), new_config)
+	require.NoError(t, err, stdout.String())
 
 	// Nonce should be replace by json merge
 	require.Equal(t, new_config.Client.Nonce, "Foo")
