@@ -95,6 +95,7 @@ var (
 		"remappings",
 		"org_id",
 		"org_name",
+		"org_redirected",
 		"analysis_target",
 		"services",
 		"Client.disable_compression",
@@ -128,6 +129,7 @@ var (
 		"defaults.disable_unicode_usernames",
 		"Client.panic_file",
 		"GUI.authenticator.saml_allow_idp_initiated",
+		"GUI.redirected_orgs.api_config",
 
 		"Client.nanny_max_connection_delay",
 		"Client.prevent_execve",

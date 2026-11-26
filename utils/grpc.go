@@ -129,6 +129,11 @@ func MakeError(err error) *api_proto.Error {
 	if errors.Is(err, io.EOF) {
 		code = api_proto.ErrorCode_EOF
 		str = err.Error()
+
+	} else if errors.Is(err, NotFoundError) {
+		code = api_proto.ErrorCode_NOT_FOUND
+		str = err.Error()
+
 	} else if err != nil {
 		code = api_proto.ErrorCode_ERROR
 		str = err.Error()

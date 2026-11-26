@@ -379,7 +379,9 @@ type GetTableResponse struct {
 	EndTime   int64              `protobuf:"varint,6,opt,name=end_time,json=endTime,proto3" json:"end_time,omitempty"`
 	Timelines []*proto1.Timeline `protobuf:"bytes,8,rep,name=timelines,proto3" json:"timelines,omitempty"`
 	// If there is a stack table this is the path to it.
-	StackPath     []string `protobuf:"bytes,7,rep,name=stack_path,json=stackPath,proto3" json:"stack_path,omitempty"`
+	StackPath []string `protobuf:"bytes,7,rep,name=stack_path,json=stackPath,proto3" json:"stack_path,omitempty"`
+	// Errors are returned inline - most common ones are not found.
+	Error         *Error `protobuf:"bytes,9,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -470,11 +472,18 @@ func (x *GetTableResponse) GetStackPath() []string {
 	return nil
 }
 
+func (x *GetTableResponse) GetError() *Error {
+	if x != nil {
+		return x.Error
+	}
+	return nil
+}
+
 var File_csv_proto protoreflect.FileDescriptor
 
 const file_csv_proto_rawDesc = "" +
 	"\n" +
-	"\tcsv.proto\x12\x05proto\x1a\x14proto/semantic.proto\x1a\x1eartifacts/proto/artifact.proto\x1a\x1ftimelines/proto/timelines.proto\"\xb0\a\n" +
+	"\tcsv.proto\x12\x05proto\x1a\x14proto/semantic.proto\x1a\x1eartifacts/proto/artifact.proto\x1a\x1ftimelines/proto/timelines.proto\x1a\x0fdatastore.proto\"\xb0\a\n" +
 	"\x0fGetTableRequest\x12\x12\n" +
 	"\x04rows\x18\x02 \x01(\x04R\x04rows\x12\x1b\n" +
 	"\tstart_row\x18\x03 \x01(\x04R\bstartRow\x12\x1d\n" +
@@ -512,7 +521,7 @@ const file_csv_proto_rawDesc = "" +
 	"\aversion\x18\x19 \x01(\x04R\aversion\x12%\n" +
 	"\x0evfs_components\x18\x1a \x03(\tR\rvfsComponents\"\x19\n" +
 	"\x03Row\x12\x12\n" +
-	"\x04json\x18\x02 \x01(\tR\x04json\"\xbe\x02\n" +
+	"\x04json\x18\x02 \x01(\tR\x04json\"\xe2\x02\n" +
 	"\x10GetTableResponse\x12-\n" +
 	"\acolumns\x18\x01 \x03(\tB\x13\xe2\xfc\xe3\xc4\x01\r\x12\vThe columnsR\acolumns\x12\x1e\n" +
 	"\x04rows\x18\x02 \x03(\v2\n" +
@@ -525,7 +534,8 @@ const file_csv_proto_rawDesc = "" +
 	"\bend_time\x18\x06 \x01(\x03R\aendTime\x12-\n" +
 	"\ttimelines\x18\b \x03(\v2\x0f.proto.TimelineR\ttimelines\x12\x1d\n" +
 	"\n" +
-	"stack_path\x18\a \x03(\tR\tstackPathB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
+	"stack_path\x18\a \x03(\tR\tstackPath\x12\"\n" +
+	"\x05error\x18\t \x01(\v2\f.proto.ErrorR\x05errorB1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_csv_proto_rawDescOnce sync.Once
@@ -546,16 +556,18 @@ var file_csv_proto_goTypes = []any{
 	(*GetTableResponse)(nil), // 2: proto.GetTableResponse
 	(*proto.ColumnType)(nil), // 3: proto.ColumnType
 	(*proto1.Timeline)(nil),  // 4: proto.Timeline
+	(*Error)(nil),            // 5: proto.Error
 }
 var file_csv_proto_depIdxs = []int32{
 	1, // 0: proto.GetTableResponse.rows:type_name -> proto.Row
 	3, // 1: proto.GetTableResponse.column_types:type_name -> proto.ColumnType
 	4, // 2: proto.GetTableResponse.timelines:type_name -> proto.Timeline
-	3, // [3:3] is the sub-list for method output_type
-	3, // [3:3] is the sub-list for method input_type
-	3, // [3:3] is the sub-list for extension type_name
-	3, // [3:3] is the sub-list for extension extendee
-	0, // [0:3] is the sub-list for field type_name
+	5, // 3: proto.GetTableResponse.error:type_name -> proto.Error
+	4, // [4:4] is the sub-list for method output_type
+	4, // [4:4] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_csv_proto_init() }
@@ -563,6 +575,7 @@ func file_csv_proto_init() {
 	if File_csv_proto != nil {
 		return
 	}
+	file_datastore_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

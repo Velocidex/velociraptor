@@ -21,9 +21,10 @@ const (
 type ErrorCode int32
 
 const (
-	ErrorCode_OK    ErrorCode = 0
-	ErrorCode_EOF   ErrorCode = 1
-	ErrorCode_ERROR ErrorCode = 2
+	ErrorCode_OK        ErrorCode = 0
+	ErrorCode_EOF       ErrorCode = 1
+	ErrorCode_ERROR     ErrorCode = 2
+	ErrorCode_NOT_FOUND ErrorCode = 3
 )
 
 // Enum value maps for ErrorCode.
@@ -32,11 +33,13 @@ var (
 		0: "OK",
 		1: "EOF",
 		2: "ERROR",
+		3: "NOT_FOUND",
 	}
 	ErrorCode_value = map[string]int32{
-		"OK":    0,
-		"EOF":   1,
-		"ERROR": 2,
+		"OK":        0,
+		"EOF":       1,
+		"ERROR":     2,
+		"NOT_FOUND": 3,
 	}
 )
 
@@ -702,11 +705,12 @@ const file_datastore_proto_rawDesc = "" +
 	"\x03str\x18\x02 \x01(\tR\x03str\"U\n" +
 	"\x15FSWriteBufferResponse\x12\x18\n" +
 	"\awritten\x18\x01 \x01(\x03R\awritten\x12\"\n" +
-	"\x05error\x18\x02 \x01(\v2\f.proto.ErrorR\x05error*'\n" +
+	"\x05error\x18\x02 \x01(\v2\f.proto.ErrorR\x05error*6\n" +
 	"\tErrorCode\x12\x06\n" +
 	"\x02OK\x10\x00\x12\a\n" +
 	"\x03EOF\x10\x01\x12\t\n" +
-	"\x05ERROR\x10\x02B1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
+	"\x05ERROR\x10\x02\x12\r\n" +
+	"\tNOT_FOUND\x10\x03B1Z/www.velocidex.com/golang/velociraptor/api/protob\x06proto3"
 
 var (
 	file_datastore_proto_rawDescOnce sync.Once
