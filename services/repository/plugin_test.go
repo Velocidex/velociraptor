@@ -97,14 +97,15 @@ func (self *PluginTestSuite) TestArtifactsSyntax() {
 			}
 			assert.True(self.T(), len(state.Errors) == 0)
 
-			// Undeclared plugin permissions are only warnings in the
-			// verifier, so assert on them explicitly to stop drift
-			// silently accumulating in built in artifacts.
+			// The verifier reports these as warnings, but built in
+			// artifacts should be warning free. Where the diagnostic
+			// is a false positive, or fixing it would change the
+			// artifact's output, suppress it with a `linter:` comment
+			// (e.g. `// linter: symbol_mask_warn:url`).
 			for _, warning := range state.Warnings {
 				fmt.Printf("Warning with %v: %v\n", artifact_name, warning)
-				assert.NotEqual(self.T(), launcher.REQUIRED_PERMISSIONS,
-					warning.Name,
-					"Artifact %v has undeclared plugin permissions",
+				assert.Fail(self.T(), warning.Error(),
+					"Artifact %v has verifier warnings: fix them or add a `linter:` suppression to the VQL",
 					artifact_name)
 			}
 		}
