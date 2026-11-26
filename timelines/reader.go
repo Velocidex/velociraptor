@@ -55,7 +55,7 @@ func (self *TimelineReader) getIndex(i int) (*IndexRecord, error) {
 	}
 
 	err = binary.Read(self.buffered_index_fd, binary.LittleEndian, idx_record)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, err
 	}
 	return idx_record, nil

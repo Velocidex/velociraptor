@@ -18,6 +18,7 @@ import (
 	"context"
 	"encoding/binary"
 	"errors"
+	"io"
 	"os"
 	"regexp"
 	"strconv"
@@ -284,7 +285,7 @@ func ReadExeFile(
 	// it. TODO: Can we do this in a more efficient way?
 	exe_bytes := make([]byte, s.Size())
 	n, err := fd.Read(exe_bytes)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		return nil, err
 	}
 

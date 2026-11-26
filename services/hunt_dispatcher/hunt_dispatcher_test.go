@@ -247,10 +247,17 @@ func (self *HuntDispatcherTestSuite) TestModifyingHuntFlushToDatastore() {
 	assert.Equal(self.T(), hunt_obj.State, api_proto.Hunt_STOPPED)
 
 	// But not immediately visible in minion
-	vtesting.WaitUntil(5*time.Second, self.T(), func() bool {
+	vtesting.WaitUntilWithError(5*time.Second, self.T(), func() bool {
 		hunt_obj, pres = self.minion_dispatcher.GetHunt(self.Ctx,
 			services.GetHuntOptions{Request: false}, "H.1")
 		return pres && hunt_obj.HuntId == "H.1"
+	}, func() string {
+		hunts, _, err := self.minion_dispatcher.Store.ListHunts(self.Ctx,
+			result_sets.ResultSetOptions{},
+			services.GetHuntOptions{Request: false}, 0, 100)
+		assert.NoError(self.T(), err)
+
+		return json.MustMarshalString(hunts)
 	})
 
 	assert.True(self.T(), pres)

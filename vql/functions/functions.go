@@ -23,6 +23,7 @@ import (
 	"encoding/ascii85"
 	"encoding/base64"
 	"encoding/binary"
+	"io"
 	"strconv"
 	"strings"
 	"time"
@@ -321,7 +322,9 @@ func (self _UTF16) Call(
 	}
 
 	ints := make([]uint16, len(arg.String)/2)
-	if err := binary.Read(bytes.NewReader([]byte(arg.String)), binary.LittleEndian, &ints); err != nil {
+	err = binary.Read(bytes.NewReader([]byte(arg.String)),
+		binary.LittleEndian, &ints)
+	if err != nil && err != io.EOF {
 		scope.Log("utf16: %s", err.Error())
 		return vfilter.Null{}
 	}

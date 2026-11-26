@@ -3,6 +3,7 @@ package server_artifacts
 import (
 	"context"
 	"io"
+	"sync"
 
 	actions_proto "www.velocidex.com/golang/velociraptor/actions/proto"
 	crypto_proto "www.velocidex.com/golang/velociraptor/crypto/proto"
@@ -34,7 +35,7 @@ type CollectionContextManager interface {
 	Load() error
 
 	// Start writing the collection context to storage.
-	StartRefresh()
+	StartRefresh(wg *sync.WaitGroup)
 
 	// A Query context track a single query in the collection.
 	GetQueryContext(query *actions_proto.VQLCollectorArgs) QueryContext

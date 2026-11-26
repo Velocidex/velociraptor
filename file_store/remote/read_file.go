@@ -4,9 +4,12 @@ import (
 	"context"
 	"io"
 	"os"
+	"sync"
 
+	"github.com/alitto/pond/v2"
 	api_proto "www.velocidex.com/golang/velociraptor/api/proto"
 	config_proto "www.velocidex.com/golang/velociraptor/config/proto"
+	"www.velocidex.com/golang/velociraptor/constants"
 	"www.velocidex.com/golang/velociraptor/file_store/api"
 	"www.velocidex.com/golang/velociraptor/file_store/path_specs"
 	"www.velocidex.com/golang/velociraptor/utils"
@@ -39,39 +42,73 @@ func (self *FileReader) Read(buff []byte) (int, error) {
 		}
 	}()
 
-	grpc_result, err := conn.VFSGetBuffer(ctx,
-		&api_proto.VFSFileBuffer{
-			Offset:     uint64(self.offset),
-			Length:     uint32(len(buff)),
-			Components: self.filename.Components(),
-			PathType:   int64(self.filename.Type()),
-			OrgId:      self.config_obj.OrgId,
-		})
-	if err != nil {
-		return 0, utils.StatusToError(err)
+	// split the buffer into smaller rpc sized buffers.
+	pool := pond.NewPool(10, pond.WithContext(ctx))
+	total_read := 0
+	var mu sync.Mutex
+
+	// The largest buffer we can transfer in one call
+	var buf_size int64 = constants.GRPC_DEFAULT_TRANSFER_SIZE
+	if self.config_obj.ApiConfig != nil &&
+		self.config_obj.ApiConfig.MaxGrpcRecvSize > 2*10240 {
+		buf_size = int64(self.config_obj.ApiConfig.MaxGrpcRecvSize)
 	}
 
-	if grpc_result.Data == nil {
-		return 0, io.EOF
+	// Leave a bit of space for other fields.
+	buf_size -= 10240
+
+	var tasks []pond.Task
+
+	for offset := int64(0); offset < int64(len(buff)); offset += buf_size {
+		tasks = append(tasks, pool.SubmitErr(func() error {
+			to_read := buf_size
+			end_of_buff := int64(len(buff))
+
+			if offset+to_read > end_of_buff {
+				to_read = end_of_buff - offset
+			}
+
+			grpc_result, err := conn.VFSGetBuffer(ctx,
+				&api_proto.VFSFileBuffer{
+					Offset:     uint64(offset + self.offset),
+					Length:     uint32(to_read),
+					Components: self.filename.Components(),
+					PathType:   int64(self.filename.Type()),
+					OrgId:      self.config_obj.OrgId,
+				})
+
+			if err != nil {
+				return utils.StatusToError(err)
+			}
+
+			if to_read > int64(len(grpc_result.Data)) {
+				to_read = int64(len(grpc_result.Data))
+				err = io.EOF
+			}
+
+			// Copy the data into the buffer
+			mu.Lock()
+			for i := int64(0); i < to_read; i++ {
+				buff[i+offset] = grpc_result.Data[i]
+			}
+			total_read += int(to_read)
+			mu.Unlock()
+
+			return err
+		}))
 	}
 
-	to_read := len(buff)
-	if to_read > len(grpc_result.Data) {
-		to_read = len(grpc_result.Data)
+	// Wait here for all the calls
+	for _, t := range tasks {
+		err1 := t.Wait()
+		if err == nil {
+			err = err1
+		}
 	}
 
-	for i := 0; i < to_read; i++ {
-		buff[i] = grpc_result.Data[i]
-	}
+	self.offset += int64(total_read)
 
-	// A short read must be at the end of file.
-	if to_read < len(buff) {
-		err = io.EOF
-	}
-
-	self.offset += int64(to_read)
-
-	return to_read, err
+	return total_read, err
 }
 
 func (self *FileReader) Seek(offset int64, whence int) (int64, error) {
@@ -122,12 +159,12 @@ func (self *FileReader) Stat() (api.FileInfo, error) {
 		return nil, utils.StatusToError(err)
 	}
 
-	urn := path_specs.NewUnsafeDatastorePath(grpc_result.Components...).
+	urn := path_specs.NewUnsafeFilestorePath(grpc_result.Components...).
 		SetType(api.PathType(grpc_result.Type))
 
 	return &vtesting.MockFileInfo{
 		Name_:     urn.Base(),
-		PathSpec_: urn.AsFilestorePath(),
+		PathSpec_: urn,
 		FullPath_: urn.String(),
 		Mode_:     os.FileMode(grpc_result.Mode),
 		Size_:     int64(grpc_result.Size),
