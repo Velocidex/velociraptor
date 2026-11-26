@@ -710,6 +710,24 @@ GUI:
     sub_authenticators:
       - type: Google
 
+  # Orgs can be redirected by the GUI. When the user selects this org,
+  # the server will re-route requests to the remote endpoint and
+  # incorporate them into the GUI. This allows distributed, isolated
+  # servers to be treated as part of the same deployment.
+  redirected_orgs:
+    # The OrgId to be redirected - this should be unique on the
+    # server.
+  - org_id:  O1234
+    org_name: RedirectedOrg
+
+    # The org id that will be mapped on the remote server.
+    redirected_org_id: "root"
+
+    # A path to an API config file created by the remote server. The
+    # API user should have the impersonate permission so it can relay
+    # API calls on behalf of the user logged into the current system.
+    api_config_file: /path/to/api.file.yaml
+
 ## This is the internal Velociraptor CA configuration. It is needed to
 ## sign new API keys. Secure deployments can remove this part of the
 ## config and safely store it offline.
@@ -816,7 +834,6 @@ Frontend:
     type: noip
 
     # The hostname to update
-    hostname: www.velo.com
     ddns_username: 1234233452
     ddns_password: 2313e2324
 
@@ -980,6 +997,15 @@ Frontend:
     # sec). Index files are typically 150kb / 1000 clients.
     index_snapshot_frequency: 10
 
+    # Various housekeeping tasks operate with lower priority on the
+    # server. This rate throttles these to a reasonable rate. Default
+    # is 100 per second. Set to -1 to disable.
+    housekeep_op_rate: 100
+
+    # How many housekeeping threads are allowed (default 4)
+    housekeep_concurrency: 4
+
+
 ## Velociraptor has a datastore abstraction and can use a number of
 ## possible data storage engines. This section configures the data
 ## store implementation.
@@ -1051,7 +1077,6 @@ Datastore:
   # writes but at the same time prevent frequently written files from
   # never flushing to disk.
   memcache_write_mutation_min_age: 1000 # Default 1000 msec
-  int64 memcache_write_mutation_max_age: 5000  # Default 5000 msec
 
   ## MemcacheFileDataStore will cache small files in memory to improve
   ## efficiency. This is the maximum size of the cache.

@@ -637,7 +637,9 @@ func (self *ApiServer) GetTable(
 
 	result, err := tables.GetTable(ctx, org_config_obj, in, principal)
 	if err != nil {
-		return nil, Status(self.verbose, err)
+		return &api_proto.GetTableResponse{
+			Error: utils.MakeError(err),
+		}, nil
 	}
 
 	return result, nil

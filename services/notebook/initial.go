@@ -297,14 +297,6 @@ func CalculateNotebookArtifact(
 
 			full_source_name := paths.FullArtifactName(artifact_name, new_source.Name)
 
-			// If there are too many cells we add a placeholder to
-			// allow the user to calculate them on demand. Otherwise
-			// we may overwhelm the notebook workers.
-			output := ""
-			if idx > 4 {
-				output = fmt.Sprintf("<h3>%s</h3><br>Recalculate to View", full_source_name)
-			}
-
 			custom_cells := false
 			// Tag custom cells with the artifact name and the source
 			for _, n_orig := range s.Notebook {
@@ -336,19 +328,14 @@ func CalculateNotebookArtifact(
 				// No notebook specified for this source, add a
 				// default.
 
-				default_limit := int64(50)
-				if config_obj.Defaults != nil &&
-					config_obj.Defaults.NotebookDefaultNewCellRows > 0 {
-					default_limit = config_obj.Defaults.NotebookDefaultNewCellRows
-				}
-
 				switch artifact_modes.ModeNameToMode(artifact.Type) {
 				case artifact_modes.MODE_CLIENT_EVENT,
 					artifact_modes.MODE_SERVER_EVENT:
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
-							Type:   "vql",
-							Output: output,
+							Type: "vql",
+							Output: DefaultEventCellOutput(in, idx,
+								artifact_name, new_source.Name),
 							Env: []*artifacts_proto.ArtifactEnv{{
 								Key:   "ArtifactName",
 								Value: full_source_name,
@@ -362,15 +349,15 @@ From {{ Scope "StartTime" }} to {{ Scope "EndTime" }}
 
 SELECT timestamp(epoch=_ts) AS ServerTime, *
  FROM source(start_time=StartTime, end_time=EndTime, artifact=%q)
-LIMIT %v
-`, full_source_name, full_source_name, default_limit),
+`, full_source_name, full_source_name),
 						})
 
 				default:
 					new_source.Notebook = append(new_source.Notebook,
 						&artifacts_proto.NotebookSourceCell{
-							Type:   "vql",
-							Output: output,
+							Type: "vql",
+							Output: DefaultFlowCellOutput(in, idx,
+								artifact_name, new_source.Name),
 							Env: []*artifacts_proto.ArtifactEnv{{
 								Key:   "ArtifactName",
 								Value: full_source_name,
@@ -380,7 +367,6 @@ LIMIT %v
 # %v
 */
 SELECT * FROM source(artifact=%q)
-LIMIT 50
 `, full_source_name, full_source_name),
 						})
 				}

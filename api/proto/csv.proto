@@ -3,6 +3,7 @@ syntax = "proto3";
 import "proto/semantic.proto";
 import "artifacts/proto/artifact.proto";
 import "timelines/proto/timelines.proto";
+import "datastore.proto";
 
 package proto;
 
@@ -115,4 +116,7 @@ message GetTableResponse {
 
     // If there is a stack table this is the path to it.
     repeated string stack_path = 7;
+
+    // Errors are returned inline - most common ones are not found.
+    Error error = 9;
 }
