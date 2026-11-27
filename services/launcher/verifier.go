@@ -127,9 +127,6 @@ func (self *AnalysisState) AnalyseArtifactRequiredPermissions(
 	// these permissions.
 	implied_permissions := []string{
 		"FILESYSTEM_READ", "MACHINE_STATE",
-
-		// Used by http_client on the client side.
-		"COLLECT_SERVER",
 	}
 
 	// They also receive permissions required by the artifact because
