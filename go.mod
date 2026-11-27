@@ -32,7 +32,7 @@ require (
 	github.com/Velocidex/go-yara v1.1.10-0.20260915111603-5c94650bd2f5
 	github.com/Velocidex/grok v0.0.1
 	github.com/Velocidex/json v0.0.0-20220224052537-92f3c0326e5a
-	github.com/Velocidex/ordereddict v0.0.0-20261028034010-6857b08b4dab
+	github.com/Velocidex/ordereddict v0.0.0-20261126150131-14d40b7b2eba
 	github.com/Velocidex/pkcs7 v0.0.0-20230220112103-d4ed02e1862a
 	github.com/Velocidex/sflags v0.3.1-0.20241126160332-cc1a5b66b8f1
 	github.com/Velocidex/sigma-go v0.0.0-20241113062227-c1c5ea4b5250

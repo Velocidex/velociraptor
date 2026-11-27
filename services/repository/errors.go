@@ -3,7 +3,7 @@ package repository
 import (
 	"strings"
 
-		"github.com/alecthomas/participle/v2"
+	"github.com/alecthomas/participle/v2"
 	artifacts_proto "www.velocidex.com/golang/velociraptor/artifacts/proto"
 	"www.velocidex.com/golang/velociraptor/utils/yaml"
 )
@@ -13,7 +13,7 @@ func reportError(errToReport error,
 
 	var node yaml.Node
 	err := yaml.Unmarshal([]byte(artifact.Raw), &node)
-	if err == nil || len(node.Content) > 0 {
+	if err == nil && len(node.Content) > 0 {
 		root := node.Content[0]
 		var nodes []yaml.NodeContext
 		yaml.GetYamlNodes(root, root, strings.Split(field, "."), &nodes)
