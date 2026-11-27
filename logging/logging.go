@@ -472,7 +472,7 @@ func (self *LogManager) makeNewComponent(
 	}
 
 	Log.Hooks.Add(lfshook.NewHook(stderr_map, &Formatter{stderr_map}))
-	if !NoColor && !isatty.IsTerminal(os.Stdout.Fd()) {
+	if !NoColor && !isatty.IsTerminal(os.Stderr.Fd()) {
 		NoColor = true
 	}
 
